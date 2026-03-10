@@ -1,0 +1,124 @@
+{
+  "$schema": "draft-07",
+  "title": "classify-and-place Content Pack",
+  "description": "Define un escenario temático para el engine de clasificación y ubicación",
+  "type": "object",
+  "required": ["meta", "categories", "items", "missions", "difficulty_scaling"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["id", "name", "subtitle", "emoji", "description", "setting", "cognitive_targets"],
+      "properties": {
+        "id": { "type": "string", "description": "Identificador único del pack" },
+        "name": { "type": "string", "description": "Nombre del escenario" },
+        "subtitle": { "type": "string", "description": "Subtítulo descriptivo" },
+        "emoji": { "type": "string", "description": "Emoji principal del pack" },
+        "description": { "type": "string", "description": "Descripción para el selector de juegos" },
+        "setting": { "type": "string", "description": "Contexto narrativo del escenario" },
+        "cognitive_targets": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Dominios cognitivos que trabaja este pack"
+        },
+        "colors": {
+          "type": "object",
+          "properties": {
+            "accent": { "type": "string" },
+            "surface": { "type": "string" },
+            "bg": { "type": "string" }
+          }
+        }
+      }
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "emoji"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "emoji": { "type": "string" },
+          "description": { "type": "string" },
+          "color": { "type": "string" }
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "emoji", "category"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "emoji": { "type": "string" },
+          "category": { "type": "string", "description": "ID de la categoría a la que pertenece" },
+          "tier": { "type": "string", "enum": ["essential", "advanced", "neutral", "error", "distractor"] },
+          "difficulty": { "type": "integer", "minimum": 1, "maximum": 10 },
+          "hint": { "type": "string", "description": "Pista opcional para niveles fáciles" },
+          "confusable_with": { "type": "string", "description": "ID de categoría con la que se confunde fácilmente" }
+        }
+      }
+    },
+    "missions": {
+      "type": "array",
+      "description": "Misiones/consignas que el jugador debe cumplir",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "description", "target_items"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "emoji": { "type": "string" },
+          "description": { "type": "string" },
+          "target_items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "item_id": { "type": "string" },
+                "required": { "type": "boolean" },
+                "alt_group": { "type": "string" }
+              }
+            }
+          },
+          "budget": { "type": "number", "description": "Presupuesto opcional para la misión" },
+          "time_limit_seconds": { "type": "integer" },
+          "min_difficulty": { "type": "integer" }
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "description": "Eventos aleatorios que pueden ocurrir durante el gameplay",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "text": { "type": "string" },
+          "effect": { "type": "string", "enum": ["block_category", "time_pressure", "add_item", "remove_item", "shuffle", "distraction"] },
+          "target": { "type": "string" },
+          "probability": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "difficulty_scaling": {
+      "type": "object",
+      "description": "Parámetros por nivel de dificultad (1-10)",
+      "patternProperties": {
+        "^level_[0-9]+$": {
+          "type": "object",
+          "properties": {
+            "items_per_round": { "type": "integer" },
+            "categories_visible": { "type": "integer" },
+            "time_limit": { "type": ["integer", "null"] },
+            "distractors": { "type": "boolean" },
+            "events_enabled": { "type": "boolean" },
+            "hint_available": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,486 @@
+{
+  "meta": {
+    "id": "ferreteria-berugo",
+    "name": "La Ferretería de Berugo",
+    "subtitle": "El local que tiene de todo — si sabés buscarlo",
+    "emoji": "🔧",
+    "description": "Berugo se fue de vacaciones y te dejó el local. Llegan clientes, llega mercadería, y vos tenés que resolver todo: clasificar, calcular, razonar y no venderle un tirafondo al que necesita un bulón.",
+    "setting": "Ferretería de barrio en Necochea. Mostrador de madera gastado, estantes hasta el techo, cajones con etiquetas a mano, olor a aguarrás y WD-40. Hay un gato dormido arriba del exhibidor de pinturas.",
+    "cognitive_targets": [
+      "categorización semántica",
+      "seriación",
+      "cálculo matemático",
+      "agrupamiento funcional",
+      "semejanza perceptual (externa)",
+      "semejanza funcional (simbólica)",
+      "simbolización",
+      "razonamiento inferencial",
+      "memoria de trabajo",
+      "velocidad de procesamiento",
+      "planificación",
+      "inhibición de respuesta"
+    ],
+    "colors": {
+      "accent": "#f59e0b",
+      "surface": "#292524",
+      "bg": "#1c1917",
+      "category_header": "#78716c"
+    }
+  },
+
+  "categories": [
+    { "id": "electrica", "label": "Herramientas Eléctricas", "emoji": "⚡", "zone": "pared-fondo-izq", "description": "Taladros, amoladoras, sierras — todo lo que enchufás o lleva batería", "color": "#eab308" },
+    { "id": "manual", "label": "Herramientas Manuales", "emoji": "🔨", "zone": "panel-central", "description": "Martillos, destornilladores, llaves, alicates, pinzas", "color": "#3b82f6" },
+    { "id": "plomeria", "label": "Plomería", "emoji": "🚿", "zone": "pasillo-2", "description": "Canillas, caños, cueritos, válvulas, teflón, sifones", "color": "#06b6d4" },
+    { "id": "electricidad", "label": "Material Eléctrico", "emoji": "💡", "zone": "estante-derecho", "description": "Cables, llaves de luz, enchufes, térmicas, tubos LED, fichas", "color": "#a855f7" },
+    { "id": "fijacion", "label": "Tornillería y Fijación", "emoji": "🔩", "zone": "cajonera-central", "description": "Tornillos, clavos, tarugos, tirafondos, bulones, arandelas, tuercas", "color": "#78716c" },
+    { "id": "pintura", "label": "Pinturas y Terminación", "emoji": "🎨", "zone": "estante-izquierdo", "description": "Látex, esmalte sintético, rodillos, pinceles, lijas, enduido, aguarrás", "color": "#ec4899" },
+    { "id": "jardin", "label": "Jardín y Exterior", "emoji": "🌱", "zone": "fondo-patio", "description": "Mangueras, palas, rastrillos, macetas, alambre, tejido", "color": "#22c55e" },
+    { "id": "seguridad", "label": "Cerrajería y Seguridad", "emoji": "🔒", "zone": "vitrina-mostrador", "description": "Candados, cerraduras, bisagras, pasadores, cadenas", "color": "#ef4444" },
+    { "id": "adhesivos", "label": "Adhesivos y Selladores", "emoji": "🧴", "zone": "estante-mostrador", "description": "Cinta, pegamentos, siliconas, selladores, teflón", "color": "#f97316" }
+  ],
+
+  "items": [
+    { "id": "taladro_percutor", "name": "Taladro percutor 13mm", "emoji": "🔧", "category": "electrica", "difficulty": 1, "price": 45000, "hint": "Hace agujeros en pared, madera, metal" },
+    { "id": "taladro_simple", "name": "Taladro sin percutor 10mm", "emoji": "🔧", "category": "electrica", "difficulty": 2, "price": 28000, "confusable_with": "taladro_percutor", "similarity_type": "perceptual", "similarity_note": "Parecido al percutor pero NO sirve para pared de material" },
+    { "id": "amoladora_115", "name": "Amoladora 115mm", "emoji": "⚙️", "category": "electrica", "difficulty": 1, "price": 32000 },
+    { "id": "amoladora_230", "name": "Amoladora 230mm", "emoji": "⚙️", "category": "electrica", "difficulty": 3, "price": 65000, "confusable_with": "amoladora_115", "similarity_type": "perceptual", "similarity_note": "Parece igual pero es mucho más grande y potente — para cortar hierro grueso" },
+    { "id": "sierra_caladora", "name": "Sierra caladora", "emoji": "🪚", "category": "electrica", "difficulty": 2, "price": 38000 },
+    { "id": "atornillador_electrico", "name": "Atornillador inalámbrico 12V", "emoji": "🔧", "category": "electrica", "difficulty": 2, "price": 35000, "confusable_with": "destornillador_phillips", "similarity_type": "funcional", "similarity_note": "Hace lo mismo que el destornillador manual pero es eléctrico" },
+    { "id": "lijadora_orbital", "name": "Lijadora orbital", "emoji": "⚙️", "category": "electrica", "difficulty": 4, "price": 42000, "confusable_with": "lija_al_agua", "similarity_type": "funcional", "similarity_note": "Ambas lijan, pero una es eléctrica y la otra manual" },
+    { "id": "soldadora_electrica", "name": "Soldadora inverter 200A", "emoji": "⚡", "category": "electrica", "difficulty": 5, "price": 180000 },
+
+    { "id": "martillo_carpintero", "name": "Martillo carpintero", "emoji": "🔨", "category": "manual", "difficulty": 1, "price": 8500, "hint": "Para clavar clavos" },
+    { "id": "martillo_galponero", "name": "Martillo galponero", "emoji": "🔨", "category": "manual", "difficulty": 3, "price": 12000, "confusable_with": "martillo_carpintero", "similarity_type": "perceptual", "similarity_note": "Parece un martillo común pero la cabeza es diferente — más pesado, para trabajos rudos" },
+    { "id": "maza_goma", "name": "Maza de goma", "emoji": "🔨", "category": "manual", "difficulty": 3, "price": 6500, "confusable_with": "martillo_carpintero", "similarity_type": "perceptual", "similarity_note": "Forma de martillo pero de goma — no marca la pieza" },
+    { "id": "destornillador_phillips", "name": "Destornillador Phillips N°2", "emoji": "🪛", "category": "manual", "difficulty": 1, "price": 3200 },
+    { "id": "destornillador_paleta", "name": "Destornillador punta plana", "emoji": "🪛", "category": "manual", "difficulty": 1, "price": 2800, "confusable_with": "destornillador_phillips", "similarity_type": "perceptual", "similarity_note": "Parecidos pero la punta es distinta — uno en cruz, otro plano" },
+    { "id": "destornillador_buscapolo", "name": "Destornillador buscapolo", "emoji": "🪛", "category": "electricidad", "difficulty": 4, "price": 2500, "confusable_with": "destornillador_paleta", "similarity_type": "perceptual", "similarity_note": "PARECE un destornillador pero es para detectar corriente — va en Material Eléctrico" },
+    { "id": "alicate_universal", "name": "Alicate universal", "emoji": "🔧", "category": "manual", "difficulty": 1, "price": 5500 },
+    { "id": "pinza_punta", "name": "Pinza punta fina", "emoji": "🔧", "category": "manual", "difficulty": 2, "price": 4800, "confusable_with": "alicate_universal", "similarity_type": "perceptual" },
+    { "id": "pinza_pelacable", "name": "Pinza pelacables", "emoji": "🔧", "category": "electricidad", "difficulty": 4, "price": 6200, "confusable_with": "pinza_punta", "similarity_type": "perceptual", "similarity_note": "PARECE una pinza común pero es específica para cables — va en Material Eléctrico" },
+    { "id": "llave_francesa", "name": "Llave francesa 10\"", "emoji": "🔧", "category": "manual", "difficulty": 1, "price": 9800 },
+    { "id": "llave_grifa", "name": "Llave grifa (Stilson)", "emoji": "🔧", "category": "plomeria", "difficulty": 4, "price": 14000, "confusable_with": "llave_francesa", "similarity_type": "perceptual", "similarity_note": "PARECE una llave francesa pero tiene mordaza — es específica para caños, va en Plomería" },
+    { "id": "juego_allen", "name": "Juego llaves Allen", "emoji": "🔧", "category": "manual", "difficulty": 2, "price": 4500 },
+    { "id": "serrucho", "name": "Serrucho 20\"", "emoji": "🪚", "category": "manual", "difficulty": 1, "price": 7800 },
+    { "id": "cinta_metrica", "name": "Cinta métrica 5m", "emoji": "📏", "category": "manual", "difficulty": 1, "price": 4200 },
+    { "id": "nivel_burbuja", "name": "Nivel de burbuja 40cm", "emoji": "📏", "category": "manual", "difficulty": 2, "price": 5500 },
+    { "id": "formon_20", "name": "Formón 20mm", "emoji": "🔪", "category": "manual", "difficulty": 4, "price": 4800 },
+
+    { "id": "canilla_cocina", "name": "Canilla monocomando cocina", "emoji": "🚿", "category": "plomeria", "difficulty": 2, "price": 35000 },
+    { "id": "canilla_lavatorio", "name": "Canilla de lavatorio", "emoji": "🚿", "category": "plomeria", "difficulty": 2, "price": 18000, "confusable_with": "canilla_cocina", "similarity_type": "perceptual" },
+    { "id": "cuerito_media", "name": "Cuerito 1/2 pulgada", "emoji": "⭕", "category": "plomeria", "difficulty": 1, "price": 350 },
+    { "id": "cuerito_tres_cuartos", "name": "Cuerito 3/4 pulgada", "emoji": "⭕", "category": "plomeria", "difficulty": 2, "price": 450, "confusable_with": "cuerito_media", "similarity_type": "perceptual", "similarity_note": "Casi idéntico pero más grande — la medida importa" },
+    { "id": "cano_pvc_40", "name": "Caño PVC 40mm x 4m", "emoji": "🔵", "category": "plomeria", "difficulty": 2, "price": 4200 },
+    { "id": "cano_pvc_110", "name": "Caño PVC 110mm x 4m", "emoji": "🔵", "category": "plomeria", "difficulty": 2, "price": 9800, "confusable_with": "cano_pvc_40", "similarity_type": "perceptual", "similarity_note": "Mismo material, distinto diámetro — uno es para pileta, otro para cloacal" },
+    { "id": "teflon", "name": "Cinta de teflón", "emoji": "🧻", "category": "plomeria", "difficulty": 1, "price": 650, "confusable_with": "cinta_aisladora", "similarity_type": "perceptual", "similarity_note": "Rollos parecidos pero el teflón es blanco y para roscas de agua" },
+    { "id": "sifon_botella", "name": "Sifón botella", "emoji": "🔵", "category": "plomeria", "difficulty": 3, "price": 5500 },
+    { "id": "flotante_completo", "name": "Flotante completo p/ depósito", "emoji": "🚽", "category": "plomeria", "difficulty": 3, "price": 4800 },
+
+    { "id": "cable_25", "name": "Cable 2.5mm² (metro)", "emoji": "〰️", "category": "electricidad", "difficulty": 2, "price": 1200, "symbol_code": "2.5mm² = tomacorrientes comunes" },
+    { "id": "cable_15", "name": "Cable 1.5mm² (metro)", "emoji": "〰️", "category": "electricidad", "difficulty": 2, "price": 850, "confusable_with": "cable_25", "similarity_type": "perceptual", "symbol_code": "1.5mm² = iluminación", "similarity_note": "Parecen iguales pero distinto grosor — uno es para luz, otro para enchufes" },
+    { "id": "cable_4", "name": "Cable 4mm² (metro)", "emoji": "〰️", "category": "electricidad", "difficulty": 3, "price": 1800, "symbol_code": "4mm² = aire acondicionado, horno eléctrico" },
+    { "id": "llave_luz_simple", "name": "Llave de luz simple", "emoji": "🔲", "category": "electricidad", "difficulty": 1, "price": 2200 },
+    { "id": "llave_luz_doble", "name": "Llave de luz doble", "emoji": "🔲", "category": "electricidad", "difficulty": 2, "price": 3500 },
+    { "id": "enchufe_embutir", "name": "Enchufe para embutir", "emoji": "🔌", "category": "electricidad", "difficulty": 2, "price": 2800 },
+    { "id": "termica_20a", "name": "Térmica 20A", "emoji": "⚡", "category": "electricidad", "difficulty": 3, "price": 8500, "symbol_code": "20A = circuito de tomacorrientes" },
+    { "id": "termica_10a", "name": "Térmica 10A", "emoji": "⚡", "category": "electricidad", "difficulty": 3, "price": 7200, "confusable_with": "termica_20a", "similarity_type": "perceptual", "symbol_code": "10A = circuito de iluminación" },
+    { "id": "diferencial_30ma", "name": "Disyuntor diferencial 30mA", "emoji": "⚡", "category": "electricidad", "difficulty": 5, "price": 28000, "confusable_with": "termica_20a", "similarity_type": "perceptual", "similarity_note": "Parece una térmica pero es un diferencial — protege personas, no circuitos" },
+    { "id": "tubo_led_120", "name": "Tubo LED 120cm 18W", "emoji": "💡", "category": "electricidad", "difficulty": 2, "price": 5500 },
+    { "id": "lampara_led_9w", "name": "Lámpara LED 9W fría", "emoji": "💡", "category": "electricidad", "difficulty": 1, "price": 2200 },
+    { "id": "cinta_aisladora", "name": "Cinta aisladora negra", "emoji": "⬛", "category": "electricidad", "difficulty": 1, "price": 1200, "confusable_with": "teflon", "similarity_type": "perceptual", "similarity_note": "Ambas son cintas en rollo pero una es negra y aísla electricidad" },
+    { "id": "ficha_macho", "name": "Ficha macho 3 patas 10A", "emoji": "🔌", "category": "electricidad", "difficulty": 2, "price": 1800 },
+    { "id": "ficha_triple", "name": "Ficha triple (zapatilla)", "emoji": "🔌", "category": "electricidad", "difficulty": 2, "price": 4500 },
+
+    { "id": "tornillo_fix_6x40", "name": "Tornillo p/ fijación 6x40mm", "emoji": "🔩", "category": "fijacion", "difficulty": 2, "price": 45, "unit": "unidad" },
+    { "id": "tornillo_fix_8x60", "name": "Tornillo p/ fijación 8x60mm", "emoji": "🔩", "category": "fijacion", "difficulty": 2, "price": 65, "unit": "unidad", "confusable_with": "tornillo_fix_6x40", "similarity_type": "perceptual" },
+    { "id": "tirafondo_8x50", "name": "Tirafondo 8x50mm", "emoji": "🔩", "category": "fijacion", "difficulty": 3, "price": 85, "unit": "unidad", "confusable_with": "tornillo_fix_8x60", "similarity_type": "perceptual", "similarity_note": "Parecido al tornillo pero cabeza hexagonal — para madera gruesa" },
+    { "id": "bulon_8x30", "name": "Bulón 8x30mm con tuerca", "emoji": "🔩", "category": "fijacion", "difficulty": 3, "price": 120, "unit": "unidad", "confusable_with": "tirafondo_8x50", "similarity_type": "perceptual", "similarity_note": "Cabeza parecida al tirafondo pero lleva tuerca — para unir hierro" },
+    { "id": "clavo_2p", "name": "Clavo 2 pulgadas (kg)", "emoji": "📌", "category": "fijacion", "difficulty": 1, "price": 2800, "unit": "kg" },
+    { "id": "clavo_4p", "name": "Clavo 4 pulgadas (kg)", "emoji": "📌", "category": "fijacion", "difficulty": 1, "price": 3200, "unit": "kg" },
+    { "id": "tarugo_6mm", "name": "Tarugo nylon 6mm", "emoji": "🔷", "category": "fijacion", "difficulty": 1, "price": 35, "unit": "unidad", "symbol_code": "6mm = tornillo 4.5mm, mecha 6mm" },
+    { "id": "tarugo_8mm", "name": "Tarugo nylon 8mm", "emoji": "🔷", "category": "fijacion", "difficulty": 2, "price": 55, "unit": "unidad", "symbol_code": "8mm = tornillo 5.5mm, mecha 8mm" },
+    { "id": "tarugo_10mm", "name": "Tarugo nylon 10mm", "emoji": "🔷", "category": "fijacion", "difficulty": 2, "price": 75, "unit": "unidad", "symbol_code": "10mm = tornillo 7mm, mecha 10mm" },
+    { "id": "tarugo_mariposa", "name": "Tarugo mariposa p/ durlock", "emoji": "🦋", "category": "fijacion", "difficulty": 4, "price": 180, "unit": "unidad", "similarity_note": "No es un tarugo común — se abre atrás de la placa" },
+    { "id": "arandela_8mm", "name": "Arandela plana 8mm", "emoji": "⭕", "category": "fijacion", "difficulty": 2, "price": 25, "unit": "unidad" },
+    { "id": "tornillo_autoperf", "name": "Tornillo autoperforante 14x1\"", "emoji": "🔩", "category": "fijacion", "difficulty": 3, "price": 55, "unit": "unidad", "similarity_note": "Punta de mecha — para chapa, no necesita agujerear antes" },
+    { "id": "grampa_cables", "name": "Grampas para cable N°8", "emoji": "📎", "category": "fijacion", "difficulty": 3, "price": 30, "unit": "unidad", "confusable_with": "electricidad", "similarity_type": "funcional", "similarity_note": "Son para sujetar cables pero es un elemento de fijación" },
+
+    { "id": "latex_interior_4", "name": "Látex interior blanco 4L", "emoji": "🪣", "category": "pintura", "difficulty": 1, "price": 18000 },
+    { "id": "latex_exterior_4", "name": "Látex exterior blanco 4L", "emoji": "🪣", "category": "pintura", "difficulty": 2, "price": 24000, "confusable_with": "latex_interior_4", "similarity_type": "perceptual", "similarity_note": "Misma lata, misma marca, pero uno es para exterior (más resistente al agua)" },
+    { "id": "esmalte_sintetico", "name": "Esmalte sintético negro 1L", "emoji": "🫙", "category": "pintura", "difficulty": 2, "price": 9500 },
+    { "id": "aguarras", "name": "Aguarrás 1L", "emoji": "🧴", "category": "pintura", "difficulty": 1, "price": 3500, "hint": "Disolvente para esmalte sintético" },
+    { "id": "rodillo_lana", "name": "Rodillo de lana 22cm", "emoji": "🖌️", "category": "pintura", "difficulty": 1, "price": 4500 },
+    { "id": "rodillo_espuma", "name": "Rodillo de espuma 10cm", "emoji": "🖌️", "category": "pintura", "difficulty": 2, "price": 2200, "confusable_with": "rodillo_lana", "similarity_type": "perceptual", "similarity_note": "Los dos son rodillos pero el de espuma es para esmalte, el de lana para látex" },
+    { "id": "pincel_2p", "name": "Pincel 2 pulgadas", "emoji": "🖌️", "category": "pintura", "difficulty": 1, "price": 2800 },
+    { "id": "lija_al_agua_220", "name": "Lija al agua N°220", "emoji": "📄", "category": "pintura", "difficulty": 2, "price": 650 },
+    { "id": "lija_al_agua_400", "name": "Lija al agua N°400", "emoji": "📄", "category": "pintura", "difficulty": 2, "price": 750, "confusable_with": "lija_al_agua_220", "similarity_type": "perceptual", "similarity_note": "Idénticas visualmente — N°220 es más gruesa, N°400 más fina" },
+    { "id": "lija_madera_80", "name": "Lija para madera N°80", "emoji": "📄", "category": "pintura", "difficulty": 3, "price": 550, "similarity_note": "Para desbaste grueso — no confundir con lija al agua" },
+    { "id": "enduido_1kg", "name": "Enduido plástico 1kg", "emoji": "🫙", "category": "pintura", "difficulty": 2, "price": 3200 },
+    { "id": "cinta_papel", "name": "Cinta de papel (enmascarar)", "emoji": "📎", "category": "pintura", "difficulty": 1, "price": 2200, "confusable_with": "cinta_aisladora", "similarity_type": "perceptual", "similarity_note": "Ambas son cintas pero la de papel es para pintar y la aisladora para electricidad" },
+
+    { "id": "manguera_1_2_x25", "name": "Manguera 1/2\" x 25m", "emoji": "🟢", "category": "jardin", "difficulty": 1, "price": 18000 },
+    { "id": "pala_punta", "name": "Pala punta corazón", "emoji": "⛏️", "category": "jardin", "difficulty": 1, "price": 12000 },
+    { "id": "rastrillo", "name": "Rastrillo 14 dientes", "emoji": "🧹", "category": "jardin", "difficulty": 1, "price": 7500 },
+    { "id": "tijera_podar", "name": "Tijera de podar", "emoji": "✂️", "category": "jardin", "difficulty": 2, "price": 8500 },
+    { "id": "alambre_galv_17", "name": "Alambre galvanizado N°17 (kg)", "emoji": "〰️", "category": "jardin", "difficulty": 3, "price": 4500, "confusable_with": "cable_25", "similarity_type": "perceptual", "similarity_note": "Parece cable pero es alambre para cerco, no conduce corriente intencionalmente" },
+    { "id": "maceta_20", "name": "Maceta plástica N°20", "emoji": "🪴", "category": "jardin", "difficulty": 1, "price": 3200 },
+
+    { "id": "candado_40", "name": "Candado bronce 40mm", "emoji": "🔒", "category": "seguridad", "difficulty": 1, "price": 5500 },
+    { "id": "candado_60", "name": "Candado bronce 60mm", "emoji": "🔒", "category": "seguridad", "difficulty": 1, "price": 9800, "confusable_with": "candado_40", "similarity_type": "perceptual" },
+    { "id": "cerradura_embutir", "name": "Cerradura de embutir", "emoji": "🔐", "category": "seguridad", "difficulty": 3, "price": 22000 },
+    { "id": "bisagra_3p", "name": "Bisagra 3 pulgadas (par)", "emoji": "📎", "category": "seguridad", "difficulty": 2, "price": 3500 },
+    { "id": "pasador_100", "name": "Pasador 100mm", "emoji": "📎", "category": "seguridad", "difficulty": 2, "price": 2200 },
+    { "id": "cadena_galv_metro", "name": "Cadena galvanizada (metro)", "emoji": "⛓️", "category": "seguridad", "difficulty": 2, "price": 3800 },
+
+    { "id": "silicona_acida", "name": "Silicona ácida transparente", "emoji": "🧴", "category": "adhesivos", "difficulty": 2, "price": 4500 },
+    { "id": "silicona_neutra", "name": "Silicona neutra blanca", "emoji": "🧴", "category": "adhesivos", "difficulty": 3, "price": 6200, "confusable_with": "silicona_acida", "similarity_type": "perceptual", "similarity_note": "Tubos idénticos pero la neutra no corroe — para aluminio y espejos" },
+    { "id": "adhesivo_contacto", "name": "Adhesivo de contacto 250ml", "emoji": "🧴", "category": "adhesivos", "difficulty": 2, "price": 5800 },
+    { "id": "la_gotita", "name": "La Gotita (cianoacrilato)", "emoji": "💧", "category": "adhesivos", "difficulty": 1, "price": 2200 },
+    { "id": "epoxi_5min", "name": "Epoxi rápido 5 minutos", "emoji": "🧪", "category": "adhesivos", "difficulty": 3, "price": 4800, "similarity_note": "Mezcla dos componentes — para pegar cosas que nada pega" },
+    { "id": "cinta_doble_faz", "name": "Cinta doble faz espumada", "emoji": "📎", "category": "adhesivos", "difficulty": 2, "price": 3200, "confusable_with": "cinta_papel", "similarity_type": "perceptual" }
+  ],
+
+  "missions": {
+    "classification": [
+      {
+        "id": "abrir_local",
+        "name": "Abrir el local",
+        "emoji": "🏪",
+        "description": "Llegó el camión del proveedor y descargó todo mezclado en el mostrador. Clasificá cada producto en su estante correcto.",
+        "type": "classify_all",
+        "min_difficulty": 1,
+        "tutorial": true
+      },
+      {
+        "id": "devolucion",
+        "name": "La devolución",
+        "emoji": "📦",
+        "description": "Un cliente devolvió una bolsa con 20 cosas mezcladas. Guardá cada una en su lugar lo más rápido posible.",
+        "type": "classify_timed",
+        "time_limit_seconds": 180,
+        "min_difficulty": 3
+      }
+    ],
+
+    "seriation": [
+      {
+        "id": "ordenar_lijas",
+        "name": "Ordená las lijas",
+        "emoji": "📄",
+        "description": "Acomodá las lijas de más gruesa a más fina: 80, 120, 220, 400, 600. Recordá: número MÁS BAJO = grano MÁS GRUESO.",
+        "type": "order_sequence",
+        "items_to_order": ["lija_madera_80", "lija_al_agua_220", "lija_al_agua_400"],
+        "correct_order_logic": "ascending_grit",
+        "cognitive_target": "seriación numérica inversa",
+        "min_difficulty": 2
+      },
+      {
+        "id": "ordenar_cables",
+        "name": "Cables por sección",
+        "emoji": "〰️",
+        "description": "Ordená los cables de menor a mayor sección: 1mm², 1.5mm², 2.5mm², 4mm², 6mm². Más grueso = más amperaje.",
+        "type": "order_sequence",
+        "items_to_order": ["cable_15", "cable_25", "cable_4"],
+        "correct_order_logic": "ascending_mm2",
+        "cognitive_target": "seriación numérica con comprensión funcional",
+        "min_difficulty": 3
+      },
+      {
+        "id": "ordenar_tarugos",
+        "name": "Tarugos por medida",
+        "emoji": "🔷",
+        "description": "Ordená los tarugos de menor a mayor: 5mm, 6mm, 8mm, 10mm, 12mm. Cada tarugo lleva su mecha y tornillo correspondiente.",
+        "type": "order_sequence",
+        "items_to_order": ["tarugo_6mm", "tarugo_8mm", "tarugo_10mm"],
+        "correct_order_logic": "ascending_mm",
+        "cognitive_target": "seriación + correspondencia",
+        "min_difficulty": 2
+      },
+      {
+        "id": "ordenar_candados",
+        "name": "Candados por tamaño",
+        "emoji": "🔒",
+        "description": "Del más chico al más grande: 20mm, 30mm, 40mm, 50mm, 60mm.",
+        "type": "order_sequence",
+        "correct_order_logic": "ascending_mm",
+        "cognitive_target": "seriación simple",
+        "min_difficulty": 1
+      }
+    ],
+
+    "calculation": [
+      {
+        "id": "cortar_cano",
+        "name": "¿Cuántos tramos de caño?",
+        "emoji": "🔵",
+        "description": "El cliente necesita 7 metros de caño PVC de 40mm. Vienen en tramos de 4 metros. ¿Cuántos tramos necesita?",
+        "type": "math_problem",
+        "correct_answer": 2,
+        "explanation": "7 ÷ 4 = 1,75 → necesitás 2 tramos (no podés comprar 1,75 tramos)",
+        "cognitive_target": "cálculo con redondeo práctico",
+        "min_difficulty": 3
+      },
+      {
+        "id": "precio_clavos",
+        "name": "El precio de los clavos",
+        "emoji": "📌",
+        "description": "El kilo de clavos de 2 pulgadas cuesta $2.800. El cliente necesita 250 gramos. ¿Cuánto le cobrás?",
+        "type": "math_problem",
+        "correct_answer": 700,
+        "explanation": "250g = 1/4 de kilo → $2.800 ÷ 4 = $700",
+        "cognitive_target": "cálculo proporcional",
+        "min_difficulty": 2
+      },
+      {
+        "id": "cable_habitacion",
+        "name": "Cable para la habitación",
+        "emoji": "〰️",
+        "description": "Hay que cablear una habitación: 2 bocas de luz (3 metros de cable cada una) y 3 tomacorrientes (4 metros cada uno). ¿Cuántos metros de cable en total?",
+        "type": "math_problem",
+        "correct_answer": 18,
+        "explanation": "(2 × 3) + (3 × 4) = 6 + 12 = 18 metros",
+        "cognitive_target": "cálculo combinado con operaciones múltiples",
+        "min_difficulty": 3
+      },
+      {
+        "id": "presupuesto_pintura",
+        "name": "Presupuesto de pintura",
+        "emoji": "🪣",
+        "description": "El cliente va a pintar una habitación de 4m x 3m, paredes de 2.5m de alto. Rinde 10m²/litro. ¿Cuántos litros necesita para UNA mano?",
+        "type": "math_problem",
+        "correct_answer": 3.5,
+        "accept_range": [3, 4],
+        "explanation": "Perímetro = 2×(4+3) = 14m. Superficie = 14 × 2.5 = 35m². 35 ÷ 10 = 3.5 litros",
+        "cognitive_target": "cálculo geométrico aplicado + razonamiento secuencial",
+        "min_difficulty": 5
+      },
+      {
+        "id": "vuelto",
+        "name": "El vuelto",
+        "emoji": "💰",
+        "description": "El cliente compró: 1 rodillo ($4.500) + 2 pinceles ($2.800 c/u) + 1 lija ($650). Paga con $15.000. ¿Cuánto de vuelto?",
+        "type": "math_problem",
+        "correct_answer": 4250,
+        "explanation": "4500 + 2×2800 + 650 = 10.750. Vuelto = 15.000 - 10.750 = $4.250",
+        "cognitive_target": "cálculo aritmético múltiple + sustracción",
+        "min_difficulty": 3
+      }
+    ],
+
+    "grouping": [
+      {
+        "id": "kit_canilla",
+        "name": "Kit: arreglar canilla que gotea",
+        "emoji": "🚿",
+        "description": "Un cliente dice: 'La canilla del baño gotea'. Armale el kit completo con todo lo que necesita.",
+        "type": "select_group",
+        "correct_items": ["cuerito_media", "teflon", "llave_francesa"],
+        "partial_credit": ["cuerito_tres_cuartos", "llave_grifa"],
+        "trap_items": ["canilla_cocina", "silicona_acida"],
+        "cognitive_target": "agrupamiento funcional + razonamiento inferencial",
+        "min_difficulty": 3
+      },
+      {
+        "id": "kit_cuadro",
+        "name": "Kit: colgar un cuadro en pared",
+        "emoji": "🖼️",
+        "description": "El cliente quiere colgar un cuadro mediano en pared de material (ladrillo). ¿Qué le vendés?",
+        "type": "select_group",
+        "correct_items": ["taladro_percutor", "tarugo_6mm", "tornillo_fix_6x40"],
+        "partial_credit": ["tarugo_8mm", "tornillo_fix_8x60", "nivel_burbuja", "cinta_metrica"],
+        "trap_items": ["taladro_simple", "tarugo_mariposa", "clavo_2p"],
+        "trap_explanations": {
+          "taladro_simple": "Sin percutor no atravesás ladrillo",
+          "tarugo_mariposa": "Esos son para durlock, no para pared de material",
+          "clavo_2p": "Un cuadro mediano con clavo se cae — necesita tarugo"
+        },
+        "cognitive_target": "agrupamiento funcional + razonamiento causal",
+        "min_difficulty": 3
+      },
+      {
+        "id": "kit_cuadro_durlock",
+        "name": "Kit: colgar estante en durlock",
+        "emoji": "🪵",
+        "description": "El cliente quiere colgar un estante pesado en pared de DURLOCK. Cuidado — no es lo mismo que pared de material.",
+        "type": "select_group",
+        "correct_items": ["tarugo_mariposa", "atornillador_electrico"],
+        "partial_credit": ["nivel_burbuja", "cinta_metrica"],
+        "trap_items": ["taladro_percutor", "tarugo_8mm", "clavo_4p"],
+        "trap_explanations": {
+          "taladro_percutor": "El percutor rompe el durlock — solo hace falta un agujerito",
+          "tarugo_8mm": "Tarugo común no agarra en durlock — se sale",
+          "clavo_4p": "Un clavo en durlock no sostiene nada"
+        },
+        "cognitive_target": "razonamiento inferencial + inhibición de respuesta prepotente",
+        "min_difficulty": 4
+      },
+      {
+        "id": "kit_pintar_habitacion",
+        "name": "Kit: pintar una habitación",
+        "emoji": "🎨",
+        "description": "El cliente quiere pintar una habitación. Armate el kit completo: pintura + herramientas + preparación.",
+        "type": "select_group",
+        "correct_items": ["latex_interior_4", "rodillo_lana", "pincel_2p", "enduido_1kg", "lija_al_agua_220", "cinta_papel"],
+        "partial_credit": ["lija_al_agua_400"],
+        "trap_items": ["latex_exterior_4", "rodillo_espuma", "aguarras", "esmalte_sintetico"],
+        "trap_explanations": {
+          "latex_exterior_4": "Es para exterior — más caro al pedo para interior",
+          "rodillo_espuma": "Espuma es para esmalte, lana es para látex",
+          "aguarras": "El látex se diluye con agua, no con aguarrás"
+        },
+        "cognitive_target": "agrupamiento funcional complejo + exclusión por razonamiento",
+        "min_difficulty": 4
+      }
+    ],
+
+    "similarity_discrimination": [
+      {
+        "id": "cual_es_cual",
+        "name": "¿Cuál es cuál?",
+        "emoji": "👀",
+        "description": "Te muestro dos productos que se PARECEN. Decime en qué se diferencian y a qué estante va cada uno.",
+        "type": "compare_pair",
+        "pairs": [
+          { "item_a": "destornillador_paleta", "item_b": "destornillador_buscapolo", "key_difference": "El buscapolo detecta corriente — va en Material Eléctrico, no en Herramientas Manuales" },
+          { "item_a": "llave_francesa", "item_b": "llave_grifa", "key_difference": "La grifa tiene mordaza dentada para caños — va en Plomería" },
+          { "item_a": "teflon", "item_b": "cinta_aisladora", "key_difference": "Teflón es blanco y sella roscas de agua. Aisladora es negra y aísla electricidad" },
+          { "item_a": "latex_interior_4", "item_b": "latex_exterior_4", "key_difference": "El exterior resiste lluvia y sol. El interior es más barato y cubre igual adentro" },
+          { "item_a": "silicona_acida", "item_b": "silicona_neutra", "key_difference": "La ácida corroe aluminio y espejos. La neutra no corroe pero es más cara" },
+          { "item_a": "rodillo_lana", "item_b": "rodillo_espuma", "key_difference": "Lana para látex (base agua). Espuma para esmalte (base solvente)" },
+          { "item_a": "tornillo_fix_8x60", "item_b": "tirafondo_8x50", "key_difference": "Tornillo = punta aguda para tarugo. Tirafondo = cabeza hexagonal para madera directa" },
+          { "item_a": "pinza_punta", "item_b": "pinza_pelacable", "key_difference": "Punta fina = manual general. Pelacables = para pelar cable, tiene muescas calibradas" },
+          { "item_a": "alambre_galv_17", "item_b": "cable_25", "key_difference": "Alambre = para cercos y amarres. Cable = conduce electricidad, tiene aislación" }
+        ],
+        "cognitive_target": "discriminación perceptual + categorización funcional",
+        "min_difficulty": 3
+      }
+    ],
+
+    "symbolization": [
+      {
+        "id": "leer_tarugo",
+        "name": "La regla del tarugo",
+        "emoji": "🔷",
+        "description": "Cada tarugo tiene una medida. Esa medida te dice qué mecha usar y qué tornillo va adentro. Tarugo 6mm → mecha 6mm → tornillo 4.5mm. Tarugo 8mm → mecha 8mm → tornillo 5.5mm. Tarugo 10mm → mecha 10mm → tornillo 7mm. Dado un tarugo, elegí la mecha y el tornillo correcto.",
+        "type": "symbol_matching",
+        "rules": [
+          { "tarugo": "6mm", "mecha": "6mm", "tornillo": "4.5mm" },
+          { "tarugo": "8mm", "mecha": "8mm", "tornillo": "5.5mm" },
+          { "tarugo": "10mm", "mecha": "10mm", "tornillo": "7mm" }
+        ],
+        "cognitive_target": "simbolización + correspondencia múltiple",
+        "min_difficulty": 3
+      },
+      {
+        "id": "seccion_cable",
+        "name": "¿Qué cable para qué circuito?",
+        "emoji": "〰️",
+        "description": "1.5mm² = iluminación (10A). 2.5mm² = tomacorrientes (20A). 4mm² = aire acondicionado (25A). 6mm² = cocina eléctrica (32A). Dado un artefacto, elegí el cable correcto.",
+        "type": "symbol_matching",
+        "rules": [
+          { "artefacto": "Velador", "cable": "1.5mm²", "termica": "10A" },
+          { "artefacto": "Tostadora", "cable": "2.5mm²", "termica": "20A" },
+          { "artefacto": "Aire split 3000 frigorías", "cable": "4mm²", "termica": "25A" },
+          { "artefacto": "Horno eléctrico empotrable", "cable": "4mm²", "termica": "25A" },
+          { "artefacto": "Cocina eléctrica vitrocerámica", "cable": "6mm²", "termica": "32A" }
+        ],
+        "cognitive_target": "simbolización funcional + tabla de correspondencia + razonamiento técnico",
+        "min_difficulty": 4
+      }
+    ],
+
+    "reasoning": [
+      {
+        "id": "el_cliente_confundido",
+        "name": "El cliente que no sabe lo que necesita",
+        "emoji": "🤔",
+        "description": "El cliente describe un PROBLEMA, no un producto. Vos tenés que deducir qué necesita.",
+        "type": "inference_problem",
+        "scenarios": [
+          {
+            "client_says": "Se me mueve el enchufe de la pared cuando pongo el cargador del celular.",
+            "correct_items": ["enchufe_embutir", "destornillador_phillips"],
+            "reasoning": "Enchufe flojo → reemplazar. Necesita enchufe + destornillador para sacarlo/ponerlo"
+          },
+          {
+            "client_says": "Prendo la luz de la cocina y salta la térmica.",
+            "correct_items": ["lampara_led_9w", "cinta_aisladora"],
+            "reasoning": "Probable cortocircuito en la lámpara o empalme pelado. Cambiar lámpara + revisar empalmes con aisladora"
+          },
+          {
+            "client_says": "Tengo humedad en la pared del baño que da al exterior.",
+            "correct_items": ["latex_exterior_4", "enduido_1kg", "lija_al_agua_220"],
+            "reasoning": "Humedad exterior → sellar con pintura impermeable. Hay que lijar, enduir y pintar con látex exterior"
+          },
+          {
+            "client_says": "Se me sale la canilla de la bacha de la cocina, se mueve toda.",
+            "correct_items": ["llave_francesa", "teflon"],
+            "reasoning": "Canilla suelta → apretar tuerca inferior con llave francesa + poner teflón en la rosca"
+          },
+          {
+            "client_says": "Quiero poner una repisa pero la pared es de durlock, no sé si aguanta.",
+            "correct_items": ["tarugo_mariposa", "nivel_burbuja"],
+            "reasoning": "Durlock → tarugos mariposa (los comunes se salen). Nivel para que quede derecha"
+          }
+        ],
+        "cognitive_target": "razonamiento inferencial causal + planificación + conocimiento aplicado",
+        "min_difficulty": 5
+      }
+    ]
+  },
+
+  "events": [
+    { "id": "gato_estante", "text": "El gato de Berugo se subió al estante de pinturas y tiró un tarro de enduido. Limpiá antes de seguir.", "effect": "time_penalty", "penalty_seconds": 10, "probability": 0.08 },
+    { "id": "cliente_apurado", "text": "Entró un cliente apurado que necesita 'algo para la canilla'. Atendelo rápido y volvé a lo tuyo.", "effect": "interruption_task", "probability": 0.1 },
+    { "id": "corte_luz", "text": "Se cortó la luz 10 segundos. Los estantes no se ven bien.", "effect": "visual_fog", "duration_seconds": 10, "probability": 0.06 },
+    { "id": "proveedor_llega", "text": "Llegó otro proveedor con 5 productos más. Agregados al mostrador.", "effect": "add_items", "count": 5, "probability": 0.1 },
+    { "id": "telefono", "text": "Suena el teléfono: '¿Tenés tarugos de 8mm?'. Contestá y seguí.", "effect": "distraction_popup", "probability": 0.1 },
+    { "id": "billete_falso", "text": "Un cliente pagó con un billete de $10.000 que parece trucho. ¿Lo aceptás o lo rechazás?", "effect": "decision_popup", "probability": 0.05 }
+  ],
+
+  "difficulty_scaling": {
+    "level_1": { "items_per_round": 8, "categories_visible": 4, "time_limit": null, "distractors": false, "events_enabled": false, "hints_available": true, "similarity_pairs": false, "calculations": false },
+    "level_2": { "items_per_round": 12, "categories_visible": 5, "time_limit": null, "distractors": false, "events_enabled": false, "hints_available": true, "similarity_pairs": false, "calculations": false },
+    "level_3": { "items_per_round": 15, "categories_visible": 6, "time_limit": 300, "distractors": false, "events_enabled": false, "hints_available": false, "similarity_pairs": true, "calculations": false },
+    "level_4": { "items_per_round": 18, "categories_visible": 7, "time_limit": 240, "distractors": true, "events_enabled": false, "hints_available": false, "similarity_pairs": true, "calculations": true },
+    "level_5": { "items_per_round": 20, "categories_visible": 8, "time_limit": 210, "distractors": true, "events_enabled": true, "hints_available": false, "similarity_pairs": true, "calculations": true },
+    "level_6": { "items_per_round": 24, "categories_visible": 9, "time_limit": 180, "distractors": true, "events_enabled": true, "hints_available": false, "similarity_pairs": true, "calculations": true },
+    "level_7": { "items_per_round": 28, "categories_visible": 9, "time_limit": 150, "distractors": true, "events_enabled": true, "hints_available": false, "similarity_pairs": true, "calculations": true, "reasoning_missions": true }
+  },
+
+  "metrics": {
+    "classification_accuracy": { "label": "Precisión de clasificación", "formula": "correct_placements / total_placements", "clinical_correlation": "categorización semántica, WCST categorías completadas" },
+    "similarity_discrimination_score": { "label": "Discriminación de semejanzas", "formula": "correct_pairs / total_pairs", "clinical_correlation": "discriminación perceptual, subtest Semejanzas WAIS" },
+    "seriation_accuracy": { "label": "Seriación", "formula": "items_in_correct_position / total_items", "clinical_correlation": "seriación numérica, subtest Matrices WAIS" },
+    "calculation_accuracy": { "label": "Cálculo", "formula": "correct_answers / total_problems", "clinical_correlation": "aritmética, subtest Aritmética WAIS" },
+    "grouping_precision": { "label": "Agrupamiento funcional", "formula": "(correct_selected - traps_selected) / total_correct", "clinical_correlation": "formación de conceptos, WCST, función ejecutiva" },
+    "reasoning_score": { "label": "Razonamiento inferencial", "formula": "correct_inferences / total_scenarios", "clinical_correlation": "razonamiento abstracto, Tower of London, función ejecutiva" },
+    "symbolization_score": { "label": "Simbolización", "formula": "correct_matches / total_matches", "clinical_correlation": "comprensión simbólica, abstracción, subtest Información WAIS" },
+    "trap_inhibition_rate": { "label": "Inhibición de trampas", "formula": "1 - (traps_selected / traps_available)", "clinical_correlation": "control inhibitorio, Stroop, Go/No-Go" },
+    "perseveration_index": { "label": "Índice de perseveración", "formula": "repeated_wrong_category_errors / total_errors", "clinical_correlation": "flexibilidad cognitiva, errores perseverativos WCST" },
+    "time_per_decision": { "label": "Tiempo por decisión", "formula": "avg_ms_per_placement", "clinical_correlation": "velocidad de procesamiento, TMT-A" },
+    "hesitation_pattern": { "label": "Patrón de vacilación", "formula": "moves_with_hover_>2s / total_moves", "clinical_correlation": "incertidumbre decisional, ansiedad de rendimiento" },
+    "event_recovery_time": { "label": "Recuperación ante interrupción", "formula": "avg_ms_to_resume_after_event", "clinical_correlation": "atención sostenida, resiliencia atencional" }
+  },
+
+  "mouse_telemetry": {
+    "description": "Métricas pasivas capturadas de movimiento del mouse/touch en TODOS los juegos",
+    "parameters": [
+      { "id": "total_distance", "label": "Distancia total recorrida (px)", "clinical": "actividad motora, nivel de energía" },
+      { "id": "avg_velocity", "label": "Velocidad promedio del cursor", "clinical": "velocidad psicomotora" },
+      { "id": "velocity_variance", "label": "Varianza de velocidad", "clinical": "consistencia motora, posible tremor" },
+      { "id": "path_efficiency", "label": "Eficiencia de trayectoria (recta/real)", "clinical": "planificación motora, función ejecutiva" },
+      { "id": "pause_count", "label": "Cantidad de pausas >2s", "clinical": "interrupciones atencionales, fatiga cognitiva" },
+      { "id": "avg_pause_duration", "label": "Duración promedio de pausas", "clinical": "latencia decisional" },
+      { "id": "direction_changes", "label": "Cambios de dirección bruscos", "clinical": "impulsividad, cambio de decisión" },
+      { "id": "hover_before_click", "label": "Tiempo de hover antes de click", "clinical": "deliberación, incertidumbre" },
+      { "id": "click_precision", "label": "Precisión del click (distancia al centro del target)", "clinical": "coordinación visomotora" },
+      { "id": "double_click_rate", "label": "Tasa de doble click accidental", "clinical": "control motor fino, impulsividad" },
+      { "id": "idle_zones", "label": "Zonas de inactividad prolongada", "clinical": "patrones de evitación, fatiga regional" },
+      { "id": "scroll_pattern", "label": "Patrón de scroll (si aplica)", "clinical": "estrategia de exploración visual" },
+      { "id": "drag_overshoot", "label": "Sobrepaso en drag-and-drop", "clinical": "control motor, calibración visomotora" },
+      { "id": "correction_moves", "label": "Movimientos correctivos post-drop", "clinical": "autocorrección, monitoreo de error" }
+    ]
+  }
+}
