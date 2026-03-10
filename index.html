@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HDD Gaming · Clínica José Ingenieros</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0b;--surface:#141416;--card:#1c1c20;--border:rgba(255,255,255,.06);--text:#e4e4e7;--muted:#71717a;--accent:#f59e0b;--accent2:#ef4444;--green:#22c55e;--blue:#3b82f6;--purple:#8b5cf6;--pink:#ec4899;--cyan:#06b6d4;--orange:#f97316}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+.noise{position:fixed;inset:0;opacity:.03;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+header{padding:40px 24px 20px;text-align:center;position:relative}
+header::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+.logo{font-family:'Space Mono',monospace;font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:900;letter-spacing:-.03em;line-height:1.1;background:linear-gradient(135deg,#fff 0%,#a1a1aa 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{color:var(--muted);font-size:.9rem;margin-top:8px;font-weight:400}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;padding:40px 24px;max-width:1200px;margin:0 auto}
+.pack-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:all .35s cubic-bezier(.4,0,.2,1);position:relative}
+.pack-card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.12);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.pack-card:hover .pack-glow{opacity:1}
+.pack-glow{position:absolute;inset:0;border-radius:16px;opacity:0;transition:opacity .35s;pointer-events:none}
+.pack-header{padding:28px 24px 20px;position:relative;overflow:hidden}
+.pack-header::before{content:'';position:absolute;inset:0;opacity:.08}
+.pack-emoji{font-size:3rem;margin-bottom:12px;display:block;filter:drop-shadow(0 4px 12px rgba(0,0,0,.3))}
+.pack-name{font-size:1.4rem;font-weight:900;letter-spacing:-.02em;line-height:1.2}
+.pack-sub{font-size:.8rem;color:var(--muted);margin-top:6px;line-height:1.4}
+.pack-body{padding:0 24px 24px}
+.pack-desc{font-size:.82rem;color:#a1a1aa;line-height:1.5;margin-bottom:16px}
+.pack-stats{display:flex;gap:16px;flex-wrap:wrap}
+.stat{display:flex;flex-direction:column}
+.stat-val{font-family:'Space Mono',monospace;font-size:1.1rem;font-weight:700;color:#fff}
+.stat-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:2px}
+.pack-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.tag{font-size:.65rem;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.05);color:var(--muted);border:1px solid rgba(255,255,255,.06)}
+.pack-play{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;padding:12px;border-radius:10px;font-weight:700;font-size:.85rem;letter-spacing:.02em;transition:all .2s;border:none;width:100%;cursor:pointer;color:#000}
+.pack-play:hover{filter:brightness(1.1);transform:scale(1.02)}
+.footer{text-align:center;padding:40px 24px;color:var(--muted);font-size:.75rem;border-top:1px solid var(--border)}
+.footer a{color:var(--accent);text-decoration:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.pack-card{animation:fadeUp .5s ease both}
+.pack-card:nth-child(2){animation-delay:.08s}
+.pack-card:nth-child(3){animation-delay:.16s}
+.pack-card:nth-child(4){animation-delay:.24s}
+.pack-card:nth-child(5){animation-delay:.32s}
+.badge-new{position:absolute;top:16px;right:16px;background:var(--accent);color:#000;font-size:.6rem;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.06em;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="noise"></div>
+<header>
+  <div class="logo">Hospital de Día Digital · Clínica José Ingenieros</div>
+  <h1>Gaming Terapéutico</h1>
+  <p class="subtitle">Elegí un escenario y empezá a jugar — mismo motor, mundos diferentes</p>
+</header>
+
+<div class="grid" id="grid"></div>
+
+<footer class="footer">
+  Clínica Psiquiátrica Privada José Ingenieros SRL · Necochea, Buenos Aires<br>
+  <a href="https://clinicajoseingenieros.ar">clinicajoseingenieros.ar</a> · Frame: classify-and-place v1.0
+</footer>
+
+<script>
+const PACKS = [
+  {
+    id:'ferreteria', name:'La Ferretería de Berugo', emoji:'🔧',
+    subtitle:'Organizá el local antes de que abra',
+    desc:'Llegó un camión con mercadería mezclada. Clasificá tornillos, cables, pinturas y herramientas en 9 estantes. Cuidado: el buscapolo PARECE un destornillador pero va en otro estante.',
+    items:90, categories:9, modes:7, color:'#f59e0b',
+    tags:['Categorización','Seriación','Cálculo','Semejanza','Simbolización','Razonamiento'],
+    status:'new'
+  },
+  {
+    id:'libreria-escolar', name:'La Librería de la Seño Marta', emoji:'📚',
+    subtitle:'Vuelta al cole — armá los pedidos sin equivocarte',
+    desc:'Febrero, cola de padres con listas escolares. No le vendas un block de color al que pidió blanco, ni fibras permanentes al de 1er grado.',
+    items:70, categories:8, modes:7, color:'#3b82f6',
+    tags:['Categorización','Dureza de lápiz','Porcentajes','Lista escolar','Escuadras'],
+    status:'new'
+  },
+  {
+    id:'electrodomesticos', name:'Electrodomésticos El Rayo', emoji:'📺',
+    subtitle:'Liquidación de temporada — no mezcles un split con un ventilador',
+    desc:'Container con mercadería nueva. Clasificá teles, heladeras, splits y celulares. Calculá cuotas con interés y deducí qué necesita el cliente que alquila.',
+    items:55, categories:8, modes:7, color:'#ef4444',
+    tags:['Categorización','Frigorías','Cuotas','Resolución TV','Watts'],
+    status:'new'
+  },
+  {
+    id:'almacen-general', name:'El Almacén de Don Tito', emoji:'🏪',
+    subtitle:'El que tiene de todo — si sabés buscar entre el desorden',
+    desc:'Los ratones desordenaron todo. Ojo: la leche larga vida cerrada va en almacén seco, NO en heladera. El jugo en polvo NO es una bebida. El desodorante de piso NO es el de persona.',
+    items:65, categories:9, modes:7, color:'#22c55e',
+    tags:['Categorización','Vencimiento','Precio/litro','Harina 000 vs 0000','Etiquetas'],
+    status:'new'
+  },
+  {
+    id:'supermarket', name:'Desafío Milanesas', emoji:'🛒',
+    subtitle:'Comprá todo lo necesario sin pasarte del presupuesto',
+    desc:'Misión clásica del HDD: recorré las góndolas, elegí los ingredientes para milanesas, no te distraigas con el bazar y controlá el presupuesto.',
+    items:44, categories:6, modes:3, color:'#8b5cf6',
+    tags:['Compra por receta','Presupuesto','Distractores'],
+    status:'original'
+  }
+];
+
+const grid = document.getElementById('grid');
+PACKS.forEach(p => {
+  const card = document.createElement('div');
+  card.className = 'pack-card';
+  card.onclick = () => window.location.href = `engines/classify-and-place/index.html?pack=${p.id}`;
+  card.innerHTML = `
+    <div class="pack-glow" style="box-shadow:inset 0 0 60px ${p.color}22,0 0 40px ${p.color}11"></div>
+    ${p.status === 'new' ? '<div class="badge-new">Nuevo</div>' : ''}
+    <div class="pack-header" style="background:linear-gradient(135deg,${p.color}08,transparent)">
+      <span class="pack-emoji">${p.emoji}</span>
+      <div class="pack-name">${p.name}</div>
+      <div class="pack-sub">${p.subtitle}</div>
+    </div>
+    <div class="pack-body">
+      <div class="pack-desc">${p.desc}</div>
+      <div class="pack-stats">
+        <div class="stat"><span class="stat-val">${p.items}</span><span class="stat-lbl">Items</span></div>
+        <div class="stat"><span class="stat-val">${p.categories}</span><span class="stat-lbl">Categorías</span></div>
+        <div class="stat"><span class="stat-val">${p.modes}</span><span class="stat-lbl">Modos</span></div>
+      </div>
+      <div class="pack-tags">${p.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+      <button class="pack-play" style="background:${p.color}">▶ Jugar</button>
+    </div>`;
+  grid.appendChild(card);
+});
+</script>
+</body>
+</html>
