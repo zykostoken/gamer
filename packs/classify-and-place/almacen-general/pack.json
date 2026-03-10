@@ -1,0 +1,338 @@
+{
+  "meta": {
+    "id": "almacen-don-tito",
+    "name": "El Almacén de Don Tito",
+    "subtitle": "El que tiene de todo — si sabés buscar entre el desorden",
+    "emoji": "🏪",
+    "description": "Don Tito tiene un almacén que vende comida, limpieza, bazar, fiambrería y hasta juguetes. Le entraron ratones y hay que reorganizar TODO el local. Cada cosa en su estante, sin mezclar fideos con lavandina.",
+    "setting": "Almacén de barrio en Necochea. Piso de mosaico antiguo, estantes de madera hasta el techo, heladera exhibidora de fiambres contra la pared, freezer horizontal con helados, góndola central con galletitas y conservas. Cartelitos escritos a mano con los precios. Un perro duerme en la puerta.",
+    "cognitive_targets": [
+      "categorización semántica multidominio",
+      "seriación por peso, volumen y precio",
+      "cálculo con unidades de peso y volumen",
+      "agrupamiento funcional por receta/necesidad",
+      "semejanza perceptual (envases similares)",
+      "semejanza funcional (productos sustitutos)",
+      "simbolización (fechas de vencimiento, códigos nutricionales)",
+      "razonamiento inferencial (compra para situación)",
+      "lectura de etiquetas y unidades",
+      "memoria de trabajo con listas"
+    ],
+    "colors": {
+      "accent": "#22c55e",
+      "surface": "#1a1a2e",
+      "bg": "#0f0f1a",
+      "category_header": "#4ade80"
+    }
+  },
+
+  "categories": [
+    { "id": "almacen_seco", "label": "Almacén Seco", "emoji": "🍝", "description": "Fideos, arroz, harina, aceite, conservas, legumbres, sal, azúcar, yerba, café", "color": "#f59e0b" },
+    { "id": "lacteos_fiambres", "label": "Lácteos y Fiambres", "emoji": "🧀", "description": "Leche, queso, yogur, manteca, jamón, salchichas — todo lo que va en heladera", "color": "#3b82f6" },
+    { "id": "panaderia", "label": "Panadería y Galletitas", "emoji": "🍞", "description": "Pan, facturas, galletitas, bizcochos, tostadas, budines", "color": "#d97706" },
+    { "id": "bebidas", "label": "Bebidas", "emoji": "🥤", "description": "Agua, gaseosas, jugos, vino, cerveza, soda", "color": "#06b6d4" },
+    { "id": "frutas_verduras", "label": "Frutas y Verduras", "emoji": "🥬", "description": "Todo lo fresco: tomate, lechuga, papa, cebolla, banana, manzana, limón", "color": "#22c55e" },
+    { "id": "limpieza", "label": "Limpieza", "emoji": "🧹", "description": "Lavandina, detergente, desodorante de piso, esponjas, trapos, bolsas de residuos", "color": "#8b5cf6" },
+    { "id": "higiene", "label": "Higiene Personal", "emoji": "🧴", "description": "Jabón, shampoo, pasta dental, papel higiénico, desodorante, toallitas", "color": "#ec4899" },
+    { "id": "bazar", "label": "Bazar y Descartables", "emoji": "🍽️", "description": "Vasos, platos, cubiertos, servilletas, papel aluminio, film, fósforos, velas", "color": "#64748b" },
+    { "id": "congelados", "label": "Congelados", "emoji": "🧊", "description": "Milanesas, hamburguesas, papas fritas, helados, verduras congeladas", "color": "#0ea5e9" }
+  ],
+
+  "items": [
+    { "id": "fideos_500g", "name": "Fideos secos 500g", "emoji": "🍝", "category": "almacen_seco", "difficulty": 1, "price": 1200, "unit": "paquete" },
+    { "id": "fideos_matarazzo", "name": "Fideos Matarazzo 500g", "emoji": "🍝", "category": "almacen_seco", "difficulty": 1, "price": 1800, "confusable_with": "fideos_500g", "similarity_type": "perceptual", "similarity_note": "Mismo producto pero marca premium — ¿vale $600 más?" },
+    { "id": "arroz_1kg", "name": "Arroz largo fino 1kg", "emoji": "🍚", "category": "almacen_seco", "difficulty": 1, "price": 1600 },
+    { "id": "arroz_parboil", "name": "Arroz parboil 1kg", "emoji": "🍚", "category": "almacen_seco", "difficulty": 2, "price": 2200, "confusable_with": "arroz_1kg", "similarity_type": "perceptual", "similarity_note": "Mismo paquete pero el parboil no se pasa y es más nutritivo — más caro" },
+    { "id": "harina_000_1kg", "name": "Harina 000 x1kg", "emoji": "🌾", "category": "almacen_seco", "difficulty": 1, "price": 850 },
+    { "id": "harina_0000_1kg", "name": "Harina 0000 x1kg", "emoji": "🌾", "category": "almacen_seco", "difficulty": 3, "price": 950, "confusable_with": "harina_000_1kg", "similarity_type": "perceptual", "similarity_note": "000 = para pan y empanadas (más fuerza). 0000 = para tortas y pastas (más fina). El número importa." },
+    { "id": "aceite_girasol_1_5l", "name": "Aceite de girasol 1.5L", "emoji": "🫒", "category": "almacen_seco", "difficulty": 1, "price": 2800 },
+    { "id": "aceite_oliva_500ml", "name": "Aceite de oliva 500ml", "emoji": "🫒", "category": "almacen_seco", "difficulty": 2, "price": 5500, "confusable_with": "aceite_girasol_1_5l", "similarity_type": "funcional", "similarity_note": "Ambos aceites pero el de oliva es para ensaladas y terminaciones, no para freír (más caro y se quema)" },
+    { "id": "sal_fina_500g", "name": "Sal fina 500g", "emoji": "🧂", "category": "almacen_seco", "difficulty": 1, "price": 450 },
+    { "id": "sal_gruesa_1kg", "name": "Sal gruesa 1kg", "emoji": "🧂", "category": "almacen_seco", "difficulty": 1, "price": 550, "confusable_with": "sal_fina_500g", "similarity_type": "perceptual", "similarity_note": "Fina = para la mesa y cocinar. Gruesa = para asado y conservar." },
+    { "id": "azucar_1kg", "name": "Azúcar 1kg", "emoji": "🍬", "category": "almacen_seco", "difficulty": 1, "price": 1200 },
+    { "id": "yerba_1kg", "name": "Yerba mate 1kg", "emoji": "🧉", "category": "almacen_seco", "difficulty": 1, "price": 3500 },
+    { "id": "cafe_250g", "name": "Café molido 250g", "emoji": "☕", "category": "almacen_seco", "difficulty": 1, "price": 2800 },
+    { "id": "tomate_triturado_520g", "name": "Tomate triturado 520g", "emoji": "🥫", "category": "almacen_seco", "difficulty": 1, "price": 950 },
+    { "id": "atun_lata", "name": "Atún en lata 170g", "emoji": "🥫", "category": "almacen_seco", "difficulty": 1, "price": 2200 },
+    { "id": "lentejas_500g", "name": "Lentejas 500g", "emoji": "🫘", "category": "almacen_seco", "difficulty": 1, "price": 1100 },
+    { "id": "polenta_500g", "name": "Polenta instantánea 500g", "emoji": "🌽", "category": "almacen_seco", "difficulty": 1, "price": 950 },
+    { "id": "pure_instantaneo", "name": "Puré instantáneo 125g", "emoji": "🥔", "category": "almacen_seco", "difficulty": 1, "price": 850 },
+    { "id": "mayonesa_500g", "name": "Mayonesa 500g", "emoji": "🫙", "category": "almacen_seco", "difficulty": 2, "price": 2200, "similarity_note": "Aunque parece de heladera, la mayonesa cerrada va en almacén. Abierta sí va en heladera." },
+
+    { "id": "leche_sachet_1l", "name": "Leche entera sachet 1L", "emoji": "🥛", "category": "lacteos_fiambres", "difficulty": 1, "price": 1200 },
+    { "id": "leche_larga_vida_1l", "name": "Leche larga vida 1L", "emoji": "🥛", "category": "almacen_seco", "difficulty": 3, "price": 1800, "confusable_with": "leche_sachet_1l", "similarity_type": "funcional", "similarity_note": "¡Trampa! La larga vida CERRADA va en almacén seco (no necesita heladera). La sachet SIEMPRE va en heladera." },
+    { "id": "queso_cremoso_kg", "name": "Queso cremoso (por kg)", "emoji": "🧀", "category": "lacteos_fiambres", "difficulty": 1, "price": 8500, "unit": "kg" },
+    { "id": "queso_rallado_200g", "name": "Queso rallado 200g", "emoji": "🧀", "category": "lacteos_fiambres", "difficulty": 2, "price": 2800 },
+    { "id": "jamon_cocido_kg", "name": "Jamón cocido (por kg)", "emoji": "🥓", "category": "lacteos_fiambres", "difficulty": 1, "price": 9500, "unit": "kg" },
+    { "id": "salchichas_x6", "name": "Salchichas x6 unidades", "emoji": "🌭", "category": "lacteos_fiambres", "difficulty": 1, "price": 2200 },
+    { "id": "yogur_frutilla", "name": "Yogur frutilla 120g", "emoji": "🥛", "category": "lacteos_fiambres", "difficulty": 1, "price": 850 },
+    { "id": "manteca_200g", "name": "Manteca 200g", "emoji": "🧈", "category": "lacteos_fiambres", "difficulty": 1, "price": 2200 },
+    { "id": "huevos_docena", "name": "Huevos x12", "emoji": "🥚", "category": "lacteos_fiambres", "difficulty": 1, "price": 3500 },
+    { "id": "dulce_leche_400g", "name": "Dulce de leche 400g", "emoji": "🫙", "category": "almacen_seco", "difficulty": 2, "price": 2800, "similarity_note": "El dulce de leche cerrado va en almacén seco. Abierto sí va en heladera." },
+
+    { "id": "pan_frances_kg", "name": "Pan francés (por kg)", "emoji": "🥖", "category": "panaderia", "difficulty": 1, "price": 2200, "unit": "kg" },
+    { "id": "facturas_docena", "name": "Facturas x12", "emoji": "🥐", "category": "panaderia", "difficulty": 1, "price": 4500 },
+    { "id": "galletitas_agua", "name": "Galletitas de agua x3 paquetes", "emoji": "🍘", "category": "panaderia", "difficulty": 1, "price": 2800 },
+    { "id": "galletitas_dulces", "name": "Galletitas dulces surtidas", "emoji": "🍪", "category": "panaderia", "difficulty": 1, "price": 2200 },
+    { "id": "tostadas_light", "name": "Tostadas de arroz", "emoji": "🍘", "category": "panaderia", "difficulty": 2, "price": 1800, "confusable_with": "galletitas_agua", "similarity_type": "funcional" },
+    { "id": "bizcochos_salados", "name": "Bizcochos salados x200g", "emoji": "🥨", "category": "panaderia", "difficulty": 1, "price": 1500 },
+
+    { "id": "gaseosa_2_25l", "name": "Gaseosa cola 2.25L", "emoji": "🥤", "category": "bebidas", "difficulty": 1, "price": 2800 },
+    { "id": "gaseosa_lata_354", "name": "Gaseosa cola lata 354ml", "emoji": "🥤", "category": "bebidas", "difficulty": 1, "price": 1200, "confusable_with": "gaseosa_2_25l", "similarity_type": "perceptual" },
+    { "id": "agua_mineral_2l", "name": "Agua mineral sin gas 2L", "emoji": "💧", "category": "bebidas", "difficulty": 1, "price": 1100 },
+    { "id": "agua_saborizada", "name": "Agua saborizada 1.5L", "emoji": "💧", "category": "bebidas", "difficulty": 2, "price": 1500, "confusable_with": "agua_mineral_2l", "similarity_type": "perceptual", "similarity_note": "Parece agua pero tiene azúcar y saborizantes — no es lo mismo nutricionalmente" },
+    { "id": "jugo_polvo_x3", "name": "Jugo en polvo x3 sobres", "emoji": "🧃", "category": "almacen_seco", "difficulty": 3, "price": 950, "similarity_note": "Trampa: el jugo en polvo va en almacén seco, no en bebidas — es un polvo, no una bebida lista" },
+    { "id": "soda_sifon", "name": "Soda sifón 1L", "emoji": "🧊", "category": "bebidas", "difficulty": 1, "price": 650 },
+    { "id": "vino_tinto_750ml", "name": "Vino tinto 750ml", "emoji": "🍷", "category": "bebidas", "difficulty": 1, "price": 4500 },
+    { "id": "cerveza_lata_473ml", "name": "Cerveza lata 473ml", "emoji": "🍺", "category": "bebidas", "difficulty": 1, "price": 1800 },
+
+    { "id": "papa_kg", "name": "Papas (por kg)", "emoji": "🥔", "category": "frutas_verduras", "difficulty": 1, "price": 1500, "unit": "kg" },
+    { "id": "cebolla_kg", "name": "Cebollas (por kg)", "emoji": "🧅", "category": "frutas_verduras", "difficulty": 1, "price": 1200, "unit": "kg" },
+    { "id": "tomate_kg", "name": "Tomates (por kg)", "emoji": "🍅", "category": "frutas_verduras", "difficulty": 1, "price": 2200, "unit": "kg", "confusable_with": "tomate_triturado_520g", "similarity_type": "funcional", "similarity_note": "El fresco va en verdulería, el triturado enlatado en almacén seco" },
+    { "id": "lechuga", "name": "Lechuga (unidad)", "emoji": "🥬", "category": "frutas_verduras", "difficulty": 1, "price": 1200 },
+    { "id": "banana_kg", "name": "Bananas (por kg)", "emoji": "🍌", "category": "frutas_verduras", "difficulty": 1, "price": 1800, "unit": "kg" },
+    { "id": "manzana_kg", "name": "Manzanas (por kg)", "emoji": "🍎", "category": "frutas_verduras", "difficulty": 1, "price": 2500, "unit": "kg" },
+    { "id": "limon_kg", "name": "Limones (por kg)", "emoji": "🍋", "category": "frutas_verduras", "difficulty": 1, "price": 1800, "unit": "kg" },
+    { "id": "zanahoria_kg", "name": "Zanahorias (por kg)", "emoji": "🥕", "category": "frutas_verduras", "difficulty": 1, "price": 1500, "unit": "kg" },
+
+    { "id": "lavandina_2l", "name": "Lavandina 2L", "emoji": "🧴", "category": "limpieza", "difficulty": 1, "price": 1200 },
+    { "id": "detergente_750ml", "name": "Detergente lavavajillas 750ml", "emoji": "🧴", "category": "limpieza", "difficulty": 1, "price": 1800, "confusable_with": "jabon_liquido", "similarity_type": "perceptual", "similarity_note": "Envases parecidos pero el detergente es para platos y el jabón líquido para manos" },
+    { "id": "jabon_blanco", "name": "Jabón blanco en pan", "emoji": "🧼", "category": "limpieza", "difficulty": 1, "price": 850, "confusable_with": "jabon_tocador", "similarity_type": "perceptual", "similarity_note": "El blanco es para ropa. El de tocador es para el cuerpo." },
+    { "id": "desodorante_piso_900ml", "name": "Desodorante de piso 900ml", "emoji": "🧴", "category": "limpieza", "difficulty": 1, "price": 1500 },
+    { "id": "esponja_cocina", "name": "Esponja de cocina doble faz", "emoji": "🧽", "category": "limpieza", "difficulty": 1, "price": 650 },
+    { "id": "bolsa_residuos_x10", "name": "Bolsas de residuos x10", "emoji": "🗑️", "category": "limpieza", "difficulty": 1, "price": 1100 },
+    { "id": "trapo_piso", "name": "Trapo de piso", "emoji": "🧹", "category": "limpieza", "difficulty": 1, "price": 1800 },
+    { "id": "limpiador_vidrios", "name": "Limpiador de vidrios 500ml", "emoji": "🧴", "category": "limpieza", "difficulty": 2, "price": 1600, "confusable_with": "desodorante_piso_900ml", "similarity_type": "perceptual" },
+
+    { "id": "jabon_tocador", "name": "Jabón de tocador x3", "emoji": "🧼", "category": "higiene", "difficulty": 1, "price": 1500, "confusable_with": "jabon_blanco", "similarity_type": "perceptual" },
+    { "id": "jabon_liquido", "name": "Jabón líquido para manos 250ml", "emoji": "🧴", "category": "higiene", "difficulty": 2, "price": 1200, "confusable_with": "detergente_750ml", "similarity_type": "perceptual" },
+    { "id": "shampoo_400ml", "name": "Shampoo 400ml", "emoji": "🧴", "category": "higiene", "difficulty": 1, "price": 3200 },
+    { "id": "acondicionador_400ml", "name": "Acondicionador 400ml", "emoji": "🧴", "category": "higiene", "difficulty": 2, "price": 3500, "confusable_with": "shampoo_400ml", "similarity_type": "perceptual", "similarity_note": "Mismo envase, misma marca — uno lava (shampoo) y otro suaviza (acondicionador)" },
+    { "id": "pasta_dental", "name": "Pasta dental 90g", "emoji": "🪥", "category": "higiene", "difficulty": 1, "price": 1800 },
+    { "id": "cepillo_dental", "name": "Cepillo dental", "emoji": "🪥", "category": "higiene", "difficulty": 1, "price": 1500 },
+    { "id": "papel_higienico_x4", "name": "Papel higiénico x4 rollos", "emoji": "🧻", "category": "higiene", "difficulty": 1, "price": 2800, "confusable_with": "servilletas_x100", "similarity_type": "perceptual", "similarity_note": "Ambos son papel pero el higiénico va en higiene y las servilletas en bazar" },
+    { "id": "desodorante_spray", "name": "Desodorante aerosol", "emoji": "🧴", "category": "higiene", "difficulty": 1, "price": 2500, "confusable_with": "desodorante_piso_900ml", "similarity_type": "perceptual", "similarity_note": "¡Atención! Uno es desodorante de PERSONA (higiene) y el otro de PISO (limpieza). No confundir." },
+    { "id": "pañales_x30", "name": "Pañales x30 unidades", "emoji": "👶", "category": "higiene", "difficulty": 1, "price": 8500 },
+
+    { "id": "servilletas_x100", "name": "Servilletas x100", "emoji": "🧻", "category": "bazar", "difficulty": 1, "price": 1200 },
+    { "id": "papel_aluminio", "name": "Papel aluminio 5m", "emoji": "📄", "category": "bazar", "difficulty": 1, "price": 1800 },
+    { "id": "film_transparente", "name": "Film transparente 30m", "emoji": "📄", "category": "bazar", "difficulty": 1, "price": 2200, "confusable_with": "papel_aluminio", "similarity_type": "funcional", "similarity_note": "Ambos envuelven comida pero el aluminio va al horno y el film no" },
+    { "id": "vasos_descart_x50", "name": "Vasos descartables x50", "emoji": "🥤", "category": "bazar", "difficulty": 1, "price": 1500 },
+    { "id": "fosforos_x3", "name": "Fósforos x3 cajitas", "emoji": "🔥", "category": "bazar", "difficulty": 1, "price": 650 },
+    { "id": "velas_x4", "name": "Velas x4 unidades", "emoji": "🕯️", "category": "bazar", "difficulty": 1, "price": 1200 },
+    { "id": "platos_descart_x10", "name": "Platos descartables x10", "emoji": "🍽️", "category": "bazar", "difficulty": 1, "price": 950 },
+
+    { "id": "milanesas_cong_x4", "name": "Milanesas congeladas x4", "emoji": "🥩", "category": "congelados", "difficulty": 1, "price": 4500, "confusable_with": "jamon_cocido_kg", "similarity_type": "funcional", "similarity_note": "Las milanesas congeladas van en freezer, no en heladera exhibidora de fiambres" },
+    { "id": "hamburguesas_x4", "name": "Hamburguesas congeladas x4", "emoji": "🍔", "category": "congelados", "difficulty": 1, "price": 3200 },
+    { "id": "papas_fritas_cong_1kg", "name": "Papas fritas congeladas 1kg", "emoji": "🍟", "category": "congelados", "difficulty": 1, "price": 3800, "confusable_with": "papa_kg", "similarity_type": "funcional", "similarity_note": "Las frescas van en verdulería. Las congeladas en freezer." },
+    { "id": "helado_1kg", "name": "Helado 1kg", "emoji": "🍦", "category": "congelados", "difficulty": 1, "price": 5500 }
+  ],
+
+  "missions": {
+    "classification": [
+      {
+        "id": "reorganizar_almacen",
+        "name": "Reorganizar después de los ratones",
+        "emoji": "🐭",
+        "description": "Los ratones desordenaron todo. Cada producto tiene que volver a su estante correcto.",
+        "type": "classify_all",
+        "min_difficulty": 1
+      }
+    ],
+
+    "seriation": [
+      {
+        "id": "ordenar_precios",
+        "name": "De más barato a más caro",
+        "emoji": "💰",
+        "description": "Ordená estos productos por precio: sal fina ($450), esponja ($650), café ($2.800), yerba ($3.500), queso cremoso kg ($8.500).",
+        "type": "order_sequence",
+        "cognitive_target": "seriación numérica con contexto económico",
+        "min_difficulty": 1
+      },
+      {
+        "id": "ordenar_peso",
+        "name": "De más liviano a más pesado",
+        "emoji": "⚖️",
+        "description": "Ordená por peso: café 250g, sal fina 500g, fideos 500g, arroz 1kg, harina 1kg, azúcar 1kg.",
+        "type": "order_sequence",
+        "cognitive_target": "seriación por peso con igualdades (múltiples de 1kg)",
+        "min_difficulty": 2
+      },
+      {
+        "id": "ordenar_vencimiento",
+        "name": "¿Qué vence primero?",
+        "emoji": "📅",
+        "description": "Ordená por urgencia de consumo: leche sachet (3 días), yogur (15 días), pan (2 días), queso cremoso (21 días), fideos secos (2 años), atún en lata (5 años).",
+        "type": "order_sequence",
+        "cognitive_target": "seriación temporal + conocimiento de conservación de alimentos",
+        "min_difficulty": 3
+      }
+    ],
+
+    "calculation": [
+      {
+        "id": "compra_basica",
+        "name": "La compra básica",
+        "emoji": "🛒",
+        "description": "Fideos ($1.200) + tomate triturado ($950) + 1/2 kg de queso rallado... pero el queso rallado viene de 200g a $2.800. ¿Cuánto sale 100g?",
+        "type": "math_problem",
+        "correct_answer": 1400,
+        "explanation": "200g = $2.800. 100g = $2.800 ÷ 2 = $1.400",
+        "cognitive_target": "cálculo proporcional de peso/precio",
+        "min_difficulty": 2
+      },
+      {
+        "id": "precio_por_kilo",
+        "name": "¿Cuál conviene?",
+        "emoji": "⚖️",
+        "description": "Gaseosa 2.25L a $2.800 vs. lata 354ml a $1.200. ¿Cuál sale más barata por litro?",
+        "type": "math_problem",
+        "correct_answer": "gaseosa_2_25l",
+        "explanation": "Botella: $2.800 ÷ 2.25 = $1.244/litro. Lata: $1.200 ÷ 0.354 = $3.389/litro. La botella sale menos de la mitad por litro.",
+        "cognitive_target": "cálculo de precio unitario + comparación + conversión de unidades",
+        "min_difficulty": 4
+      },
+      {
+        "id": "vuelto_almacen",
+        "name": "El vuelto de Don Tito",
+        "emoji": "💵",
+        "description": "Compra: pan 1/2 kg ($1.100), leche ($1.200), facturas docena ($4.500), yerba ($3.500). Paga con $20.000. ¿Vuelto?",
+        "type": "math_problem",
+        "correct_answer": 9700,
+        "explanation": "1.100 + 1.200 + 4.500 + 3.500 = 10.300. Vuelto = 20.000 - 10.300 = $9.700",
+        "cognitive_target": "suma múltiple + sustracción",
+        "min_difficulty": 2
+      },
+      {
+        "id": "fiambre_gramos",
+        "name": "200 gramos de jamón",
+        "emoji": "🥓",
+        "description": "El kg de jamón cocido cuesta $9.500. La cliente pide 200 gramos. ¿Cuánto le cobrás?",
+        "type": "math_problem",
+        "correct_answer": 1900,
+        "explanation": "200g = 0.2 kg. $9.500 × 0.2 = $1.900",
+        "cognitive_target": "cálculo proporcional gramos/kilos",
+        "min_difficulty": 2
+      }
+    ],
+
+    "grouping": [
+      {
+        "id": "asado_domingo",
+        "name": "Compras para el asado del domingo",
+        "emoji": "🥩",
+        "description": "Se junta la familia. 8 personas. Necesitás: pan, gaseosas, hielo (no hay), ensalada (lechuga, tomate), papel aluminio y servilletas. ¿Qué agarrás?",
+        "type": "select_group",
+        "correct_items": ["pan_frances_kg", "gaseosa_2_25l", "lechuga", "tomate_kg", "papel_aluminio", "servilletas_x100"],
+        "trap_items": ["fideos_500g", "lavandina_2l", "helado_1kg", "pañales_x30"],
+        "cognitive_target": "agrupamiento funcional por evento social",
+        "min_difficulty": 2
+      },
+      {
+        "id": "limpieza_cocina",
+        "name": "Limpieza general de la cocina",
+        "emoji": "🧹",
+        "description": "Vas a hacer limpieza profunda de la cocina. ¿Qué necesitás?",
+        "type": "select_group",
+        "correct_items": ["lavandina_2l", "detergente_750ml", "esponja_cocina", "trapo_piso", "bolsa_residuos_x10", "limpiador_vidrios"],
+        "trap_items": ["shampoo_400ml", "pasta_dental", "desodorante_spray", "jabon_tocador"],
+        "trap_explanations": {
+          "shampoo_400ml": "Es para el pelo, no para la cocina",
+          "desodorante_spray": "Es desodorante personal, no de ambientes"
+        },
+        "cognitive_target": "agrupamiento funcional + inhibición de categoría relacionada pero incorrecta",
+        "min_difficulty": 2
+      }
+    ],
+
+    "similarity_discrimination": [
+      {
+        "id": "cual_es_cual_almacen",
+        "name": "¿Cuál es cuál?",
+        "emoji": "👀",
+        "type": "compare_pair",
+        "pairs": [
+          { "item_a": "harina_000_1kg", "item_b": "harina_0000_1kg", "key_difference": "000 = más fuerza, para pan y empanadas. 0000 = más refinada, para tortas y pastas finas" },
+          { "item_a": "jabon_blanco", "item_b": "jabon_tocador", "key_difference": "Blanco = para lavar ropa (limpieza). Tocador = para el cuerpo (higiene)" },
+          { "item_a": "detergente_750ml", "item_b": "jabon_liquido", "key_difference": "Detergente = para platos (cocina). Jabón líquido = para manos (baño)" },
+          { "item_a": "leche_sachet_1l", "item_b": "leche_larga_vida_1l", "key_difference": "Sachet = necesita heladera siempre. Larga vida = cerrada va en almacén, abierta en heladera" },
+          { "item_a": "desodorante_spray", "item_b": "desodorante_piso_900ml", "key_difference": "Spray = persona (axilas). Piso = limpieza de pisos (lavandina + perfume)" },
+          { "item_a": "papa_kg", "item_b": "papas_fritas_cong_1kg", "key_difference": "Frescas = verdulería. Congeladas = freezer" },
+          { "item_a": "aceite_girasol_1_5l", "item_b": "aceite_oliva_500ml", "key_difference": "Girasol = para freír y cocinar (barato). Oliva = para ensaladas y terminaciones (caro, se quema a alta temperatura)" },
+          { "item_a": "papel_aluminio", "item_b": "film_transparente", "key_difference": "Aluminio = resiste calor, va al horno. Film = NO va al horno, se derrite" }
+        ],
+        "cognitive_target": "discriminación perceptual y funcional en contexto doméstico",
+        "min_difficulty": 2
+      }
+    ],
+
+    "symbolization": [
+      {
+        "id": "leer_etiqueta",
+        "name": "Leer la etiqueta",
+        "emoji": "🏷️",
+        "description": "Las etiquetas dicen cosas importantes: 'Mantener refrigerado' = heladera. 'Conservar en lugar fresco y seco' = almacén. 'Producto ultracongelado' = freezer. 'Una vez abierto, conservar refrigerado' = almacén si cerrado, heladera si abierto. Dado un producto con su etiqueta, ubicalo.",
+        "type": "symbol_matching",
+        "cognitive_target": "lectura funcional + decodificación de instrucciones",
+        "min_difficulty": 2
+      },
+      {
+        "id": "fecha_vencimiento",
+        "name": "¿Está vencido?",
+        "emoji": "📅",
+        "description": "Hoy es 10 de marzo de 2026. ¿Estos productos están vencidos? 'Vto: 15/02/2026' = VENCIDO. 'Vto: 30/04/2026' = VIGENTE. 'Vto: 10/03/2026' = ÚLTIMO DÍA.",
+        "type": "symbol_matching",
+        "cognitive_target": "lectura de fechas + comparación temporal + toma de decisión",
+        "min_difficulty": 3
+      }
+    ],
+
+    "reasoning": [
+      {
+        "id": "cliente_almacen",
+        "name": "Los pedidos de los vecinos",
+        "emoji": "🤔",
+        "type": "inference_problem",
+        "scenarios": [
+          {
+            "client_says": "Doña Rosa manda a la nena con un papelito: 'mandame para hacer fideos con tuco'.",
+            "correct_items": ["fideos_500g", "tomate_triturado_520g", "aceite_girasol_1_5l", "sal_fina_500g"],
+            "partial_credit": ["cebolla_kg", "queso_rallado_200g"],
+            "reasoning": "Fideos + salsa de tomate necesitan: fideos, tomate triturado, aceite (para el sofrito), sal. Cebolla y queso rallado son opcionales pero lógicos."
+          },
+          {
+            "client_says": "Es el cumple del nene y necesito para la mesa de los chicos: jugo, vasos, platos, servilletas y algo de picar.",
+            "correct_items": ["gaseosa_2_25l", "vasos_descart_x50", "platos_descart_x10", "servilletas_x100", "galletitas_dulces"],
+            "partial_credit": ["papas_fritas_cong_1kg", "helado_1kg"],
+            "reasoning": "Fiesta infantil = descartables + bebida + snacks dulces"
+          },
+          {
+            "client_says": "Se me cortó la luz y no sé cuánto va a tardar. ¿Qué hago con la heladera?",
+            "correct_answer": "No abras la heladera. Si no la abrís, aguanta 4-6 horas. El freezer aguanta hasta 24 horas. Comprá hielo por las dudas.",
+            "reasoning": "Razonamiento causal sobre conservación — no es una compra sino un consejo"
+          }
+        ],
+        "cognitive_target": "razonamiento inferencial cotidiano + conocimiento doméstico",
+        "min_difficulty": 3
+      }
+    ]
+  },
+
+  "events": [
+    { "id": "perro_entra", "text": "El perro se metió al local y se comió un paquete de galletitas. Sacalo y seguí.", "effect": "distraction_popup", "probability": 0.1 },
+    { "id": "fiado", "text": "Don Pedro pide fiado otra vez. ¿Le fiás o no? (Debe $15.000 del mes pasado)", "effect": "decision_popup", "probability": 0.08 },
+    { "id": "se_cayo_gondola", "text": "Se cayeron 3 latas de tomate de la góndola. Juntá y reacomodá.", "effect": "time_penalty", "penalty_seconds": 8, "probability": 0.07 },
+    { "id": "proveedora_llega", "text": "Llegó la proveedora de lácteos con el pedido. Atendela y volvé.", "effect": "interruption_task", "probability": 0.08 },
+    { "id": "heladera_suena", "text": "La heladera exhibidora está haciendo ruido. Revisá que esté bien cerrada.", "effect": "distraction_popup", "probability": 0.05 }
+  ],
+
+  "difficulty_scaling": {
+    "level_1": { "items_per_round": 10, "categories_visible": 4, "time_limit": null, "distractors": false, "events_enabled": false, "hints_available": true },
+    "level_2": { "items_per_round": 14, "categories_visible": 5, "time_limit": null, "distractors": false, "hints_available": true },
+    "level_3": { "items_per_round": 18, "categories_visible": 6, "time_limit": 300, "distractors": true, "hints_available": false, "similarity_pairs": true },
+    "level_4": { "items_per_round": 22, "categories_visible": 7, "time_limit": 240, "distractors": true, "events_enabled": true, "similarity_pairs": true, "calculations": true },
+    "level_5": { "items_per_round": 26, "categories_visible": 8, "time_limit": 200, "distractors": true, "events_enabled": true, "calculations": true },
+    "level_6": { "items_per_round": 30, "categories_visible": 9, "time_limit": 180, "distractors": true, "events_enabled": true, "calculations": true, "reasoning_missions": true }
+  }
+}

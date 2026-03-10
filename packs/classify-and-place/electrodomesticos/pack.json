@@ -1,0 +1,347 @@
+{
+  "meta": {
+    "id": "electrodomesticos-elrayo",
+    "name": "Electrodomésticos El Rayo",
+    "subtitle": "Liquidación de temporada — no mezcles un split con un ventilador de techo",
+    "emoji": "📺",
+    "description": "Don Rayo se va de viaje y te deja el local. Llegó un container con mercadería nueva, hay que clasificar todo, armar combos para clientes y calcular cuotas sin que te coman los números.",
+    "setting": "Casa de electrodomésticos sobre la avenida principal de Necochea. Vidriera con lavarropas y teles. Depósito atrás con cajas apiladas. Mostrador con vitrinas de celulares y accesorios. Cartelera de 12 y 18 cuotas sin interés.",
+    "cognitive_targets": [
+      "categorización semántica por función",
+      "seriación por especificación técnica",
+      "cálculo de cuotas y porcentajes",
+      "agrupamiento funcional por necesidad del cliente",
+      "semejanza perceptual (productos similares)",
+      "semejanza funcional (mismo uso, distinta gama)",
+      "simbolización (watts, BTU, litros, pulgadas, Hz)",
+      "razonamiento inferencial (problema → solución)",
+      "comparación de especificaciones",
+      "memoria de trabajo con datos numéricos"
+    ],
+    "colors": {
+      "accent": "#ef4444",
+      "surface": "#18181b",
+      "bg": "#09090b",
+      "category_header": "#f87171"
+    }
+  },
+
+  "categories": [
+    { "id": "cocina", "label": "Cocina", "emoji": "🍳", "description": "Heladeras, cocinas, hornos, microondas, licuadoras, tostadoras, cafeteras, freidoras", "color": "#f59e0b" },
+    { "id": "lavado", "label": "Lavado y Limpieza", "emoji": "🫧", "description": "Lavarropas, secarropas, lavavajillas, aspiradoras, planchas", "color": "#3b82f6" },
+    { "id": "climatizacion", "label": "Climatización", "emoji": "❄️", "description": "Aires acondicionados, ventiladores, estufas, calefactores, deshumidificadores", "color": "#06b6d4" },
+    { "id": "imagen_sonido", "label": "Imagen y Sonido", "emoji": "📺", "description": "Televisores, barras de sonido, parlantes, auriculares, proyectores", "color": "#8b5cf6" },
+    { "id": "informatica", "label": "Informática", "emoji": "💻", "description": "Notebooks, tablets, monitores, teclados, mouse, impresoras", "color": "#64748b" },
+    { "id": "celulares", "label": "Celulares y Accesorios", "emoji": "📱", "description": "Smartphones, fundas, cargadores, auriculares bluetooth, smartwatches", "color": "#22c55e" },
+    { "id": "cuidado_personal", "label": "Cuidado Personal", "emoji": "💇", "description": "Secadores, planchitas, cortadoras, afeitadoras, depiladoras", "color": "#ec4899" },
+    { "id": "pequeños", "label": "Pequeños Electrodomésticos", "emoji": "🔌", "description": "Pavas eléctricas, sandwicheras, minipimers, batidoras, jugueras", "color": "#f97316" }
+  ],
+
+  "items": [
+    { "id": "heladera_cycle_defrost", "name": "Heladera cycle defrost 280L", "emoji": "🧊", "category": "cocina", "difficulty": 2, "price": 650000, "specs": "280 litros, cycle defrost, freezer arriba, clase A" },
+    { "id": "heladera_no_frost", "name": "Heladera No Frost 370L", "emoji": "🧊", "category": "cocina", "difficulty": 2, "price": 980000, "confusable_with": "heladera_cycle_defrost", "similarity_type": "perceptual", "similarity_note": "Parecidas pero No Frost no genera escarcha — más cara pero menos mantenimiento", "specs": "370 litros, no frost, clase A+" },
+    { "id": "freezer_vertical", "name": "Freezer vertical 220L", "emoji": "🧊", "category": "cocina", "difficulty": 3, "price": 580000, "confusable_with": "heladera_no_frost", "similarity_type": "perceptual", "similarity_note": "Parece heladera pero es SOLO freezer — no tiene parte de conservación fresca" },
+    { "id": "cocina_4h", "name": "Cocina 4 hornallas acero", "emoji": "🍳", "category": "cocina", "difficulty": 1, "price": 420000 },
+    { "id": "anafe_electrico", "name": "Anafe eléctrico vitrocerámico 2 hornallas", "emoji": "🍳", "category": "cocina", "difficulty": 3, "price": 180000, "confusable_with": "cocina_4h", "similarity_type": "funcional", "similarity_note": "Ambos cocinan pero el anafe es eléctrico (no necesita gas) y no tiene horno" },
+    { "id": "horno_electrico_40l", "name": "Horno eléctrico 40L", "emoji": "🍞", "category": "cocina", "difficulty": 2, "price": 165000 },
+    { "id": "microondas_20l", "name": "Microondas 20L", "emoji": "📡", "category": "cocina", "difficulty": 1, "price": 185000, "confusable_with": "horno_electrico_40l", "similarity_type": "funcional", "similarity_note": "Ambos calientan comida pero el micro es por microondas (rápido, no dora) y el horno es por resistencia (dora, gratina)" },
+    { "id": "microondas_grill", "name": "Microondas con grill 28L", "emoji": "📡", "category": "cocina", "difficulty": 3, "price": 280000, "confusable_with": "microondas_20l", "similarity_type": "perceptual", "similarity_note": "Parecido pero este tiene grill — puede dorar y gratinar" },
+    { "id": "licuadora_1_5l", "name": "Licuadora 1.5L 600W", "emoji": "🫙", "category": "pequeños", "difficulty": 1, "price": 75000, "specs": "600W, vaso plástico, 2 velocidades" },
+    { "id": "licuadora_vidrio", "name": "Licuadora 1.5L 1000W vaso de vidrio", "emoji": "🫙", "category": "pequeños", "difficulty": 2, "price": 120000, "confusable_with": "licuadora_1_5l", "similarity_type": "perceptual", "similarity_note": "Más potente y vaso de vidrio (más higiénico, no raya, no absorbe olor)" },
+    { "id": "minipimer_600w", "name": "Minipimer 600W", "emoji": "🥄", "category": "pequeños", "difficulty": 1, "price": 55000, "confusable_with": "licuadora_1_5l", "similarity_type": "funcional", "similarity_note": "Ambas procesan pero la minipimer se mete en la olla — la licuadora necesita su vaso" },
+    { "id": "tostadora_2_panes", "name": "Tostadora eléctrica 2 panes", "emoji": "🍞", "category": "pequeños", "difficulty": 1, "price": 42000 },
+    { "id": "sandwichera", "name": "Sandwichera antiadherente", "emoji": "🥪", "category": "pequeños", "difficulty": 1, "price": 38000, "confusable_with": "tostadora_2_panes", "similarity_type": "funcional", "similarity_note": "Ambas calientan pan pero la sandwichera prensa (tostado de jamón y queso) y la tostadora solo tuesta rebanadas" },
+    { "id": "cafetera_express", "name": "Cafetera express 15 bar", "emoji": "☕", "category": "pequeños", "difficulty": 2, "price": 285000, "specs": "15 bar presión, espumador de leche, café molido" },
+    { "id": "cafetera_capsulas", "name": "Cafetera de cápsulas", "emoji": "☕", "category": "pequeños", "difficulty": 2, "price": 165000, "confusable_with": "cafetera_express", "similarity_type": "funcional", "similarity_note": "Ambas hacen espresso pero la de cápsulas usa cápsulas propietarias (más caro por café, más fácil de usar)" },
+    { "id": "pava_electrica", "name": "Pava eléctrica 1.7L", "emoji": "🫖", "category": "pequeños", "difficulty": 1, "price": 45000, "confusable_with": "cafetera_capsulas", "similarity_type": "funcional", "similarity_note": "La pava solo calienta agua. La cafetera hace café con presión." },
+    { "id": "freidora_aire", "name": "Freidora de aire 4.5L", "emoji": "🍟", "category": "pequeños", "difficulty": 2, "price": 145000, "confusable_with": "horno_electrico_40l", "similarity_type": "funcional", "similarity_note": "Ambas cocinan con aire caliente pero la freidora es más chica, más rápida y más eficiente para pociones individuales" },
+    { "id": "batidora_planetaria", "name": "Batidora planetaria 5L", "emoji": "🍰", "category": "pequeños", "difficulty": 3, "price": 320000 },
+
+    { "id": "lavarropas_auto_7kg", "name": "Lavarropas automático 7kg", "emoji": "🫧", "category": "lavado", "difficulty": 1, "price": 520000, "specs": "7kg, carga frontal, 1000 RPM, 15 programas" },
+    { "id": "lavarropas_auto_10kg", "name": "Lavarropas automático 10kg", "emoji": "🫧", "category": "lavado", "difficulty": 2, "price": 780000, "confusable_with": "lavarropas_auto_7kg", "similarity_type": "perceptual", "specs": "10kg, carga frontal, 1400 RPM, inverter" },
+    { "id": "lavarropas_semiaut", "name": "Lavarropas semiautomático 5kg", "emoji": "🫧", "category": "lavado", "difficulty": 2, "price": 280000, "confusable_with": "lavarropas_auto_7kg", "similarity_type": "perceptual", "similarity_note": "Más barato pero hay que llenar, vaciar y escurrir manualmente" },
+    { "id": "secarropas_8kg", "name": "Secarropas por calor 8kg", "emoji": "🌬️", "category": "lavado", "difficulty": 2, "price": 480000 },
+    { "id": "lavavajillas_14c", "name": "Lavavajillas 14 cubiertos", "emoji": "🍽️", "category": "lavado", "difficulty": 2, "price": 850000 },
+    { "id": "aspiradora_ciclonica", "name": "Aspiradora ciclónica sin bolsa", "emoji": "🧹", "category": "lavado", "difficulty": 1, "price": 165000 },
+    { "id": "robot_aspiradora", "name": "Robot aspiradora WiFi", "emoji": "🤖", "category": "lavado", "difficulty": 3, "price": 380000, "confusable_with": "aspiradora_ciclonica", "similarity_type": "funcional", "similarity_note": "Ambas aspiran pero el robot es autónomo (programa horario, mapea la casa) — la ciclónica es manual y más potente" },
+    { "id": "plancha_vapor", "name": "Plancha a vapor 2200W", "emoji": "👔", "category": "lavado", "difficulty": 1, "price": 65000 },
+
+    { "id": "split_3000fg", "name": "Aire split frío/calor 3000 frigorías", "emoji": "❄️", "category": "climatizacion", "difficulty": 2, "price": 780000, "specs": "3000fg, inverter, clase A, gas R410A", "symbol_code": "3000fg = ambientes de 20-25 m²" },
+    { "id": "split_4500fg", "name": "Aire split frío/calor 4500 frigorías", "emoji": "❄️", "category": "climatizacion", "difficulty": 2, "price": 1050000, "confusable_with": "split_3000fg", "similarity_type": "perceptual", "symbol_code": "4500fg = ambientes de 30-40 m²" },
+    { "id": "split_2300fg", "name": "Aire split frío solo 2300 frigorías", "emoji": "❄️", "category": "climatizacion", "difficulty": 3, "price": 520000, "confusable_with": "split_3000fg", "similarity_type": "perceptual", "similarity_note": "Este es SOLO FRÍO — no calienta en invierno" },
+    { "id": "ventilador_pie", "name": "Ventilador de pie 20\" 3 velocidades", "emoji": "🌀", "category": "climatizacion", "difficulty": 1, "price": 65000 },
+    { "id": "ventilador_techo", "name": "Ventilador de techo con luz", "emoji": "🌀", "category": "climatizacion", "difficulty": 2, "price": 120000, "confusable_with": "ventilador_pie", "similarity_type": "funcional" },
+    { "id": "estufa_cuarzo", "name": "Estufa de cuarzo 2 velas", "emoji": "🔥", "category": "climatizacion", "difficulty": 1, "price": 42000 },
+    { "id": "caloventor", "name": "Caloventor 2000W", "emoji": "🔥", "category": "climatizacion", "difficulty": 1, "price": 55000, "confusable_with": "estufa_cuarzo", "similarity_type": "funcional", "similarity_note": "Ambos calientan: la estufa irradia (calienta cosas) y el caloventor convecta (calienta el aire con ventilador)" },
+    { "id": "estufa_tiro_bal", "name": "Estufa tiro balanceado 3000 kcal", "emoji": "🔥", "category": "climatizacion", "difficulty": 3, "price": 280000, "similarity_note": "Va con instalación de gas — el caloventor y la de cuarzo son eléctricos" },
+    { "id": "deshumidificador", "name": "Deshumidificador 12L/día", "emoji": "💧", "category": "climatizacion", "difficulty": 4, "price": 320000, "similarity_note": "No enfría ni calienta — saca humedad del ambiente" },
+
+    { "id": "tv_32_hd", "name": "Smart TV 32\" HD", "emoji": "📺", "category": "imagen_sonido", "difficulty": 1, "price": 280000, "specs": "32 pulgadas, HD 1366x768, 60Hz" },
+    { "id": "tv_43_fhd", "name": "Smart TV 43\" Full HD", "emoji": "📺", "category": "imagen_sonido", "difficulty": 1, "price": 420000, "specs": "43 pulgadas, FHD 1920x1080, 60Hz" },
+    { "id": "tv_50_4k", "name": "Smart TV 50\" 4K UHD", "emoji": "📺", "category": "imagen_sonido", "difficulty": 2, "price": 620000, "specs": "50 pulgadas, 4K 3840x2160, 60Hz, HDR10" },
+    { "id": "tv_65_4k", "name": "Smart TV 65\" 4K UHD", "emoji": "📺", "category": "imagen_sonido", "difficulty": 2, "price": 950000, "confusable_with": "tv_50_4k", "similarity_type": "perceptual", "specs": "65 pulgadas, 4K, 120Hz, Dolby Vision" },
+    { "id": "barra_sonido", "name": "Barra de sonido 2.1 Bluetooth", "emoji": "🔊", "category": "imagen_sonido", "difficulty": 2, "price": 185000 },
+    { "id": "parlante_bt", "name": "Parlante Bluetooth portátil", "emoji": "🔊", "category": "imagen_sonido", "difficulty": 1, "price": 45000, "confusable_with": "barra_sonido", "similarity_type": "funcional", "similarity_note": "Ambos reproducen audio por Bluetooth pero la barra es para TV en casa y el parlante es portátil" },
+    { "id": "auriculares_bt", "name": "Auriculares Bluetooth over-ear", "emoji": "🎧", "category": "imagen_sonido", "difficulty": 1, "price": 65000 },
+    { "id": "auriculares_tws", "name": "Auriculares TWS (in-ear)", "emoji": "🎧", "category": "celulares", "difficulty": 2, "price": 42000, "confusable_with": "auriculares_bt", "similarity_type": "funcional", "similarity_note": "Ambos son BT pero los TWS son chiquitos in-ear — van más con celulares que con TV" },
+
+    { "id": "notebook_i5", "name": "Notebook 15.6\" Core i5 8GB/512GB", "emoji": "💻", "category": "informatica", "difficulty": 2, "price": 850000 },
+    { "id": "notebook_celeron", "name": "Notebook 14\" Celeron 4GB/128GB", "emoji": "💻", "category": "informatica", "difficulty": 2, "price": 420000, "confusable_with": "notebook_i5", "similarity_type": "perceptual", "similarity_note": "Parece notebook pero procesador básico — para navegar y Office, no para programas pesados" },
+    { "id": "tablet_10", "name": "Tablet 10\" 64GB WiFi", "emoji": "📱", "category": "informatica", "difficulty": 2, "price": 280000, "confusable_with": "notebook_celeron", "similarity_type": "funcional", "similarity_note": "Para consumo de contenido similar pero no tiene teclado físico ni Windows" },
+    { "id": "monitor_24_fhd", "name": "Monitor 24\" Full HD", "emoji": "🖥️", "category": "informatica", "difficulty": 2, "price": 220000, "confusable_with": "tv_32_hd", "similarity_type": "perceptual", "similarity_note": "Parece una TV chica pero es monitor — menor latencia, mejor para PC, no tiene sintonizador" },
+    { "id": "impresora_multifuncion", "name": "Impresora multifunción WiFi (tinta)", "emoji": "🖨️", "category": "informatica", "difficulty": 1, "price": 185000 },
+    { "id": "teclado_mouse_combo", "name": "Combo teclado + mouse inalámbrico", "emoji": "⌨️", "category": "informatica", "difficulty": 1, "price": 32000 },
+
+    { "id": "celular_gama_baja", "name": "Smartphone 6.5\" 64GB 4G", "emoji": "📱", "category": "celulares", "difficulty": 1, "price": 180000 },
+    { "id": "celular_gama_media", "name": "Smartphone 6.7\" 128GB 5G", "emoji": "📱", "category": "celulares", "difficulty": 2, "price": 380000, "confusable_with": "celular_gama_baja", "similarity_type": "perceptual" },
+    { "id": "celular_gama_alta", "name": "Smartphone premium 256GB 5G", "emoji": "📱", "category": "celulares", "difficulty": 2, "price": 950000, "confusable_with": "celular_gama_media", "similarity_type": "perceptual" },
+    { "id": "cargador_rapido", "name": "Cargador rápido 20W USB-C", "emoji": "🔌", "category": "celulares", "difficulty": 1, "price": 15000 },
+    { "id": "funda_silicona", "name": "Funda de silicona universal", "emoji": "📱", "category": "celulares", "difficulty": 1, "price": 8000 },
+    { "id": "smartwatch", "name": "Smartwatch Bluetooth", "emoji": "⌚", "category": "celulares", "difficulty": 2, "price": 85000 },
+    { "id": "powerbank_10000", "name": "Powerbank 10.000 mAh", "emoji": "🔋", "category": "celulares", "difficulty": 1, "price": 28000 },
+
+    { "id": "secador_pelo_2000w", "name": "Secador de pelo 2000W", "emoji": "💇", "category": "cuidado_personal", "difficulty": 1, "price": 42000 },
+    { "id": "planchita_pelo", "name": "Planchita de pelo cerámica", "emoji": "💇", "category": "cuidado_personal", "difficulty": 1, "price": 55000, "confusable_with": "secador_pelo_2000w", "similarity_type": "funcional", "similarity_note": "Ambos para el pelo pero el secador seca y la planchita alisa" },
+    { "id": "cortadora_pelo", "name": "Cortadora de pelo profesional", "emoji": "💈", "category": "cuidado_personal", "difficulty": 1, "price": 48000 },
+    { "id": "afeitadora_electrica", "name": "Afeitadora eléctrica recargable", "emoji": "🪒", "category": "cuidado_personal", "difficulty": 1, "price": 65000, "confusable_with": "cortadora_pelo", "similarity_type": "perceptual", "similarity_note": "Parecidas pero la afeitadora corta al ras, la cortadora deja largo regulable" },
+    { "id": "depiladora_electrica", "name": "Depiladora eléctrica", "emoji": "✨", "category": "cuidado_personal", "difficulty": 2, "price": 72000, "confusable_with": "afeitadora_electrica", "similarity_type": "perceptual", "similarity_note": "La depiladora arranca el pelo de raíz, la afeitadora solo corta la superficie" }
+  ],
+
+  "missions": {
+    "classification": [
+      {
+        "id": "descargar_container",
+        "name": "Descargar el container",
+        "emoji": "📦",
+        "description": "Llegó un container con 30 productos mezclados. Clasificá cada uno en su sector del local.",
+        "type": "classify_all",
+        "min_difficulty": 1
+      }
+    ],
+
+    "seriation": [
+      {
+        "id": "ordenar_teles",
+        "name": "Teles por tamaño",
+        "emoji": "📺",
+        "description": "Ordená los televisores de menor a mayor: 32\" → 43\" → 50\" → 55\" → 65\" → 75\".",
+        "type": "order_sequence",
+        "cognitive_target": "seriación numérica con unidad de medida (pulgadas)",
+        "min_difficulty": 1
+      },
+      {
+        "id": "ordenar_heladeras",
+        "name": "Heladeras por capacidad",
+        "emoji": "🧊",
+        "description": "Ordená de menor a mayor litros: 180L → 280L → 370L → 450L → 540L.",
+        "type": "order_sequence",
+        "cognitive_target": "seriación numérica con comprensión de volumen",
+        "min_difficulty": 2
+      },
+      {
+        "id": "ordenar_splits",
+        "name": "Aires por frigorías",
+        "emoji": "❄️",
+        "description": "Ordená: 2300fg → 3000fg → 4500fg → 5500fg. A más frigorías, más metros cuadrados cubre.",
+        "type": "order_sequence",
+        "cognitive_target": "seriación + correspondencia funcional",
+        "min_difficulty": 3
+      },
+      {
+        "id": "ordenar_resolucion",
+        "name": "Resolución de pantalla",
+        "emoji": "🖥️",
+        "description": "De menor a mayor calidad: HD (1366x768) → Full HD (1920x1080) → 4K UHD (3840x2160) → 8K (7680x4320).",
+        "type": "order_sequence",
+        "cognitive_target": "seriación simbólica con nomenclatura técnica",
+        "min_difficulty": 4
+      }
+    ],
+
+    "calculation": [
+      {
+        "id": "cuotas_sin_interes",
+        "name": "¿Cuánto por mes?",
+        "emoji": "💳",
+        "description": "El lavarropas de $520.000 está en 12 cuotas sin interés. ¿Cuánto paga por mes?",
+        "type": "math_problem",
+        "correct_answer": 43333,
+        "accept_range": [43000, 43400],
+        "explanation": "520.000 ÷ 12 = $43.333,33 por mes",
+        "cognitive_target": "división con números grandes",
+        "min_difficulty": 3
+      },
+      {
+        "id": "cuotas_con_interes",
+        "name": "El recargo del plan",
+        "emoji": "💳",
+        "description": "La TV de $620.000 en 18 cuotas tiene 35% de recargo. ¿Cuánto sale en total? ¿Cuánto por cuota?",
+        "type": "math_problem",
+        "correct_answer": { "total": 837000, "cuota": 46500 },
+        "explanation": "35% de 620.000 = 217.000. Total = 837.000. Cuota = 837.000 ÷ 18 = $46.500",
+        "cognitive_target": "cálculo de porcentaje + división",
+        "min_difficulty": 5
+      },
+      {
+        "id": "frigorias_ambiente",
+        "name": "¿Cuántas frigorías necesito?",
+        "emoji": "❄️",
+        "description": "Regla: se necesitan 50 frigorías por m². Ambiente de 4m x 5m. ¿Cuántas frigorías? ¿Qué equipo le vendés?",
+        "type": "math_problem",
+        "correct_answer": { "frigorias": 1000, "equipo": "split_2300fg" },
+        "explanation": "4 × 5 = 20m². 20 × 50 = 1.000fg. El split de 2300fg cubre de sobra.",
+        "cognitive_target": "cálculo aplicado con regla + selección de producto",
+        "min_difficulty": 4
+      },
+      {
+        "id": "ahorro_contado",
+        "name": "¿Conviene de contado?",
+        "emoji": "💰",
+        "description": "La heladera No Frost cuesta $980.000. De contado tiene 15% de descuento. ¿Cuánto ahorra?",
+        "type": "math_problem",
+        "correct_answer": 147000,
+        "explanation": "15% de 980.000 = $147.000 de ahorro. Precio contado = $833.000",
+        "cognitive_target": "cálculo de porcentaje + comparación",
+        "min_difficulty": 3
+      }
+    ],
+
+    "grouping": [
+      {
+        "id": "kit_depto_nuevo",
+        "name": "Equipar un departamento nuevo",
+        "emoji": "🏠",
+        "description": "Un joven se muda solo a su primer depto (40m², cocina integrada). Necesita lo básico para cocina, lavado y confort. Presupuesto: $2.500.000.",
+        "type": "select_group",
+        "correct_items": ["heladera_cycle_defrost", "cocina_4h", "microondas_20l", "lavarropas_semiaut", "tv_32_hd", "ventilador_pie", "pava_electrica"],
+        "partial_credit": ["lavarropas_auto_7kg", "tv_43_fhd", "split_2300fg"],
+        "trap_items": ["heladera_no_frost", "lavavajillas_14c", "tv_65_4k", "robot_aspiradora"],
+        "trap_explanations": {
+          "heladera_no_frost": "Se va del presupuesto — la cycle defrost es suficiente para arrancar",
+          "lavavajillas_14c": "Lujo innecesario para una persona sola con presupuesto ajustado",
+          "tv_65_4k": "En un depto de 40m² una 65\" es excesiva y carísima",
+          "robot_aspiradora": "Lujo — con una escoba alcanza al principio"
+        },
+        "cognitive_target": "agrupamiento funcional + restricción presupuestaria + priorización",
+        "min_difficulty": 4
+      },
+      {
+        "id": "kit_regalo_madre",
+        "name": "Regalo para el Día de la Madre",
+        "emoji": "🎁",
+        "description": "Presupuesto $150.000. Algo útil para la casa que ella no se compraría sola.",
+        "type": "select_group",
+        "correct_items": ["freidora_aire", "licuadora_vidrio", "plancha_vapor"],
+        "partial_credit": ["cafetera_capsulas", "batidora_planetaria", "minipimer_600w", "secador_pelo_2000w", "planchita_pelo"],
+        "trap_items": ["lavarropas_auto_7kg", "notebook_i5", "tv_50_4k"],
+        "trap_explanations": {
+          "lavarropas_auto_7kg": "Se pasa del presupuesto de $150.000",
+          "notebook_i5": "Muy por encima del presupuesto",
+          "tv_50_4k": "Supera el presupuesto"
+        },
+        "cognitive_target": "agrupamiento por criterio social + restricción de presupuesto + empatía",
+        "min_difficulty": 3
+      }
+    ],
+
+    "similarity_discrimination": [
+      {
+        "id": "cual_es_cual_electro",
+        "name": "¿Cuál es cuál?",
+        "emoji": "👀",
+        "type": "compare_pair",
+        "pairs": [
+          { "item_a": "heladera_cycle_defrost", "item_b": "heladera_no_frost", "key_difference": "Cycle defrost genera escarcha que hay que sacar. No frost no genera escarcha nunca pero consume más." },
+          { "item_a": "split_3000fg", "item_b": "split_2300fg", "key_difference": "El de 3000fg es frío/calor (sirve todo el año). El de 2300fg es SOLO FRÍO." },
+          { "item_a": "microondas_20l", "item_b": "horno_electrico_40l", "key_difference": "Micro = calienta rápido pero no dora. Horno = tarda más pero dora, gratina y cocina." },
+          { "item_a": "aspiradora_ciclonica", "item_b": "robot_aspiradora", "key_difference": "Ciclónica = manual pero más potente. Robot = autónomo pero menos potente y no sube escaleras." },
+          { "item_a": "monitor_24_fhd", "item_b": "tv_32_hd", "key_difference": "Monitor = menor latencia, para PC, sin sintonizador. TV = sintonizador, apps streaming, para ver de lejos." },
+          { "item_a": "notebook_i5", "item_b": "notebook_celeron", "key_difference": "i5 = procesador potente para todo. Celeron = básico solo para Office y navegar." },
+          { "item_a": "cortadora_pelo", "item_b": "afeitadora_electrica", "key_difference": "Cortadora = deja largo regulable. Afeitadora = corta al ras como hoja de afeitar." }
+        ],
+        "cognitive_target": "discriminación funcional de productos tecnológicos",
+        "min_difficulty": 3
+      }
+    ],
+
+    "symbolization": [
+      {
+        "id": "frigorias_metros",
+        "name": "Frigorías y metros cuadrados",
+        "emoji": "❄️",
+        "description": "2300fg = hasta 20m². 3000fg = 20-30m². 4500fg = 30-40m². 5500fg = 40-55m². Dado un ambiente, elegí el equipo.",
+        "type": "symbol_matching",
+        "cognitive_target": "decodificación de especificación técnica + correspondencia",
+        "min_difficulty": 3
+      },
+      {
+        "id": "resolucion_tv",
+        "name": "¿Qué resolución es cada una?",
+        "emoji": "📺",
+        "description": "HD = 1366×768 (básica). Full HD = 1920×1080 (estándar). 4K UHD = 3840×2160 (alta). A más píxeles, mejor imagen.",
+        "type": "symbol_matching",
+        "cognitive_target": "comprensión de escala técnica con nomenclatura comercial",
+        "min_difficulty": 4
+      },
+      {
+        "id": "watts_consumo",
+        "name": "Watts y consumo eléctrico",
+        "emoji": "⚡",
+        "description": "La pava eléctrica consume 2000W. El split inverter 1200W. La TV 120W. El cargador 20W. Ordená de mayor a menor consumo y pensá cuál impacta más en la boleta de luz.",
+        "type": "symbol_matching",
+        "cognitive_target": "comprensión de unidad de medida eléctrica + razonamiento proporcional",
+        "min_difficulty": 4
+      }
+    ],
+
+    "reasoning": [
+      {
+        "id": "cliente_electro",
+        "name": "El cliente que explica mal lo que necesita",
+        "emoji": "🤔",
+        "type": "inference_problem",
+        "scenarios": [
+          {
+            "client_says": "Quiero algo para enfriar el living pero no puedo hacer instalación porque alquilo.",
+            "correct_items": ["ventilador_pie"],
+            "partial_credit": ["split_3000fg"],
+            "reasoning": "Alquila = no puede instalar split (requiere agujero en pared). Ventilador de pie se enchufa y listo."
+          },
+          {
+            "client_says": "Se me rompió la heladera y tengo un freezer lleno de comida. ¿Me vendés una heladera urgente?",
+            "correct_items": ["heladera_no_frost"],
+            "reasoning": "Ya tiene freezer, así que necesita heladera con buen conservador. Si le vendés freezer vertical le duplicás lo que ya tiene."
+          },
+          {
+            "client_says": "Mi hija se va a estudiar a La Plata y necesita una compu. No tiene mucha plata.",
+            "correct_items": ["notebook_celeron"],
+            "reasoning": "Para facultad (Office, PDF, navegar) alcanza Celeron. La i5 es mejor pero más cara e innecesaria para ese uso."
+          },
+          {
+            "client_says": "Quiero algo para calentar el baño mientras me baño. Es chiquito, 3x2 metros.",
+            "correct_items": ["caloventor"],
+            "reasoning": "Baño chico + necesidad inmediata = caloventor. La estufa de cuarzo no mueve aire. El tiro balanceado no va en baño (gas + humedad = peligro)."
+          }
+        ],
+        "cognitive_target": "razonamiento inferencial con restricciones situacionales",
+        "min_difficulty": 5
+      }
+    ]
+  },
+
+  "events": [
+    { "id": "corte_luz", "text": "Se cortó la luz en el local. Tenés que seguir con la linterna del celular 15 segundos.", "effect": "visual_fog", "duration_seconds": 15, "probability": 0.06 },
+    { "id": "cliente_devolucion", "text": "Un cliente quiere devolver un microondas porque pensaba que era horno eléctrico. Explicale la diferencia.", "effect": "interruption_task", "probability": 0.08 },
+    { "id": "oferta_relampago", "text": "¡Oferta relámpago! 30% de descuento en el próximo producto que clasifiques correctamente.", "effect": "bonus_next", "probability": 0.1 },
+    { "id": "nene_toca", "text": "Un nene está tocando las teles de la vidriera. Distraelo antes de que tire una.", "effect": "distraction_popup", "probability": 0.08 }
+  ],
+
+  "difficulty_scaling": {
+    "level_1": { "items_per_round": 8, "categories_visible": 4, "time_limit": null, "distractors": false, "events_enabled": false, "hints_available": true, "similarity_pairs": false, "calculations": false },
+    "level_2": { "items_per_round": 12, "categories_visible": 5, "time_limit": null, "distractors": false, "events_enabled": false, "hints_available": true },
+    "level_3": { "items_per_round": 16, "categories_visible": 6, "time_limit": 300, "distractors": false, "hints_available": false, "similarity_pairs": true },
+    "level_4": { "items_per_round": 20, "categories_visible": 7, "time_limit": 240, "distractors": true, "events_enabled": false, "similarity_pairs": true, "calculations": true },
+    "level_5": { "items_per_round": 24, "categories_visible": 8, "time_limit": 210, "distractors": true, "events_enabled": true, "calculations": true },
+    "level_6": { "items_per_round": 28, "categories_visible": 8, "time_limit": 180, "distractors": true, "events_enabled": true, "calculations": true, "reasoning_missions": true }
+  }
+}
