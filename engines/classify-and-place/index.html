@@ -6,667 +6,549 @@
 <title>Cargando... · HDD Gaming</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0a0b;--surface:#141416;--card:#1c1c20;--card2:#222228;--border:rgba(255,255,255,.06);--text:#e4e4e7;--muted:#71717a;--accent:#f59e0b;--green:#22c55e;--red:#ef4444;--blue:#3b82f6}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0a0a0f;--surface:#12121a;--card:#1a1a27;--border:rgba(255,255,255,.06);--text:#e8e8ed;--dim:rgba(255,255,255,.4);--accent:#6366f1;--ok:#22c55e;--err:#ef4444;--warn:#f59e0b}
+*{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
-.noise{position:fixed;inset:0;opacity:.025;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.grain{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 
-/* TOPBAR */
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
-.topbar-left{display:flex;align-items:center;gap:12px}
-.topbar-back{color:var(--muted);text-decoration:none;font-size:.8rem;padding:6px 12px;border-radius:8px;border:1px solid var(--border);transition:all .2s}
-.topbar-back:hover{border-color:var(--accent);color:var(--accent)}
-.topbar-title{font-weight:700;font-size:1rem}
-.topbar-right{display:flex;align-items:center;gap:16px;font-family:'Space Mono',monospace;font-size:.85rem}
-.timer{color:var(--accent);font-weight:700;font-size:1.1rem}
-.score-display{display:flex;gap:12px}
-.score-item{display:flex;align-items:center;gap:4px}
-.score-icon{font-size:.8rem}
-.score-val{font-weight:700}
-
-/* MODES NAV */
-.modes-nav{display:flex;gap:4px;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch}
-.mode-btn{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;font-family:inherit}
-.mode-btn:hover{border-color:rgba(255,255,255,.15);color:var(--text)}
-.mode-btn.active{background:var(--accent);color:#000;border-color:var(--accent)}
-.mode-btn .mode-emoji{margin-right:4px}
+/* HEADER */
+.hdr{background:linear-gradient(180deg,rgba(99,102,241,.08) 0%,transparent 100%);border-bottom:1px solid var(--border);padding:14px 24px;position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.hdr-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.hdr-left a{color:var(--dim);text-decoration:none;font-size:.75rem;font-family:'Space Mono',monospace;letter-spacing:.05em}
+.hdr-left a:hover{color:var(--accent)}
+.hdr-title{font-size:1.2rem;font-weight:900;margin-top:2px}
+.hdr-title .em{margin-right:6px}
+.hdr-right{display:flex;gap:20px;align-items:center}
+.hdr-stat{text-align:center}
+.hdr-stat-v{font-family:'Space Mono',monospace;font-size:1.3rem;font-weight:700}
+.hdr-stat-l{font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim)}
+.timer{color:var(--warn)}
+.score-v{color:var(--ok)}
+.level-badge{font-family:'Space Mono',monospace;font-size:.65rem;padding:4px 10px;border-radius:6px;background:rgba(99,102,241,.15);color:var(--accent);border:1px solid rgba(99,102,241,.2)}
 
 /* GAME AREA */
-.game-area{max-width:1400px;margin:0 auto;padding:20px}
+.game{max-width:1200px;margin:0 auto;padding:24px}
+.game-intro{text-align:center;padding:40px 20px}
+.game-intro .big-em{font-size:4rem;display:block;margin-bottom:12px}
+.game-intro h2{font-size:1.6rem;font-weight:900;margin-bottom:8px}
+.game-intro p{color:var(--dim);max-width:500px;margin:0 auto 24px;line-height:1.5;font-size:.9rem}
 
-/* CLASSIFICATION MODE */
-.classify-layout{display:grid;grid-template-columns:1fr;gap:20px}
-@media(min-width:900px){.classify-layout{grid-template-columns:320px 1fr}}
-.source-area{background:var(--surface);border:2px dashed var(--border);border-radius:16px;padding:16px}
-.source-title{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:12px;font-weight:700}
-.source-items{display:flex;flex-wrap:wrap;gap:8px;min-height:100px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#818cf8;transform:translateY(-1px)}
+.btn-ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:rgba(255,255,255,.15)}
 
-.item-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:var(--card2);border:1px solid var(--border);cursor:grab;user-select:none;font-size:.82rem;font-weight:500;transition:all .2s;position:relative}
-.item-chip:hover{border-color:rgba(255,255,255,.15);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.3)}
-.item-chip.dragging{opacity:.4;transform:scale(.95)}
-.item-chip .item-emoji{font-size:1.1rem}
-.item-chip .item-price{font-size:.65rem;color:var(--green);font-family:'Space Mono',monospace;margin-left:4px}
-.item-chip.correct{border-color:var(--green);background:rgba(34,197,94,.1);animation:popIn .3s ease}
-.item-chip.wrong{border-color:var(--red);background:rgba(239,68,68,.1);animation:shake .4s ease}
+/* MOSTRADOR - items to classify */
+.mostrador{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:24px;min-height:100px}
+.mostrador-title{font-family:'Space Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.mostrador-title .count{color:var(--accent)}
+.items-area{display:flex;flex-wrap:wrap;gap:10px;min-height:60px}
 
-.shelves-area{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-.shelf{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:14px;min-height:120px;transition:all .25s}
-.shelf.drag-over{border-color:var(--accent);background:rgba(245,158,11,.04);box-shadow:0 0 20px rgba(245,158,11,.08)}
-.shelf-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-.shelf-emoji{font-size:1.3rem}
-.shelf-name{font-size:.82rem;font-weight:700}
-.shelf-count{margin-left:auto;font-size:.65rem;color:var(--muted);font-family:'Space Mono',monospace;background:var(--card);padding:2px 8px;border-radius:6px}
-.shelf-items{display:flex;flex-wrap:wrap;gap:6px;min-height:40px}
+.item{
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
+  width:100px;height:100px;border-radius:12px;background:var(--card);
+  border:2px solid var(--border);cursor:grab;user-select:none;
+  gap:2px;padding:8px;transition:all .15s;position:relative;
+}
+.item:hover{transform:scale(1.06);border-color:rgba(255,255,255,.15);z-index:10}
+.item.dragging{opacity:.4;transform:scale(.95)}
+.item .item-em{font-size:1.6rem}
+.item .item-nm{font-size:.55rem;text-align:center;line-height:1.15;color:var(--dim);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.item .item-price{font-size:.6rem;font-weight:700;color:var(--ok);margin-top:1px}
 
-/* GROUPING MODE */
-.grouping-mission{background:var(--surface);border-radius:16px;padding:24px;border:1px solid var(--border);margin-bottom:20px}
-.mission-emoji{font-size:2rem;margin-bottom:8px}
-.mission-name{font-size:1.2rem;font-weight:900}
-.mission-desc{font-size:.88rem;color:#a1a1aa;margin-top:8px;line-height:1.5}
-.grouping-items{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-.group-item{padding:10px 16px;border-radius:10px;background:var(--card);border:2px solid var(--border);cursor:pointer;font-size:.82rem;display:flex;align-items:center;gap:6px;transition:all .2s;user-select:none}
-.group-item:hover{border-color:rgba(255,255,255,.15)}
-.group-item.selected{border-color:var(--accent);background:rgba(245,158,11,.08)}
-.group-item.correct-reveal{border-color:var(--green);background:rgba(34,197,94,.1)}
-.group-item.trap-reveal{border-color:var(--red);background:rgba(239,68,68,.1)}
-.group-item.missed-reveal{border-color:var(--blue);background:rgba(59,130,246,.08)}
-.check-btn{display:block;margin:20px auto 0;padding:14px 40px;border-radius:12px;background:var(--accent);color:#000;font-weight:700;font-size:1rem;border:none;cursor:pointer;transition:all .2s}
-.check-btn:hover{filter:brightness(1.1);transform:scale(1.02)}
-
-/* CALCULATION MODE */
-.calc-card{background:var(--surface);border-radius:16px;padding:32px;border:1px solid var(--border);max-width:600px;margin:0 auto}
-.calc-emoji{font-size:2.5rem;margin-bottom:12px}
-.calc-question{font-size:1.1rem;line-height:1.6;margin-bottom:24px}
-.calc-input-row{display:flex;gap:12px;align-items:center}
-.calc-input{flex:1;padding:14px 18px;border-radius:10px;background:var(--card);border:2px solid var(--border);color:var(--text);font-size:1.2rem;font-family:'Space Mono',monospace;outline:none;transition:border-color .2s}
-.calc-input:focus{border-color:var(--accent)}
-.calc-unit{font-size:.85rem;color:var(--muted)}
-.calc-submit{padding:14px 28px;border-radius:10px;background:var(--accent);color:#000;font-weight:700;border:none;cursor:pointer;font-size:.9rem;transition:all .2s}
-.calc-result{margin-top:20px;padding:16px;border-radius:12px;font-size:.88rem;line-height:1.5}
-.calc-result.correct{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:var(--green)}
-.calc-result.wrong{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);color:var(--red)}
-
-/* SIMILARITY MODE */
-.similarity-pair{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:700px;margin:0 auto}
-.sim-card{background:var(--surface);border:2px solid var(--border);border-radius:16px;padding:24px;text-align:center;cursor:pointer;transition:all .25s}
-.sim-card:hover{border-color:rgba(255,255,255,.12)}
-.sim-card .sim-emoji{font-size:2.5rem;margin-bottom:8px}
-.sim-card .sim-name{font-size:1rem;font-weight:700;margin-bottom:4px}
-.sim-card .sim-cat{font-size:.72rem;color:var(--muted)}
-.sim-vs{text-align:center;font-size:1.4rem;font-weight:900;color:var(--muted);padding:20px 0}
-.sim-explain{background:var(--surface);border-radius:14px;padding:20px;border:1px solid var(--border);max-width:700px;margin:16px auto 0;font-size:.88rem;line-height:1.6;color:#a1a1aa}
-.sim-explain strong{color:var(--accent)}
-.sim-next{display:block;margin:16px auto 0;padding:10px 32px;border-radius:8px;background:var(--card2);border:1px solid var(--border);color:var(--text);font-weight:600;cursor:pointer;transition:all .2s}
-.sim-next:hover{border-color:var(--accent);color:var(--accent)}
-
-/* RESULTS */
-.results-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);z-index:200;display:flex;align-items:center;justify-content:center;animation:fadeIn .3s ease}
-.results-card{background:var(--surface);border-radius:20px;padding:40px;max-width:480px;width:90%;text-align:center;border:1px solid var(--border);animation:scaleIn .4s ease}
-.results-emoji{font-size:3.5rem;margin-bottom:12px}
-.results-title{font-size:1.6rem;font-weight:900}
-.results-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:24px 0}
-.results-stat{background:var(--card);border-radius:12px;padding:14px}
-.results-stat-val{font-family:'Space Mono',monospace;font-size:1.4rem;font-weight:700}
-.results-stat-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:4px}
-.results-btn{padding:14px 40px;border-radius:12px;background:var(--accent);color:#000;font-weight:700;font-size:.95rem;border:none;cursor:pointer;margin-top:8px;transition:all .2s}
-.results-btn:hover{filter:brightness(1.1)}
-
-/* LOADING */
-.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px}
-.loading .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+/* ESTANTES - categories */
+.estantes{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.estante{
+  background:var(--surface);border:2px solid var(--border);border-radius:14px;
+  padding:14px;min-height:130px;transition:all .25s;position:relative;
+}
+.estante.drag-over{border-color:var(--accent);background:rgba(99,102,241,.04);box-shadow:0 0 20px rgba(99,102,241,.1)}
+.estante.correct-flash{border-color:var(--ok);background:rgba(34,197,94,.04)}
+.estante.wrong-flash{border-color:var(--err);background:rgba(239,68,68,.04)}
+.estante-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.estante-em{font-size:1.2rem}
+.estante-nm{font-size:.8rem;font-weight:700}
+.estante-count{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--dim);margin-left:auto}
+.estante-items{display:flex;flex-wrap:wrap;gap:6px;min-height:40px}
+.placed-item{
+  display:inline-flex;align-items:center;gap:4px;
+  background:var(--card);border-radius:8px;padding:4px 10px;
+  font-size:.7rem;border:1px solid rgba(34,197,94,.2);
+  animation:popIn .25s ease;
+}
+.placed-item .pi-em{font-size:.9rem}
+@keyframes popIn{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
 
 /* TOAST */
-.toasts{position:fixed;top:70px;right:16px;z-index:300;display:flex;flex-direction:column;gap:8px}
-.toast{padding:10px 18px;border-radius:10px;font-size:.82rem;font-weight:600;color:#fff;animation:slideIn .3s ease,slideOut .3s ease 2s forwards;box-shadow:0 4px 20px rgba(0,0,0,.4);max-width:300px}
-.toast-ok{background:rgba(34,197,94,.9)}
-.toast-err{background:rgba(239,68,68,.85)}
-.toast-info{background:rgba(59,130,246,.85)}
+.toast-wrap{position:fixed;top:80px;right:16px;z-index:9998;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:10px 18px;border-radius:10px;font-size:.8rem;font-weight:600;color:#fff;backdrop-filter:blur(12px);pointer-events:auto;animation:tIn .3s ease,tOut .3s ease 2s forwards;box-shadow:0 4px 15px rgba(0,0,0,.3);max-width:300px}
+.toast-ok{background:rgba(34,197,94,.85);border:1px solid rgba(34,197,94,.4)}
+.toast-err{background:rgba(239,68,68,.75);border:1px solid rgba(239,68,68,.4)}
+.toast-info{background:rgba(99,102,241,.8);border:1px solid rgba(99,102,241,.4)}
+@keyframes tIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tOut{from{opacity:1}to{opacity:0;transform:translateY(-10px)}}
 
-@keyframes popIn{0%{transform:scale(.9)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
-@keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
-@keyframes slideOut{from{opacity:1}to{opacity:0;transform:translateY(-10px)}}
+/* RESULTS */
+.results{text-align:center;padding:40px 20px}
+.results h2{font-size:2rem;font-weight:900;margin-bottom:8px}
+.results .big-score{font-family:'Space Mono',monospace;font-size:4rem;font-weight:700;color:var(--ok);margin:16px 0}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;max-width:600px;margin:24px auto}
+.res-card{background:var(--card);border-radius:12px;padding:16px;text-align:center}
+.res-card .rv{font-family:'Space Mono',monospace;font-size:1.4rem;font-weight:700}
+.res-card .rl{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);margin-top:4px}
+
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;min-height:60vh;flex-direction:column;gap:16px}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+.shake{animation:shake .4s ease}
 
-/* Drag ghost */
-.drag-ghost{position:fixed;pointer-events:none;z-index:999;padding:8px 14px;border-radius:10px;background:var(--accent);color:#000;font-weight:700;font-size:.85rem;box-shadow:0 8px 30px rgba(0,0,0,.5);transform:translate(-50%,-50%)}
+/* DIFFICULTY SELECT */
+.diff-select{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.diff-btn{padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:'Space Mono',monospace;font-size:.75rem;cursor:pointer;transition:all .2s}
+.diff-btn:hover,.diff-btn.active{border-color:var(--accent);background:rgba(99,102,241,.1);color:var(--accent)}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .estantes{grid-template-columns:1fr 1fr}
+  .item{width:80px;height:85px}
+  .item .item-em{font-size:1.3rem}
+  .hdr-title{font-size:1rem}
+}
+@media(max-width:480px){
+  .estantes{grid-template-columns:1fr}
+  .game{padding:12px}
+}
 </style>
 </head>
 <body>
-<div class="noise"></div>
-<div class="toasts" id="toasts"></div>
+<div class="grain"></div>
+<div class="toast-wrap" id="toasts"></div>
 
-<!-- TOPBAR -->
-<div class="topbar">
-  <div class="topbar-left">
-    <a href="../../index.html" class="topbar-back">← Volver</a>
-    <span class="topbar-title" id="topbar-title">Cargando...</span>
+<header class="hdr">
+<div class="hdr-inner">
+  <div class="hdr-left">
+    <a href="../../index.html">← HDD Gaming</a>
+    <div class="hdr-title"><span class="em" id="h-em"></span><span id="h-nm"></span></div>
   </div>
-  <div class="topbar-right">
-    <div class="timer" id="timer">00:00</div>
-    <div class="score-display">
-      <div class="score-item"><span class="score-icon">✅</span><span class="score-val" id="score-ok">0</span></div>
-      <div class="score-item"><span class="score-icon">❌</span><span class="score-val" id="score-err">0</span></div>
-    </div>
+  <div class="hdr-right">
+    <span class="level-badge" id="h-level">Nivel 1</span>
+    <div class="hdr-stat"><div class="hdr-stat-v score-v" id="h-score">0</div><div class="hdr-stat-l">Puntos</div></div>
+    <div class="hdr-stat"><div class="hdr-stat-v timer" id="h-timer">--:--</div><div class="hdr-stat-l">Tiempo</div></div>
   </div>
 </div>
+</header>
 
-<!-- MODES NAV -->
-<div class="modes-nav" id="modes-nav"></div>
-
-<!-- GAME AREA -->
-<div class="game-area" id="game-area">
-  <div class="loading"><div class="spinner"></div><span style="color:var(--muted);font-size:.85rem">Cargando pack...</span></div>
+<main class="game" id="game">
+<div class="loading" id="loading-screen">
+  <div class="spinner"></div>
+  <p style="color:var(--dim);font-size:.85rem">Cargando pack...</p>
 </div>
+</main>
 
 <script>
-// ============================
-// ENGINE: classify-and-place
-// ============================
+/* ============================================================================
+   CLASSIFY-AND-PLACE ENGINE v1.0
+   HDD Therapeutic Gaming · Clínica José Ingenieros
+   ============================================================================ */
+
+const PACK_MAP = {
+  'ferreteria': '../../packs/classify-and-place/ferreteria/pack.json',
+  'libreria-escolar': '../../packs/classify-and-place/libreria-escolar/pack.json',
+  'electrodomesticos': '../../packs/classify-and-place/electrodomesticos/pack.json',
+  'almacen-general': '../../packs/classify-and-place/almacen-general/pack.json',
+  'supermarket': '../../packs/classify-and-place/supermarket/pack.json',
+};
 
 let PACK = null;
-let STATE = { mode:'classify', ok:0, err:0, startTime:0, timerInterval:null, level:1, placed:{}, currentMissionIdx:0, currentCalcIdx:0, currentPairIdx:0, selectedGroupItems:new Set() };
+let STATE = {
+  phase: 'intro', // intro | playing | results
+  level: 1,
+  score: 0,
+  correct: 0,
+  errors: 0,
+  totalItems: 0,
+  placedItems: 0,
+  startTime: 0,
+  timerInterval: null,
+  currentItems: [],
+  // Telemetry
+  moves: [],
+  mouseData: [],
+  lastMoveTime: 0,
+};
 
-// -- PACK LOADING --
-const params = new URLSearchParams(location.search);
-const packId = params.get('pack') || 'ferreteria';
-
+// ---- PACK LOADING ----
 async function loadPack() {
+  const params = new URLSearchParams(window.location.search);
+  const packId = params.get('pack') || 'ferreteria';
+  const url = PACK_MAP[packId];
+  if (!url) { document.getElementById('game').innerHTML = '<div class="loading"><p style="color:var(--err)">Pack no encontrado: '+packId+'</p></div>'; return; }
   try {
-    const r = await fetch(`../../packs/classify-and-place/${packId}/pack.json`);
-    if (!r.ok) throw new Error(r.status);
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     PACK = await r.json();
-  } catch(e) {
-    // Fallback: try alternate paths
-    try {
-      const r2 = await fetch(`/packs/classify-and-place/${packId}/pack.json`);
-      PACK = await r2.json();
-    } catch(e2) {
-      document.getElementById('game-area').innerHTML = `<div class="loading"><p style="color:var(--red)">No se pudo cargar el pack "${packId}"</p><a href="../../index.html" class="topbar-back" style="margin-top:12px">Volver al hub</a></div>`;
-      return;
+    document.title = PACK.meta.name + ' · HDD Gaming';
+    document.getElementById('h-em').textContent = PACK.meta.emoji;
+    document.getElementById('h-nm').textContent = PACK.meta.name;
+    if (PACK.meta.colors) {
+      document.documentElement.style.setProperty('--accent', PACK.meta.colors.accent);
     }
-  }
-  initGame();
-}
-
-function initGame() {
-  document.title = `${PACK.meta.name} · HDD Gaming`;
-  document.getElementById('topbar-title').textContent = `${PACK.meta.emoji} ${PACK.meta.name}`;
-  document.documentElement.style.setProperty('--accent', PACK.meta.colors?.accent || '#f59e0b');
-  STATE.startTime = Date.now();
-  STATE.timerInterval = setInterval(updateTimer, 1000);
-  buildModesNav();
-  setMode('classify');
-}
-
-// -- TIMER --
-function updateTimer() {
-  const s = Math.floor((Date.now() - STATE.startTime) / 1000);
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  document.getElementById('timer').textContent = `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-}
-
-function updateScore() {
-  document.getElementById('score-ok').textContent = STATE.ok;
-  document.getElementById('score-err').textContent = STATE.err;
-}
-
-// -- MODES NAV --
-const MODES = [
-  { id:'classify', emoji:'📦', label:'Clasificar' },
-  { id:'grouping', emoji:'🧰', label:'Armar Kit' },
-  { id:'calculation', emoji:'🧮', label:'Calcular' },
-  { id:'similarity', emoji:'👀', label:'¿Cuál es cuál?' }
-];
-
-function buildModesNav() {
-  const nav = document.getElementById('modes-nav');
-  nav.innerHTML = MODES.map(m => 
-    `<button class="mode-btn ${m.id === STATE.mode ? 'active' : ''}" onclick="setMode('${m.id}')"><span class="mode-emoji">${m.emoji}</span>${m.label}</button>`
-  ).join('');
-}
-
-function setMode(mode) {
-  STATE.mode = mode;
-  buildModesNav();
-  const area = document.getElementById('game-area');
-  switch(mode) {
-    case 'classify': renderClassify(area); break;
-    case 'grouping': renderGrouping(area); break;
-    case 'calculation': renderCalculation(area); break;
-    case 'similarity': renderSimilarity(area); break;
+    showIntro();
+  } catch(e) {
+    document.getElementById('game').innerHTML = '<div class="loading"><p style="color:var(--err)">Error cargando pack: '+e.message+'</p><p style="color:var(--dim);font-size:.75rem;margin-top:8px">Intentá abrir desde el hub principal.</p></div>';
   }
 }
 
-// -- TOAST --
-function toast(msg, type='ok') {
+// ---- INTRO SCREEN ----
+function showIntro() {
+  STATE.phase = 'intro';
+  const maxLevel = Object.keys(PACK.difficulty_scaling || {}).length || 4;
+  const game = document.getElementById('game');
+  game.innerHTML = `
+    <div class="game-intro">
+      <span class="big-em">${PACK.meta.emoji}</span>
+      <h2>${PACK.meta.name}</h2>
+      <p>${PACK.meta.description || PACK.meta.subtitle}</p>
+      <p style="font-size:.75rem;color:var(--dim);margin-bottom:20px">${PACK.meta.setting || ''}</p>
+      <div style="margin-bottom:24px">
+        <span style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em">Elegí la dificultad</span>
+        <div class="diff-select" id="diff-sel"></div>
+      </div>
+      <button class="btn btn-primary" onclick="startGame()">🎮 Empezar a jugar</button>
+      <div style="margin-top:16px"><a href="../../index.html" style="color:var(--dim);font-size:.75rem;text-decoration:none">← Volver al hub</a></div>
+    </div>`;
+  const ds = document.getElementById('diff-sel');
+  for (let i = 1; i <= maxLevel; i++) {
+    const b = document.createElement('button');
+    b.className = 'diff-btn' + (i === 1 ? ' active' : '');
+    b.textContent = 'Nivel ' + i;
+    b.onclick = () => { STATE.level = i; ds.querySelectorAll('.diff-btn').forEach(x => x.classList.remove('active')); b.classList.add('active'); document.getElementById('h-level').textContent = 'Nivel ' + i; };
+    ds.appendChild(b);
+  }
+}
+
+// ---- START GAME ----
+function startGame() {
+  STATE.phase = 'playing';
+  STATE.score = 0; STATE.correct = 0; STATE.errors = 0; STATE.placedItems = 0;
+  STATE.moves = []; STATE.mouseData = []; STATE.startTime = performance.now();
+  document.getElementById('h-score').textContent = '0';
+
+  // Get difficulty config
+  const diffKey = 'level_' + STATE.level;
+  const diff = (PACK.difficulty_scaling || {})[diffKey] || { items_per_round: 12, categories_visible: 5 };
+
+  // Select categories
+  let cats = [...PACK.categories];
+  if (diff.categories_visible && diff.categories_visible < cats.length) {
+    cats = cats.sort(() => Math.random() - 0.5).slice(0, diff.categories_visible);
+  }
+  const catIds = new Set(cats.map(c => c.id));
+
+  // Select items for this round
+  let items = PACK.items.filter(it => catIds.has(it.category));
+  // Shuffle and limit
+  items = items.sort(() => Math.random() - 0.5);
+  const count = Math.min(diff.items_per_round || 15, items.length);
+  items = items.slice(0, count);
+  STATE.currentItems = items;
+  STATE.totalItems = items.length;
+
+  // Timer
+  if (diff.time_limit) {
+    let remaining = diff.time_limit;
+    updateTimer(remaining);
+    STATE.timerInterval = setInterval(() => {
+      remaining--;
+      updateTimer(remaining);
+      if (remaining <= 0) { clearInterval(STATE.timerInterval); showResults(); }
+    }, 1000);
+  } else {
+    updateTimer(null);
+    // Count-up timer
+    let elapsed = 0;
+    STATE.timerInterval = setInterval(() => { elapsed++; updateTimerUp(elapsed); }, 1000);
+  }
+
+  renderGame(cats, items, diff);
+}
+
+function updateTimer(sec) {
+  const el = document.getElementById('h-timer');
+  if (sec === null) { el.textContent = '00:00'; return; }
+  const m = Math.floor(sec / 60); const s = sec % 60;
+  el.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  if (sec <= 30) el.style.color = 'var(--err)';
+  else if (sec <= 60) el.style.color = 'var(--warn)';
+  else el.style.color = 'var(--warn)';
+}
+function updateTimerUp(sec) {
+  const m = Math.floor(sec / 60); const s = sec % 60;
+  document.getElementById('h-timer').textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+// ---- RENDER GAME ----
+function renderGame(cats, items, diff) {
+  const game = document.getElementById('game');
+  game.innerHTML = `
+    <div class="mostrador" id="mostrador">
+      <div class="mostrador-title">
+        📦 Mostrador — <span class="count"><span id="remaining">${items.length}</span> productos por ubicar</span>
+      </div>
+      <div class="items-area" id="items-area"></div>
+    </div>
+    <div class="estantes" id="estantes"></div>`;
+
+  // Render items
+  const area = document.getElementById('items-area');
+  items.forEach(it => {
+    const el = document.createElement('div');
+    el.className = 'item';
+    el.draggable = true;
+    el.dataset.id = it.id;
+    el.dataset.cat = it.category;
+    const price = it.price ? '$' + it.price.toLocaleString('es-AR') : (it.price_range ? '$' + it.price_range[0].toLocaleString('es-AR') : '');
+    el.innerHTML = `<span class="item-em">${it.emoji}</span><span class="item-nm">${it.name}</span>${price ? '<span class="item-price">' + price + '</span>' : ''}`;
+
+    // Drag events
+    el.addEventListener('dragstart', e => {
+      el.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', it.id);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+
+    // Touch support
+    let touchClone = null;
+    el.addEventListener('touchstart', e => {
+      const touch = e.touches[0];
+      el.dataset.touchId = it.id;
+      el.classList.add('dragging');
+      touchClone = el.cloneNode(true);
+      touchClone.style.cssText = 'position:fixed;z-index:10000;pointer-events:none;opacity:0.8;transform:scale(1.1);';
+      touchClone.style.left = (touch.clientX - 50) + 'px';
+      touchClone.style.top = (touch.clientY - 50) + 'px';
+      document.body.appendChild(touchClone);
+    }, { passive: true });
+    el.addEventListener('touchmove', e => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      if (touchClone) {
+        touchClone.style.left = (touch.clientX - 50) + 'px';
+        touchClone.style.top = (touch.clientY - 50) + 'px';
+      }
+      // Highlight estante under finger
+      document.querySelectorAll('.estante').forEach(est => {
+        const r = est.getBoundingClientRect();
+        if (touch.clientX >= r.left && touch.clientX <= r.right && touch.clientY >= r.top && touch.clientY <= r.bottom) {
+          est.classList.add('drag-over');
+        } else {
+          est.classList.remove('drag-over');
+        }
+      });
+    }, { passive: false });
+    el.addEventListener('touchend', e => {
+      el.classList.remove('dragging');
+      if (touchClone) { touchClone.remove(); touchClone = null; }
+      const touch = e.changedTouches[0];
+      document.querySelectorAll('.estante').forEach(est => {
+        est.classList.remove('drag-over');
+        const r = est.getBoundingClientRect();
+        if (touch.clientX >= r.left && touch.clientX <= r.right && touch.clientY >= r.top && touch.clientY <= r.bottom) {
+          handleDrop(it.id, est.dataset.cat, el);
+        }
+      });
+    });
+
+    area.appendChild(el);
+  });
+
+  // Render estantes (shelves)
+  const estDiv = document.getElementById('estantes');
+  cats.forEach(cat => {
+    const el = document.createElement('div');
+    el.className = 'estante';
+    el.dataset.cat = cat.id;
+    el.innerHTML = `
+      <div class="estante-hdr">
+        <span class="estante-em">${cat.emoji}</span>
+        <span class="estante-nm">${cat.label}</span>
+        <span class="estante-count" id="cnt-${cat.id}">0</span>
+      </div>
+      <div class="estante-items" id="placed-${cat.id}"></div>`;
+
+    // Drop events
+    el.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; el.classList.add('drag-over'); });
+    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+    el.addEventListener('drop', e => {
+      e.preventDefault(); el.classList.remove('drag-over');
+      const itemId = e.dataTransfer.getData('text/plain');
+      const itemEl = document.querySelector(`.item[data-id="${itemId}"]`);
+      handleDrop(itemId, cat.id, itemEl);
+    });
+
+    estDiv.appendChild(el);
+  });
+
+  // Mouse telemetry
+  document.addEventListener('mousemove', trackMouse);
+}
+
+// ---- HANDLE DROP ----
+function handleDrop(itemId, targetCat, itemEl) {
+  const item = STATE.currentItems.find(i => i.id === itemId);
+  if (!item || !itemEl) return;
+
+  const isCorrect = item.category === targetCat;
+  const now = performance.now();
+  STATE.moves.push({ itemId, targetCat, correct: isCorrect, time: now - STATE.startTime, rt: now - (STATE.lastMoveTime || STATE.startTime) });
+  STATE.lastMoveTime = now;
+
+  if (isCorrect) {
+    STATE.correct++;
+    STATE.score += 100 + (STATE.level * 20);
+    STATE.placedItems++;
+
+    // Move item to estante
+    const placedArea = document.getElementById('placed-' + targetCat);
+    const pill = document.createElement('span');
+    pill.className = 'placed-item';
+    pill.innerHTML = `<span class="pi-em">${item.emoji}</span> ${item.name}`;
+    placedArea.appendChild(pill);
+
+    // Update count
+    const cnt = document.getElementById('cnt-' + targetCat);
+    cnt.textContent = parseInt(cnt.textContent) + 1;
+
+    // Flash estante green
+    const estante = document.querySelector(`.estante[data-cat="${targetCat}"]`);
+    estante.classList.add('correct-flash');
+    setTimeout(() => estante.classList.remove('correct-flash'), 400);
+
+    // Remove from mostrador
+    itemEl.remove();
+    toast('✓ ' + item.name, 'ok');
+  } else {
+    STATE.errors++;
+    STATE.score = Math.max(0, STATE.score - 30);
+
+    // Flash estante red
+    const estante = document.querySelector(`.estante[data-cat="${targetCat}"]`);
+    estante.classList.add('wrong-flash');
+    setTimeout(() => estante.classList.remove('wrong-flash'), 500);
+
+    // Shake the item
+    itemEl.classList.add('shake');
+    setTimeout(() => itemEl.classList.remove('shake'), 500);
+
+    // Find correct category name
+    const correctCat = PACK.categories.find(c => c.id === item.category);
+    toast('✗ ' + item.name + ' → va en ' + (correctCat ? correctCat.label : item.category), 'err');
+  }
+
+  // Update UI
+  document.getElementById('h-score').textContent = STATE.score;
+  const remaining = STATE.totalItems - STATE.placedItems;
+  const remEl = document.getElementById('remaining');
+  if (remEl) remEl.textContent = remaining;
+
+  // Check if done
+  if (STATE.placedItems >= STATE.totalItems) {
+    clearInterval(STATE.timerInterval);
+    setTimeout(showResults, 800);
+  }
+}
+
+// ---- TOAST ----
+function toast(msg, type) {
+  const c = document.getElementById('toasts');
   const t = document.createElement('div');
-  t.className = `toast toast-${type}`;
+  t.className = 'toast toast-' + (type || 'info');
   t.textContent = msg;
-  document.getElementById('toasts').appendChild(t);
+  c.appendChild(t);
   setTimeout(() => t.remove(), 2500);
 }
 
-// ============================
-// MODE: CLASSIFY
-// ============================
-function renderClassify(area) {
-  const items = shuffle([...PACK.items]).slice(0, 20);
-  const catIds = [...new Set(items.map(i => i.category))];
-  const cats = PACK.categories.filter(c => catIds.includes(c.id));
-  // Add a couple extra categories for confusion
-  const extraCats = PACK.categories.filter(c => !catIds.includes(c.id)).slice(0, 2);
-  const allCats = shuffle([...cats, ...extraCats]);
+// ---- RESULTS ----
+function showResults() {
+  STATE.phase = 'results';
+  document.removeEventListener('mousemove', trackMouse);
+  const elapsed = ((performance.now() - STATE.startTime) / 1000).toFixed(1);
+  const accuracy = STATE.totalItems > 0 ? Math.round((STATE.correct / (STATE.correct + STATE.errors)) * 100) : 0;
+  const avgRT = STATE.moves.length > 0 ? Math.round(STATE.moves.reduce((a, m) => a + m.rt, 0) / STATE.moves.length) : 0;
+  const perseverations = countPerseverations();
 
-  STATE.classifyItems = items;
-  STATE.placed = {};
-
-  area.innerHTML = `
-    <div class="classify-layout">
-      <div class="source-area">
-        <div class="source-title">📦 Mostrador — ${items.length} productos por ubicar</div>
-        <div class="source-items" id="source-items">
-          ${items.map(item => itemChip(item)).join('')}
+  const game = document.getElementById('game');
+  game.innerHTML = `
+    <div class="results">
+      <h2>${accuracy >= 80 ? '🎉 ¡Excelente!' : accuracy >= 60 ? '👍 ¡Bien!' : '💪 Seguí practicando'}</h2>
+      <div class="big-score">${accuracy}%</div>
+      <p style="color:var(--dim);margin-bottom:8px">Precisión de clasificación · Nivel ${STATE.level}</p>
+      <div class="results-grid">
+        <div class="res-card"><div class="rv" style="color:var(--ok)">${STATE.correct}</div><div class="rl">Correctos</div></div>
+        <div class="res-card"><div class="rv" style="color:var(--err)">${STATE.errors}</div><div class="rl">Errores</div></div>
+        <div class="res-card"><div class="rv">${elapsed}s</div><div class="rl">Tiempo total</div></div>
+        <div class="res-card"><div class="rv">${avgRT}ms</div><div class="rl">RT Promedio</div></div>
+        <div class="res-card"><div class="rv" style="color:var(--accent)">${STATE.score}</div><div class="rl">Puntos</div></div>
+        <div class="res-card"><div class="rv">${perseverations}</div><div class="rl">Perseveraciones</div></div>
+      </div>
+      <div style="margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="startGame()">🔄 Jugar de nuevo</button>
+        <button class="btn btn-ghost" onclick="showIntro()">⚙️ Cambiar nivel</button>
+        <a href="../../index.html" class="btn btn-ghost">← Volver al hub</a>
+      </div>
+      <div style="margin-top:24px;padding:16px;background:var(--surface);border-radius:12px;text-align:left;max-width:500px;margin-left:auto;margin-right:auto">
+        <div style="font-family:'Space Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:8px">Telemetría de sesión</div>
+        <div style="font-size:.7rem;color:var(--dim);line-height:1.8">
+          Movimientos totales del mouse: ${STATE.mouseData.length}<br>
+          Velocidad promedio cursor: ${avgMouseSpeed()}px/s<br>
+          Pausas >2s: ${countPauses()}<br>
+          Pack: ${PACK.meta.id} · Nivel: ${STATE.level}
         </div>
       </div>
-      <div class="shelves-area" id="shelves-area">
-        ${allCats.map(cat => `
-          <div class="shelf" data-cat="${cat.id}" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
-            <div class="shelf-header">
-              <span class="shelf-emoji">${cat.emoji}</span>
-              <span class="shelf-name">${cat.label}</span>
-              <span class="shelf-count" id="count-${cat.id}">0</span>
-            </div>
-            <div class="shelf-items" id="shelf-${cat.id}"></div>
-          </div>
-        `).join('')}
-      </div>
     </div>`;
-
-  // Setup drag events
-  document.querySelectorAll('.item-chip[draggable]').forEach(el => {
-    el.addEventListener('dragstart', onDragStart);
-    el.addEventListener('dragend', onDragEnd);
-    // Touch support
-    el.addEventListener('touchstart', onTouchStart, {passive:false});
-    el.addEventListener('touchmove', onTouchMove, {passive:false});
-    el.addEventListener('touchend', onTouchEnd);
-  });
 }
 
-function itemChip(item, small=false) {
-  const price = item.price ? `<span class="item-price">$${item.price.toLocaleString('es-AR')}</span>` : '';
-  return `<div class="item-chip" draggable="true" data-id="${item.id}" data-cat="${item.category}">
-    <span class="item-emoji">${item.emoji}</span>
-    <span>${item.name}</span>${price}
-  </div>`;
-}
-
-let draggedItem = null;
-let touchGhost = null;
-
-function onDragStart(e) {
-  draggedItem = e.target.closest('.item-chip');
-  draggedItem.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', draggedItem.dataset.id);
-}
-function onDragEnd(e) {
-  if (draggedItem) draggedItem.classList.remove('dragging');
-  draggedItem = null;
-  document.querySelectorAll('.shelf').forEach(s => s.classList.remove('drag-over'));
-}
-function onDragOver(e) {
-  e.preventDefault();
-  e.currentTarget.classList.add('drag-over');
-}
-function onDragLeave(e) {
-  e.currentTarget.classList.remove('drag-over');
-}
-function onDrop(e) {
-  e.preventDefault();
-  const shelf = e.currentTarget;
-  shelf.classList.remove('drag-over');
-  if (!draggedItem) return;
-  const itemId = draggedItem.dataset.id;
-  const correctCat = draggedItem.dataset.cat;
-  const targetCat = shelf.dataset.cat;
-  processPlacement(itemId, correctCat, targetCat, draggedItem, shelf);
-}
-
-// Touch support
-function onTouchStart(e) {
-  e.preventDefault();
-  draggedItem = e.target.closest('.item-chip');
-  draggedItem.classList.add('dragging');
-  touchGhost = document.createElement('div');
-  touchGhost.className = 'drag-ghost';
-  touchGhost.textContent = draggedItem.querySelector('.item-emoji').textContent + ' ' + draggedItem.querySelector('span:nth-child(2)')?.textContent;
-  document.body.appendChild(touchGhost);
-  moveTouchGhost(e.touches[0]);
-}
-function onTouchMove(e) {
-  e.preventDefault();
-  if (touchGhost) moveTouchGhost(e.touches[0]);
-  // Highlight shelf under touch
-  document.querySelectorAll('.shelf').forEach(s => s.classList.remove('drag-over'));
-  const el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
-  const shelf = el?.closest('.shelf');
-  if (shelf) shelf.classList.add('drag-over');
-}
-function onTouchEnd(e) {
-  if (touchGhost) { touchGhost.remove(); touchGhost = null; }
-  if (!draggedItem) return;
-  const touch = e.changedTouches[0];
-  const el = document.elementFromPoint(touch.clientX, touch.clientY);
-  const shelf = el?.closest('.shelf');
-  if (shelf) {
-    const itemId = draggedItem.dataset.id;
-    const correctCat = draggedItem.dataset.cat;
-    const targetCat = shelf.dataset.cat;
-    processPlacement(itemId, correctCat, targetCat, draggedItem, shelf);
+function countPerseverations() {
+  let p = 0;
+  for (let i = 1; i < STATE.moves.length; i++) {
+    if (!STATE.moves[i].correct && !STATE.moves[i-1].correct && STATE.moves[i].targetCat === STATE.moves[i-1].targetCat) p++;
   }
-  draggedItem.classList.remove('dragging');
-  document.querySelectorAll('.shelf').forEach(s => s.classList.remove('drag-over'));
-  draggedItem = null;
+  return p;
 }
-function moveTouchGhost(touch) {
-  if (touchGhost) {
-    touchGhost.style.left = touch.clientX + 'px';
-    touchGhost.style.top = touch.clientY + 'px';
+
+// ---- MOUSE TELEMETRY ----
+function trackMouse(e) {
+  const now = performance.now();
+  STATE.mouseData.push({ x: e.clientX, y: e.clientY, t: now });
+  // Keep last 5000 points
+  if (STATE.mouseData.length > 5000) STATE.mouseData.shift();
+}
+
+function avgMouseSpeed() {
+  if (STATE.mouseData.length < 2) return 0;
+  let totalDist = 0;
+  for (let i = 1; i < STATE.mouseData.length; i++) {
+    const dx = STATE.mouseData[i].x - STATE.mouseData[i-1].x;
+    const dy = STATE.mouseData[i].y - STATE.mouseData[i-1].y;
+    totalDist += Math.sqrt(dx*dx + dy*dy);
   }
+  const totalTime = (STATE.mouseData[STATE.mouseData.length-1].t - STATE.mouseData[0].t) / 1000;
+  return totalTime > 0 ? Math.round(totalDist / totalTime) : 0;
 }
 
-function processPlacement(itemId, correctCat, targetCat, chipEl, shelfEl) {
-  if (STATE.placed[itemId]) return;
-  STATE.placed[itemId] = targetCat;
-
-  const isCorrect = correctCat === targetCat;
-  const item = PACK.items.find(i => i.id === itemId);
-  
-  if (isCorrect) {
-    STATE.ok++;
-    chipEl.classList.add('correct');
-    toast(`✅ ${item.name} → correcto`, 'ok');
-  } else {
-    STATE.err++;
-    chipEl.classList.add('wrong');
-    const correctCatObj = PACK.categories.find(c => c.id === correctCat);
-    const hint = item.similarity_note || `Va en ${correctCatObj?.label}`;
-    toast(`❌ ${item.name} → ${hint}`, 'err');
+function countPauses() {
+  let pauses = 0;
+  for (let i = 1; i < STATE.mouseData.length; i++) {
+    if ((STATE.mouseData[i].t - STATE.mouseData[i-1].t) > 2000) pauses++;
   }
-  updateScore();
-
-  // Move chip to shelf
-  const shelfItems = shelfEl.querySelector('.shelf-items');
-  const mini = document.createElement('div');
-  mini.className = `item-chip ${isCorrect ? 'correct' : 'wrong'}`;
-  mini.style.cursor = 'default';
-  mini.innerHTML = `<span class="item-emoji">${item.emoji}</span><span style="font-size:.75rem">${item.name}</span>`;
-  shelfItems.appendChild(mini);
-
-  // Update count
-  const countEl = document.getElementById(`count-${targetCat}`);
-  if (countEl) countEl.textContent = shelfItems.children.length;
-
-  // Remove from source
-  chipEl.style.transition = 'all .2s';
-  chipEl.style.opacity = '0';
-  chipEl.style.transform = 'scale(.8)';
-  setTimeout(() => chipEl.remove(), 200);
-
-  // Check if done
-  const remaining = document.querySelectorAll('#source-items .item-chip');
-  if (remaining.length <= 1) {
-    setTimeout(() => showResults('classify'), 600);
-  }
+  return pauses;
 }
 
-// ============================
-// MODE: GROUPING
-// ============================
-function renderGrouping(area) {
-  const missions = PACK.missions?.grouping;
-  if (!missions || missions.length === 0) {
-    area.innerHTML = '<div class="loading"><p style="color:var(--muted)">Este pack no tiene misiones de agrupamiento todavía.</p></div>';
-    return;
-  }
-  STATE.currentMissionIdx = STATE.currentMissionIdx % missions.length;
-  const mission = missions[STATE.currentMissionIdx];
-  STATE.selectedGroupItems = new Set();
-
-  // Get all items that could be shown (correct + traps + some neutrals)
-  const relevantIds = [...(mission.correct_items || []), ...(mission.trap_items || []), ...(mission.partial_credit || [])];
-  const relevantItems = relevantIds.map(id => PACK.items.find(i => i.id === id)).filter(Boolean);
-  // Add some random distractors
-  const otherItems = shuffle(PACK.items.filter(i => !relevantIds.includes(i.id))).slice(0, 6);
-  const allItems = shuffle([...relevantItems, ...otherItems]);
-
-  area.innerHTML = `
-    <div class="grouping-mission">
-      <div class="mission-emoji">${mission.emoji || '🧰'}</div>
-      <div class="mission-name">${mission.name}</div>
-      <div class="mission-desc">${mission.description}</div>
-    </div>
-    <div class="grouping-items" id="grouping-items">
-      ${allItems.map(item => `
-        <div class="group-item" data-id="${item.id}" onclick="toggleGroupItem(this)">
-          <span>${item.emoji}</span>
-          <span>${item.name}</span>
-          ${item.price ? `<span style="font-size:.7rem;color:var(--green);margin-left:4px;font-family:'Space Mono',monospace">$${item.price.toLocaleString('es-AR')}</span>` : ''}
-        </div>
-      `).join('')}
-    </div>
-    <button class="check-btn" onclick="checkGrouping()">Verificar selección</button>
-    <div id="grouping-result"></div>`;
-}
-
-function toggleGroupItem(el) {
-  const id = el.dataset.id;
-  if (STATE.selectedGroupItems.has(id)) {
-    STATE.selectedGroupItems.delete(id);
-    el.classList.remove('selected');
-  } else {
-    STATE.selectedGroupItems.add(id);
-    el.classList.add('selected');
-  }
-}
-
-function checkGrouping() {
-  const missions = PACK.missions.grouping;
-  const mission = missions[STATE.currentMissionIdx];
-  const correct = new Set(mission.correct_items || []);
-  const traps = new Set(mission.trap_items || []);
-  const partial = new Set(mission.partial_credit || []);
-  const selected = STATE.selectedGroupItems;
-
-  let hits = 0, misses = 0, trapHits = 0;
-
-  document.querySelectorAll('.group-item').forEach(el => {
-    const id = el.dataset.id;
-    el.classList.remove('selected');
-    el.style.pointerEvents = 'none';
-
-    if (correct.has(id) && selected.has(id)) {
-      el.classList.add('correct-reveal');
-      hits++;
-    } else if (correct.has(id) && !selected.has(id)) {
-      el.classList.add('missed-reveal');
-      misses++;
-    } else if (traps.has(id) && selected.has(id)) {
-      el.classList.add('trap-reveal');
-      trapHits++;
-      const explain = mission.trap_explanations?.[id];
-      if (explain) {
-        const note = document.createElement('div');
-        note.style.cssText = 'font-size:.7rem;color:var(--red);margin-top:4px';
-        note.textContent = '⚠️ ' + explain;
-        el.appendChild(note);
-      }
-    } else if (partial.has(id) && selected.has(id)) {
-      el.classList.add('correct-reveal');
-      hits += 0.5;
-    }
-  });
-
-  STATE.ok += hits;
-  STATE.err += trapHits + misses;
-  updateScore();
-
-  const total = correct.size;
-  const pct = Math.round((hits / total) * 100);
-  const resultDiv = document.getElementById('grouping-result');
-  resultDiv.innerHTML = `
-    <div style="text-align:center;margin-top:24px">
-      <div style="font-size:2rem">${pct >= 70 ? '🎉' : pct >= 40 ? '🤔' : '😬'}</div>
-      <div style="font-size:1.1rem;font-weight:700;margin:8px 0">${hits}/${total} items correctos${trapHits > 0 ? ` · ${trapHits} trampas` : ''}</div>
-      <button class="sim-next" onclick="STATE.currentMissionIdx++;renderGrouping(document.getElementById('game-area'))">Siguiente misión →</button>
-    </div>`;
-
-  document.querySelector('.check-btn').style.display = 'none';
-}
-
-// ============================
-// MODE: CALCULATION
-// ============================
-function renderCalculation(area) {
-  const calcs = PACK.missions?.calculation;
-  if (!calcs || calcs.length === 0) {
-    area.innerHTML = '<div class="loading"><p style="color:var(--muted)">Este pack no tiene desafíos de cálculo todavía.</p></div>';
-    return;
-  }
-  STATE.currentCalcIdx = STATE.currentCalcIdx % calcs.length;
-  const calc = calcs[STATE.currentCalcIdx];
-
-  area.innerHTML = `
-    <div class="calc-card">
-      <div class="calc-emoji">${calc.emoji || '🧮'}</div>
-      <div class="mission-name" style="margin-bottom:4px">${calc.name}</div>
-      <div class="calc-question">${calc.description}</div>
-      <div class="calc-input-row">
-        <input type="number" class="calc-input" id="calc-answer" placeholder="Tu respuesta..." onkeydown="if(event.key==='Enter')checkCalc()">
-        <span class="calc-unit">${calc.answer_unit || '$'}</span>
-        <button class="calc-submit" onclick="checkCalc()">Verificar</button>
-      </div>
-      <div id="calc-result"></div>
-    </div>`;
-  document.getElementById('calc-answer').focus();
-}
-
-function checkCalc() {
-  const calcs = PACK.missions.calculation;
-  const calc = calcs[STATE.currentCalcIdx];
-  const input = document.getElementById('calc-answer');
-  const answer = parseFloat(input.value);
-  if (isNaN(answer)) return;
-
-  let correct = false;
-  const expected = typeof calc.correct_answer === 'object' ? Object.values(calc.correct_answer)[0] : calc.correct_answer;
-  
-  if (calc.accept_range) {
-    correct = answer >= calc.accept_range[0] && answer <= calc.accept_range[1];
-  } else {
-    correct = Math.abs(answer - expected) < expected * 0.05 || answer === expected;
-  }
-
-  if (correct) { STATE.ok++; toast('✅ ¡Correcto!', 'ok'); }
-  else { STATE.err++; toast(`❌ La respuesta era ${typeof expected === 'number' ? expected.toLocaleString('es-AR') : expected}`, 'err'); }
-  updateScore();
-
-  const res = document.getElementById('calc-result');
-  res.className = `calc-result ${correct ? 'correct' : 'wrong'}`;
-  res.innerHTML = `<strong>${correct ? '✅ ¡Correcto!' : '❌ Incorrecto'}</strong><br>${calc.explanation}<br><br>
-    <button class="sim-next" onclick="STATE.currentCalcIdx++;renderCalculation(document.getElementById('game-area'))">Siguiente problema →</button>`;
-  input.disabled = true;
-}
-
-// ============================
-// MODE: SIMILARITY
-// ============================
-function renderSimilarity(area) {
-  const simData = PACK.missions?.similarity_discrimination;
-  if (!simData || simData.length === 0 || !simData[0].pairs) {
-    area.innerHTML = '<div class="loading"><p style="color:var(--muted)">Este pack no tiene pares de semejanza todavía.</p></div>';
-    return;
-  }
-  const pairs = simData[0].pairs;
-  STATE.currentPairIdx = STATE.currentPairIdx % pairs.length;
-  const pair = pairs[STATE.currentPairIdx];
-  const itemA = PACK.items.find(i => i.id === pair.item_a);
-  const itemB = PACK.items.find(i => i.id === pair.item_b);
-  if (!itemA || !itemB) { STATE.currentPairIdx++; renderSimilarity(area); return; }
-
-  const catA = PACK.categories.find(c => c.id === itemA.category);
-  const catB = PACK.categories.find(c => c.id === itemB.category);
-
-  area.innerHTML = `
-    <div style="text-align:center;margin-bottom:20px">
-      <div style="font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Par ${STATE.currentPairIdx + 1} de ${pairs.length}</div>
-      <div style="font-size:1.2rem;font-weight:700;margin-top:8px">Estos dos se parecen. ¿En qué se diferencian?</div>
-    </div>
-    <div class="similarity-pair">
-      <div class="sim-card" onclick="revealSimilarity()">
-        <div class="sim-emoji">${itemA.emoji}</div>
-        <div class="sim-name">${itemA.name}</div>
-        <div class="sim-cat">${catA?.emoji} ${catA?.label}</div>
-      </div>
-      <div class="sim-card" onclick="revealSimilarity()">
-        <div class="sim-emoji">${itemB.emoji}</div>
-        <div class="sim-name">${itemB.name}</div>
-        <div class="sim-cat">${catB?.emoji} ${catB?.label}</div>
-      </div>
-    </div>
-    <div class="sim-vs">VS</div>
-    <div id="sim-reveal" style="display:none">
-      <div class="sim-explain"><strong>Diferencia clave:</strong><br>${pair.key_difference}</div>
-      <button class="sim-next" onclick="STATE.currentPairIdx++;renderSimilarity(document.getElementById('game-area'))">Siguiente par →</button>
-    </div>
-    <button class="check-btn" id="sim-show-btn" onclick="revealSimilarity()" style="margin-top:20px">Revelar diferencia</button>`;
-}
-
-function revealSimilarity() {
-  document.getElementById('sim-reveal').style.display = 'block';
-  const btn = document.getElementById('sim-show-btn');
-  if (btn) btn.style.display = 'none';
-  STATE.ok++;
-  updateScore();
-}
-
-// ============================
-// RESULTS
-// ============================
-function showResults(mode) {
-  const elapsed = Math.floor((Date.now() - STATE.startTime) / 1000);
-  const total = STATE.ok + STATE.err;
-  const pct = total > 0 ? Math.round((STATE.ok / total) * 100) : 0;
-  let emoji = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : pct >= 40 ? '🤔' : '💪';
-  let msg = pct >= 80 ? '¡Excelente trabajo!' : pct >= 60 ? 'Buen trabajo' : pct >= 40 ? 'Se puede mejorar' : 'A seguir practicando';
-
-  const overlay = document.createElement('div');
-  overlay.className = 'results-overlay';
-  overlay.innerHTML = `
-    <div class="results-card">
-      <div class="results-emoji">${emoji}</div>
-      <div class="results-title">${msg}</div>
-      <div class="results-stats">
-        <div class="results-stat"><div class="results-stat-val" style="color:var(--green)">${STATE.ok}</div><div class="results-stat-lbl">Correctos</div></div>
-        <div class="results-stat"><div class="results-stat-val" style="color:var(--red)">${STATE.err}</div><div class="results-stat-lbl">Errores</div></div>
-        <div class="results-stat"><div class="results-stat-val">${pct}%</div><div class="results-stat-lbl">Precisión</div></div>
-      </div>
-      <div style="font-family:'Space Mono',monospace;font-size:.8rem;color:var(--muted);margin-bottom:16px">Tiempo: ${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}</div>
-      <button class="results-btn" onclick="this.closest('.results-overlay').remove();setMode(STATE.mode)">Jugar de nuevo</button>
-      <button class="sim-next" style="margin-top:8px" onclick="this.closest('.results-overlay').remove()">Cerrar</button>
-    </div>`;
-  document.body.appendChild(overlay);
-}
-
-// -- UTILS --
-function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
-
-// -- INIT --
+// ---- INIT ----
 loadPack();
 </script>
 </body>
