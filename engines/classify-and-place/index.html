@@ -125,7 +125,16 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <main class="game" id="game"><div class="loading"><div class="spinner"></div><p style="color:var(--dim);font-size:.85rem">Cargando pack...</p></div></main>
 <script>
 const PACK_MAP={'ferreteria':'../../packs/classify-and-place/ferreteria/pack.json','libreria-escolar':'../../packs/classify-and-place/libreria-escolar/pack.json','electrodomesticos':'../../packs/classify-and-place/electrodomesticos/pack.json','almacen-general':'../../packs/classify-and-place/almacen-general/pack.json','supermarket':'../../packs/classify-and-place/supermarket/pack.json'};
-let PACK=null,STATE={phase:'intro',mode:'classify',level:1,score:0,correct:0,errors:0,totalItems:0,placedItems:0,startTime:0,timerInterval:null,currentItems:[],moves:[],mouseData:[],lastMoveTime:0,kitCart:{},kitMissionIdx:0,calcIdx:0,simIdx:0,kitBudget:0,kitSpent:0,kitScenario:null};
+let PACK=null,STATE={phase:'intro',mode:'classify',level:1,score:0,correct:0,errors:0,totalItems:0,placedItems:0,startTime:0,timerInterval:null,currentItems:[],moves:[],mouseData:[],lastMoveTime:0,kitCart:{},kitMissionIdx:0,calcIdx:0,simIdx:0,kitBudget:0,kitSpent:0,kitScenario:null,
+// Kit telemetry
+kitLog:[],       // every add/remove action timestamped
+kitRemovals:0,   // how many times removed item from cart
+kitFirstAction:0,// ms from start to first add
+kitBudgetExceededAt:0, // ms when first exceeded budget (0=never)
+kitSectionClicks:{}, // which category sections were scrolled to / clicked
+kitLastActionTime:0,
+kitDeliberationPauses:0, // pauses >5s between actions
+};
 
 async function loadPack(){const p=new URLSearchParams(location.search),id=p.get('pack')||'ferreteria',url=PACK_MAP[id];if(!url){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--err)">Pack no encontrado</p></div>';return}try{const r=await fetch(url);if(!r.ok)throw new Error(r.status);PACK=await r.json()}catch(e){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--err)">Error: '+e.message+'</p></div>';return}document.title=PACK.meta.name+' · HDD Gaming';document.getElementById('h-em').textContent=PACK.meta.emoji;document.getElementById('h-nm').textContent=PACK.meta.name;if(PACK.meta.colors)document.documentElement.style.setProperty('--accent',PACK.meta.colors.accent);showIntro()}
 
@@ -165,22 +174,78 @@ const KITS=[
 {emoji:'⛺',title:'Camping de fin de semana',desc:'Te vas de camping 2 días con 4 amigos. Comprá la comida y lo básico. No hay heladera, no hay horno. Solo una parrillita y conservadora con hielo.',budget:30000,areas:['Comida sin heladera','Bebidas','Descartables','Snacks']},
 ];
 
-function startKit(){STATE.phase='playing';STATE.kitCart={};STATE.kitSpent=0;const sc=KITS[STATE.kitMissionIdx%KITS.length];STATE.kitBudget=sc.budget;STATE.kitScenario=sc;
+function startKit(){STATE.phase='playing';STATE.kitCart={};STATE.kitSpent=0;STATE.kitLog=[];STATE.kitRemovals=0;STATE.kitFirstAction=0;STATE.kitBudgetExceededAt=0;STATE.kitSectionClicks={};STATE.kitLastActionTime=0;STATE.kitDeliberationPauses=0;const sc=KITS[STATE.kitMissionIdx%KITS.length];STATE.kitBudget=sc.budget;STATE.kitScenario=sc;
 const byCat={};PACK.items.forEach(it=>{if(!byCat[it.category])byCat[it.category]=[];byCat[it.category].push(it)});
 const secs=PACK.categories.map(cat=>{const its=byCat[cat.id]||[];if(!its.length)return'';return`<div class="kit-section"><div class="kit-section-hdr"><span class="kit-section-em">${cat.emoji}</span>${cat.label}</div>${its.map(it=>{const pr=it.price||((it.price_range||[])[0])||0;return`<div class="kit-product" data-id="${it.id}" data-price="${pr}" onclick="kitToggle('${it.id}',${pr})"><span class="kit-p-em">${it.emoji}</span><div class="kit-p-info"><div class="kit-p-name">${it.name}</div></div><span class="kit-p-price">$${pr.toLocaleString('es-AR')}</span></div>`}).join('')}</div>`}).join('');
 document.getElementById('game').innerHTML=`<div class="kit-scenario"><div class="kit-em">${sc.emoji}</div><div class="kit-title">${sc.title}</div><div class="kit-desc">${sc.desc}</div><div class="kit-budget-bar"><div><div class="kit-budget-label">Presupuesto</div><div class="kit-budget-val">$${sc.budget.toLocaleString('es-AR')}</div></div><div class="kit-budget-meter"><div class="kit-budget-fill" id="kit-fill" style="width:0%;background:var(--ok)"></div></div><div><div class="kit-spent" id="kit-spent-label">Gastado: $0</div><div class="kit-remaining" id="kit-remain">Quedan: $${sc.budget.toLocaleString('es-AR')}</div></div></div></div><div class="kit-cart" id="kit-cart"><div class="kit-cart-title">🛒 Tu carrito</div><div class="kit-cart-items" id="kit-cart-items"><div class="kit-empty">Tocá productos para agregarlos</div></div></div><div class="kit-store">${secs}</div><div style="text-align:center;padding:20px 0"><button class="btn btn-primary" onclick="kitFinish()">✅ Terminé mi compra</button> <button class="btn btn-ghost btn-sm" onclick="STATE.kitMissionIdx++;startKit()">🔄 Otro escenario</button></div>`}
 
-function kitToggle(id,pr){if(STATE.kitCart[id]){delete STATE.kitCart[id];STATE.kitSpent-=pr;document.querySelector('.kit-product[data-id="'+id+'"]')?.classList.remove('in-cart');toast('Quitado','info')}else{STATE.kitCart[id]=pr;STATE.kitSpent+=pr;document.querySelector('.kit-product[data-id="'+id+'"]')?.classList.add('in-cart');toast('Agregado','ok')}kitUI()}
+function kitToggle(id,pr){const now=performance.now(),elapsed=now-STATE.startTime,sinceLastAction=now-STATE.kitLastActionTime;
+// Track deliberation pauses (>5s between actions)
+if(STATE.kitLastActionTime>0&&sinceLastAction>5000)STATE.kitDeliberationPauses++;
+STATE.kitLastActionTime=now;
+// Track first action latency
+if(!STATE.kitFirstAction)STATE.kitFirstAction=elapsed;
+const item=PACK.items.find(i=>i.id===id);
+if(STATE.kitCart[id]){
+  delete STATE.kitCart[id];STATE.kitSpent-=pr;STATE.kitRemovals++;
+  STATE.kitLog.push({action:'remove',itemId:id,name:item?.name||id,category:item?.category||'?',price:pr,time:elapsed,spent:STATE.kitSpent,sinceLastMs:sinceLastAction});
+  document.querySelector('.kit-product[data-id="'+id+'"]')?.classList.remove('in-cart');toast('Quitado','info');
+}else{
+  STATE.kitCart[id]=pr;STATE.kitSpent+=pr;
+  STATE.kitLog.push({action:'add',itemId:id,name:item?.name||id,category:item?.category||'?',price:pr,time:elapsed,spent:STATE.kitSpent,sinceLastMs:sinceLastAction});
+  // Track when budget first exceeded
+  if(STATE.kitSpent>STATE.kitBudget&&!STATE.kitBudgetExceededAt)STATE.kitBudgetExceededAt=elapsed;
+  document.querySelector('.kit-product[data-id="'+id+'"]')?.classList.add('in-cart');toast('Agregado','ok');
+}
+// Track section engagement
+if(item)STATE.kitSectionClicks[item.category]=(STATE.kitSectionClicks[item.category]||0)+1;
+kitUI()}
 
 function kitUI(){const pct=Math.min(100,Math.round(STATE.kitSpent/STATE.kitBudget*100));const f=document.getElementById('kit-fill');f.style.width=pct+'%';f.style.background=pct>100?'var(--err)':pct>80?'var(--warn)':'var(--ok)';document.getElementById('kit-spent-label').textContent='Gastado: $'+STATE.kitSpent.toLocaleString('es-AR');const rem=STATE.kitBudget-STATE.kitSpent;const rE=document.getElementById('kit-remain');rE.textContent=(rem>=0?'Quedan: $':'Excedido: $')+Math.abs(rem).toLocaleString('es-AR');rE.className='kit-remaining'+(rem<0?' over':'');
 const cd=document.getElementById('kit-cart-items'),ids=Object.keys(STATE.kitCart);if(!ids.length){cd.innerHTML='<div class="kit-empty">Tocá productos para agregarlos</div>';return}cd.innerHTML=ids.map(id=>{const it=PACK.items.find(i=>i.id===id);return it?`<div class="kit-cart-item"><span class="ci-em">${it.emoji}</span>${it.name} <span class="ci-price">$${STATE.kitCart[id].toLocaleString('es-AR')}</span></div>`:''}).join('')}
 
 function kitFinish(){clearInterval(STATE.timerInterval);const elapsed=Math.floor((performance.now()-STATE.startTime)/1000),ids=Object.keys(STATE.kitCart),sc=STATE.kitScenario,over=STATE.kitSpent>STATE.kitBudget;
 const catsCov=new Set(ids.map(id=>{const it=PACK.items.find(i=>i.id===id);return it?it.category:null}).filter(Boolean));
-document.getElementById('game').innerHTML=`<div class="results"><h2>${over?'💸 Te pasaste del presupuesto':ids.length>0?'🛒 Compra terminada':'🤷 ¿No compraste nada?'}</h2><div class="big-score" style="color:${over?'var(--err)':'var(--ok)'}">${ids.length} productos</div>
-<div class="results-grid"><div class="res-card"><div class="rv">$${STATE.kitSpent.toLocaleString('es-AR')}</div><div class="rl">Total gastado</div></div><div class="res-card"><div class="rv" style="color:${over?'var(--err)':'var(--ok)'}">$${Math.abs(STATE.kitBudget-STATE.kitSpent).toLocaleString('es-AR')}</div><div class="rl">${over?'Excedido':'Sobrante'}</div></div><div class="res-card"><div class="rv">${catsCov.size}/${PACK.categories.length}</div><div class="rl">Categorías usadas</div></div><div class="res-card"><div class="rv">${elapsed}s</div><div class="rl">Tiempo</div></div></div>
-<div style="background:var(--surface);border-radius:14px;padding:20px;max-width:550px;margin:24px auto;text-align:left;border:1px solid var(--border)"><div style="font-family:'Space Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:12px">Tu compra</div><div style="display:flex;flex-wrap:wrap;gap:6px">${ids.map(id=>{const it=PACK.items.find(i=>i.id===id);return it?`<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;background:var(--card);font-size:.75rem;border:1px solid var(--border)">${it.emoji} ${it.name}</span>`:''}).join('')}</div>
-<div style="margin-top:16px;font-size:.78rem;color:var(--dim);line-height:1.6"><strong style="color:var(--accent)">Nota clínica:</strong> Evaluación abierta — no hay respuesta única correcta. El profesional analiza: cobertura de necesidades del escenario, priorización bajo restricción presupuestaria, conocimiento previo, planificación y cálculo acumulativo.${sc.areas?'<br><strong>Áreas esperables:</strong> '+sc.areas.join(' · '):''}</div></div>
+const log=STATE.kitLog,adds=log.filter(l=>l.action==='add'),removes=log.filter(l=>l.action==='remove');
+const catSeq=[];adds.forEach(a=>{if(!catSeq.includes(a.category))catSeq.push(a)});
+const firstCatObj=catSeq[0]?PACK.categories.find(c=>c.id===catSeq[0].category):null;
+const firstCatName=firstCatObj?firstCatObj.label:'—';
+const actionGaps=log.slice(1).map(l=>l.sinceLastMs);
+const avgDelibMs=actionGaps.length?Math.round(actionGaps.reduce((a,b)=>a+b,0)/actionGaps.length):0;
+const firstActionSec=STATE.kitFirstAction?Math.round(STATE.kitFirstAction/1000):0;
+const perCat={};ids.forEach(id=>{const it=PACK.items.find(i=>i.id===id);if(it)perCat[it.category]=(perCat[it.category]||0)+1});
+const catBreakdown=PACK.categories.filter(c=>perCat[c.id]).map(c=>`${c.emoji} ${c.label}: ${perCat[c.id]}`).join('<br>');
+const catsMissed=PACK.categories.filter(c=>!perCat[c.id]).map(c=>`${c.emoji} ${c.label}`).join(', ');
+const budgetPct=Math.round(STATE.kitSpent/STATE.kitBudget*100);
+const timeline=adds.slice(0,10).map((a,i)=>`<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:6px;background:var(--card);font-size:.65rem;border:1px solid var(--border)"><span style="color:var(--accent);font-weight:700">${i+1}</span> ${a.name}</span>`).join(' ');
+const removalNames=removes.map(r=>r.name);
+document.getElementById('game').innerHTML=`<div class="results"><h2>${over?'💸 Presupuesto excedido':ids.length>0?'🛒 Compra terminada':'🤷 Carrito vacío'}</h2><div class="big-score" style="color:${over?'var(--err)':'var(--ok)'}">$${STATE.kitSpent.toLocaleString('es-AR')}</div><p style="color:var(--dim)">${ids.length} productos · ${budgetPct}% del presupuesto</p>
+<div class="results-grid" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">
+<div class="res-card"><div class="rv">${ids.length}</div><div class="rl">Productos</div></div>
+<div class="res-card"><div class="rv" style="color:${over?'var(--err)':'var(--ok)'}">$${Math.abs(STATE.kitBudget-STATE.kitSpent).toLocaleString('es-AR')}</div><div class="rl">${over?'Excedido':'Sobrante'}</div></div>
+<div class="res-card"><div class="rv">${catsCov.size}/${PACK.categories.length}</div><div class="rl">Categorías</div></div>
+<div class="res-card"><div class="rv">${elapsed}s</div><div class="rl">Tiempo total</div></div>
+<div class="res-card"><div class="rv">${firstActionSec}s</div><div class="rl">Latencia 1er item</div></div>
+<div class="res-card"><div class="rv">${(avgDelibMs/1000).toFixed(1)}s</div><div class="rl">Deliberación prom</div></div>
+<div class="res-card"><div class="rv">${STATE.kitRemovals}</div><div class="rl">Autocorrecciones</div></div>
+<div class="res-card"><div class="rv">${STATE.kitDeliberationPauses}</div><div class="rl">Pausas &gt;5s</div></div>
+</div>
+<div style="background:var(--surface);border-radius:14px;padding:20px;max-width:620px;margin:24px auto;text-align:left;border:1px solid var(--border)">
+<div style="font-family:'Space Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:14px">📊 Análisis de compra</div>
+<div style="margin-bottom:14px"><div style="font-size:.72rem;font-weight:700;color:var(--accent);margin-bottom:6px">Orden de compra</div><div style="display:flex;flex-wrap:wrap;gap:4px">${timeline||'—'}</div><div style="font-size:.65rem;color:var(--dim);margin-top:4px">Primera categoría: <strong style="color:var(--text)">${firstCatName}</strong> — indica priorización del paciente</div></div>
+<div style="margin-bottom:14px"><div style="font-size:.72rem;font-weight:700;color:var(--accent);margin-bottom:6px">Cobertura por categoría</div><div style="font-size:.75rem;line-height:1.8">${catBreakdown||'—'}</div>${catsMissed?'<div style="font-size:.65rem;color:var(--err);margin-top:4px">Sin compras en: '+catsMissed+'</div>':''}</div>
+${STATE.kitRemovals>0?'<div style="margin-bottom:14px"><div style="font-size:.72rem;font-weight:700;color:var(--accent);margin-bottom:4px">Autocorrecciones ('+STATE.kitRemovals+')</div><div style="font-size:.72rem;color:var(--dim)">'+removalNames.join(', ')+'</div><div style="font-size:.65rem;color:var(--dim);margin-top:3px">'+(STATE.kitRemovals<=2?'Decisiones firmes':STATE.kitRemovals<=5?'Deliberación activa':'Indecisión significativa')+'</div></div>':''}
+${STATE.kitBudgetExceededAt>0?'<div style="margin-bottom:14px"><div style="font-size:.72rem;font-weight:700;color:var(--err);margin-bottom:4px">⚠️ Presupuesto excedido</div><div style="font-size:.72rem;color:var(--dim)">Se pasó a los '+Math.round(STATE.kitBudgetExceededAt/1000)+'s (tras '+log.filter(l=>l.action==='add'&&l.time<=STATE.kitBudgetExceededAt).length+' productos). '+(over?'No corrigió.':'Corrigió sacando items.')+'</div></div>':''}
+<div style="border-top:1px solid var(--border);padding-top:14px;margin-top:8px"><div style="font-size:.72rem;font-weight:700;color:var(--accent);margin-bottom:6px">Indicadores clínicos</div>
+<div style="font-size:.68rem;color:var(--dim);line-height:1.9">
+<strong>Latencia inicial (${firstActionSec}s):</strong> ${firstActionSec<10?'Rápido — impulsividad o familiaridad':firstActionSec<30?'Deliberación razonable':firstActionSec<60?'Prolongada — dificultad para iniciar':'Muy larga — evaluar bloqueo ejecutivo'}<br>
+<strong>Deliberación prom (${(avgDelibMs/1000).toFixed(1)}s):</strong> ${avgDelibMs<2000?'Rápida — posible impulsividad':avgDelibMs<5000?'Normal':avgDelibMs<10000?'Lenta — procesamiento cuidadoso':'Muy lenta — fatiga o dificultad severa'}<br>
+<strong>Pausas &gt;5s (${STATE.kitDeliberationPauses}):</strong> ${STATE.kitDeliberationPauses===0?'Flujo continuo':STATE.kitDeliberationPauses<=3?'Pausas reflexivas esperables':'Muchas pausas — desenganche o fatiga'}<br>
+<strong>Cobertura (${catsCov.size}/${PACK.categories.length}):</strong> ${catsCov.size>=PACK.categories.length-1?'Amplia — visión global':catsCov.size>=Math.ceil(PACK.categories.length/2)?'Parcial — áreas omitidas':'Limitada — rigidez o foco estrecho'}<br>
+<strong>Presupuesto (${budgetPct}%):</strong> ${budgetPct>110?'Excedido significativo — dificultad de cálculo':budgetPct>100?'Levemente excedido':budgetPct>70?'Buen uso':budgetPct>40?'Subutilizado':'Muy poco gastado — posible avolición'}
+</div></div>
+${sc.areas?'<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px"><div style="font-size:.65rem;color:var(--dim)"><strong>Áreas esperables:</strong> '+sc.areas.join(' · ')+'</div></div>':''}
+</div>
 <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn btn-primary" onclick="STATE.kitMissionIdx++;startKit()">🔄 Otro escenario</button><button class="btn btn-ghost" onclick="showIntro()">⚙️ Menú</button></div></div>`}
 
 /* ===== CALC ===== */
