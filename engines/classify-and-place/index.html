@@ -145,7 +145,11 @@ g.innerHTML=`<div class="game-intro"><span class="big-em">${PACK.meta.emoji}</sp
 const ds=document.getElementById('diff-sel');for(let i=1;i<=ml;i++){const b=document.createElement('button');b.className='diff-btn'+(i===1?' active':'');b.textContent='Nivel '+i;b.onclick=()=>{STATE.level=i;ds.querySelectorAll('.diff-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('h-level').textContent='Nivel '+i};ds.appendChild(b)}}
 
 function pickMode(btn,m){STATE.mode=m;document.querySelectorAll('#mode-sel .diff-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
-function startMode(){STATE.score=0;STATE.correct=0;STATE.errors=0;STATE.placedItems=0;STATE.moves=[];STATE.mouseData=[];STATE.startTime=performance.now();STATE.lastMoveTime=0;document.getElementById('h-score').textContent='0';clearInterval(STATE.timerInterval);let el=0;STATE.timerInterval=setInterval(()=>{el++;document.getElementById('h-timer').textContent=String(Math.floor(el/60)).padStart(2,'0')+':'+String(el%60).padStart(2,'0')},1000);({classify:startClassify,kit:startKit,calc:startCalc,sim:startSim})[STATE.mode]()}
+function startMode(){STATE.score=0;STATE.correct=0;STATE.errors=0;STATE.placedItems=0;STATE.moves=[];STATE.mouseData=[];STATE.scrollData=[];STATE.startTime=performance.now();STATE.lastMoveTime=0;document.getElementById('h-score').textContent='0';clearInterval(STATE.timerInterval);let el=0;STATE.timerInterval=setInterval(()=>{el++;document.getElementById('h-timer').textContent=String(Math.floor(el/60)).padStart(2,'0')+':'+String(el%60).padStart(2,'0')},1000);
+// Global mouse + scroll telemetry for ALL modes
+document.removeEventListener('mousemove',trackMouse);document.removeEventListener('scroll',trackScroll,true);
+document.addEventListener('mousemove',trackMouse);document.addEventListener('scroll',trackScroll,true);
+({classify:startClassify,kit:startKit,calc:startCalc,sim:startSim})[STATE.mode]()}
 function toast(m,t){const c=document.getElementById('toasts'),d=document.createElement('div');d.className='toast toast-'+(t||'info');d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),2500)}
 
 /* ===== CLASSIFY ===== */
@@ -155,7 +159,7 @@ const allItems=shuffle([...items]).map(it=>{const pr=it.price?'$'+it.price.toLoc
 document.getElementById('game').innerHTML=`<div class="mostrador"><div class="mostrador-title">📦 Mostrador — todo mezclado — <span class="count"><span id="remaining">${items.length}</span> por ubicar</span></div><div class="items-row">${allItems}</div></div><div class="estantes" id="estantes"></div>`;
 const ed=document.getElementById('estantes');shuffle([...cats]).forEach(cat=>{const el=document.createElement('div');el.className='estante';el.dataset.cat=cat.id;el.innerHTML=`<div class="estante-hdr"><span class="estante-em">${cat.emoji}</span><span class="estante-nm">${cat.label}</span><span class="estante-count" id="cnt-${cat.id}">0</span></div><div class="estante-items" id="placed-${cat.id}"></div>`;el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag-over')});el.addEventListener('dragleave',()=>el.classList.remove('drag-over'));el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('drag-over');handleDrop(e.dataTransfer.getData('text/plain'),cat.id,document.querySelector('.item[data-id="'+e.dataTransfer.getData('text/plain')+'"]'))});ed.appendChild(el)});
 document.querySelectorAll('.item[draggable]').forEach(el=>{el.addEventListener('dragstart',e=>{el.classList.add('dragging');e.dataTransfer.setData('text/plain',el.dataset.id)});el.addEventListener('dragend',()=>el.classList.remove('dragging'));let tc=null;el.addEventListener('touchstart',e=>{el.classList.add('dragging');tc=el.cloneNode(true);tc.style.cssText='position:fixed;z-index:10000;pointer-events:none;opacity:.8;transform:scale(1.1)';tc.style.left=(e.touches[0].clientX-50)+'px';tc.style.top=(e.touches[0].clientY-50)+'px';document.body.appendChild(tc)},{passive:true});el.addEventListener('touchmove',e=>{e.preventDefault();if(tc){tc.style.left=(e.touches[0].clientX-50)+'px';tc.style.top=(e.touches[0].clientY-50)+'px'}document.querySelectorAll('.estante').forEach(s=>{const r=s.getBoundingClientRect();s.classList.toggle('drag-over',e.touches[0].clientX>=r.left&&e.touches[0].clientX<=r.right&&e.touches[0].clientY>=r.top&&e.touches[0].clientY<=r.bottom)})},{passive:false});el.addEventListener('touchend',e=>{el.classList.remove('dragging');if(tc){tc.remove();tc=null}const t=e.changedTouches[0];document.querySelectorAll('.estante').forEach(s=>{s.classList.remove('drag-over');const r=s.getBoundingClientRect();if(t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom)handleDrop(el.dataset.id,s.dataset.cat,el)})})});
-document.addEventListener('mousemove',trackMouse)}
+}
 
 function handleDrop(iid,tcat,iel){const it=STATE.currentItems.find(i=>i.id===iid);if(!it||!iel)return;const ok=it.category===tcat,now=performance.now();STATE.moves.push({itemId:iid,targetCat:tcat,correct:ok,time:now-STATE.startTime,rt:now-(STATE.lastMoveTime||STATE.startTime)});STATE.lastMoveTime=now;
 if(ok){STATE.correct++;STATE.score+=100+STATE.level*20;STATE.placedItems++;const pa=document.getElementById('placed-'+tcat),pill=document.createElement('span');pill.className='placed-item';pill.innerHTML=`<span class="pi-em">${it.emoji}</span> ${it.name}`;pa.appendChild(pill);document.getElementById('cnt-'+tcat).textContent=pa.children.length;const est=document.querySelector('.estante[data-cat="'+tcat+'"]');est.classList.add('correct-flash');setTimeout(()=>est.classList.remove('correct-flash'),400);iel.remove();toast('✓ '+it.name,'ok')}
@@ -202,7 +206,7 @@ kitUI()}
 function kitUI(){const pct=Math.min(100,Math.round(STATE.kitSpent/STATE.kitBudget*100));const f=document.getElementById('kit-fill');f.style.width=pct+'%';f.style.background=pct>100?'var(--err)':pct>80?'var(--warn)':'var(--ok)';document.getElementById('kit-spent-label').textContent='Gastado: $'+STATE.kitSpent.toLocaleString('es-AR');const rem=STATE.kitBudget-STATE.kitSpent;const rE=document.getElementById('kit-remain');rE.textContent=(rem>=0?'Quedan: $':'Excedido: $')+Math.abs(rem).toLocaleString('es-AR');rE.className='kit-remaining'+(rem<0?' over':'');
 const cd=document.getElementById('kit-cart-items'),ids=Object.keys(STATE.kitCart);if(!ids.length){cd.innerHTML='<div class="kit-empty">Tocá productos para agregarlos</div>';return}cd.innerHTML=ids.map(id=>{const it=PACK.items.find(i=>i.id===id);return it?`<div class="kit-cart-item"><span class="ci-em">${it.emoji}</span>${it.name} <span class="ci-price">$${STATE.kitCart[id].toLocaleString('es-AR')}</span></div>`:''}).join('')}
 
-function kitFinish(){clearInterval(STATE.timerInterval);const elapsed=Math.floor((performance.now()-STATE.startTime)/1000),ids=Object.keys(STATE.kitCart),sc=STATE.kitScenario,over=STATE.kitSpent>STATE.kitBudget;
+function kitFinish(){clearInterval(STATE.timerInterval);document.removeEventListener('mousemove',trackMouse);document.removeEventListener('scroll',trackScroll,true);const elapsed=Math.floor((performance.now()-STATE.startTime)/1000),ids=Object.keys(STATE.kitCart),sc=STATE.kitScenario,over=STATE.kitSpent>STATE.kitBudget;
 const catsCov=new Set(ids.map(id=>{const it=PACK.items.find(i=>i.id===id);return it?it.category:null}).filter(Boolean));
 const log=STATE.kitLog,adds=log.filter(l=>l.action==='add'),removes=log.filter(l=>l.action==='remove');
 const catSeq=[];adds.forEach(a=>{if(!catSeq.includes(a.category))catSeq.push(a)});
@@ -244,6 +248,7 @@ ${STATE.kitBudgetExceededAt>0?'<div style="margin-bottom:14px"><div style="font-
 </div></div>
 ${sc.areas?'<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px"><div style="font-size:.65rem;color:var(--dim)"><strong>Áreas esperables:</strong> '+sc.areas.join(' · ')+'</div></div>':''}
 </div>
+<div style="background:var(--surface);border-radius:14px;padding:20px;max-width:620px;margin:16px auto;text-align:left;border:1px solid var(--border)">${mouseHTML()}</div>
 <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn btn-primary" onclick="STATE.kitMissionIdx++;startKit()">🔄 Otro escenario</button><button class="btn btn-ghost" onclick="showIntro()">⚙️ Menú</button></div></div>`}
 
 /* ===== CALC ===== */
@@ -256,12 +261,70 @@ function startSim(){STATE.phase='playing';const sd=PACK.missions?.similarity_dis
 document.getElementById('game').innerHTML=`<div style="text-align:center;margin-bottom:20px"><div style="font-size:.75rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em">Par ${(STATE.simIdx%pairs.length)+1} de ${pairs.length}</div><div style="font-size:1.2rem;font-weight:700;margin-top:8px">Estos dos se parecen. ¿En qué se diferencian?</div></div><div class="sim-pair"><div class="sim-card"><div class="s-em">${a.emoji}</div><div class="s-nm">${a.name}</div><div class="s-cat">${ca?.emoji||''} ${ca?.label||''}</div></div><div class="sim-card"><div class="s-em">${b.emoji}</div><div class="s-nm">${b.name}</div><div class="s-cat">${cb?.emoji||''} ${cb?.label||''}</div></div></div><div class="sim-vs">VS</div><div id="sim-rev" style="display:none"><div class="sim-explain"><strong>Diferencia clave:</strong><br>${pair.key_difference}</div><div style="text-align:center;margin-top:16px"><button class="btn btn-ghost btn-sm" onclick="STATE.simIdx++;startSim()">Siguiente →</button></div></div><div style="text-align:center"><button class="btn btn-primary" id="sim-btn" onclick="document.getElementById('sim-rev').style.display='block';this.remove();STATE.correct++;STATE.score+=50;document.getElementById('h-score').textContent=STATE.score">Revelar diferencia</button></div>`}
 
 /* ===== RESULTS (classify) ===== */
-function showResults(){STATE.phase='results';document.removeEventListener('mousemove',trackMouse);const el=((performance.now()-STATE.startTime)/1000).toFixed(1),acc=STATE.correct+STATE.errors>0?Math.round(STATE.correct/(STATE.correct+STATE.errors)*100):0,avgRT=STATE.moves.length?Math.round(STATE.moves.reduce((a,m)=>a+m.rt,0)/STATE.moves.length):0;let pers=0;for(let i=1;i<STATE.moves.length;i++)if(!STATE.moves[i].correct&&!STATE.moves[i-1].correct&&STATE.moves[i].targetCat===STATE.moves[i-1].targetCat)pers++;
-document.getElementById('game').innerHTML=`<div class="results"><h2>${acc>=80?'🎉 ¡Excelente!':acc>=60?'👍 ¡Bien!':'💪 Seguí practicando'}</h2><div class="big-score">${acc}%</div><p style="color:var(--dim)">Precisión · Nivel ${STATE.level}</p><div class="results-grid"><div class="res-card"><div class="rv" style="color:var(--ok)">${STATE.correct}</div><div class="rl">Correctos</div></div><div class="res-card"><div class="rv" style="color:var(--err)">${STATE.errors}</div><div class="rl">Errores</div></div><div class="res-card"><div class="rv">${el}s</div><div class="rl">Tiempo</div></div><div class="res-card"><div class="rv">${avgRT}ms</div><div class="rl">RT promedio</div></div><div class="res-card"><div class="rv" style="color:var(--accent)">${STATE.score}</div><div class="rl">Puntos</div></div><div class="res-card"><div class="rv">${pers}</div><div class="rl">Perseveraciones</div></div></div><div style="margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn btn-primary" onclick="startMode()">🔄 De nuevo</button><button class="btn btn-ghost" onclick="showIntro()">⚙️ Menú</button></div><div style="margin-top:24px;padding:16px;background:var(--surface);border-radius:12px;text-align:left;max-width:500px;margin:auto;border:1px solid var(--border)"><div style="font-family:'Space Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:8px">Telemetría</div><div style="font-size:.7rem;color:var(--dim);line-height:1.8">Mouse: ${STATE.mouseData.length} pts · Vel: ${avgMS()}px/s · Pausas>2s: ${cntP()}<br>Pack: ${PACK.meta.id} · Nivel: ${STATE.level}</div></div></div>`}
+function showResults(){STATE.phase='results';document.removeEventListener('mousemove',trackMouse);document.removeEventListener('scroll',trackScroll,true);const el=((performance.now()-STATE.startTime)/1000).toFixed(1),acc=STATE.correct+STATE.errors>0?Math.round(STATE.correct/(STATE.correct+STATE.errors)*100):0,avgRT=STATE.moves.length?Math.round(STATE.moves.reduce((a,m)=>a+m.rt,0)/STATE.moves.length):0;let pers=0;for(let i=1;i<STATE.moves.length;i++)if(!STATE.moves[i].correct&&!STATE.moves[i-1].correct&&STATE.moves[i].targetCat===STATE.moves[i-1].targetCat)pers++;
+document.getElementById('game').innerHTML=`<div class="results"><h2>${acc>=80?'🎉 ¡Excelente!':acc>=60?'👍 ¡Bien!':'💪 Seguí practicando'}</h2><div class="big-score">${acc}%</div><p style="color:var(--dim)">Precisión · Nivel ${STATE.level}</p><div class="results-grid"><div class="res-card"><div class="rv" style="color:var(--ok)">${STATE.correct}</div><div class="rl">Correctos</div></div><div class="res-card"><div class="rv" style="color:var(--err)">${STATE.errors}</div><div class="rl">Errores</div></div><div class="res-card"><div class="rv">${el}s</div><div class="rl">Tiempo</div></div><div class="res-card"><div class="rv">${avgRT}ms</div><div class="rl">RT promedio</div></div><div class="res-card"><div class="rv" style="color:var(--accent)">${STATE.score}</div><div class="rl">Puntos</div></div><div class="res-card"><div class="rv">${pers}</div><div class="rl">Perseveraciones</div></div></div><div style="margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn btn-primary" onclick="startMode()">🔄 De nuevo</button><button class="btn btn-ghost" onclick="showIntro()">⚙️ Menú</button></div><div style="margin-top:24px;padding:16px;background:var(--surface);border-radius:12px;text-align:left;max-width:600px;margin:auto;border:1px solid var(--border)">${mouseHTML()}</div></div>`}
 
-function trackMouse(e){STATE.mouseData.push({x:e.clientX,y:e.clientY,t:performance.now()});if(STATE.mouseData.length>5000)STATE.mouseData.shift()}
-function avgMS(){if(STATE.mouseData.length<2)return 0;let d=0;for(let i=1;i<STATE.mouseData.length;i++){const dx=STATE.mouseData[i].x-STATE.mouseData[i-1].x,dy=STATE.mouseData[i].y-STATE.mouseData[i-1].y;d+=Math.sqrt(dx*dx+dy*dy)}const t=(STATE.mouseData[STATE.mouseData.length-1].t-STATE.mouseData[0].t)/1000;return t>0?Math.round(d/t):0}
-function cntP(){let p=0;for(let i=1;i<STATE.mouseData.length;i++)if(STATE.mouseData[i].t-STATE.mouseData[i-1].t>2000)p++;return p}
+function trackMouse(e){const n=performance.now();STATE.mouseData.push({x:e.clientX,y:e.clientY,t:n});if(STATE.mouseData.length>8000)STATE.mouseData.shift()}
+function trackScroll(){if(!STATE.scrollData)STATE.scrollData=[];STATE.scrollData.push({y:window.scrollY,t:performance.now()});if(STATE.scrollData.length>2000)STATE.scrollData.shift()}
+
+// === MOUSE METRICS ENGINE ===
+function mouseMetrics(){
+  const md=STATE.mouseData;if(md.length<10)return{pts:md.length,vel:0,velVar:0,pauses:0,dirChanges:0,pathEff:0,totalDist:0,idleRatio:0};
+  // Total distance & velocity per segment
+  let totalDist=0;const vels=[];
+  for(let i=1;i<md.length;i++){
+    const dx=md[i].x-md[i-1].x,dy=md[i].y-md[i-1].y,dist=Math.sqrt(dx*dx+dy*dy);
+    const dt=(md[i].t-md[i-1].t)/1000;
+    totalDist+=dist;
+    if(dt>0&&dt<2)vels.push(dist/dt); // ignore >2s gaps (pauses)
+  }
+  const avgVel=vels.length?Math.round(vels.reduce((a,b)=>a+b,0)/vels.length):0;
+  // Velocity variance
+  const velVar=vels.length>1?Math.round(Math.sqrt(vels.reduce((s,v)=>s+(v-avgVel)**2,0)/(vels.length-1))):0;
+  // Pauses >2s
+  let pauses=0,idleMs=0;
+  for(let i=1;i<md.length;i++){const gap=md[i].t-md[i-1].t;if(gap>2000){pauses++;idleMs+=gap}}
+  const totalMs=md[md.length-1].t-md[0].t;
+  const idleRatio=totalMs>0?Math.round(idleMs/totalMs*100):0;
+  // Direction changes (angle change > 90°)
+  let dirChanges=0;
+  for(let i=2;i<md.length;i++){
+    const ax=md[i-1].x-md[i-2].x,ay=md[i-1].y-md[i-2].y;
+    const bx=md[i].x-md[i-1].x,by=md[i].y-md[i-1].y;
+    const dot=ax*bx+ay*by,magA=Math.sqrt(ax*ax+ay*ay),magB=Math.sqrt(bx*bx+by*by);
+    if(magA>2&&magB>2){const cos=dot/(magA*magB);if(cos<0)dirChanges++} // >90° change
+  }
+  // Path efficiency (straight line start→end / actual distance)
+  const sx=md[0].x,sy=md[0].y,ex=md[md.length-1].x,ey=md[md.length-1].y;
+  const straightDist=Math.sqrt((ex-sx)**2+(ey-sy)**2);
+  const pathEff=totalDist>0?Math.round(straightDist/totalDist*100):0;
+  // Scroll depth
+  const scrollCount=(STATE.scrollData||[]).length;
+  const maxScroll=STATE.scrollData?.length?Math.max(...STATE.scrollData.map(s=>s.y)):0;
+
+  return{pts:md.length,vel:avgVel,velVar,pauses,dirChanges,pathEff,totalDist:Math.round(totalDist),idleRatio,scrollCount,maxScroll};
+}
+
+function mouseHTML(){
+  const m=mouseMetrics();
+  return `<div style="font-family:'Space Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:8px">🖱️ Telemetría de mouse</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:.68rem;margin-bottom:10px">
+  <div style="background:var(--card);padding:8px;border-radius:8px;text-align:center"><div style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700">${m.vel}</div><div style="color:var(--dim);font-size:.55rem;margin-top:2px">px/s velocidad</div></div>
+  <div style="background:var(--card);padding:8px;border-radius:8px;text-align:center"><div style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700">${m.velVar}</div><div style="color:var(--dim);font-size:.55rem;margin-top:2px">varianza vel.</div></div>
+  <div style="background:var(--card);padding:8px;border-radius:8px;text-align:center"><div style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700">${m.pauses}</div><div style="color:var(--dim);font-size:.55rem;margin-top:2px">pausas &gt;2s</div></div>
+  <div style="background:var(--card);padding:8px;border-radius:8px;text-align:center"><div style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700">${m.dirChanges}</div><div style="color:var(--dim);font-size:.55rem;margin-top:2px">cambios dirección</div></div>
+  <div style="background:var(--card);padding:8px;border-radius:8px;text-align:center"><div style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700">${m.pathEff}%</div><div style="color:var(--dim);font-size:.55rem;margin-top:2px">eficiencia trazo</div></div>
+  <div style="background:var(--card);padding:8px;border-radius:8px;text-align:center"><div style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700">${m.idleRatio}%</div><div style="color:var(--dim);font-size:.55rem;margin-top:2px">% inactivo</div></div>
+</div>
+<div style="font-size:.65rem;color:var(--dim);line-height:1.7">
+  Distancia total: ${(m.totalDist/1000).toFixed(1)}K px · ${m.pts} muestras · Scroll: ${m.scrollCount} eventos (max ${m.maxScroll}px)<br>
+  <strong>Vel. prom (${m.vel} px/s):</strong> ${m.vel<100?'Muy lento — posible enlentecimiento psicomotor o sedación':m.vel<300?'Normal':m.vel<600?'Rápido — buena activación motora':'Muy rápido — posible agitación o impulsividad'}<br>
+  <strong>Varianza vel. (${m.velVar}):</strong> ${m.velVar<50?'Muy consistente — movimiento uniforme':m.velVar<150?'Varianza normal':m.velVar<300?'Variable — aceleraciones y desaceleraciones marcadas':'Muy variable — posible tremor, fatiga o agitación'}<br>
+  <strong>Pausas &gt;2s (${m.pauses}):</strong> ${m.pauses===0?'Sin interrupciones':m.pauses<=3?'Pocas — reflexión puntual':m.pauses<=8?'Moderadas — deliberación o fatiga intermitente':'Muchas — fatiga cognitiva, desenganche o distracción'}<br>
+  <strong>Cambios dirección (${m.dirChanges}):</strong> ${m.dirChanges<10?'Movimiento fluido y dirigido':m.dirChanges<30?'Normal — exploración visual':m.dirChanges<60?'Frecuentes — búsqueda visual activa o indecisión':'Excesivos — desorientación visual o agitación motora'}<br>
+  <strong>Eficiencia trazo (${m.pathEff}%):</strong> ${m.pathEff>50?'Alta — movimiento dirigido con objetivo':m.pathEff>20?'Media — exploración con orientación':m.pathEff>5?'Baja — mucha exploración sin rumbo claro':'Muy baja — movimiento errático'}
+</div>`
+}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 loadPack();
 </script>
