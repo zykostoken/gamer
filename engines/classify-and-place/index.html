@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cargando... · HDD Gaming</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../shared/telemetry.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0a0a0f;--surface:#12121a;--card:#1a1a27;--card2:#22222f;--border:rgba(255,255,255,.06);--text:#e8e8ed;--dim:rgba(255,255,255,.4);--accent:#6366f1;--ok:#22c55e;--err:#ef4444;--warn:#f59e0b}
@@ -134,7 +136,11 @@ kitLastActionTime:0,
 kitDeliberationPauses:0, // pauses >5s between actions
 };
 
-async function loadPack(){const p=new URLSearchParams(location.search),id=p.get('pack')||'ferreteria',url=PACK_MAP[id];if(!url){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--err)">Pack no encontrado</p></div>';return}try{const r=await fetch(url);if(!r.ok)throw new Error(r.status);PACK=await r.json()}catch(e){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--err)">Error: '+e.message+'</p></div>';return}document.title=PACK.meta.name+' · HDD Gaming';document.getElementById('h-em').textContent=PACK.meta.emoji;document.getElementById('h-nm').textContent=PACK.meta.name;if(PACK.meta.colors)document.documentElement.style.setProperty('--accent',PACK.meta.colors.accent);showIntro()}
+async function loadPack(){const p=new URLSearchParams(location.search),id=p.get('pack')||'ferreteria',url=PACK_MAP[id];if(!url){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--err)">Pack no encontrado</p></div>';return}try{const r=await fetch(url);if(!r.ok)throw new Error(r.status);PACK=await r.json()}catch(e){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--err)">Error: '+e.message+'</p></div>';return}document.title=PACK.meta.name+' · HDD Gaming';document.getElementById('h-em').textContent=PACK.meta.emoji;document.getElementById('h-nm').textContent=PACK.meta.name;if(PACK.meta.colors)document.documentElement.style.setProperty('--accent',PACK.meta.colors.accent);
+// Init telemetry with patient ID (from URL param or localStorage)
+const pid=new URLSearchParams(location.search).get('pid')||localStorage.getItem('hdd_patient_id')||'demo_'+Date.now();
+if(typeof TELEM!=='undefined')TELEM.init(pid).catch(()=>{});
+showIntro()}
 
 function showIntro(){STATE.phase='intro';const ml=Object.keys(PACK.difficulty_scaling||{}).length||4,g=document.getElementById('game'),hm=PACK.missions&&(PACK.missions.grouping||PACK.missions.calculation||PACK.missions.similarity_discrimination);
 g.innerHTML=`<div class="game-intro"><span class="big-em">${PACK.meta.emoji}</span><h2>${PACK.meta.name}</h2><p>${PACK.meta.description||''}</p><p style="font-size:.75rem;color:var(--dim);margin-bottom:20px;font-style:italic">${PACK.meta.setting||''}</p>
@@ -147,8 +153,9 @@ const ds=document.getElementById('diff-sel');for(let i=1;i<=ml;i++){const b=docu
 function pickMode(btn,m){STATE.mode=m;document.querySelectorAll('#mode-sel .diff-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
 function startMode(){STATE.score=0;STATE.correct=0;STATE.errors=0;STATE.placedItems=0;STATE.moves=[];STATE.mouseData=[];STATE.scrollData=[];STATE.startTime=performance.now();STATE.lastMoveTime=0;document.getElementById('h-score').textContent='0';clearInterval(STATE.timerInterval);let el=0;STATE.timerInterval=setInterval(()=>{el++;document.getElementById('h-timer').textContent=String(Math.floor(el/60)).padStart(2,'0')+':'+String(el%60).padStart(2,'0')},1000);
 // Global mouse + scroll telemetry for ALL modes
-document.removeEventListener('mousemove',trackMouse);document.removeEventListener('scroll',trackScroll,true);
 document.addEventListener('mousemove',trackMouse);document.addEventListener('scroll',trackScroll,true);
+// Telemetry: start game session
+if(typeof TELEM!=='undefined')TELEM.startGameSession({frame:'classify-and-place',packId:PACK.meta.id,mode:STATE.mode,level:STATE.level}).catch(()=>{});
 ({classify:startClassify,kit:startKit,calc:startCalc,sim:startSim})[STATE.mode]()}
 function toast(m,t){const c=document.getElementById('toasts'),d=document.createElement('div');d.className='toast toast-'+(t||'info');d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),2500)}
 
@@ -208,6 +215,12 @@ const cd=document.getElementById('kit-cart-items'),ids=Object.keys(STATE.kitCart
 
 function kitFinish(){clearInterval(STATE.timerInterval);document.removeEventListener('mousemove',trackMouse);document.removeEventListener('scroll',trackScroll,true);const elapsed=Math.floor((performance.now()-STATE.startTime)/1000),ids=Object.keys(STATE.kitCart),sc=STATE.kitScenario,over=STATE.kitSpent>STATE.kitBudget;
 const catsCov=new Set(ids.map(id=>{const it=PACK.items.find(i=>i.id===id);return it?it.category:null}).filter(Boolean));
+// TELEMETRY: send to Supabase
+if(typeof TELEM!=='undefined'){const mm=mouseMetrics();const adds=STATE.kitLog.filter(l=>l.action==='add');const avgDelib=STATE.kitLog.length>1?Math.round(STATE.kitLog.slice(1).reduce((a,l)=>a+l.sinceLastMs,0)/(STATE.kitLog.length-1)):0;
+TELEM.endGameSession({durationMs:elapsed*1000,score:STATE.score,correct:ids.length,errors:0,totalItems:PACK.items.length,accuracyPct:null,completed:true,kitScenario:sc.title,kitBudget:STATE.kitBudget,kitSpent:STATE.kitSpent,kitBudgetExceeded:over,kitBudgetExceededAtMs:STATE.kitBudgetExceededAt||null,kitItemsAdded:adds.length,kitItemsRemoved:STATE.kitRemovals,kitFirstActionMs:Math.round(STATE.kitFirstAction),kitAvgDeliberationMs:avgDelib,kitDeliberationPauses:STATE.kitDeliberationPauses,kitCategoriesCovered:catsCov.size,packId:PACK.meta.id,mode:'kit'}).catch(()=>{});
+TELEM.sendMouseTelemetry(mm).catch(()=>{});
+TELEM.sendKitLog(STATE.kitLog).catch(()=>{});
+}
 const log=STATE.kitLog,adds=log.filter(l=>l.action==='add'),removes=log.filter(l=>l.action==='remove');
 const catSeq=[];adds.forEach(a=>{if(!catSeq.includes(a.category))catSeq.push(a)});
 const firstCatObj=catSeq[0]?PACK.categories.find(c=>c.id===catSeq[0].category):null;
@@ -262,6 +275,12 @@ document.getElementById('game').innerHTML=`<div style="text-align:center;margin-
 
 /* ===== RESULTS (classify) ===== */
 function showResults(){STATE.phase='results';document.removeEventListener('mousemove',trackMouse);document.removeEventListener('scroll',trackScroll,true);const el=((performance.now()-STATE.startTime)/1000).toFixed(1),acc=STATE.correct+STATE.errors>0?Math.round(STATE.correct/(STATE.correct+STATE.errors)*100):0,avgRT=STATE.moves.length?Math.round(STATE.moves.reduce((a,m)=>a+m.rt,0)/STATE.moves.length):0;let pers=0;for(let i=1;i<STATE.moves.length;i++)if(!STATE.moves[i].correct&&!STATE.moves[i-1].correct&&STATE.moves[i].targetCat===STATE.moves[i-1].targetCat)pers++;
+// TELEMETRY: send everything to Supabase
+if(typeof TELEM!=='undefined'){const mm=mouseMetrics();
+TELEM.endGameSession({durationMs:Math.round(performance.now()-STATE.startTime),score:STATE.score,correct:STATE.correct,errors:STATE.errors,totalItems:STATE.totalItems,accuracyPct:acc,completed:true,perseverations:pers,avgReactionTimeMs:avgRT,packId:PACK.meta.id,mode:'classify'}).catch(()=>{});
+TELEM.sendMouseTelemetry(mm).catch(()=>{});
+TELEM.sendClassifyMoves(STATE.moves,STATE.currentItems).catch(()=>{});
+}
 document.getElementById('game').innerHTML=`<div class="results"><h2>${acc>=80?'🎉 ¡Excelente!':acc>=60?'👍 ¡Bien!':'💪 Seguí practicando'}</h2><div class="big-score">${acc}%</div><p style="color:var(--dim)">Precisión · Nivel ${STATE.level}</p><div class="results-grid"><div class="res-card"><div class="rv" style="color:var(--ok)">${STATE.correct}</div><div class="rl">Correctos</div></div><div class="res-card"><div class="rv" style="color:var(--err)">${STATE.errors}</div><div class="rl">Errores</div></div><div class="res-card"><div class="rv">${el}s</div><div class="rl">Tiempo</div></div><div class="res-card"><div class="rv">${avgRT}ms</div><div class="rl">RT promedio</div></div><div class="res-card"><div class="rv" style="color:var(--accent)">${STATE.score}</div><div class="rl">Puntos</div></div><div class="res-card"><div class="rv">${pers}</div><div class="rl">Perseveraciones</div></div></div><div style="margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn btn-primary" onclick="startMode()">🔄 De nuevo</button><button class="btn btn-ghost" onclick="showIntro()">⚙️ Menú</button></div><div style="margin-top:24px;padding:16px;background:var(--surface);border-radius:12px;text-align:left;max-width:600px;margin:auto;border:1px solid var(--border)">${mouseHTML()}</div></div>`}
 
 function trackMouse(e){const n=performance.now();STATE.mouseData.push({x:e.clientX,y:e.clientY,t:n});if(STATE.mouseData.length>8000)STATE.mouseData.shift()}
@@ -327,6 +346,8 @@ function mouseHTML(){
 }
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 loadPack();
+// Cleanup on exit
+window.addEventListener('beforeunload',()=>{if(typeof TELEM!=='undefined')TELEM.endPlatformSession()});
 </script>
 </body>
 </html>
