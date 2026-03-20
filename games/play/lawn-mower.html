@@ -1047,6 +1047,27 @@
             <div class="level-desc">El desafio final de mantenimiento completo.</div>
           </div>
         </button>
+        <button class="level-btn" data-level="201">
+          <div class="level-num" style="background:#f59e0b;">P3-1</div>
+          <div class="level-info">
+            <div class="level-name">Doble Tarea: Pileta</div>
+            <div class="level-desc">Corta el cesped mientras vigilas que la pileta no se desborde.</div>
+          </div>
+        </button>
+        <button class="level-btn" data-level="202">
+          <div class="level-num" style="background:#f59e0b;">P3-2</div>
+          <div class="level-info">
+            <div class="level-name">Doble Tarea Avanzada</div>
+            <div class="level-desc">Jardin grande, pileta rapida, cables. Planifica cerca del desague.</div>
+          </div>
+        </button>
+        <button class="level-btn" data-level="203">
+          <div class="level-num" style="background:#ef4444;">P3-3</div>
+          <div class="level-info">
+            <div class="level-name">Triple Tarea: Nene + Pileta</div>
+            <div class="level-desc">Corta, vigila la pileta Y cuida al nene. Maxima carga cognitiva.</div>
+          </div>
+        </button>
       </div>
     </div>
   </div>
@@ -1156,7 +1177,9 @@
     POOL_DIRTY: 9, // for level 5 pool cleaning section
     EMPTY: 10,      // outside yard
     FLOWER_DRY: 11, // flowers that need watering (Part 2)
-    FLOWER_WATERED: 12 // watered flowers (Part 2)
+    FLOWER_WATERED: 12, // watered flowers (Part 2)
+    DRAIN: 13,        // drain plug next to pool (Part 3 - dual task)
+    FAUCET: 14        // faucet / water source indicator (Part 3)
   };
 
   // ---- COLORS ----
@@ -1173,7 +1196,9 @@
     [T.POOL_DIRTY]: '#67e8f9',
     [T.EMPTY]:      '#e2e8f0',
     [T.FLOWER_DRY]: '#d4a574', // brownish for dry ground
-    [T.FLOWER_WATERED]: '#4ade80' // back to green when watered
+    [T.FLOWER_WATERED]: '#4ade80', // back to green when watered
+    [T.DRAIN]:      '#94a3b8',  // grey stone drain
+    [T.FAUCET]:     '#64748b'   // dark grey faucet
   };
 
   // Flower colors palette
@@ -1219,6 +1244,38 @@
 
   let blockedCheckTimer = null;
   let consecutiveBlockedChecks = 0;
+
+  // ---- PART 3: DUAL/TRIPLE TASK STATE ----
+  let isPart3 = false;
+  let gameTickId = null;
+  // Pool filling mechanic
+  let poolWaterLevel = 0;        // 0-100
+  let poolFillRate = 2;          // % per tick (adjustable per level)
+  let poolOverflowed = false;
+  let poolOverflowCount = 0;
+  let poolDrainCount = 0;        // times player drained
+  let poolCheckTimestamps = [];   // when player was adjacent to pool
+  let lastOverflowTime = 0;
+  let overflowReactionTimes = []; // RT from overflow to drain action
+  // Child/NPC mechanic
+  let childActive = false;
+  let childX = -1, childY = -1;
+  let childMoveCounter = 0;
+  let childMoveInterval = 4;     // ticks between child moves (2 sec at 500ms tick)
+  let childPoolAttractionPct = 30; // % chance of moving toward pool
+  let childNearPoolStart = 0;    // timestamp when child first adjacent to pool
+  let childDangerCount = 0;      // times child reached pool without interception
+  let childInterceptCount = 0;   // times player intercepted child
+  let childInterceptRTs = [];    // RT from child-near-pool to player intercept
+  let childDirection = 0;        // 0-3 (N,E,S,W)
+  // Rain mechanic (future)
+  let isRaining = false;
+  let rainStartTime = 0;
+  // Task switching metrics
+  let lastTaskSwitchTime = 0;
+  let taskSwitchCount = 0;
+  let preInterruptionPos = null; // {x,y} where player was when interrupted
+  let returnToTaskAccuracy = []; // did player return to where they were?
 
   // ---- SESSION METRICS HISTORY (persistent across levels for charts) ----
   let metricsHistory = JSON.parse(localStorage.getItem('lawnmower_metrics_history') || '[]');
@@ -1412,7 +1469,18 @@
             }
             var total = dirs.N + dirs.S + dirs.E + dirs.W;
             return total > 0 ? { N: Math.round(dirs.N/total*100), S: Math.round(dirs.S/total*100), E: Math.round(dirs.E/total*100), W: Math.round(dirs.W/total*100), dominant: Object.entries(dirs).sort(function(a,b){return b[1]-a[1];})[0][0] } : null;
-          })()
+          })(),
+          // --- PART 3: Dual/Triple Task Metrics ---
+          part3_active: isPart3 || false,
+          pool_overflow_count: isPart3 ? poolOverflowCount : undefined,
+          pool_drain_count: isPart3 ? poolDrainCount : undefined,
+          pool_overflow_reaction_times_ms: isPart3 && overflowReactionTimes.length > 0 ? overflowReactionTimes : undefined,
+          pool_overflow_rt_mean_ms: isPart3 && overflowReactionTimes.length > 0 ? Math.round(overflowReactionTimes.reduce(function(a,b){return a+b;},0)/overflowReactionTimes.length) : undefined,
+          child_danger_count: isPart3 && childActive ? childDangerCount : undefined,
+          child_intercept_count: isPart3 && childActive ? childInterceptCount : undefined,
+          child_intercept_rt_mean_ms: isPart3 && childInterceptRTs.length > 0 ? Math.round(childInterceptRTs.reduce(function(a,b){return a+b;},0)/childInterceptRTs.length) : undefined,
+          task_switch_count: isPart3 ? taskSwitchCount : undefined,
+          cognitive_load_level: isPart3 ? (childActive ? 'triple' : 'dual') : 'single'
         }
       });
 
@@ -2239,6 +2307,25 @@
     totalDryFlowers = 0;
     currentScale = 1;
     isPart2 = false;
+    // Reset Part 3 state
+    isPart3 = false;
+    poolWaterLevel = 0;
+    poolOverflowed = false;
+    poolOverflowCount = 0;
+    poolDrainCount = 0;
+    poolCheckTimestamps = [];
+    overflowReactionTimes = [];
+    childActive = false;
+    childX = -1; childY = -1;
+    childMoveCounter = 0;
+    childNearPoolStart = 0;
+    childDangerCount = 0;
+    childInterceptCount = 0;
+    childInterceptRTs = [];
+    taskSwitchCount = 0;
+    returnToTaskAccuracy = [];
+    preInterruptionPos = null;
+    if (gameTickId) { clearInterval(gameTickId); gameTickId = null; }
 
     const F = T.FENCE, G = T.GRASS, P = T.PATH, H = T.HOUSE,
           FL = T.FLOWER, PO = T.POOL, CA = T.CABLE, CO = T.COMPOST,
@@ -2260,6 +2347,10 @@
       baseLevel = level - 40;
       scaleFactor = 3; // 3x3 for scale 3 - truly mini squares
       currentScale = 3;
+    } else if (level >= 201) {
+      // Part 3 levels: dual/triple task
+      isPart3 = true;
+      return buildPart3Level(level);
     } else if (level >= 101) {
       // Part 2 levels
       isPart2 = true;
@@ -2820,7 +2911,328 @@
     return { map, startPos };
   }
 
-  // ---- INSTRUCTION SYSTEM ----
+  // ============================================================
+  // PART 3: DUAL/TRIPLE TASK — Cognitive Load Progression
+  // Level 201: Dual task (mow + monitor pool filling)
+  // Level 202: Dual task harder (faster fill, bigger garden)
+  // Level 203: Triple task (mow + pool + wandering child near danger)
+  // ============================================================
+
+  function buildPart3Level(level) {
+    const F = T.FENCE, G = T.GRASS, P = T.PATH, H = T.HOUSE,
+          FL = T.FLOWER, PO = T.POOL, CA = T.CABLE, CO = T.COMPOST,
+          E = T.EMPTY, DR = T.DRAIN, FA = T.FAUCET;
+
+    let map, startPos;
+    hasBag = true;
+    bagCapacity = 20;
+    isPart3 = true;
+    childActive = false;
+
+    if (level === 201) {
+      // DUAL TASK TUTORIAL: Small garden + pool that fills + drain
+      poolFillRate = 1.5; // slow fill
+      childActive = false;
+      map = [
+        [F,F,F,F,F,F,F,F,F,F,F,F],
+        [F,H,H,H,P,G,G,G,G,G,G,F],
+        [F,H,H,H,P,G,G,FL,G,G,G,F],
+        [F,P,P,P,P,G,G,G,G,G,G,F],
+        [F,G,G,G,G,G,G,G,G,G,G,F],
+        [F,G,FL,G,G,G,G,G,FA,PO,PO,F],
+        [F,G,G,G,G,G,G,G,DR,PO,PO,F],
+        [F,G,G,G,G,G,G,G,G,G,CO,F],
+        [F,G,G,G,G,G,G,G,G,G,G,F],
+        [F,F,F,F,F,F,F,F,F,F,F,F],
+      ];
+      startPos = [3, 4];
+    }
+    else if (level === 202) {
+      // DUAL TASK INTERMEDIATE: Bigger garden + faster fill + cables
+      poolFillRate = 2.5;
+      childActive = false;
+      map = [
+        [F,F,F,F,F,F,F,F,F,F,F,F,F,F],
+        [F,H,H,H,P,G,G,G,G,G,G,G,G,F],
+        [F,H,H,H,P,G,G,G,CA,G,G,G,G,F],
+        [F,P,P,P,P,G,G,G,G,G,G,G,G,F],
+        [F,G,G,G,G,G,G,FL,G,G,G,G,G,F],
+        [F,G,FL,G,G,G,G,G,G,G,FA,PO,PO,F],
+        [F,G,G,G,G,CA,G,G,G,G,DR,PO,PO,F],
+        [F,G,G,G,G,G,G,G,G,G,G,G,G,F],
+        [F,G,G,G,FL,G,G,G,G,G,G,G,CO,F],
+        [F,G,G,G,G,G,G,CA,G,G,G,G,G,F],
+        [F,G,G,G,G,G,G,G,G,G,G,G,G,F],
+        [F,F,F,F,F,F,F,F,F,F,F,F,F,F],
+      ];
+      startPos = [3, 4];
+    }
+    else {
+      // TRIPLE TASK: Garden + pool + wandering child
+      poolFillRate = 2;
+      childActive = true;
+      childMoveInterval = 3; // moves every 1.5 sec
+      childPoolAttractionPct = 25;
+      map = [
+        [F,F,F,F,F,F,F,F,F,F,F,F,F,F],
+        [F,H,H,H,P,G,G,G,G,G,G,G,G,F],
+        [F,H,H,H,P,G,G,FL,G,G,G,G,G,F],
+        [F,P,P,P,P,G,G,G,G,G,G,G,G,F],
+        [F,G,G,G,G,G,G,G,G,G,G,G,G,F],
+        [F,G,FL,G,G,G,G,G,G,FA,PO,PO,G,F],
+        [F,G,G,G,G,CA,G,G,G,DR,PO,PO,G,F],
+        [F,G,G,G,G,G,G,G,G,G,G,G,G,F],
+        [F,G,G,FL,G,G,G,G,G,G,G,G,CO,F],
+        [F,G,G,G,G,G,G,G,G,G,G,G,G,F],
+        [F,F,F,F,F,F,F,F,F,F,F,F,F,F],
+      ];
+      startPos = [3, 4];
+      // Child starts in safe corner
+      childX = 1; childY = 1;
+    }
+
+    // Count grass
+    totalGrass = 0;
+    for (let r = 0; r < map.length; r++) {
+      for (let c = 0; c < map[r].length; c++) {
+        if (map[r][c] === T.GRASS) totalGrass++;
+        if (map[r][c] === T.FLOWER) {
+          flowerColors[r + ',' + c] = FLOWER_PALETTE[Math.floor(Math.random() * FLOWER_PALETTE.length)];
+        }
+      }
+    }
+
+    return { map, startPos };
+  }
+
+  // ---- PART 3: GAME TICK (500ms interval for dynamic elements) ----
+  function gameTick() {
+    if (!gameRunning || !isPart3) return;
+
+    // === POOL FILLING ===
+    if (poolWaterLevel < 100 && !poolOverflowed) {
+      poolWaterLevel = Math.min(100, poolWaterLevel + poolFillRate);
+
+      // Check overflow
+      if (poolWaterLevel >= 100) {
+        poolOverflowed = true;
+        poolOverflowCount++;
+        lastOverflowTime = Date.now();
+        score -= 200;
+        showToast('La pileta se desbordo! Ve al desague! -200pts', 'error', 3000);
+      } else if (poolWaterLevel >= 75) {
+        showToast('Pileta al ' + Math.round(poolWaterLevel) + '% - atencion!', 'warn', 1000);
+      }
+    }
+
+    // === CHILD MOVEMENT ===
+    if (childActive && childX >= 0) {
+      childMoveCounter++;
+      if (childMoveCounter >= childMoveInterval) {
+        childMoveCounter = 0;
+        moveChild();
+      }
+
+      // Check if child is adjacent to pool
+      let childNearPool = false;
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          var cr = childY + dr, cc = childX + dc;
+          if (cr >= 0 && cr < gridH && cc >= 0 && cc < gridW) {
+            if (grid[cr][cc] === T.POOL) childNearPool = true;
+          }
+        }
+      }
+
+      if (childNearPool) {
+        if (childNearPoolStart === 0) {
+          childNearPoolStart = Date.now();
+          showToast('El nene esta cerca de la pileta!', 'error', 2000);
+        }
+        // If near pool for >4 seconds = danger event
+        if (Date.now() - childNearPoolStart > 4000) {
+          childDangerCount++;
+          score -= 300;
+          showToast('El nene llego a la pileta sin supervision! -300pts', 'error', 3000);
+          // Relocate child to safe spot
+          childX = 1; childY = 1;
+          childNearPoolStart = 0;
+        }
+      } else {
+        childNearPoolStart = 0;
+      }
+    }
+
+    render(); // Update visual state
+  }
+
+  function moveChild() {
+    // Determine direction: random or attracted to pool
+    let dirs = [];
+    const poolPositions = [];
+
+    // Find pool tiles
+    for (let r = 0; r < gridH; r++) {
+      for (let c = 0; c < gridW; c++) {
+        if (grid[r][c] === T.POOL) poolPositions.push({r, c});
+      }
+    }
+
+    // Decide: move toward pool or random?
+    let moveTowardPool = poolPositions.length > 0 && Math.random() * 100 < childPoolAttractionPct;
+
+    if (moveTowardPool) {
+      // Find closest pool tile
+      let closest = poolPositions[0];
+      let minDist = Math.abs(childX - closest.c) + Math.abs(childY - closest.r);
+      for (var pi = 1; pi < poolPositions.length; pi++) {
+        var d = Math.abs(childX - poolPositions[pi].c) + Math.abs(childY - poolPositions[pi].r);
+        if (d < minDist) { minDist = d; closest = poolPositions[pi]; }
+      }
+      // Move one step toward closest pool
+      var ddx = closest.c > childX ? 1 : closest.c < childX ? -1 : 0;
+      var ddy = closest.r > childY ? 1 : closest.r < childY ? -1 : 0;
+      if (ddx !== 0 && Math.random() > 0.5) ddy = 0;
+      else if (ddy !== 0) ddx = 0;
+      dirs.push({dx: ddx, dy: ddy});
+    }
+
+    // Also add random directions
+    var allDirs = [{dx:0,dy:-1},{dx:1,dy:0},{dx:0,dy:1},{dx:-1,dy:0}];
+    for (var di = allDirs.length - 1; di > 0; di--) {
+      var j = Math.floor(Math.random() * (di + 1));
+      var tmp = allDirs[di]; allDirs[di] = allDirs[j]; allDirs[j] = tmp;
+    }
+    dirs = dirs.concat(allDirs);
+
+    // Try each direction
+    for (var d = 0; d < dirs.length; d++) {
+      var nx = childX + dirs[d].dx;
+      var ny = childY + dirs[d].dy;
+      if (ny >= 0 && ny < gridH && nx >= 0 && nx < gridW) {
+        var t = grid[ny][nx];
+        // Child can walk on grass, cut grass, path, drain, flowers
+        if (t === T.GRASS || t === T.CUT || t === T.PATH || t === T.DRAIN ||
+            t === T.FLOWER || t === T.FLOWER_WATERED) {
+          // Don't walk onto player
+          if (nx !== playerX || ny !== playerY) {
+            childX = nx;
+            childY = ny;
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  // ---- PART 3: DRAWING FUNCTIONS ----
+
+  function drawDrain(ctx, x, y, ts) {
+    // Stone base
+    var grd = ctx.createRadialGradient(x + ts/2, y + ts/2, 0, x + ts/2, y + ts/2, ts * 0.45);
+    grd.addColorStop(0, '#9ca3af');
+    grd.addColorStop(1, '#6b7280');
+    ctx.fillStyle = grd;
+    ctx.fillRect(x, y, ts, ts);
+    // Drain grate (circle with lines)
+    ctx.strokeStyle = '#374151';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x + ts/2, y + ts/2, ts * 0.3, 0, Math.PI * 2);
+    ctx.stroke();
+    // Grate bars
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x + ts * 0.25, y + ts/2);
+    ctx.lineTo(x + ts * 0.75, y + ts/2);
+    ctx.moveTo(x + ts/2, y + ts * 0.25);
+    ctx.lineTo(x + ts/2, y + ts * 0.75);
+    ctx.moveTo(x + ts * 0.3, y + ts * 0.3);
+    ctx.lineTo(x + ts * 0.7, y + ts * 0.7);
+    ctx.moveTo(x + ts * 0.7, y + ts * 0.3);
+    ctx.lineTo(x + ts * 0.3, y + ts * 0.7);
+    ctx.stroke();
+  }
+
+  function drawFaucet(ctx, x, y, ts) {
+    // Pipe on grass
+    ctx.fillStyle = '#4ade80';
+    ctx.fillRect(x, y, ts, ts);
+    // Pipe
+    ctx.fillStyle = '#475569';
+    ctx.fillRect(x + ts * 0.35, y + ts * 0.1, ts * 0.3, ts * 0.5);
+    ctx.fillRect(x + ts * 0.25, y + ts * 0.1, ts * 0.5, ts * 0.12);
+    // Faucet head
+    ctx.fillStyle = '#64748b';
+    ctx.beginPath();
+    ctx.arc(x + ts * 0.5, y + ts * 0.65, ts * 0.12, 0, Math.PI * 2);
+    ctx.fill();
+    // Water droplet if pool is filling
+    if (poolWaterLevel > 0 && poolWaterLevel < 100) {
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.moveTo(x + ts * 0.5, y + ts * 0.78);
+      ctx.lineTo(x + ts * 0.45, y + ts * 0.92);
+      ctx.lineTo(x + ts * 0.55, y + ts * 0.92);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  function drawChild(ctx, x, y, ts) {
+    var cx = x + ts/2, cy = y + ts/2;
+    // Body
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.roundRect(x + ts * 0.25, y + ts * 0.4, ts * 0.5, ts * 0.45, ts * 0.08);
+    ctx.fill();
+    // Head
+    ctx.fillStyle = '#fde68a';
+    ctx.beginPath();
+    ctx.arc(cx, y + ts * 0.3, ts * 0.18, 0, Math.PI * 2);
+    ctx.fill();
+    // Eyes
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.arc(cx - ts * 0.07, y + ts * 0.27, ts * 0.03, 0, Math.PI * 2);
+    ctx.arc(cx + ts * 0.07, y + ts * 0.27, ts * 0.03, 0, Math.PI * 2);
+    ctx.fill();
+    // Smile
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, y + ts * 0.33, ts * 0.06, 0.1, Math.PI - 0.1);
+    ctx.stroke();
+    // Danger indicator if near pool
+    if (childNearPoolStart > 0) {
+      ctx.fillStyle = '#ef4444';
+      ctx.font = 'bold ' + Math.round(ts * 0.25) + 'px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('!', cx, y + ts * 0.12);
+    }
+  }
+
+  function drawPoolWaterBar(ctx, x, y, ts) {
+    // Water level indicator bar on pool edge
+    if (!isPart3 || poolWaterLevel <= 0) return;
+    var barH = ts * 0.08;
+    var barW = ts - 4;
+    var fillW = barW * (poolWaterLevel / 100);
+    // Background
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(x + 2, y + ts - barH - 2, barW, barH);
+    // Fill
+    ctx.fillStyle = poolWaterLevel >= 90 ? '#ef4444' : poolWaterLevel >= 60 ? '#f59e0b' : '#38bdf8';
+    ctx.fillRect(x + 2, y + ts - barH - 2, fillW, barH);
+    // Percentage text
+    if (ts > 24) {
+      ctx.fillStyle = '#fff';
+      ctx.font = Math.max(8, Math.round(ts * 0.16)) + 'px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(Math.round(poolWaterLevel) + '%', x + ts/2, y + ts - 4);
+    }
+  }
   function getLevelInstructions(level) {
     const baseInstructions = [
       'La cortadora solo puede avanzar cortando cesped o por donde ya esta cortado.',
@@ -2860,12 +3272,35 @@
     } else if (level >= 41 && level <= 60) {
       title = 'Escala 3 - Cuadros mini';
       specific = ['Cuadros diminutos para expertos.', 'Maxima precision requerida.'];
-    } else if (level >= 101) {
+    } else if (level >= 101 && level <= 199) {
       title = 'Parte 2 - Jardinero Completo';
       specific = [
         'Tres herramientas: Cortadora, Limpiador de Piscina y Regadera.',
         'Corta el cesped, limpia la piscina sucia y riega las flores secas.',
         'Cambia entre herramientas con los botones de la esquina.',
+      ];
+    } else if (level === 201) {
+      title = 'Parte 3 - Doble Tarea: Pileta llenandose';
+      specific = [
+        'La pileta se llena automaticamente con agua. No dejes que se desborde!',
+        'Ve al desague (rejilla gris) cuando el nivel este alto para drenar.',
+        'Segui cortando el cesped mientras vigilas el nivel de agua.',
+        'Equilibra ambas tareas: cortar Y monitorear la pileta.',
+      ];
+    } else if (level === 202) {
+      title = 'Parte 3 - Doble Tarea Avanzada';
+      specific = [
+        'Jardin mas grande. La pileta se llena mas rapido.',
+        'Hay cables en el suelo. Planifica tu recorrido cerca del desague.',
+        'El desague solo drena cuando vos estas parado en el.',
+      ];
+    } else if (level >= 203) {
+      title = 'Parte 3 - Triple Tarea: Nene + Pileta + Cesped';
+      specific = [
+        'Un nene camina por el jardin. Si se acerca a la pileta, anda a buscarlo!',
+        'Acercate al nene (celda adyacente) para alejarlo del peligro.',
+        'Segui cortando Y vigilando la pileta Y cuidando al nene.',
+        'Tres tareas simultaneas: este es el nivel mas exigente.',
       ];
     }
 
@@ -2912,7 +3347,7 @@
         visited.add(key);
         const tile = grid[ny][nx];
         // Walkable tiles for pathfinding
-        if (tile === T.CUT || tile === T.PATH || tile === T.COMPOST || tile === T.FLOWER_WATERED) {
+        if (tile === T.CUT || tile === T.PATH || tile === T.COMPOST || tile === T.FLOWER_WATERED || tile === T.DRAIN || tile === T.FAUCET) {
           queue.push([nx, ny]);
         } else if (tile === T.GRASS) {
           // Check if we can actually cut it (bag not permanently full)
@@ -3287,7 +3722,14 @@
 
     // Build level name
     let levelName = '';
-    if (level >= 101) {
+    if (level >= 201) {
+      const PART3_NAMES = {
+        201: 'Doble Tarea: Pileta',
+        202: 'Doble Tarea Avanzada',
+        203: 'Triple Tarea: Nene + Pileta'
+      };
+      levelName = 'Parte 3 - ' + (level - 200) + ': ' + (PART3_NAMES[level] || 'Carga Cognitiva');
+    } else if (level >= 101) {
       const PART2_NAMES = {
         101: 'Jardin Abandonado',
         102: 'Rescate del Jardin',
@@ -3314,6 +3756,12 @@
     gameTitle.textContent = levelName;
 
     gameRunning = true;
+
+    // Start Part 3 game tick (dynamic elements: pool filling, child movement)
+    if (isPart3) {
+      if (gameTickId) clearInterval(gameTickId);
+      gameTickId = setInterval(gameTick, 500);
+    }
     startTime = Date.now();
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
@@ -3490,7 +3938,23 @@
         else if (tile === T.FENCE) {
           drawFence(ctx, x, y, ts);
         }
+        else if (tile === T.DRAIN) {
+          drawDrain(ctx, x, y, ts);
+        }
+        else if (tile === T.FAUCET) {
+          drawFaucet(ctx, x, y, ts);
+        }
+
+        // Part 3: Pool water level bar overlay on POOL tiles
+        if ((tile === T.POOL) && isPart3) {
+          drawPoolWaterBar(ctx, x, y, ts);
+        }
       }
+    }
+
+    // Part 3: Draw child NPC (before mower so mower draws on top)
+    if (isPart3 && childActive && childX >= 0 && childY >= 0) {
+      drawChild(ctx, childX * ts, childY * ts, ts);
     }
 
     // Draw mower shadow
@@ -3988,6 +4452,55 @@
       return;
     }
 
+    // DRAIN (Part 3): drains the pool when stepped on
+    if (tile === T.DRAIN) {
+      playerX = nx;
+      playerY = ny;
+      if (isPart3 && poolWaterLevel > 0) {
+        var wasOverflowed = poolOverflowed;
+        poolWaterLevel = 0;
+        poolOverflowed = false;
+        poolDrainCount++;
+        if (wasOverflowed && lastOverflowTime > 0) {
+          overflowReactionTimes.push(Date.now() - lastOverflowTime);
+        }
+        showToast('Pileta drenada!', 'info');
+        // Track task switch: player left mowing to drain
+        taskSwitchCount++;
+        lastTaskSwitchTime = Date.now();
+      }
+      recordMovement(dx, dy, true, timestamp);
+      updateUI();
+      render();
+      return;
+    }
+
+    // FAUCET: walkable (visual element only)
+    if (tile === T.FAUCET) {
+      playerX = nx;
+      playerY = ny;
+      recordMovement(dx, dy, true, timestamp);
+      updateUI();
+      render();
+      return;
+    }
+
+    // Part 3: Check child intercept (player moved adjacent to child near pool)
+    if (isPart3 && childActive && childNearPoolStart > 0) {
+      var distToChild = Math.abs(nx - childX) + Math.abs(ny - childY);
+      if (distToChild <= 1) {
+        // Player intercepted child!
+        childInterceptCount++;
+        childInterceptRTs.push(Date.now() - childNearPoolStart);
+        // Relocate child to safe spot (away from pool)
+        childX = 1; childY = 1;
+        childNearPoolStart = 0;
+        score += 100;
+        showToast('Nene a salvo! +100pts', 'info');
+        taskSwitchCount++;
+      }
+    }
+
     // Grass
     if (tile === T.GRASS) {
       grid[ny][nx] = T.CUT;
@@ -4073,6 +4586,7 @@
     gameRunning = false;
     clearInterval(timerInterval);
     clearInterval(blockedCheckInterval);
+    if (gameTickId) { clearInterval(gameTickId); gameTickId = null; }
     restartBtn.classList.remove('visible');
     clearInterval(blockedCheckTimer);
     clearInterval(timeSeriesInterval);
@@ -4287,6 +4801,7 @@
     clearInterval(timerInterval);
     clearInterval(blockedCheckInterval);
     restartBtn.classList.remove('visible');
+    if (gameTickId) { clearInterval(gameTickId); gameTickId = null; }
     document.getElementById('restartBtn').style.display = 'none';
     levelSelectScreen.classList.remove('hidden');
   });
@@ -4311,7 +4826,7 @@
   // Handlers moved to unified section below (line ~3669)
 
   // ---- NEXT LEVEL BUTTON ----
-  const LEVEL_ORDER = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,25,30,40,41,50,60,101,102,103,104,105];
+  const LEVEL_ORDER = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,25,30,40,41,50,60,101,102,103,104,105,201,202,203];
 
   function getNextLevel(current) {
     const idx = LEVEL_ORDER.indexOf(current);
