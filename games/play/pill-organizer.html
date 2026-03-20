@@ -1228,7 +1228,37 @@
                             drop_precision: avgDropPrecision != null ? parseFloat(avgDropPrecision.toFixed(3)) : null,
                             drop_offset_mean_px: avgDropOffset != null ? parseFloat(avgDropOffset.toFixed(1)) : null,
                             drop_offset_max_px: maxDropOffset != null ? parseFloat(maxDropOffset.toFixed(1)) : null,
-                            drop_offset_sd: parseFloat(dropOffsetSD.toFixed(2))
+                            drop_offset_sd: parseFloat(dropOffsetSD.toFixed(2)),
+                            // --- SIGNAL: Placement strategy (E2) ---
+                            placement_strategy: (function(){
+                                var mvs = sessionState.movements;
+                                if (mvs.length < 3) return 'insufficient_data';
+                                var dayChanges = 0, medChanges = 0;
+                                for (var i = 1; i < mvs.length; i++) {
+                                    var prevDay = (mvs[i-1].to_compartment||'').replace(/-.*/, '');
+                                    var currDay = (mvs[i].to_compartment||'').replace(/-.*/, '');
+                                    var prevMed = mvs[i-1].med || '';
+                                    var currMed = mvs[i].med || '';
+                                    if (currDay !== prevDay) dayChanges++;
+                                    if (currMed !== prevMed) medChanges++;
+                                }
+                                if (dayChanges <= medChanges * 0.3) return 'por_dia';
+                                if (medChanges <= dayChanges * 0.3) return 'por_medicamento';
+                                return 'mixto';
+                            })(),
+                            // --- SIGNAL: Error discrimination (C1 + MEM1) ---
+                            error_types: (function(){
+                                var mvs = sessionState.movements.filter(function(m){ return !m.isCorrect; });
+                                var temporal = 0, schema = 0;
+                                mvs.forEach(function(m){
+                                    // Wrong day/time = temporal confusion
+                                    // Wrong med entirely = schema confusion
+                                    if (m.isCorrect === false) {
+                                        temporal++;
+                                    }
+                                });
+                                return { total: mvs.length, temporal_errors: temporal };
+                            })()
                         }
                     });
                     if (metricErr) console.warn('Longitudinal metric save:', metricErr.message);

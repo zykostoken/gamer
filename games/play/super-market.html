@@ -1050,10 +1050,41 @@ function finishGame() {
         planificacion_ratio: +(score / 100).toFixed(3),
         abstraccion_ratio: gotAdvanced.length > 0 ? +(gotAdvanced.length / advanced.length).toFixed(3) : 0,
         flexibilidad_cognitiva: priceCheckCount,
-        impulsividad_compra: overBudgetAttempts,
+        estimacion_numerica_errores: overBudgetAttempts,
         latencia_inicio_ms: firstClickTime || 0,
         autocorrecciones_count: removals,
-        escaneo_sistematico: scanScore
+        escaneo_sistematico: scanScore,
+        // --- SIGNAL: Recipe comprehension (C1 + MEM1) ---
+        recipe_read_time_sec: (function(){
+            var e = actionLog.find(function(a){ return a.type === 'recipe_read_complete'; });
+            return e ? e.readSeconds : null;
+        })(),
+        recipe_recall_correct: (function(){
+            var e = actionLog.find(function(a){ return a.type === 'recipe_recall'; });
+            return e ? e.correct : null;
+        })(),
+        recipe_recall_latency_ms: (function(){
+            var e = actionLog.find(function(a){ return a.type === 'recipe_recall'; });
+            return e ? e.latency_ms : null;
+        })(),
+        // --- SIGNAL: Item choice pattern classification (C1 + AFEC2) ---
+        choice_pattern: (function(){
+            var hasBasic = essentialCompleteCount > 0;
+            var hasAdvanced = gotAdvanced.length > 0;
+            var hasNeutral = gotNeutral.length > 0;
+            var hasErrors = gotErrors.length > 0;
+            var basicComplete = coreComplete;
+            if (basicComplete && hasAdvanced && !hasErrors) return 'comprension_con_iniciativa';
+            if (basicComplete && !hasAdvanced) return 'literal_rigido';
+            if (!hasBasic && hasNeutral) return 'confusion_ruido_fondo';
+            if (hasBasic && !basicComplete && hasNeutral) return 'parcial_desorganizado';
+            if (hasErrors && !basicComplete) return 'confusion_con_error';
+            if (basicComplete && hasErrors) return 'comprension_con_error';
+            return 'otros';
+        })(),
+        // --- SIGNAL: Budget estimation accuracy (CAL1) ---
+        error_estimacion_pct: BUDGET > 0 ? Math.round(Math.abs(cartTotal - BUDGET) / BUDGET * 100) : null,
+        sobrepresupuesto_sistematico: overBudgetAttempts >= 3
     });
 
     if (typeof showPostGameColorModal === 'function') showPostGameColorModal();
