@@ -16,7 +16,7 @@
 
 const ConsentModal = (() => {
   const SUPABASE_URL = typeof window.SUPABASE_URL !== 'undefined' ? window.SUPABASE_URL :
-    'https://buzblnkpfydeheingzgn.supabase.co';
+    'https://aypljitzifwjosjkqsuu.supabase.co';
   const SUPABASE_KEY = typeof window.SUPABASE_ANON_KEY !== 'undefined' ? window.SUPABASE_ANON_KEY : '';
 
   // Textos de consentimiento por tipo
