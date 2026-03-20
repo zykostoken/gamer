@@ -1,0 +1,365 @@
+{
+  "module": "session-telemetry",
+  "version": "1.0.0",
+  "description": "Telemetría de comportamiento del paciente en la plataforma HDD. Se captura AUTOMÁTICAMENTE en todos los juegos, sin intervención del paciente. Cada parámetro tiene correlato clínico y reglas de alerta.",
+
+  "connection_patterns": {
+    "description": "Cuándo se conecta el paciente — proxy de ritmo circadiano y rutina",
+    "parameters": [
+      {
+        "id": "login_timestamp",
+        "label": "Hora exacta de conexión",
+        "type": "datetime",
+        "clinical": "Indicador de ritmo circadiano. Conexiones consistentes a la misma hora = rutina estable. Cambios bruscos de horario = posible descompensación, fase maníaca o insomnio.",
+        "alert_rules": [
+          { "condition": "login entre 02:00 y 05:00 más de 2 veces en 7 días", "severity": "high", "message": "Conexiones nocturnas reiteradas — evaluar insomnio, fase maníaca o inversión de ritmo circadiano" },
+          { "condition": "login antes de 06:00 cuando el patrón habitual es después de 09:00", "severity": "medium", "message": "Despertar precoz inusual — evaluar posible componente depresivo o ansiedad" },
+          { "condition": "sin conexión en 72+ horas cuando el patrón era diario", "severity": "high", "message": "Ruptura de patrón de conexión — evaluar abandono, descompensación o internación" },
+          { "condition": "varianza de hora de conexión >3 horas en última semana vs. semana anterior", "severity": "medium", "message": "Desregulación del horario — posible inestabilidad en ritmo circadiano" }
+        ]
+      },
+      {
+        "id": "login_day_of_week",
+        "label": "Día de la semana",
+        "type": "integer",
+        "clinical": "Patrón semanal. Ausencia sistemática ciertos días puede correlacionar con actividades, visitas, o evitación. Caída de fin de semana puede indicar pérdida de estructura cuando no hay contención institucional."
+      },
+      {
+        "id": "session_frequency",
+        "label": "Frecuencia de sesiones (por semana)",
+        "type": "float",
+        "clinical": "Adherencia general a la plataforma. Correlaciona con motivación (PANSS síntomas negativos), alianza terapéutica y estabilidad clínica.",
+        "alert_rules": [
+          { "condition": "frecuencia cae >50% respecto a promedio de últimas 4 semanas", "severity": "high", "message": "Caída significativa de engagement — evaluar motivación, efectos secundarios de medicación o descompensación" },
+          { "condition": "frecuencia sube >100% respecto a promedio", "severity": "medium", "message": "Aumento abrupto de uso — puede ser positivo (mejoría) o indicar fase hipomaníaca/compulsividad" }
+        ]
+      },
+      {
+        "id": "time_between_sessions",
+        "label": "Tiempo entre sesiones (horas)",
+        "type": "float",
+        "clinical": "Regularidad de uso. Intervalos regulares = rutina consolidada. Intervalos erráticos = desorganización conductual."
+      },
+      {
+        "id": "consecutive_days",
+        "label": "Días consecutivos con al menos 1 sesión",
+        "type": "integer",
+        "clinical": "Racha de adherencia. Métrica motivacional clave. En esquizofrenia con síntomas negativos, sostener 7+ días consecutivos es logro clínico significativo."
+      },
+      {
+        "id": "longest_absence",
+        "label": "Mayor ausencia (días sin conectarse)",
+        "type": "integer",
+        "clinical": "Identifica periodos de desenganche. Correlacionar con eventos clínicos (cambio de medicación, crisis, hospitalización)."
+      }
+    ]
+  },
+
+  "session_duration": {
+    "description": "Cuánto tiempo está el paciente en la plataforma y en cada juego",
+    "parameters": [
+      {
+        "id": "total_session_duration_ms",
+        "label": "Duración total de la sesión (ms)",
+        "type": "integer",
+        "clinical": "Capacidad de sostener atención y motivación. Sesiones muy cortas (<2 min) = posible avolición, frustración inmediata o confusión con la interfaz. Sesiones muy largas (>60 min) = posible hiperfocus, fase maníaca o evitación de otras actividades.",
+        "alert_rules": [
+          { "condition": "sesión <60 segundos", "severity": "low", "message": "Sesión abandonada inmediatamente — evaluar si hubo error técnico o rechazo" },
+          { "condition": "sesión >90 minutos", "severity": "medium", "message": "Sesión excesivamente larga — evaluar compulsividad o evitación" },
+          { "condition": "duración promedio cae >40% en última semana", "severity": "medium", "message": "Reducción de tiempo de engagement — posible fatiga, aburrimiento o descompensación" }
+        ]
+      },
+      {
+        "id": "time_per_game_ms",
+        "label": "Tiempo en cada juego específico (ms)",
+        "type": "object",
+        "clinical": "Preferencias y evitación. Si el paciente siempre evita un juego específico, puede revelar un dominio cognitivo deficitario que genera frustración, o un tema que genera ansiedad."
+      },
+      {
+        "id": "time_in_menu_ms",
+        "label": "Tiempo en menú/selector de juegos (ms)",
+        "type": "integer",
+        "clinical": "Latencia decisional. Mucho tiempo en el menú sin elegir juego = indecisión, ansiedad ante la elección, o desorientación. Ir directo a un juego = rutina establecida o preferencia clara."
+      },
+      {
+        "id": "time_idle_in_game_ms",
+        "label": "Tiempo de inactividad dentro del juego (ms)",
+        "type": "integer",
+        "clinical": "Periodos donde el juego está abierto pero el paciente no interactúa. Indicador de: distracción, fatiga cognitiva, disociación, interrupción externa, o apatía."
+      },
+      {
+        "id": "active_play_ratio",
+        "label": "Ratio de juego activo (tiempo activo / tiempo total)",
+        "type": "float",
+        "clinical": "Eficiencia de engagement. Ratio <0.5 = más tiempo inactivo que jugando. Cae con fatiga cognitiva, efecto sedante de medicación, o desinterés."
+      }
+    ]
+  },
+
+  "game_selection_behavior": {
+    "description": "Qué juegos elige, en qué orden, cuáles evita",
+    "parameters": [
+      {
+        "id": "games_played_per_session",
+        "label": "Cantidad de juegos diferentes por sesión",
+        "type": "integer",
+        "clinical": "Diversificación vs. fijación. Jugar siempre el mismo juego = posible rigidez cognitiva o zona de confort. Probar varios = curiosidad y flexibilidad."
+      },
+      {
+        "id": "game_preference_rank",
+        "label": "Ranking de preferencia de juegos (por frecuencia)",
+        "type": "array",
+        "clinical": "Revela fortalezas percibidas (juegos donde se siente competente) y áreas evitadas (juegos que exponen déficits)."
+      },
+      {
+        "id": "games_never_played",
+        "label": "Juegos disponibles nunca seleccionados",
+        "type": "array",
+        "clinical": "Evitación sistemática. Si un paciente nunca toca neuro-chef (secuencia + timing) pero juega todo lo demás, sugiere déficit específico en función ejecutiva secuencial."
+      },
+      {
+        "id": "game_switching_rate",
+        "label": "Tasa de cambio entre juegos sin completar",
+        "type": "float",
+        "clinical": "Abandono por frustración o impulsividad. Empieza uno, lo deja, empieza otro = baja tolerancia a la frustración o búsqueda de novedad."
+      },
+      {
+        "id": "pack_exploration",
+        "label": "Exploración de packs temáticos dentro del mismo frame",
+        "type": "object",
+        "clinical": "Si hay supermercado Y ferretería disponibles en classify-and-place: ¿prueba los dos o se queda en uno? Indicador de flexibilidad cognitiva y apertura a lo nuevo."
+      }
+    ]
+  },
+
+  "level_persistence": {
+    "description": "Cómo se comporta el paciente ante la dificultad, el error y el fracaso",
+    "parameters": [
+      {
+        "id": "attempts_per_level",
+        "label": "Intentos por nivel",
+        "type": "object",
+        "clinical": "Persistencia. 1 intento y abandona = baja tolerancia al fracaso. 10+ intentos en el mismo nivel = perseveración o determinación (diferenciar por contexto de rendimiento).",
+        "alert_rules": [
+          { "condition": "mismo nivel intentado >8 veces sin mejoría (accuracy <+5%)", "severity": "medium", "message": "Posible perseveración sin aprendizaje — evaluar si el nivel es apropiado para el paciente" },
+          { "condition": "nivel intentado 1 sola vez con score <30% y no reintentado", "severity": "low", "message": "Abandono tras fracaso — posible baja tolerancia a la frustración" }
+        ]
+      },
+      {
+        "id": "retry_latency_ms",
+        "label": "Tiempo entre fin de intento y reinicio (ms)",
+        "type": "integer",
+        "clinical": "Latencia de recuperación emocional. Reintento inmediato (<3s) = impulsividad o determinación. Reintento lento (>30s) = procesamiento del fracaso, posible rumiación. No reintenta = abandono."
+      },
+      {
+        "id": "improvement_per_retry",
+        "label": "Mejora porcentual entre intentos sucesivos",
+        "type": "float",
+        "clinical": "Curva de aprendizaje. Mejora constante = neuroplasticidad activa, capacidad de aprendizaje preservada. Sin mejora tras múltiples intentos = techo cognitivo para ese nivel o perseveración."
+      },
+      {
+        "id": "max_level_reached",
+        "label": "Nivel máximo alcanzado por juego",
+        "type": "object",
+        "clinical": "Techo de rendimiento por dominio cognitivo. Comparar entre juegos revela perfil cognitivo: puede llegar a nivel 5 en clasificación pero se estanca en nivel 2 en cálculo."
+      },
+      {
+        "id": "level_regression",
+        "label": "Regresiones de nivel (volver a nivel inferior tras haber avanzado)",
+        "type": "integer",
+        "clinical": "Inestabilidad cognitiva. Alcanzar nivel 4, caer a nivel 2 en la siguiente sesión = posible efecto de medicación, mal sueño, descompensación incipiente.",
+        "alert_rules": [
+          { "condition": "regresión de 2+ niveles en 48 horas", "severity": "high", "message": "Regresión cognitiva aguda — evaluar medicación, sueño, estado clínico" }
+        ]
+      }
+    ]
+  },
+
+  "error_behavior": {
+    "description": "Cómo se relaciona el paciente con sus propios errores",
+    "parameters": [
+      {
+        "id": "error_rate_trend",
+        "label": "Tendencia de tasa de error (últimas 10 sesiones)",
+        "type": "array",
+        "clinical": "Trayectoria de aprendizaje longitudinal. Descendente = mejora. Plana = meseta. Ascendente = posible deterioro cognitivo o descompensación.",
+        "alert_rules": [
+          { "condition": "tasa de error sube >20% en 5 sesiones consecutivas", "severity": "high", "message": "Deterioro progresivo de rendimiento — señal de alarma clínica" }
+        ]
+      },
+      {
+        "id": "error_type_distribution",
+        "label": "Distribución de tipos de error",
+        "type": "object",
+        "description": "Categorización de errores: perseverativo (repite el mismo error), confusional (error aleatorio), impulsivo (error rápido sin deliberar), por omisión (no responde)",
+        "clinical": "Tipo de error revela mecanismo subyacente: perseverativo = rigidez (frontal), confusional = desorientación, impulsivo = déficit inhibitorio, por omisión = apatía/avolición."
+      },
+      {
+        "id": "self_correction_rate",
+        "label": "Tasa de autocorrección (errores corregidos antes de confirmar)",
+        "type": "float",
+        "clinical": "Monitoreo de error. Alta autocorrección = metacognición preservada. Baja autocorrección = anosognosia o déficit de monitoreo (común en esquizofrenia)."
+      },
+      {
+        "id": "time_after_error_ms",
+        "label": "Latencia post-error (ms hasta siguiente acción)",
+        "type": "integer",
+        "clinical": "Efecto del error en el procesamiento. Enlentecimiento post-error = procesamiento adaptativo normal (Post-Error Slowing, PES). Ausencia de PES = déficit de monitoreo. PES excesivo = rumiación sobre el error."
+      },
+      {
+        "id": "error_clustering",
+        "label": "Agrupamiento temporal de errores",
+        "type": "object",
+        "clinical": "¿Los errores se agrupan al inicio (calentamiento), al final (fatiga), o son aleatorios (desatención intermitente)? Clustering al final sugiere fatiga cognitiva — indica duración óptima de sesión para ese paciente."
+      },
+      {
+        "id": "error_after_event",
+        "label": "Tasa de error inmediatamente después de un evento/interrupción",
+        "type": "float",
+        "clinical": "Vulnerabilidad a la distracción. Si los errores se disparan después de las interrupciones del juego (gato, teléfono, corte de luz), indica dificultad para recuperar el set atencional."
+      }
+    ]
+  },
+
+  "abandonment_patterns": {
+    "description": "Cuándo y cómo el paciente abandona — la conducta más informativa clínicamente",
+    "parameters": [
+      {
+        "id": "abandonment_point",
+        "label": "Punto exacto de abandono en el juego (%)",
+        "type": "float",
+        "clinical": "¿Abandona al principio (rechazo), a la mitad (frustración acumulada), o cerca del final (fatiga de cierre)? Cada patrón tiene distinto correlato clínico."
+      },
+      {
+        "id": "abandonment_trigger",
+        "label": "Evento previo al abandono",
+        "type": "string",
+        "description": "Qué pasó justo antes de que abandone: error, evento aleatorio, aumento de dificultad, nada identificable",
+        "clinical": "Si siempre abandona después de un error = intolerancia al fracaso. Si abandona tras subir de nivel = ansiedad ante la demanda creciente. Si abandona sin trigger = avolición o aburrimiento."
+      },
+      {
+        "id": "pre_abandonment_behavior_ms",
+        "label": "Comportamiento en los 30 segundos previos al abandono",
+        "type": "object",
+        "description": "Velocidad del mouse, errores, pausas, clicks erráticos en los 30 segundos antes de cerrar",
+        "clinical": "Firma conductual del abandono: aceleración + errores = frustración activa. Desaceleración + pausas = desenganche pasivo. Movimientos erráticos = agitación."
+      },
+      {
+        "id": "return_after_abandonment",
+        "label": "¿Vuelve al mismo juego después de abandonar?",
+        "type": "boolean",
+        "clinical": "Resiliencia. Abandonar y volver = capacidad de regulación emocional y reenganche. Abandonar y nunca volver = evitación consolidada."
+      },
+      {
+        "id": "return_latency_hours",
+        "label": "Horas hasta retorno tras abandono",
+        "type": "float",
+        "clinical": "Tiempo de recuperación. Volver en la misma sesión = frustración pasajera. Volver al día siguiente = procesamiento nocturno. No volver en 7+ días = evitación."
+      },
+      {
+        "id": "abandonment_rate_by_game",
+        "label": "Tasa de abandono por juego/pack",
+        "type": "object",
+        "clinical": "Perfil de tolerancia diferencial. Si abandona ferretería pero nunca supermercado, el tema o la dificultad específica del pack es un factor, no la mecánica."
+      },
+      {
+        "id": "graceful_vs_abrupt_exit",
+        "label": "Tipo de salida: botón 'volver' vs. cerrar pestaña/app",
+        "type": "string",
+        "clinical": "Salida controlada (botón) = cierre voluntario planificado. Cerrar pestaña/app = abandono impulsivo o frustración aguda. Detectable por evento beforeunload."
+      }
+    ]
+  },
+
+  "fatigue_indicators": {
+    "description": "Señales de fatiga cognitiva DENTRO de la sesión",
+    "parameters": [
+      {
+        "id": "performance_decay_curve",
+        "label": "Curva de decaimiento del rendimiento dentro de la sesión",
+        "type": "array",
+        "clinical": "Dividir la sesión en tercios: si el tercer tercio tiene >30% más errores que el primero, hay fatiga cognitiva. Indica duración máxima productiva para ese paciente."
+      },
+      {
+        "id": "reaction_time_increase",
+        "label": "Incremento de tiempo de reacción a lo largo de la sesión",
+        "type": "float",
+        "clinical": "Enlentecimiento progresivo = fatiga. Si RT sube >50% en los últimos 5 minutos vs. los primeros 5 = la sesión fue demasiado larga."
+      },
+      {
+        "id": "mouse_velocity_decay",
+        "label": "Disminución de velocidad del mouse/touch",
+        "type": "float",
+        "clinical": "Marcador psicomotor de fatiga. La mano se mueve más lento cuando el cerebro se cansa."
+      },
+      {
+        "id": "optimal_session_duration",
+        "label": "Duración óptima estimada de sesión (calculada)",
+        "type": "integer",
+        "description": "Punto donde el rendimiento comienza a caer >10% respecto al pico. Calculado automáticamente tras 5+ sesiones.",
+        "clinical": "Personalización de la prescripción de gaming. Paciente A rinde bien 15 minutos, paciente B puede sostener 40 minutos. La prescripción debe ser individualizada."
+      }
+    ]
+  },
+
+  "longitudinal_patterns": {
+    "description": "Patrones que solo emergen con semanas/meses de datos",
+    "parameters": [
+      {
+        "id": "weekly_rhythm",
+        "label": "Ritmo semanal de uso",
+        "type": "object",
+        "clinical": "¿Juega más los lunes? ¿Nunca los domingos? ¿Solo los días que tiene turno con el psiquiatra? Revela estructura semanal y anclajes motivacionales."
+      },
+      {
+        "id": "pre_post_consultation_effect",
+        "label": "Rendimiento antes vs. después de consulta clínica",
+        "type": "object",
+        "clinical": "Si el rendimiento mejora después de la consulta, la alianza terapéutica tiene efecto. Si empeora, la consulta genera ansiedad o el paciente recibió noticias difíciles."
+      },
+      {
+        "id": "medication_change_impact",
+        "label": "Impacto de cambio de medicación en métricas de gaming",
+        "type": "object",
+        "clinical": "Biomarcador conductual del efecto de la medicación. Si tras aumentar antipsicótico el RT sube 40% y la velocidad del mouse cae, el efecto sedante es medible. Si la tasa de error baja con estabilizador del ánimo, el efecto terapéutico es observable.",
+        "alert_rules": [
+          { "condition": "RT promedio sube >30% en la semana siguiente a cambio de medicación", "severity": "medium", "message": "Posible efecto sedante de cambio farmacológico — rendimiento cognitivo alterado" },
+          { "condition": "tasa de error baja >20% en 2 semanas post-cambio", "severity": "info", "message": "Posible efecto terapéutico positivo del cambio farmacológico — mejoría cognitiva" }
+        ]
+      },
+      {
+        "id": "seasonal_variation",
+        "label": "Variación estacional",
+        "type": "object",
+        "clinical": "Pacientes con componente estacional (depresión invernal, manía estival) pueden mostrar patrones gaming que correlacionen con estaciones."
+      },
+      {
+        "id": "cognitive_trajectory",
+        "label": "Trayectoria cognitiva global (score compuesto mensual)",
+        "type": "array",
+        "clinical": "El Santo Grial: una curva longitudinal que muestra si el paciente mejora, se mantiene o deteriora cognitivamente mes a mes. Comparable con evaluaciones neuropsicológicas formales anuales.",
+        "alert_rules": [
+          { "condition": "score compuesto cae >15% en 30 días", "severity": "high", "message": "Deterioro cognitivo significativo en último mes — correlacionar con clínica" },
+          { "condition": "score compuesto sube >10% en 30 días", "severity": "info", "message": "Mejoría cognitiva en último mes — posible efecto de tratamiento" }
+        ]
+      }
+    ]
+  },
+
+  "implementation_notes": {
+    "capture_method": "Todos los eventos se capturan client-side con timestamps precisos (performance.now()) y se envían a Supabase en batch al final de cada sesión o cada 60 segundos (lo que ocurra primero), para no perder datos si el paciente cierra abruptamente.",
+    "privacy": "Datos asociados al ID de paciente HDD, no a datos personales. Almacenamiento en Supabase con RLS por profesional tratante.",
+    "storage_tables": [
+      "hdd_session_log — una fila por sesión (login, duración, juegos jugados)",
+      "hdd_game_attempts — una fila por intento de nivel (juego, pack, nivel, score, errores, duración, métricas)",
+      "hdd_mouse_telemetry — datos crudos de movimiento por sesión (comprimidos)",
+      "hdd_alerts — alertas generadas automáticamente por las reglas definidas",
+      "hdd_patient_profile — perfil adaptativo acumulado (nivel actual por juego, duración óptima, preferencias)"
+    ],
+    "dashboard_views": [
+      "Vista paciente individual: timeline de sesiones, curva de rendimiento, alertas activas",
+      "Vista grupal: comparativa anónima del grupo HDD, adherencia general, distribución de niveles",
+      "Vista clínica: correlación medicación-rendimiento, alertas prioritarias, pacientes en riesgo de abandono"
+    ]
+  }
+}

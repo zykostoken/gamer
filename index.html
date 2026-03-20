@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZYKOS GAMER — Mental Health Gaming Engine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --electric-blue: #00D4FF;
+            --neon-green: #39FF14;
+            --deep-purple: #5B2C91;
+            --dark-bg: #0A0E1A;
+            --card-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--dark-bg);
+            color: #E2E8F0;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background Grid */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(50px); }
+        }
+
+        /* Glow Orbs */
+        .glow-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .orb-1 {
+            top: -10%;
+            right: 10%;
+            width: 400px;
+            height: 400px;
+            background: var(--electric-blue);
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .orb-2 {
+            bottom: -15%;
+            left: -5%;
+            width: 500px;
+            height: 500px;
+            background: var(--deep-purple);
+            animation: float 20s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(50px, -50px); }
+        }
+
+        /* Container */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        /* Header */
+        header {
+            padding: 30px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--electric-blue), var(--neon-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        nav a {
+            color: #94A3B8;
+            text-decoration: none;
+            margin-left: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--electric-blue);
+            transition: width 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--electric-blue);
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 120px 0 80px;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .hero-content h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 72px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 30%, var(--electric-blue) 70%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: slideInLeft 1s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .hero-content .tagline {
+            font-size: 24px;
+            color: var(--neon-green);
+            margin-bottom: 30px;
+            font-weight: 400;
+            animation: slideInLeft 1s ease-out 0.2s both;
+        }
+
+        .hero-content p {
+            font-size: 16px;
+            color: #94A3B8;
+            line-height: 1.8;
+            margin-bottom: 40px;
+            animation: slideInLeft 1s ease-out 0.4s both;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            animation: slideInLeft 1s ease-out 0.6s both;
+        }
+
+        .btn {
+            padding: 18px 40px;
+            font-size: 15px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--electric-blue), var(--deep-purple));
+            color: white;
+            box-shadow: 0 10px 40px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 50px rgba(0, 212, 255, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--electric-blue);
+        }
+
+        /* Hero Visual */
+        .hero-visual {
+            position: relative;
+            animation: slideInRight 1s ease-out 0.4s both;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .metric {
+            margin-bottom: 30px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #64748B;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--electric-blue);
+        }
+
+        .metric-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .metric-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--electric-blue), var(--neon-green));
+            border-radius: 2px;
+            animation: fillBar 2s ease-out 1s both;
+        }
+
+        @keyframes fillBar {
+            from { width: 0; }
+        }
+
+        /* Features Grid */
+        .features {
+            padding: 100px 0;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 48px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff, var(--electric-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #64748B;
+            font-size: 18px;
+            margin-bottom: 60px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 40px 30px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--electric-blue), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--electric-blue);
+            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.3);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .feature-card p {
+            color: #94A3B8;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Stats Section */
+        .stats {
+            padding: 80px 0;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+        }
+
+        .stat {
+            padding: 30px;
+        }
+
+        .stat-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 56px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--electric-blue), var(--neon-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #64748B;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Legal Packages */
+        .packages {
+            padding: 100px 0;
+        }
+
+        .packages-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+
+        .package-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 50px 40px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .package-card:hover {
+            transform: scale(1.05);
+            border-color: var(--electric-blue);
+            box-shadow: 0 30px 80px rgba(0, 212, 255, 0.4);
+        }
+
+        .package-flag {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .package-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .package-price {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--neon-green);
+            margin-bottom: 30px;
+        }
+
+        .package-features {
+            text-align: left;
+            margin-bottom: 30px;
+        }
+
+        .package-features li {
+            color: #94A3B8;
+            font-size: 13px;
+            margin-bottom: 12px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .package-features li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--electric-blue);
+        }
+
+        /* Footer */
+        footer {
+            padding: 60px 0;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+        }
+
+        footer p {
+            color: #64748B;
+            font-size: 14px;
+        }
+
+        footer a {
+            color: var(--electric-blue);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .hero {
+                grid-template-columns: 1fr;
+                gap: 60px;
+            }
+
+            .hero-content h1 {
+                font-size: 56px;
+            }
+
+            .features-grid,
+            .packages-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo">ZYKOS GAMER</div>
+            <nav>
+                <a href="#features">Features</a>
+                <a href="#packages">Packages</a>
+                <a href="#demos">Live Demos</a>
+                <a href="https://github.com/zykostoken/gamer" target="_blank">GitHub</a>
+            </nav>
+        </header>
+
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Mental Health Gaming Engine</h1>
+                <div class="tagline">For Institutional Deployment</div>
+                <p>Production-ready B2B platform combining therapeutic gaming, clinical dashboards, and patient management — designed for mental health institutions with region-specific regulatory compliance.</p>
+                <div class="cta-buttons">
+                    <a href="#demos" class="btn btn-primary">View Live Demos</a>
+                    <a href="https://github.com/zykostoken/gamer" class="btn btn-secondary">View on GitHub</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="glass-card">
+                    <div class="metric">
+                        <div class="metric-label">Biometric Metrics</div>
+                        <div class="metric-value">140+</div>
+                        <div class="metric-bar">
+                            <div class="metric-bar-fill" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Therapeutic Games</div>
+                        <div class="metric-value">7 Live</div>
+                        <div class="metric-bar">
+                            <div class="metric-bar-fill" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Regulatory Packages</div>
+                        <div class="metric-value">3 Regions</div>
+                        <div class="metric-bar">
+                            <div class="metric-bar-fill" style="width: 75%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats">
+            <div class="stats-grid">
+                <div class="stat">
+                    <div class="stat-number">13</div>
+                    <div class="stat-label">Components Live</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">96</div>
+                    <div class="stat-label">Sessions Logged</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">14</div>
+                    <div class="stat-label">Active Patients</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Production Ready</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="features" id="features">
+            <h2 class="section-title">Core Components</h2>
+            <p class="section-subtitle">Everything you need to deploy a clinical-grade digital mental health platform</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎮</div>
+                    <h3>Therapeutic Games</h3>
+                    <p>7 live games + universal biometrics framework capturing 140+ clinical metrics across cognitive domains.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Clinical Dashboards</h3>
+                    <p>Scientific dashboard with 5 intellectual functions (Luria/Lezak/Miyake framework) + usage analytics.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3>Patient Auth System</h3>
+                    <p>Complete authentication with session management, audit logging, and role-based access control.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3>Regional Compliance</h3>
+                    <p>Legal packages for EU GDPR, USA HIPAA, and Argentina ReNaPDiS — ready for regulatory approval.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔌</div>
+                    <h3>Database Agnostic</h3>
+                    <p>Adapter pattern architecture — integrates with any EHR via SQL, FHIR, Epic, or Cerner adapters.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Longitudinal Tracking</h3>
+                    <p>Baseline detection, Reliable Change Index (RCI), cluster classification (FUNCIONAL/HIPOACTIVO/HIPERACTIVO/DESORGANIZADO).</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="packages" id="packages">
+            <h2 class="section-title">Regional Legal Packages</h2>
+            <p class="section-subtitle">Choose your compliance framework</p>
+            <div class="packages-grid">
+                <div class="package-card">
+                    <div class="package-flag">🇪🇺</div>
+                    <div class="package-name">European Union</div>
+                    <div class="package-price">€8k-15k</div>
+                    <ul class="package-features">
+                        <li>GDPR full compliance</li>
+                        <li>Consent management UI</li>
+                        <li>Right to erasure</li>
+                        <li>Data portability</li>
+                        <li>72h breach notification</li>
+                        <li>DPO templates</li>
+                    </ul>
+                    <a href="https://www.notion.so/3242f93ce71381378c84d84f0beee367" class="btn btn-secondary">Learn More</a>
+                </div>
+                <div class="package-card">
+                    <div class="package-flag">🇺🇸</div>
+                    <div class="package-name">United States</div>
+                    <div class="package-price">$12k-20k</div>
+                    <ul class="package-features">
+                        <li>HIPAA Privacy + Security</li>
+                        <li>BAA with vendors</li>
+                        <li>Epic/Cerner adapters</li>
+                        <li>6-year audit logs</li>
+                        <li>Safe Harbor de-ID</li>
+                        <li>Breach response plan</li>
+                    </ul>
+                    <a href="https://www.notion.so/3242f93ce713817c8515f22bae02ace3" class="btn btn-secondary">Learn More</a>
+                </div>
+                <div class="package-card">
+                    <div class="package-flag">🇦🇷</div>
+                    <div class="package-name">Argentina</div>
+                    <div class="package-price">$8k-15k</div>
+                    <ul class="package-features">
+                        <li>ReNaPDiS registration</li>
+                        <li>CUIR integration</li>
+                        <li>Ley 26.529 (10yr retention)</li>
+                        <li>Digital signature (Ley 25.506)</li>
+                        <li>Model Contractual Clauses</li>
+                        <li>AAIP registration</li>
+                    </ul>
+                    <a href="https://www.notion.so/3242f93ce713818a88a6e7ba4591878c" class="btn btn-secondary">Learn More</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="features" id="demos">
+            <h2 class="section-title">Live Demos</h2>
+            <p class="section-subtitle">Experience ZYKOS GAMER in action</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🚜</div>
+                    <h3>Cortadora de Cesped</h3>
+                    <p>Spatial planning with progressive constraints. Resource management (compost bag), anticipatory path planning, error discrimination (flowers vs pool vs cable). 6 cognitive paradigms in one game.</p>
+                    <a href="/games/play/lawn-mower.html" class="btn btn-primary" style="margin-top: 20px; padding: 12px 24px; font-size: 13px;">Play Demo</a>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💊</div>
+                    <h3>Organizador de Medicacion</h3>
+                    <p>Fine motor praxis with pharmacological schema retention. Drop precision, tremor per movement, sequential strategy analysis (day-by-day vs medication-by-medication).</p>
+                    <a href="/games/play/pill-organizer.html" class="btn btn-primary" style="margin-top: 20px; padding: 12px 24px; font-size: 13px;">Play Demo</a>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🥩</div>
+                    <h3>Desafio Milanesas</h3>
+                    <p>Reading comprehension + episodic recall + numerical estimation. Semantic item classification (essential/advanced/neutral), spatial scanning, budget calculation, self-correction tracking.</p>
+                    <a href="/games/play/super-market.html" class="btn btn-primary" style="margin-top: 20px; padding: 12px 24px; font-size: 13px;">Play Demo</a>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🧑‍🍳</div>
+                    <h3>Cocinero Neuronal</h3>
+                    <p>Signal Detection Theory (d-prime, hits, misses, false alarms, correct rejects). Ingredient classification with culinary context. Tremor and hesitation capture.</p>
+                    <a href="/games/play/neuro-chef/index.html" class="btn btn-primary" style="margin-top: 20px; padding: 12px 24px; font-size: 13px;">Play Demo</a>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💊</div>
+                    <h3>Memoria de Medicacion</h3>
+                    <p>Working memory span + medication adherence simulation. Progressive difficulty levels, commission/omission discrimination, decision time variability, simulated MPR.</p>
+                    <a href="/games/play/medication-memory.html" class="btn btn-primary" style="margin-top: 20px; padding: 12px 24px; font-size: 13px;">Play Demo</a>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🏠</div>
+                    <h3>Mi Rutina Diaria</h3>
+                    <p>ADL sequencing + projective choice capture. Scene-based daily routine with biomet.js universal biometric engine. Skipped scenes analysis, action sequencing, engagement patterns.</p>
+                    <a href="/games/play/daily-routine.html" class="btn btn-primary" style="margin-top: 20px; padding: 12px 24px; font-size: 13px;">Play Demo</a>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🧊</div>
+                    <h3>Heladera Inteligente</h3>
+                    <p>Food safety classification + categorization. Correct/incorrect placement decisions with clinical flag detection for safety violations and organizational strategy.</p>
+                    <a href="/games/play/fridge-logic.html" class="btn btn-primary" style="margin-top: 20px; padding: 12px 24px; font-size: 13px;">Play Demo</a>
+                </div>
+                <div class="feature-card" style="border-color: var(--neon-green); box-shadow: 0 0 20px rgba(57,255,20,.1);">
+                    <div class="feature-icon">📊</div>
+                    <h3>Informe Clinico Digital</h3>
+                    <p>Cross-domain construct analysis. 14 clinical constructs from 7 neuropsychological domains. RCI-based change detection. Progressive disclosure architecture.</p>
+                    <a href="/hdd/admin/informe-clinico.html" class="btn btn-primary" style="margin-top: 20px; padding: 12px 24px; font-size: 13px;">View Report</a>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2026 ZYKOS GAMER. Mental Health Gaming Engine for Institutional Deployment.</p>
+            <p><a href="https://github.com/zykostoken/gamer">GitHub</a> · <a href="https://www.notion.so/3242f93ce71381108aa3cb6caba2b9af">Documentation</a> · <a href="https://zykos.ar">Reference Implementation</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

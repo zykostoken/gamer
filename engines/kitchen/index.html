@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Guardá las Compras · HDD</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:18px}
+body{font-family:'Nunito',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;overflow-x:hidden}
+
+/* TOP BAR — big and clear */
+.top{background:#1e293b;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #334155;position:sticky;top:0;z-index:100}
+.top-title{font-size:1.1rem;font-weight:900}
+.top-stats{display:flex;gap:16px}
+.ts{text-align:center}.ts b{font-size:1.5rem;font-weight:900;display:block;line-height:1}
+.ts small{font-size:.5rem;text-transform:uppercase;letter-spacing:.1em;color:#64748b}
+.ts-time b{color:#fbbf24}.ts-ok b{color:#4ade80}.ts-err b{color:#f87171}
+
+/* PROGRESS */
+.prog{height:6px;background:#1e293b}.prog-bar{height:100%;background:linear-gradient(90deg,#4ade80,#22d3ee);transition:width .5s;border-radius:0 3px 3px 0}
+
+/* GAME CONTAINER */
+.gc{max-width:800px;margin:0 auto;padding:12px}
+
+/* === SELECTED PRODUCT (big floating banner) === */
+.selected-banner{
+  display:none;position:sticky;top:60px;z-index:50;
+  background:linear-gradient(135deg,#312e81,#4338ca);
+  border:3px solid #6366f1;border-radius:20px;padding:16px 20px;margin-bottom:16px;
+  text-align:center;box-shadow:0 8px 32px rgba(99,102,241,.3);
+  animation:bounceIn .3s ease;
+}
+.selected-banner.show{display:block}
+.sb-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.15em;color:rgba(255,255,255,.5);margin-bottom:4px}
+.sb-product{display:flex;align-items:center;justify-content:center;gap:12px}
+.sb-em{font-size:2.5rem}
+.sb-nm{font-size:1.2rem;font-weight:900}
+.sb-hint{font-size:.65rem;color:rgba(255,255,255,.5);margin-top:4px}
+
+/* === PRODUCT GRID (the "bag") === */
+.bag-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;color:#64748b;margin-bottom:10px;padding-left:4px}
+.bag-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;margin-bottom:20px;
+}
+.product{
+  aspect-ratio:1;border-radius:16px;
+  background:#1e293b;border:3px solid #334155;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;user-select:none;transition:all .2s;padding:8px;gap:4px;
+  box-shadow:0 4px 12px rgba(0,0,0,.2);
+}
+.product:hover{border-color:#475569;transform:translateY(-2px)}
+.product:active{transform:scale(.95)}
+.product.selected{border-color:#6366f1;background:#1e1b4b;box-shadow:0 0 20px rgba(99,102,241,.3)}
+.product.placed{display:none}
+.product .p-em{font-size:2.2rem}
+.product .p-nm{font-size:.55rem;text-align:center;color:#94a3b8;line-height:1.2;max-height:2.4em;overflow:hidden}
+
+/* === DESTINATION ZONES (the "furniture") === */
+.zones-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;color:#64748b;margin-bottom:10px;padding-left:4px}
+.zones-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+
+.zone{
+  border-radius:18px;padding:20px;min-height:120px;
+  cursor:pointer;transition:all .25s;position:relative;overflow:hidden;
+  border:3px solid transparent;
+}
+.zone:hover{transform:translateY(-2px);filter:brightness(1.1)}
+.zone:active{transform:scale(.98)}
+.zone.target-active{border-color:#fbbf24;box-shadow:0 0 24px rgba(251,191,36,.15)}
+.zone.correct-flash{border-color:#4ade80!important;box-shadow:0 0 30px rgba(74,222,128,.25)!important}
+.zone.wrong-flash{border-color:#f87171!important;box-shadow:0 0 30px rgba(248,113,113,.2)!important}
+
+.zone-em{font-size:2.5rem;margin-bottom:6px}
+.zone-nm{font-size:1rem;font-weight:900}
+.zone-hint{font-size:.6rem;color:rgba(255,255,255,.4);margin-top:6px;line-height:1.3}
+.zone-count{position:absolute;top:12px;right:14px;font-size:.75rem;font-weight:900;background:rgba(0,0,0,.3);padding:2px 10px;border-radius:10px;backdrop-filter:blur(8px)}
+
+/* Items placed inside zone */
+.zone-items{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px}
+.zi{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:8px;font-size:.6rem;font-weight:700}
+.zi.ok{background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.15)}
+.zi.bad{background:rgba(248,113,113,.12);color:#f87171;border:1px solid rgba(248,113,113,.15)}
+
+/* TOAST — bottom center, BIG */
+.toasts{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column-reverse;gap:8px;align-items:center;pointer-events:none}
+.toast{padding:14px 28px;border-radius:16px;font-size:.9rem;font-weight:800;pointer-events:auto;animation:toastUp .3s ease,toastOut .4s ease 1.8s forwards;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.toast-ok{background:#16a34a;color:#fff}
+.toast-err{background:#dc2626;color:#fff}
+
+/* INTRO */
+.intro{text-align:center;padding:60px 20px}
+.intro h2{font-size:1.6rem;font-weight:900;margin:16px 0 8px}
+.intro p{color:#94a3b8;max-width:440px;margin:0 auto 16px;line-height:1.5;font-size:.85rem}
+.intro .warn{color:#fbbf24;font-weight:800;font-size:.8rem}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:16px 36px;border-radius:16px;border:none;font-weight:900;font-size:1rem;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-go{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;box-shadow:0 6px 24px rgba(99,102,241,.4)}
+.btn-go:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(99,102,241,.5)}
+.btn-sm{background:#1e293b;color:#94a3b8;padding:12px 24px;font-size:.85rem;border:2px solid #334155}
+
+/* RESULTS */
+.results{text-align:center;padding:40px 16px}
+.results h2{font-size:1.6rem;font-weight:900}
+.res-pct{font-size:4rem;font-weight:900;margin:12px 0;background:linear-gradient(135deg,#4ade80,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:400px;margin:20px auto}
+.rc{background:#1e293b;border-radius:14px;padding:16px;border:1px solid #334155}
+.rc b{font-size:1.4rem;display:block;font-weight:900}.rc small{font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:#64748b}
+.err-box{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.12);border-radius:14px;padding:16px;max-width:400px;margin:16px auto;text-align:left}
+.err-title{font-size:.75rem;font-weight:800;color:#f87171;margin-bottom:8px}
+.err-item{font-size:.75rem;color:#94a3b8;margin-bottom:4px;padding-left:10px;border-left:2px solid rgba(248,113,113,.3)}
+
+@keyframes bounceIn{0%{transform:scale(.8);opacity:0}60%{transform:scale(1.03)}100%{transform:scale(1);opacity:1}}
+@keyframes toastUp{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes toastOut{to{opacity:0;transform:translate(-50%,-10px)}}
+@keyframes popIn{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.shake{animation:shake .35s ease}
+</style>
+</head>
+<body>
+<div class="toasts" id="toasts"></div>
+
+<div class="top">
+  <div class="top-title" id="top-title">🛒 Guardá las Compras</div>
+  <div class="top-stats">
+    <div class="ts ts-time"><b id="h-time">0:00</b><small>Tiempo</small></div>
+    <div class="ts ts-ok"><b id="h-ok">0</b><small>Bien</small></div>
+    <div class="ts ts-err"><b id="h-err">0</b><small>Mal</small></div>
+  </div>
+</div>
+<div class="prog"><div class="prog-bar" id="prog" style="width:0%"></div></div>
+
+<div class="gc" id="game"></div>
+
+<script>
+var PACKS = {};
+
+var packId = new URLSearchParams(location.search).get('pack') || 'almacen-general';
+var PACK = null;
+async function lp(){try{var r=await fetch('../../packs/classify-and-place/'+packId+'/pack.json');PACK=await r.json();showIntro()}catch(e){document.getElementById('game').innerHTML='<p style="color:red">Error: '+e.message+'</p>'}}
+lp();
+
+var patientId = new URLSearchParams(location.search).get('patient_id') || 'DEMO';
+var S = {ok:0,err:0,total:0,placed:0,t0:0,ti:null,sec:0,moves:[],items:[],selectedId:null};
+
+// Zone colors — auto-assigned from a palette
+var PALETTE = [
+  'linear-gradient(145deg,#0c4a6e,#164e63)', // teal
+  'linear-gradient(145deg,#1e3a5f,#1e40af)', // blue
+  'linear-gradient(145deg,#14532d,#166534)', // green
+  'linear-gradient(145deg,#78350f,#92400e)', // amber
+  'linear-gradient(145deg,#4a1d96,#5b21b6)', // purple
+  'linear-gradient(145deg,#831843,#9d174d)', // pink
+  'linear-gradient(145deg,#1e293b,#334155)', // slate
+  'linear-gradient(145deg,#713f12,#854d0e)', // yellow-dark
+  'linear-gradient(145deg,#064e3b,#065f46)', // emerald
+];
+
+function showIntro() {
+  var g = document.getElementById('game');
+  g.innerHTML = '<div class="intro">' +
+    '<div style="font-size:4.5rem;margin-bottom:8px">' + PACK.meta.emoji + '</div>' +
+    '<h2>' + PACK.meta.name + '</h2>' +
+    '<p>' + (PACK.meta.setting || PACK.meta.description) + '</p>' +
+    '<p style="font-size:.8rem;color:#fbbf24;font-weight:800;margin-bottom:24px">' +
+    '\u{1F449} Toc\u00E1 un producto para seleccionarlo, despu\u00E9s toc\u00E1 el lugar donde va.</p>' +
+    '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">' +
+    '<button class="btn btn-go" onclick="startGame(15)">\u{1F3AE} Jugar</button>' +
+    '<button class="btn btn-sm" onclick="startGame(8)">Ronda corta</button>' +
+    '</div></div>';
+}
+
+function startGame(n) {
+  S.ok=0;S.err=0;S.placed=0;S.moves=[];S.sec=0;S.selectedId=null;
+  S.t0=performance.now();
+
+  // Pick items
+  var items = shuffle(PACK.items.filter(function(i){return i.category})).slice(0, Math.min(n, PACK.items.length));
+  S.total = items.length;
+  S.items = items;
+
+  // Determine which categories are needed (only those that have items in this round)
+  var usedCats = {};
+  items.forEach(function(i) { usedCats[i.category] = true; });
+  // Add 1-2 decoy categories (empty) for challenge
+  var extraCats = PACK.categories.filter(function(c) { return !usedCats[c.id]; });
+  shuffle(extraCats);
+  var decoys = extraCats.slice(0, Math.min(2, extraCats.length));
+  decoys.forEach(function(c) { usedCats[c.id] = true; });
+
+  var activeCats = PACK.categories.filter(function(c) { return usedCats[c.id]; });
+  S.activeCats = activeCats;
+
+  clearInterval(S.ti);
+  S.ti = setInterval(function(){
+    S.sec++;
+    var m=Math.floor(S.sec/60),s=S.sec%60;
+    document.getElementById('h-time').textContent=m+':'+String(s).padStart(2,'0');
+  },1000);
+  document.getElementById('h-ok').textContent='0';
+  document.getElementById('h-err').textContent='0';
+  document.getElementById('prog').style.width='0%';
+
+  if(window.biomet) biomet.start({patientId:patientId,patientDni:patientId,gameSlug:PACK.meta.id});
+
+  render(items, activeCats);
+}
+
+function render(items, cats) {
+  var itemsH = items.map(function(it){
+    return '<div class="product" data-id="'+it.id+'" data-cat="'+it.category+'" onclick="selectProduct(''+it.id+'')">' +
+      '<span class="p-em">'+it.emoji+'</span>' +
+      '<span class="p-nm">'+it.name+'</span></div>';
+  }).join('');
+
+  var zonesH = cats.map(function(cat, i){
+    var bg = PALETTE[i % PALETTE.length];
+    return '<div class="zone" data-cat="'+cat.id+'" style="background:'+bg+'" onclick="placeInZone(''+cat.id+'')">' +
+      '<span class="zone-count" id="zn-'+cat.id+'">0</span>' +
+      '<div class="zone-em">'+cat.emoji+'</div>' +
+      '<div class="zone-nm">'+cat.label+'</div>' +
+      '<div class="zone-hint">'+(cat.description||'').substring(0,80)+'</div>' +
+      '<div class="zone-items" id="zitems-'+cat.id+'"></div></div>';
+  }).join('');
+
+  document.getElementById('game').innerHTML =
+    '<div class="selected-banner" id="sel-banner">' +
+      '<div class="sb-label">PRODUCTO SELECCIONADO</div>' +
+      '<div class="sb-product"><span class="sb-em" id="sel-em"></span><span class="sb-nm" id="sel-nm"></span></div>' +
+      '<div class="sb-hint">\u{1F447} Ahora toc\u00E1 el lugar donde va</div></div>' +
+    '<div class="bag-label">\u{1F6CD}\uFE0F PRODUCTOS \u2014 ' + items.length + ' por guardar</div>' +
+    '<div class="bag-grid" id="bag">' + itemsH + '</div>' +
+    '<div class="zones-label">\u{1F3E0} \u00BFDO\u0301NDE VA CADA COSA?</div>' +
+    '<div class="zones-grid">' + zonesH + '</div>';
+
+  if(window.biomet) cats.forEach(function(c){
+    var el=document.querySelector('.zone[data-cat="'+c.id+'"]');
+    if(el) biomet.registerTarget(c.id, el);
+  });
+}
+
+function selectProduct(id) {
+  // Deselect previous
+  document.querySelectorAll('.product.selected').forEach(function(el){el.classList.remove('selected')});
+  // Select new
+  var el = document.querySelector('.product[data-id="'+id+'"]');
+  if (!el || el.classList.contains('placed')) return;
+  el.classList.add('selected');
+  S.selectedId = id;
+  var item = S.items.find(function(i){return i.id===id});
+  if(!item) return;
+  // Show banner
+  var banner = document.getElementById('sel-banner');
+  banner.classList.add('show');
+  document.getElementById('sel-em').textContent = item.emoji;
+  document.getElementById('sel-nm').textContent = item.name;
+  // Highlight valid zones
+  document.querySelectorAll('.zone').forEach(function(z){z.classList.add('target-active')});
+}
+
+function placeInZone(catId) {
+  if (!S.selectedId) {
+    toast('\u{1F446} Primero toc\u00E1 un producto de arriba', 'err');
+    return;
+  }
+  var item = S.items.find(function(i){return i.id===S.selectedId});
+  if (!item) return;
+  var el = document.querySelector('.product[data-id="'+S.selectedId+'"]');
+  if (!el) return;
+
+  var correct = item.category === catId;
+  var logicErr = null;
+
+  // Cross-contamination checks
+  var foodCats = PACK.categories.filter(function(c){
+    return ['almacen_seco','lacteos_fiambres','frutas_verduras','panaderia','bebidas','congelados','carnes'].indexOf(c.id) !== -1;
+  }).map(function(c){return c.id});
+  var cleanCats = ['limpieza','higiene'];
+  var targetIsClean = cleanCats.indexOf(catId) !== -1;
+  var targetIsFood = foodCats.indexOf(catId) !== -1;
+  var itemIsFood = foodCats.indexOf(item.category) !== -1;
+  var itemIsClean = cleanCats.indexOf(item.category) !== -1;
+
+  if (targetIsClean && itemIsFood) { logicErr = '\u00A1Comida con productos de limpieza!'; correct = false; }
+  if (targetIsFood && itemIsClean) { logicErr = '\u00A1Limpieza donde va la comida!'; correct = false; }
+  if (!correct && item.similarity_note) logicErr = item.similarity_note;
+
+  S.moves.push({itemId:S.selectedId, zone:catId, correct:correct, logicError:logicErr, time:performance.now()-S.t0});
+  if(window.biomet) biomet.recordAction({type:correct?'correct':'wrong',target_id:catId,correct:correct});
+
+  if(correct){S.ok++;document.getElementById('h-ok').textContent=S.ok}
+  else{S.err++;document.getElementById('h-err').textContent=S.err}
+  S.placed++;
+  document.getElementById('prog').style.width=Math.round(S.placed/S.total*100)+'%';
+
+  // Visual feedback on zone
+  var ze = document.querySelector('.zone[data-cat="'+catId+'"]');
+  if(correct){ze.classList.add('correct-flash');setTimeout(function(){ze.classList.remove('correct-flash')},500);toast('\u2713 '+item.name,'ok')}
+  else{ze.classList.add('wrong-flash');setTimeout(function(){ze.classList.remove('wrong-flash')},500);el.classList.add('shake');setTimeout(function(){el.classList.remove('shake')},500);
+    var cc=PACK.categories.find(function(c){return c.id===item.category});
+    toast('\u2717 '+(logicErr||item.name+' va en '+(cc?cc.label:'?')),'err')}
+
+  // Add pill to zone
+  var zItems = document.getElementById('zitems-'+catId);
+  var pill = document.createElement('span');
+  pill.className='zi '+(correct?'ok':'bad');
+  pill.style.animation='popIn .25s ease';
+  pill.innerHTML=item.emoji+' '+item.name;
+  zItems.appendChild(pill);
+  document.getElementById('zn-'+catId).textContent=zItems.children.length;
+
+  // Remove product from bag
+  el.classList.add('placed');
+
+  // Reset selection
+  S.selectedId = null;
+  document.getElementById('sel-banner').classList.remove('show');
+  document.querySelectorAll('.zone').forEach(function(z){z.classList.remove('target-active')});
+
+  // Done?
+  if(S.placed >= S.total){clearInterval(S.ti);setTimeout(showResults,600)}
+}
+
+function showResults(){
+  var bm=null;if(window.biomet)bm=biomet.save({game_mode:'kitchen',pack_id:PACK.meta.id,correct:S.ok,errors:S.err,total:S.total});
+  var acc=S.total>0?Math.round(S.ok/S.total*100):0;
+  var le=S.moves.filter(function(m){return m.logicError});
+  document.getElementById('game').innerHTML=
+    '<div class="results"><h2>'+(acc>=80?'\u{1F389} \u00A1Excelente!':acc>=60?'\u{1F44D} \u00A1Bien!':'\u{1F4AA} Segu\u00ED practicando')+'</h2>'+
+    '<div class="res-pct" style="color:'+(acc>=60?'#4ade80':'#f87171')+'">'+acc+'%</div>'+
+    '<p style="color:#64748b;margin-bottom:16px">'+PACK.meta.name+'</p>'+
+    '<div class="res-grid">'+
+    '<div class="rc"><b style="color:#4ade80">'+S.ok+'</b><small>Correctos</small></div>'+
+    '<div class="rc"><b style="color:#f87171">'+S.err+'</b><small>Errores</small></div>'+
+    '<div class="rc"><b style="color:#fbbf24">'+S.sec+'s</b><small>Tiempo</small></div>'+
+    '<div class="rc"><b style="color:#f97316">'+le.length+'</b><small>Err. l\u00F3gicos</small></div></div>'+
+    (le.length>0?'<div class="err-box"><div class="err-title">\u26A0\uFE0F Errores l\u00F3gicos</div>'+le.map(function(m){var it=S.items.find(function(i){return i.id===m.itemId});return'<div class="err-item">'+(it?it.emoji+' '+it.name:m.itemId)+': '+m.logicError+'</div>'}).join('')+'</div>':'')+
+    (bm?'<div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:14px;max-width:400px;margin:16px auto;text-align:left"><div style="font-size:.6rem;font-weight:800;color:#60a5fa;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Biomet.js</div><div style="font-size:.65rem;color:#64748b">Econom\u00EDa: '+(bm.economia_cognitiva||'\u2014')+' \u00B7 Eficiencia: '+((bm.eficiencia_motora||0)*100).toFixed(0)+'% \u00B7 Persev: '+(bm.perseveraciones||0)+'</div></div>':'')+
+    '<div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">'+
+    '<button class="btn btn-go" onclick="startGame('+S.total+')">\u{1F504} De nuevo</button>'+
+    '<button class="btn btn-sm" onclick="showIntro()">Men\u00FA</button></div></div>';
+}
+
+function toast(m,t){var d=document.createElement('div');d.className='toast toast-'+(t||'ok');d.textContent=m;document.getElementById('toasts').appendChild(d);setTimeout(function(){d.remove()},2200)}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+</script>
+</body>
+</html>

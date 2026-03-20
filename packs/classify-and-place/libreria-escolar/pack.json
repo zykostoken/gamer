@@ -1,0 +1,342 @@
+{
+  "meta": {
+    "id": "libreria-escolar",
+    "name": "La Librería de la Seño Marta",
+    "subtitle": "Vuelta al cole — armá los pedidos sin equivocarte",
+    "emoji": "📚",
+    "description": "Es febrero y la librería explota de padres con listas escolares. Organizá la mercadería, armá los pedidos y no le vendas un compás al que necesita una escuadra.",
+    "setting": "Librería y papelería de barrio en Necochea. Vidriera llena de cartucheras y mochilas. Mostrador con rollos de papel araña. Estantes hasta el techo con resmas. La Seño Marta se fue a cuidar a los nietos y te dejó a cargo en la peor semana del año.",
+    "cognitive_targets": [
+      "categorización semántica",
+      "seriación ordinal y numérica",
+      "cálculo aritmético y proporcional",
+      "agrupamiento funcional por consigna",
+      "semejanza perceptual",
+      "semejanza funcional",
+      "simbolización (medidas, formatos, códigos)",
+      "razonamiento inferencial",
+      "memoria de trabajo",
+      "planificación",
+      "inhibición de respuesta"
+    ],
+    "colors": {
+      "accent": "#3b82f6",
+      "surface": "#1e293b",
+      "bg": "#0f172a",
+      "category_header": "#60a5fa"
+    }
+  },
+
+  "categories": [
+    { "id": "escritura", "label": "Escritura", "emoji": "✏️", "description": "Lápices, lapiceras, marcadores, resaltadores, fibras, corrector", "color": "#f59e0b" },
+    { "id": "cuadernos", "label": "Cuadernos y Hojas", "emoji": "📓", "description": "Cuadernos, carpetas, hojas, repuestos, blocks", "color": "#3b82f6" },
+    { "id": "geometria", "label": "Geometría y Medición", "emoji": "📐", "description": "Reglas, escuadras, compás, transportador, plantillas", "color": "#8b5cf6" },
+    { "id": "arte", "label": "Arte y Manualidades", "emoji": "🎨", "description": "Témperas, acuarelas, pinceles, plastilina, goma eva, papel glasé", "color": "#ec4899" },
+    { "id": "corte_pegado", "label": "Corte y Pegado", "emoji": "✂️", "description": "Tijeras, plasticola, voligoma, cinta scotch, papel araña", "color": "#22c55e" },
+    { "id": "organizacion", "label": "Organización", "emoji": "🎒", "description": "Cartucheras, mochilas, etiquetas, separadores, portafolios", "color": "#06b6d4" },
+    { "id": "papel_especial", "label": "Papeles Especiales", "emoji": "📄", "description": "Papel glasé, afiche, crepé, cartulina, papel madera, papel araña", "color": "#f97316" },
+    { "id": "tecnologia", "label": "Tecnología e Impresión", "emoji": "🖨️", "description": "Resmas A4, cartuchos, pendrives, calculadoras", "color": "#64748b" }
+  ],
+
+  "items": [
+    { "id": "lapiz_hb", "name": "Lápiz negro HB", "emoji": "✏️", "category": "escritura", "difficulty": 1, "price": 450, "hint": "El lápiz estándar de toda la vida" },
+    { "id": "lapiz_2b", "name": "Lápiz negro 2B", "emoji": "✏️", "category": "escritura", "difficulty": 3, "price": 550, "confusable_with": "lapiz_hb", "similarity_type": "perceptual", "similarity_note": "Parece igual pero es más blando — para dibujo artístico, no para escribir" },
+    { "id": "lapiz_2h", "name": "Lápiz negro 2H", "emoji": "✏️", "category": "escritura", "difficulty": 3, "price": 500, "confusable_with": "lapiz_hb", "similarity_type": "perceptual", "similarity_note": "Parece igual pero es más duro — para dibujo técnico" },
+    { "id": "lapicera_azul", "name": "Lapicera azul Bic", "emoji": "🖊️", "category": "escritura", "difficulty": 1, "price": 650 },
+    { "id": "lapicera_negra", "name": "Lapicera negra Bic", "emoji": "🖊️", "category": "escritura", "difficulty": 1, "price": 650 },
+    { "id": "lapicera_roja", "name": "Lapicera roja Bic", "emoji": "🖊️", "category": "escritura", "difficulty": 1, "price": 650 },
+    { "id": "marcador_negro_perm", "name": "Marcador permanente negro", "emoji": "🖊️", "category": "escritura", "difficulty": 2, "price": 1200, "confusable_with": "fibra_negra", "similarity_type": "perceptual", "similarity_note": "Parece una fibra pero es PERMANENTE — no se borra, mancha la ropa" },
+    { "id": "fibra_negra", "name": "Fibra negra al agua", "emoji": "🖊️", "category": "escritura", "difficulty": 2, "price": 800, "confusable_with": "marcador_negro_perm", "similarity_type": "perceptual" },
+    { "id": "fibras_x12", "name": "Fibras al agua x12 colores", "emoji": "🖍️", "category": "escritura", "difficulty": 1, "price": 4500 },
+    { "id": "fibras_x24", "name": "Fibras al agua x24 colores", "emoji": "🖍️", "category": "escritura", "difficulty": 1, "price": 7200, "confusable_with": "fibras_x12", "similarity_type": "perceptual" },
+    { "id": "resaltador_amarillo", "name": "Resaltador amarillo", "emoji": "🖍️", "category": "escritura", "difficulty": 1, "price": 950 },
+    { "id": "resaltador_pack_x4", "name": "Resaltadores x4 colores", "emoji": "🖍️", "category": "escritura", "difficulty": 1, "price": 3200 },
+    { "id": "lapices_color_x12", "name": "Lápices de colores x12", "emoji": "🖍️", "category": "escritura", "difficulty": 1, "price": 3800 },
+    { "id": "lapices_color_x24", "name": "Lápices de colores x24 largos", "emoji": "🖍️", "category": "escritura", "difficulty": 1, "price": 6500 },
+    { "id": "corrector_liquido", "name": "Corrector líquido", "emoji": "🧴", "category": "escritura", "difficulty": 1, "price": 1100 },
+    { "id": "corrector_cinta", "name": "Corrector en cinta", "emoji": "📎", "category": "escritura", "difficulty": 2, "price": 1800, "confusable_with": "corrector_liquido", "similarity_type": "funcional", "similarity_note": "Ambos corrigen pero la cinta no necesita esperar que seque" },
+    { "id": "goma_lapiz", "name": "Goma de borrar lápiz", "emoji": "🧹", "category": "escritura", "difficulty": 1, "price": 350 },
+    { "id": "goma_tinta", "name": "Goma de borrar tinta", "emoji": "🧹", "category": "escritura", "difficulty": 2, "price": 450, "confusable_with": "goma_lapiz", "similarity_type": "perceptual", "similarity_note": "Parecida pero la de tinta es bicolor (mitad azul) — borra lapicera pero rompe la hoja si no tenés cuidado" },
+    { "id": "sacapuntas_metal", "name": "Sacapuntas metálico simple", "emoji": "🔧", "category": "escritura", "difficulty": 1, "price": 380 },
+    { "id": "sacapuntas_deposito", "name": "Sacapuntas con depósito", "emoji": "🔧", "category": "escritura", "difficulty": 1, "price": 850, "confusable_with": "sacapuntas_metal", "similarity_type": "funcional" },
+
+    { "id": "cuaderno_tapa_dura_48", "name": "Cuaderno tapa dura 48 hojas rayado", "emoji": "📕", "category": "cuadernos", "difficulty": 1, "price": 2800 },
+    { "id": "cuaderno_tapa_dura_96", "name": "Cuaderno tapa dura 96 hojas rayado", "emoji": "📕", "category": "cuadernos", "difficulty": 1, "price": 4200, "confusable_with": "cuaderno_tapa_dura_48", "similarity_type": "perceptual" },
+    { "id": "cuaderno_tapa_dura_48_cuad", "name": "Cuaderno tapa dura 48 hojas cuadriculado", "emoji": "📗", "category": "cuadernos", "difficulty": 2, "price": 2800, "confusable_with": "cuaderno_tapa_dura_48", "similarity_type": "perceptual", "similarity_note": "Misma tapa, mismo tamaño pero adentro es cuadriculado — si el nene necesita rayado y le das cuadriculado, vuelve la madre" },
+    { "id": "cuaderno_espiral_80", "name": "Cuaderno espiral A4 80 hojas", "emoji": "📒", "category": "cuadernos", "difficulty": 2, "price": 3500 },
+    { "id": "carpeta_n3", "name": "Carpeta N°3 con ganchos", "emoji": "📂", "category": "cuadernos", "difficulty": 1, "price": 5500 },
+    { "id": "repuesto_hojas_rayado", "name": "Repuesto hojas rayado x96", "emoji": "📄", "category": "cuadernos", "difficulty": 1, "price": 2200 },
+    { "id": "repuesto_hojas_cuadric", "name": "Repuesto hojas cuadriculado x96", "emoji": "📄", "category": "cuadernos", "difficulty": 2, "price": 2200, "confusable_with": "repuesto_hojas_rayado", "similarity_type": "perceptual" },
+    { "id": "block_dibujo_n5", "name": "Block de dibujo N°5 blanco", "emoji": "📋", "category": "cuadernos", "difficulty": 1, "price": 2500 },
+    { "id": "block_dibujo_n5_color", "name": "Block de dibujo N°5 color", "emoji": "📋", "category": "cuadernos", "difficulty": 2, "price": 3200, "confusable_with": "block_dibujo_n5", "similarity_type": "perceptual", "similarity_note": "Mismo formato pero las hojas son de colores — si pide blanco y le das color, la maestra no acepta" },
+
+    { "id": "regla_20cm", "name": "Regla 20cm transparente", "emoji": "📏", "category": "geometria", "difficulty": 1, "price": 800 },
+    { "id": "regla_30cm", "name": "Regla 30cm transparente", "emoji": "📏", "category": "geometria", "difficulty": 1, "price": 1100, "confusable_with": "regla_20cm", "similarity_type": "perceptual" },
+    { "id": "escuadra_45", "name": "Escuadra 45° - 20cm", "emoji": "📐", "category": "geometria", "difficulty": 2, "price": 1200 },
+    { "id": "escuadra_60", "name": "Escuadra 60° - 20cm", "emoji": "📐", "category": "geometria", "difficulty": 2, "price": 1200, "confusable_with": "escuadra_45", "similarity_type": "perceptual", "similarity_note": "Parecidas pero los ángulos son distintos — la de 45 es triángulo isósceles, la de 60 es escaleno" },
+    { "id": "compas_metal", "name": "Compás metálico con lápiz", "emoji": "📐", "category": "geometria", "difficulty": 2, "price": 2800 },
+    { "id": "transportador", "name": "Transportador 180°", "emoji": "📐", "category": "geometria", "difficulty": 2, "price": 900 },
+    { "id": "juego_geometria", "name": "Juego de geometría completo (4 pzas)", "emoji": "📐", "category": "geometria", "difficulty": 1, "price": 4500, "hint": "Regla + escuadra 45 + escuadra 60 + transportador" },
+
+    { "id": "tempera_x6", "name": "Témperas x6 colores", "emoji": "🎨", "category": "arte", "difficulty": 1, "price": 3800 },
+    { "id": "tempera_x12", "name": "Témperas x12 colores", "emoji": "🎨", "category": "arte", "difficulty": 1, "price": 6500 },
+    { "id": "acuarelas_x12", "name": "Acuarelas x12 pastillas", "emoji": "🎨", "category": "arte", "difficulty": 2, "price": 4200, "confusable_with": "tempera_x12", "similarity_type": "funcional", "similarity_note": "Ambas son para pintar pero la acuarela es transparente y se diluye mucho. La témpera es opaca y cubre." },
+    { "id": "pincel_n6", "name": "Pincel escolar N°6", "emoji": "🖌️", "category": "arte", "difficulty": 1, "price": 950 },
+    { "id": "pincel_n10", "name": "Pincel escolar N°10", "emoji": "🖌️", "category": "arte", "difficulty": 1, "price": 1200 },
+    { "id": "plastilina_x12", "name": "Plastilina x12 colores", "emoji": "🟢", "category": "arte", "difficulty": 1, "price": 3500 },
+    { "id": "crayones_cera_x12", "name": "Crayones de cera x12", "emoji": "🖍️", "category": "arte", "difficulty": 2, "price": 2800, "confusable_with": "lapices_color_x12", "similarity_type": "funcional", "similarity_note": "Ambos pintan colores pero los crayones son de cera (más gruesos, no se sacan punta) — los lápices de colores van en Escritura" },
+    { "id": "goma_eva_pack", "name": "Goma Eva colores surtidos x10", "emoji": "🟩", "category": "arte", "difficulty": 1, "price": 4500 },
+    { "id": "goma_eva_glitter", "name": "Goma Eva con brillantina x5", "emoji": "✨", "category": "arte", "difficulty": 2, "price": 5200, "confusable_with": "goma_eva_pack", "similarity_type": "perceptual" },
+
+    { "id": "tijera_escolar", "name": "Tijera escolar punta roma", "emoji": "✂️", "category": "corte_pegado", "difficulty": 1, "price": 1500, "hint": "Punta redondeada para seguridad de los chicos" },
+    { "id": "tijera_adulto", "name": "Tijera punta fina", "emoji": "✂️", "category": "corte_pegado", "difficulty": 2, "price": 2200, "confusable_with": "tijera_escolar", "similarity_type": "perceptual", "similarity_note": "La punta fina no es para chicos — la escolar tiene punta roma por seguridad" },
+    { "id": "plasticola_40g", "name": "Plasticola 40g", "emoji": "🧴", "category": "corte_pegado", "difficulty": 1, "price": 800 },
+    { "id": "plasticola_90g", "name": "Plasticola 90g", "emoji": "🧴", "category": "corte_pegado", "difficulty": 1, "price": 1400 },
+    { "id": "voligoma_25ml", "name": "Voligoma 25ml", "emoji": "🧴", "category": "corte_pegado", "difficulty": 2, "price": 1100, "confusable_with": "plasticola_40g", "similarity_type": "funcional", "similarity_note": "Ambos pegan pero la voligoma es transparente y más fuerte — la plasticola es blanca y para papel" },
+    { "id": "cinta_scotch", "name": "Cinta scotch transparente", "emoji": "📎", "category": "corte_pegado", "difficulty": 1, "price": 950 },
+    { "id": "cinta_papel_ancha", "name": "Cinta de papel ancha (embalar)", "emoji": "📎", "category": "corte_pegado", "difficulty": 2, "price": 1800, "confusable_with": "cinta_scotch", "similarity_type": "perceptual" },
+    { "id": "papel_arana_rollo", "name": "Papel araña (Contact) por metro", "emoji": "📜", "category": "corte_pegado", "difficulty": 1, "price": 1200, "unit": "metro" },
+
+    { "id": "cartuchera_tela_1piso", "name": "Cartuchera de tela 1 piso", "emoji": "👝", "category": "organizacion", "difficulty": 1, "price": 5500 },
+    { "id": "cartuchera_tela_2pisos", "name": "Cartuchera de tela 2 pisos", "emoji": "👝", "category": "organizacion", "difficulty": 1, "price": 8200, "confusable_with": "cartuchera_tela_1piso", "similarity_type": "perceptual" },
+    { "id": "mochila_escolar", "name": "Mochila escolar con carro", "emoji": "🎒", "category": "organizacion", "difficulty": 1, "price": 45000 },
+    { "id": "etiquetas_escolar_x20", "name": "Etiquetas autoadhesivas escolares x20", "emoji": "🏷️", "category": "organizacion", "difficulty": 1, "price": 800 },
+    { "id": "separadores_x6", "name": "Separadores para carpeta x6", "emoji": "📑", "category": "organizacion", "difficulty": 1, "price": 950 },
+    { "id": "folio_a4_x10", "name": "Folios A4 transparentes x10", "emoji": "📄", "category": "organizacion", "difficulty": 2, "price": 1200 },
+
+    { "id": "papel_glase_x10", "name": "Papel glasé x10 hojas", "emoji": "🟨", "category": "papel_especial", "difficulty": 1, "price": 850 },
+    { "id": "papel_afiche_blanco", "name": "Papel afiche blanco", "emoji": "📄", "category": "papel_especial", "difficulty": 1, "price": 650, "unit": "hoja" },
+    { "id": "papel_afiche_color", "name": "Papel afiche color (varios)", "emoji": "📄", "category": "papel_especial", "difficulty": 1, "price": 750, "unit": "hoja" },
+    { "id": "papel_crepe_rollo", "name": "Papel crepé rollo", "emoji": "📜", "category": "papel_especial", "difficulty": 1, "price": 950 },
+    { "id": "cartulina_blanca", "name": "Cartulina blanca", "emoji": "📄", "category": "papel_especial", "difficulty": 1, "price": 550, "unit": "hoja" },
+    { "id": "cartulina_color", "name": "Cartulina color", "emoji": "📄", "category": "papel_especial", "difficulty": 1, "price": 650, "unit": "hoja" },
+    { "id": "papel_madera", "name": "Papel madera", "emoji": "📄", "category": "papel_especial", "difficulty": 1, "price": 450, "unit": "hoja" },
+
+    { "id": "resma_a4_75g", "name": "Resma A4 75g x500 hojas", "emoji": "📦", "category": "tecnologia", "difficulty": 1, "price": 8500 },
+    { "id": "resma_a4_80g", "name": "Resma A4 80g x500 hojas", "emoji": "📦", "category": "tecnologia", "difficulty": 2, "price": 9800, "confusable_with": "resma_a4_75g", "similarity_type": "perceptual", "similarity_note": "Casi idénticas pero la de 80g es más gruesa — para impresiones doble faz" },
+    { "id": "resma_oficio", "name": "Resma Oficio 75g x500 hojas", "emoji": "📦", "category": "tecnologia", "difficulty": 2, "price": 9200, "confusable_with": "resma_a4_75g", "similarity_type": "perceptual", "similarity_note": "Parece igual pero es más larga (oficio vs A4) — no entra en carpeta N°3" },
+    { "id": "pendrive_32gb", "name": "Pendrive 32GB", "emoji": "💾", "category": "tecnologia", "difficulty": 1, "price": 6500 },
+    { "id": "calculadora_cientifica", "name": "Calculadora científica Casio", "emoji": "🧮", "category": "tecnologia", "difficulty": 2, "price": 28000 },
+    { "id": "calculadora_simple", "name": "Calculadora de escritorio", "emoji": "🧮", "category": "tecnologia", "difficulty": 1, "price": 8500, "confusable_with": "calculadora_cientifica", "similarity_type": "funcional", "similarity_note": "Ambas calculan pero la científica hace funciones trigonométricas, raíces, etc." }
+  ],
+
+  "missions": {
+    "classification": [
+      {
+        "id": "ordenar_deposito",
+        "name": "Ordenar el depósito",
+        "emoji": "📦",
+        "description": "Llegó el pedido del mayorista todo mezclado en cajas. Guardá cada cosa en su estante.",
+        "type": "classify_all",
+        "min_difficulty": 1
+      }
+    ],
+
+    "seriation": [
+      {
+        "id": "ordenar_lapices",
+        "name": "La escala de dureza del lápiz",
+        "emoji": "✏️",
+        "description": "Ordená los lápices del más blando al más duro: 4B → 2B → B → HB → H → 2H → 4H. MÁS B = más blando y oscuro. MÁS H = más duro y claro.",
+        "type": "order_sequence",
+        "correct_order_logic": "hardness_scale",
+        "cognitive_target": "seriación simbólica con escala convencional",
+        "min_difficulty": 4
+      },
+      {
+        "id": "ordenar_lijas_papel",
+        "name": "Papeles por tamaño",
+        "emoji": "📄",
+        "description": "Ordená los formatos de papel del más chico al más grande: A5, A4, Oficio, A3, Afiche.",
+        "type": "order_sequence",
+        "cognitive_target": "seriación de tamaño con nomenclatura estándar",
+        "min_difficulty": 3
+      },
+      {
+        "id": "ordenar_cuadernos",
+        "name": "Cuadernos por cantidad de hojas",
+        "emoji": "📓",
+        "description": "Ordená: 24 hojas → 48 hojas → 84 hojas → 96 hojas → 120 hojas.",
+        "type": "order_sequence",
+        "cognitive_target": "seriación numérica simple",
+        "min_difficulty": 1
+      }
+    ],
+
+    "calculation": [
+      {
+        "id": "lista_escolar",
+        "name": "El presupuesto de la lista escolar",
+        "emoji": "💰",
+        "description": "La mamá tiene $25.000 para la lista. Necesita: 3 cuadernos tapa dura 48h rayado ($2.800 c/u), 1 carpeta N°3 ($5.500), fibras x12 ($4.500) y plasticola 40g ($800). ¿Le alcanza? ¿Cuánto le sobra o le falta?",
+        "type": "math_problem",
+        "correct_answer": 5800,
+        "explanation": "3×2800 + 5500 + 4500 + 800 = 8400 + 5500 + 4500 + 800 = 19.200. Sobran 25.000 - 19.200 = $5.800",
+        "cognitive_target": "cálculo con múltiples operaciones + comparación con presupuesto",
+        "min_difficulty": 3
+      },
+      {
+        "id": "papel_arana",
+        "name": "¿Cuánto papel araña?",
+        "emoji": "📜",
+        "description": "Hay que forrar 5 cuadernos. Cada cuaderno necesita 50cm de papel araña. El rollo tiene 3 metros. ¿Alcanzan? ¿Cuánto sobra?",
+        "type": "math_problem",
+        "correct_answer": 50,
+        "answer_unit": "cm",
+        "explanation": "5 × 50cm = 250cm = 2.5m. Rollo = 3m = 300cm. Sobran 300 - 250 = 50cm",
+        "cognitive_target": "cálculo con conversión de unidades (m ↔ cm)",
+        "min_difficulty": 3
+      },
+      {
+        "id": "descuento_vuelta_cole",
+        "name": "El descuento de vuelta al cole",
+        "emoji": "🏷️",
+        "description": "La mochila cuesta $45.000 pero tiene 20% de descuento por vuelta al cole. ¿Cuánto sale con descuento?",
+        "type": "math_problem",
+        "correct_answer": 36000,
+        "explanation": "20% de 45.000 = 9.000. Precio final = 45.000 - 9.000 = $36.000",
+        "cognitive_target": "cálculo de porcentajes",
+        "min_difficulty": 4
+      },
+      {
+        "id": "vuelto_libreria",
+        "name": "El vuelto",
+        "emoji": "💵",
+        "description": "Compra: 2 lapiceras azules ($650 c/u) + 1 goma ($350) + 1 sacapuntas ($380). Paga con $5.000. ¿Vuelto?",
+        "type": "math_problem",
+        "correct_answer": 2770,
+        "explanation": "2×650 + 350 + 380 = 1.300 + 350 + 380 = 2.030. Vuelto = 5.000 - 2.030 = $2.970",
+        "cognitive_target": "aritmética básica secuencial",
+        "min_difficulty": 2
+      }
+    ],
+
+    "grouping": [
+      {
+        "id": "lista_1er_grado",
+        "name": "Lista de 1er grado",
+        "emoji": "🎒",
+        "description": "Armá el pedido para un nene de 1er grado: cuaderno tapa dura 48h rayado, lápiz negro HB, goma, sacapuntas, lapiceras (azul y roja), plasticola, tijera escolar, lápices de colores x12.",
+        "type": "select_group",
+        "correct_items": ["cuaderno_tapa_dura_48", "lapiz_hb", "goma_lapiz", "sacapuntas_metal", "lapicera_azul", "lapicera_roja", "plasticola_40g", "tijera_escolar", "lapices_color_x12"],
+        "trap_items": ["cuaderno_tapa_dura_48_cuad", "lapiz_2b", "tijera_adulto", "goma_tinta", "calculadora_cientifica"],
+        "trap_explanations": {
+          "cuaderno_tapa_dura_48_cuad": "La lista dice rayado, no cuadriculado",
+          "lapiz_2b": "El 2B es para dibujo artístico, para escribir se usa HB",
+          "tijera_adulto": "La punta fina no es segura para nenes de 6 años — se pide punta roma",
+          "goma_tinta": "En 1er grado escriben con lápiz, no necesitan goma de tinta",
+          "calculadora_cientifica": "En 1er grado no se usa calculadora"
+        },
+        "cognitive_target": "agrupamiento funcional + inhibición de trampas por contexto",
+        "min_difficulty": 3
+      },
+      {
+        "id": "kit_plastica",
+        "name": "Kit para la clase de plástica",
+        "emoji": "🎨",
+        "description": "La maestra de plástica pidió: témperas x6, 2 pinceles (N°6 y N°10), block de dibujo N°5 blanco, papel glasé y plasticola.",
+        "type": "select_group",
+        "correct_items": ["tempera_x6", "pincel_n6", "pincel_n10", "block_dibujo_n5", "papel_glase_x10", "plasticola_40g"],
+        "trap_items": ["acuarelas_x12", "block_dibujo_n5_color", "lapices_color_x12", "fibras_x12"],
+        "trap_explanations": {
+          "acuarelas_x12": "Pidió témperas, no acuarelas — son técnicas distintas",
+          "block_dibujo_n5_color": "El block tiene que ser blanco, no de color",
+          "lapices_color_x12": "Para plástica con témperas no se usan lápices de colores",
+          "fibras_x12": "No están en la lista de plástica"
+        },
+        "cognitive_target": "agrupamiento por consigna literal + inhibición de ítems relacionados pero no solicitados",
+        "min_difficulty": 3
+      }
+    ],
+
+    "similarity_discrimination": [
+      {
+        "id": "cual_es_cual_libreria",
+        "name": "¿Cuál es cuál?",
+        "emoji": "👀",
+        "type": "compare_pair",
+        "pairs": [
+          { "item_a": "lapiz_hb", "item_b": "lapiz_2b", "key_difference": "HB = estándar para escribir. 2B = blando para dibujo artístico (más oscuro, se corre más)" },
+          { "item_a": "marcador_negro_perm", "item_b": "fibra_negra", "key_difference": "Permanente = no se borra, para carteles y superficies. Fibra al agua = se lava, para uso escolar" },
+          { "item_a": "plasticola_40g", "item_b": "voligoma_25ml", "key_difference": "Plasticola = blanca, para papel. Voligoma = transparente, más fuerte, para goma eva y cartón" },
+          { "item_a": "escuadra_45", "item_b": "escuadra_60", "key_difference": "45° = triángulo isósceles (dos lados iguales). 60° = triángulo escaleno (todos distintos)" },
+          { "item_a": "resma_a4_75g", "item_b": "resma_oficio", "key_difference": "A4 = 21x29.7cm (entra en carpeta N°3). Oficio = 21.6x33cm (más larga, no entra)" },
+          { "item_a": "tempera_x6", "item_b": "acuarelas_x12", "key_difference": "Témpera = opaca, cubre. Acuarela = transparente, se diluye con agua" },
+          { "item_a": "corrector_liquido", "item_b": "corrector_cinta", "key_difference": "Líquido = hay que esperar que seque. Cinta = seca instantáneo pero más caro" }
+        ],
+        "cognitive_target": "discriminación perceptual y funcional",
+        "min_difficulty": 3
+      }
+    ],
+
+    "symbolization": [
+      {
+        "id": "medidas_cuaderno",
+        "name": "¿Qué tamaño es cada N°?",
+        "emoji": "📓",
+        "description": "Los cuadernos y blocks usan números que indican tamaño: N°1 = más chico. N°3 = mediano (el escolar estándar). N°5 = grande (A4). Dado un pedido, elegí el tamaño correcto.",
+        "type": "symbol_matching",
+        "cognitive_target": "decodificación de sistema de numeración convencional",
+        "min_difficulty": 2
+      },
+      {
+        "id": "gramaje_papel",
+        "name": "¿Qué significa el gramaje?",
+        "emoji": "📄",
+        "description": "75g/m² = papel estándar económico. 80g/m² = papel intermedio (doble faz). 90g/m² = papel grueso premium. 120g/m² = papel para presentaciones. A mayor gramaje, más grueso y más caro.",
+        "type": "symbol_matching",
+        "cognitive_target": "comprensión de escala de medida técnica",
+        "min_difficulty": 4
+      }
+    ],
+
+    "reasoning": [
+      {
+        "id": "cliente_confundido_libreria",
+        "name": "El padre que no entiende la lista",
+        "emoji": "🤔",
+        "type": "inference_problem",
+        "scenarios": [
+          {
+            "client_says": "La lista dice 'block N°5 blanco'. ¿Este de colores sirve?",
+            "correct_answer": "no",
+            "reasoning": "Si dice blanco, tiene que ser blanco. El de color es para otras actividades."
+          },
+          {
+            "client_says": "¿Fibras o marcadores? La lista dice 'marcadores al agua'.",
+            "correct_answer": "fibras_x12",
+            "reasoning": "En el contexto escolar, 'marcadores al agua' = fibras al agua. Los permanentes NO son al agua."
+          },
+          {
+            "client_says": "Mi hijo empieza 1ro y la lista pide 'tijera escolar'. ¿Le doy esta punta fina que corta mejor?",
+            "correct_answer": "tijera_escolar",
+            "reasoning": "Para chicos de 6 años se pide punta roma por seguridad. La punta fina puede lastimar."
+          },
+          {
+            "client_says": "Necesito una resma para la impresora de casa y otra para la oficina que imprimen doble faz. ¿Es la misma?",
+            "correct_answer": "resma_a4_80g para oficina, resma_a4_75g para casa",
+            "reasoning": "Doble faz necesita 80g mínimo para que no se transparente. Para uso casero simple alcanza 75g."
+          }
+        ],
+        "cognitive_target": "razonamiento inferencial contextual",
+        "min_difficulty": 4
+      }
+    ]
+  },
+
+  "events": [
+    { "id": "cola_padres", "text": "Se formó cola de 5 padres con listas. ¡Más rápido!", "effect": "time_pressure", "time_reduction_pct": 20, "probability": 0.1 },
+    { "id": "nene_llora", "text": "Un nene se largó a llorar porque no encuentra la cartuchera de Messi. Consolalo y seguí.", "effect": "distraction_popup", "probability": 0.08 },
+    { "id": "stock_agotado", "text": "Se acabaron las plasticolas de 40g. Ofrecé la de 90g al doble de precio.", "effect": "item_substitution", "probability": 0.06 },
+    { "id": "telefono_proveedor", "text": "Llama el proveedor: '¿Necesitás más resmas A4? Tengo oferta.' Decidí rápido.", "effect": "decision_popup", "probability": 0.08 }
+  ],
+
+  "difficulty_scaling": {
+    "level_1": { "items_per_round": 10, "categories_visible": 4, "time_limit": null, "distractors": false, "events_enabled": false, "hints_available": true, "similarity_pairs": false, "calculations": false },
+    "level_2": { "items_per_round": 14, "categories_visible": 5, "time_limit": null, "distractors": false, "events_enabled": false, "hints_available": true, "similarity_pairs": false, "calculations": false },
+    "level_3": { "items_per_round": 18, "categories_visible": 6, "time_limit": 300, "distractors": false, "events_enabled": false, "hints_available": false, "similarity_pairs": true, "calculations": false },
+    "level_4": { "items_per_round": 22, "categories_visible": 7, "time_limit": 240, "distractors": true, "events_enabled": false, "hints_available": false, "similarity_pairs": true, "calculations": true },
+    "level_5": { "items_per_round": 26, "categories_visible": 8, "time_limit": 210, "distractors": true, "events_enabled": true, "hints_available": false, "similarity_pairs": true, "calculations": true },
+    "level_6": { "items_per_round": 30, "categories_visible": 8, "time_limit": 180, "distractors": true, "events_enabled": true, "hints_available": false, "similarity_pairs": true, "calculations": true, "reasoning_missions": true }
+  }
+}

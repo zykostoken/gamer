@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heladera Inteligente - CJI HDD</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+    <script src="/js/sanitize.js"></script>
+    <script src="/games/shared/input-calibration.js"></script>
+    <script src="/games/shared/auto-save.js"></script>
+    <script src="/games/shared/show-metrics.js"></script>
+    <script>window.onerror=function(m,s,l,c,e){document.title='ERROR';var d=document.createElement('div');d.style.cssText='position:fixed;top:0;left:0;right:0;background:red;color:white;padding:16px;z-index:99999;font-size:14px';d.textContent='JS Error: '+m+' (line '+l+')';document.body.appendChild(d);console.error('[fridge-logic]',m,s,l,e);};</script>
+    <style>
+        :root { --bg: #0f172a; --surface: #1e293b; --card: #334155; --accent: #3b82f6; --success: #22c55e; --danger: #ef4444; --warn: #f59e0b; }
+        body { background: var(--bg); color: #e2e8f0; font-family: system-ui, -apple-system, sans-serif; margin: 0; min-height: 100vh; overflow-x: hidden; }
+        
+        .item-card {
+            width: 90px; height: 105px; border-radius: 12px; background: var(--card);
+            border: 2px solid rgba(255,255,255,0.1); cursor: grab; user-select: none;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 4px; padding: 6px; transition: transform 0.15s, box-shadow 0.15s;
+            touch-action: none;
+        }
+        .item-card:hover { transform: scale(1.08); box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
+        .item-card.dragging { opacity: 0.5; transform: scale(0.9); }
+        .item-card .emoji { font-size: 2rem; }
+        .item-card .name { font-size: 0.65rem; text-align: center; line-height: 1.1; color: rgba(255,255,255,0.8); }
+        
+        .drop-zone {
+            border: 2px dashed rgba(255,255,255,0.15); border-radius: 16px;
+            min-height: 180px; padding: 12px; transition: all 0.2s;
+            display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start;
+        }
+        .drop-zone.drag-over { border-color: var(--accent); background: rgba(59,130,246,0.08); box-shadow: inset 0 0 20px rgba(59,130,246,0.1); }
+        .drop-zone .item-card { width: 72px; height: 85px; }
+        .drop-zone .item-card .emoji { font-size: 1.5rem; }
+        .drop-zone .item-card .name { font-size: 0.55rem; }
+        
+        .zone-label { font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        
+        .score-bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.1); overflow: hidden; }
+        .score-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+        
+        .result-badge { padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 600; }
+        .badge-ok { background: rgba(34,197,94,0.2); color: #22c55e; }
+        .badge-warn { background: rgba(245,158,11,0.2); color: #f59e0b; }
+        .badge-bad { background: rgba(239,68,68,0.2); color: #ef4444; }
+        
+        @keyframes slideIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+        .animate-in { animation: slideIn 0.3s ease; }
+
+        /* Touch drag ghost */
+        .touch-ghost {
+            position: fixed; z-index: 99999; pointer-events: none;
+            opacity: 0.85; transform: scale(1.1);
+        }
+        
+        /* Toast notifications */
+        .toast-container { position: fixed; top: 80px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+        .toast {
+            padding: 10px 18px; border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+            color: #fff; backdrop-filter: blur(12px); pointer-events: auto;
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 2s forwards;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-width: 280px;
+        }
+        .toast-ok { background: rgba(34,197,94,0.85); }
+        .toast-bad { background: rgba(239,68,68,0.75); }
+        .toast-warn { background: rgba(245,158,11,0.85); }
+        @keyframes toastIn { from { opacity:0; transform: translateX(40px); } to { opacity:1; transform: translateX(0); } }
+        @keyframes toastOut { from { opacity:1; } to { opacity:0; transform: translateY(-10px); } }
+        
+        /* Placement flash feedback */
+        .placed-ok { animation: flashOk 0.5s ease; }
+        .placed-bad { animation: flashBad 0.5s ease; }
+        @keyframes flashOk { 0% { box-shadow: 0 0 0 4px rgba(34,197,94,0.8); } 100% { box-shadow: none; } }
+        @keyframes flashBad { 0% { box-shadow: 0 0 0 4px rgba(239,68,68,0.8); } 100% { box-shadow: none; } }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .item-card { width: 72px; height: 88px; }
+            .item-card .emoji { font-size: 1.6rem; }
+            .item-card .name { font-size: 0.6rem; }
+            #zones-grid { grid-template-columns: 1fr !important; }
+        }
+    </style>
+</head>
+<body>
+<div id="toast-container" class="toast-container"></div>
+
+<!-- HEADER -->
+<header style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 16px 24px;">
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <a id="back-link" href="/hdd/portal/" style="color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.85rem;">← Volver al portal</a>
+            <h1 style="margin: 4px 0 0; font-size: 1.5rem; font-weight: 700;">🧊 Heladera Inteligente</h1>
+            <p style="margin: 2px 0 0; font-size: 0.8rem; color: rgba(255,255,255,0.5);">Clínica Psiquiátrica José Ingenieros · HDD</p>
+        </div>
+        <div style="text-align: right;">
+            <div id="timer" style="font-size: 1.8rem; font-family: monospace; font-weight: 700;">00:00</div>
+            <div id="items-count" style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">0/20 ubicados</div>
+        </div>
+    </div>
+</header>
+
+<!-- PANTALLA DE INICIO -->
+<div id="start-screen" style="display:flex; align-items:center; justify-content:center; min-height: calc(100vh - 80px); padding: 24px;">
+    <div style="background: var(--surface); border-radius: 20px; padding: 40px; max-width: 520px; width: 100%; text-align: center; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="font-size: 4rem; margin-bottom: 12px;">🧊</div>
+        <h2 style="font-size: 1.8rem; font-weight: 800; margin: 0 0 8px;">Heladera Inteligente</h2>
+        <p style="color: rgba(255,255,255,0.5); margin: 0 0 24px; font-size: 0.85rem;">Evaluación de Categorización · Memoria Semántica · Juicio</p>
+        
+        <div style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); border-radius: 14px; padding: 20px; text-align: left; margin-bottom: 20px;">
+            <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 10px; color: #60a5fa;">📋 CONSIGNA</div>
+            <p style="font-size: 0.9rem; margin: 0 0 12px; color: rgba(255,255,255,0.8);">Acabás de volver del supermercado con <strong>20 artículos</strong>. Tenés que guardar cada uno en su lugar correcto:</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8rem;">
+                <div style="background: var(--card); padding: 10px; border-radius: 10px;">❄️ <strong>Freezer</strong><br><span style="color:rgba(255,255,255,0.5)">Congelados (-18°C)</span></div>
+                <div style="background: var(--card); padding: 10px; border-radius: 10px;">🥶 <strong>Estante frío</strong><br><span style="color:rgba(255,255,255,0.5)">Lácteos, carnes (2-4°C)</span></div>
+                <div style="background: var(--card); padding: 10px; border-radius: 10px;">🥬 <strong>Cajón verduras</strong><br><span style="color:rgba(255,255,255,0.5)">Frutas y verduras (6-8°C)</span></div>
+                <div style="background: var(--card); padding: 10px; border-radius: 10px;">🗄️ <strong>Alacena</strong><br><span style="color:rgba(255,255,255,0.5)">Secos y condimentos</span></div>
+            </div>
+            <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; padding: 8px 12px; margin-top: 10px; font-size: 0.78rem; color: #f87171;">
+                ⚠️ <strong>Ojo:</strong> Los productos de limpieza van SEPARADOS de los alimentos. ¡Es un ítem de salubridad!
+            </div>
+        </div>
+
+        <div style="background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.2); border-radius: 10px; padding: 10px 14px; margin-bottom: 24px; font-size: 0.75rem; color: #c084fc;">
+            <strong>🔬 Se evaluará:</strong> Ubicación correcta, categorización, salubridad, tiempo de respuesta y hesitaciones.
+        </div>
+
+        <button onclick="beginGame()" style="width: 100%; padding: 16px; border-radius: 14px; border: none; background: linear-gradient(135deg, #3b82f6, #6366f1); color: #fff; font-size: 1.2rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 20px rgba(59,130,246,0.3); transition: all 0.2s;">
+            ▶ COMENZAR
+        </button>
+    </div>
+</div>
+
+<!-- CONSIGNA (in-game reminder) -->
+<div id="consigna" style="display:none; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); margin: 16px auto; max-width: 1200px; border-radius: 12px; padding: 16px 24px;">
+    <p style="margin: 0; font-size: 0.95rem;">📋 <strong>Consigna:</strong> Arrastrá cada artículo al lugar correcto. Las cosas de la heladera van a la heladera (freezer, estante frío o verduras). Lo demás va a la alacena o al estante.</p>
+</div>
+
+<!-- GAME AREA -->
+<div id="game-area" style="display:none; max-width: 1200px; margin: 0 auto; padding: 0 16px 100px;">
+
+    <!-- CANASTA (source items) -->
+    <div id="canasta" style="background: var(--surface); border-radius: 16px; padding: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.08);">
+        <div class="zone-label" style="color: var(--warn);">🧺 Canasta de compras</div>
+        <div id="items-grid" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;"></div>
+    </div>
+
+    <!-- DROP ZONES -->
+    <div id="zones-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        
+        <!-- HELADERA -->
+        <div style="background: var(--surface); border-radius: 16px; padding: 16px; border: 1px solid rgba(255,255,255,0.08);">
+            <h2 style="margin: 0 0 12px; font-size: 1.1rem;">🧊 Heladera</h2>
+            
+            <div class="zone-label" style="color: #60a5fa;">❄️ Freezer (-18°C)</div>
+            <div class="drop-zone" id="zone-freezer" data-zone="freezer"></div>
+            
+            <div class="zone-label" style="color: #93c5fd; margin-top: 12px;">🥶 Estante frío (2-4°C)</div>
+            <div class="drop-zone" id="zone-frio" data-zone="frio"></div>
+            
+            <div class="zone-label" style="color: #86efac; margin-top: 12px;">🥬 Cajón verduras (6-8°C)</div>
+            <div class="drop-zone" id="zone-verduras" data-zone="verduras"></div>
+        </div>
+
+        <!-- FUERA DE HELADERA -->
+        <div style="background: var(--surface); border-radius: 16px; padding: 16px; border: 1px solid rgba(255,255,255,0.08);">
+            <h2 style="margin: 0 0 12px; font-size: 1.1rem;">🏠 Fuera de la heladera</h2>
+            
+            <div class="zone-label" style="color: #fbbf24;">🗄️ Alacena (secos/condimentos)</div>
+            <div class="drop-zone" id="zone-alacena" data-zone="alacena"></div>
+            
+            <div class="zone-label" style="color: #f87171; margin-top: 12px;">🧴 Estante limpieza (¡separado!)</div>
+            <div class="drop-zone" id="zone-limpieza" data-zone="limpieza"></div>
+        </div>
+    </div>
+
+    <!-- BOTON FINALIZAR -->
+    <div style="text-align: center; margin-top: 24px;">
+        <button id="btn-finish" onclick="finishGame()" style="display:none; padding: 14px 40px; border-radius: 12px; border: none; background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; font-size: 1.1rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(34,197,94,0.3);">
+            ✓ Evaluar mi heladera
+        </button>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results" style="display:none; margin-top: 24px;"></div>
+</div>
+
+<script>
+// ========== CONFIG ==========
+var sb = null;
+try {
+    sb = getSupabaseClient();
+    if (!sb) { console.warn('[fridge-logic] Supabase SDK no cargó, modo offline'); }
+} catch(e) { console.warn('[fridge-logic] Supabase init failed:', e.message); }
+
+// ========== ITEMS DATABASE ==========
+const ITEMS = [
+    // FREEZER
+    { id: 'helado', emoji: '🍦', name: 'Helado', zone: 'freezer', cat: 'congelado' },
+    { id: 'milanesas_cong', emoji: '🥩', name: 'Milanesas congeladas', zone: 'freezer', cat: 'congelado' },
+    { id: 'verduras_cong', emoji: '🥦', name: 'Verduras congeladas', zone: 'freezer', cat: 'congelado' },
+    // FRIO (lácteos, carnes, fiambres)
+    { id: 'leche', emoji: '🥛', name: 'Leche', zone: 'frio', cat: 'lacteo' },
+    { id: 'yogur', emoji: '🫙', name: 'Yogur', zone: 'frio', cat: 'lacteo' },
+    { id: 'queso', emoji: '🧀', name: 'Queso', zone: 'frio', cat: 'lacteo' },
+    { id: 'manteca', emoji: '🧈', name: 'Manteca', zone: 'frio', cat: 'lacteo' },
+    { id: 'jamon', emoji: '🥓', name: 'Jamón', zone: 'frio', cat: 'fiambre' },
+    { id: 'huevos', emoji: '🥚', name: 'Huevos', zone: 'frio', cat: 'proteina' },
+    { id: 'pollo', emoji: '🍗', name: 'Pollo crudo', zone: 'frio', cat: 'carne', safety: 'raw_meat' },
+    // VERDURAS
+    { id: 'lechuga', emoji: '🥬', name: 'Lechuga', zone: 'verduras', cat: 'verdura' },
+    { id: 'tomate', emoji: '🍅', name: 'Tomate', zone: 'verduras', cat: 'verdura' },
+    { id: 'zanahoria', emoji: '🥕', name: 'Zanahoria', zone: 'verduras', cat: 'verdura' },
+    { id: 'manzana', emoji: '🍎', name: 'Manzana', zone: 'verduras', cat: 'fruta' },
+    // ALACENA
+    { id: 'arroz', emoji: '🍚', name: 'Arroz', zone: 'alacena', cat: 'seco' },
+    { id: 'fideos', emoji: '🍝', name: 'Fideos', zone: 'alacena', cat: 'seco' },
+    { id: 'aceite', emoji: '🫒', name: 'Aceite', zone: 'alacena', cat: 'seco' },
+    { id: 'galletitas', emoji: '🍪', name: 'Galletitas', zone: 'alacena', cat: 'snack' },
+    // LIMPIEZA
+    { id: 'detergente', emoji: '🧴', name: 'Detergente', zone: 'limpieza', cat: 'limpieza', safety: 'toxic' },
+    { id: 'lavandina', emoji: '🧪', name: 'Lavandina', zone: 'limpieza', cat: 'limpieza', safety: 'toxic' },
+];
+
+// ========== GAME STATE ==========
+let gameState = {
+    placements: {},    // itemId → zonePlaced
+    startTime: null,
+    actionLog: [],
+    patientId: null,
+    hesitations: [],
+    lastActionTime: null
+};
+
+// ========== BEGIN GAME (from COMENZAR button) ==========
+function beginGame() {
+    try {
+        console.log('[fridge-logic] beginGame() called');
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('consigna').style.display = 'block';
+        document.getElementById('game-area').style.display = 'block';
+        initGame();
+        console.log('[fridge-logic] initGame() completed');
+    } catch(e) {
+        console.error('[fridge-logic] beginGame crashed:', e);
+        alert('Error al iniciar juego: ' + e.message);
+    }
+}
+
+// ========== INIT ==========
+function initGame() {
+    gameState.startTime = Date.now();
+    const _p = new URLSearchParams(window.location.search);
+    // Read numeric ID and DNI separately  
+    gameState.patientDni = _p.get('dni') || (function(){try{return localStorage.getItem('hdd_patient_dni')}catch(e){return null}})() || 'DEMO';
+    
+    // Shuffle items
+    const shuffled = [...ITEMS].sort(() => Math.random() - 0.5);
+    const grid = document.getElementById('items-grid');
+    grid.innerHTML = '';
+    
+    shuffled.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'item-card animate-in';
+        card.id = 'item-' + item.id;
+        card.dataset.itemId = item.id;
+        card.innerHTML = '<span class="emoji">' + item.emoji + '</span><span class="name">' + item.name + '</span>';
+        
+        const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        if (isTouchDevice) {
+            // Touch-only: ghost drag
+            card.addEventListener('touchstart', handleTouchStart, { passive: false });
+            card.addEventListener('touchmove', handleTouchMove, { passive: false });
+            card.addEventListener('touchend', handleTouchEnd);
+        } else {
+            // Desktop: HTML5 drag native
+            card.draggable = true;
+            card.addEventListener('dragstart', handleDragStart);
+            card.addEventListener('dragend', handleDragEnd);
+        }
+        
+        grid.appendChild(card);
+    });
+    
+    // Setup drop zones
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+        zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+        zone.addEventListener('drop', handleDrop);
+    });
+    
+    // Also make canasta a drop zone (to undo)
+    const canasta = document.getElementById('items-grid');
+    canasta.parentElement.addEventListener('dragover', e => e.preventDefault());
+    canasta.parentElement.addEventListener('drop', handleReturnToCanasta);
+    
+    startTimer();
+}
+
+// ========== DRAG & DROP (Desktop) ==========
+let draggedId = null;
+
+function handleDragStart(e) {
+    draggedId = e.target.closest('.item-card').dataset.itemId;
+    e.target.closest('.item-card').classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    logAction('drag_start', { item: draggedId });
+}
+
+function handleDragEnd(e) {
+    e.target.closest('.item-card').classList.remove('dragging');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    const zone = e.currentTarget;
+    zone.classList.remove('drag-over');
+    if (!draggedId) return;
+    placeItem(draggedId, zone.dataset.zone);
+}
+
+function handleReturnToCanasta(e) {
+    e.preventDefault();
+    if (!draggedId) return;
+    returnItemToCanasta(draggedId);
+}
+
+// ========== TOUCH DRAG ==========
+let touchGhost = null;
+let touchDragId = null;
+
+function handleTouchStart(e) {
+    e.preventDefault();
+    const card = e.target.closest('.item-card');
+    if (!card) return;
+    touchDragId = card.dataset.itemId;
+    card.classList.add('dragging');
+    
+    // Create ghost
+    touchGhost = card.cloneNode(true);
+    touchGhost.className = 'item-card touch-ghost';
+    document.body.appendChild(touchGhost);
+    positionGhost(e.touches[0]);
+    logAction('drag_start', { item: touchDragId, touch: true });
+}
+
+function handleTouchMove(e) {
+    e.preventDefault();
+    if (!touchGhost) return;
+    positionGhost(e.touches[0]);
+    
+    // Highlight zone under finger
+    document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+    const el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+    if (el) {
+        const zone = el.closest('.drop-zone');
+        if (zone) zone.classList.add('drag-over');
+    }
+}
+
+function handleTouchEnd(e) {
+    if (!touchGhost || !touchDragId) return;
+    
+    const touch = e.changedTouches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    
+    document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+    document.querySelectorAll('.item-card.dragging').forEach(c => c.classList.remove('dragging'));
+    touchGhost.remove();
+    touchGhost = null;
+    
+    if (el) {
+        const zone = el.closest('.drop-zone');
+        if (zone) {
+            placeItem(touchDragId, zone.dataset.zone);
+        } else if (el.closest('#canasta')) {
+            returnItemToCanasta(touchDragId);
+        }
+    }
+    touchDragId = null;
+}
+
+function positionGhost(touch) {
+    if (!touchGhost) return;
+    touchGhost.style.left = (touch.clientX - 45) + 'px';
+    touchGhost.style.top = (touch.clientY - 52) + 'px';
+}
+
+// ========== PLACEMENT LOGIC ==========
+// ========== TOAST NOTIFICATIONS ==========
+function showToast(msg, type) {
+    var container = document.getElementById('toast-container');
+    var toast = document.createElement('div');
+    toast.className = 'toast toast-' + (type || 'ok');
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(function() { toast.remove(); }, 2400);
+}
+
+function placeItem(itemId, zoneName) {
+    const card = document.getElementById('item-' + itemId);
+    if (!card) return;
+    
+    const zone = document.getElementById('zone-' + zoneName);
+    if (!zone) return;
+    
+    const item = ITEMS.find(i => i.id === itemId);
+    zone.appendChild(card);
+    gameState.placements[itemId] = zoneName;
+    logAction('place', { item: itemId, zone: zoneName });
+    
+    // Visual + toast feedback (sin revelar la respuesta correcta)
+    if (item) {
+        var correct = item.zone === zoneName;
+        card.classList.add(correct ? 'placed-ok' : 'placed-bad');
+        setTimeout(function() { card.classList.remove('placed-ok', 'placed-bad'); }, 600);
+
+        if (item.safety === 'toxic' && (zoneName === 'frio' || zoneName === 'freezer' || zoneName === 'verduras')) {
+            showToast('⚠️ ¡Cuidado! Los productos de limpieza no van con alimentos', 'warn');
+        } else if (!correct) {
+            // Pista contextual sin revelar la zona correcta
+            var hints = {
+                freezer: 'Esto no necesita estar tan frío...',
+                frio: 'Pensá en qué temperatura necesita este producto...',
+                verduras: 'No todo va en el cajón de verduras...',
+                alacena: '¿Seguro que no necesita frío?',
+                limpieza: 'Esto no es un producto de limpieza...'
+            };
+            showToast(item.emoji + ' ' + (hints[zoneName] || 'Mmm, ¿estás seguro?'), 'bad');
+        } else {
+            showToast(item.emoji + ' ' + item.name + ' ¡Bien!', 'ok');
+        }
+    }
+    
+    updateCounter();
+}
+
+function returnItemToCanasta(itemId) {
+    const card = document.getElementById('item-' + itemId);
+    if (!card) return;
+    const item = ITEMS.find(i => i.id === itemId);
+    document.getElementById('items-grid').appendChild(card);
+    delete gameState.placements[itemId];
+    logAction('return', { item: itemId });
+    if (item) showToast(item.emoji + ' ' + item.name + ' devuelto a canasta', 'warn');
+    updateCounter();
+}
+
+function updateCounter() {
+    const placed = Object.keys(gameState.placements).length;
+    document.getElementById('items-count').textContent = placed + '/20 ubicados';
+    document.getElementById('btn-finish').style.display = placed >= 15 ? 'inline-block' : 'none';
+}
+
+// ========== TIMER ==========
+let timerInterval;
+function startTimer() {
+    timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+        const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        const s = String(elapsed % 60).padStart(2, '0');
+        document.getElementById('timer').textContent = m + ':' + s;
+    }, 1000);
+}
+
+// ========== LOGGING ==========
+function logAction(type, data) {
+    const now = Date.now();
+    if (gameState.lastActionTime && (now - gameState.lastActionTime) > 3000) {
+        gameState.hesitations.push({ gap_ms: now - gameState.lastActionTime, before: type });
+    }
+    gameState.lastActionTime = now;
+    gameState.actionLog.push({ type, ...data, t: now - gameState.startTime });
+}
+
+// ========== EVALUATION ==========
+function finishGame() {
+    clearInterval(timerInterval);
+    const totalTime = Date.now() - gameState.startTime;
+    
+    let correctPlacements = 0;
+    let categoryScore = 0;
+    let safetyViolations = [];
+    let details = [];
+    
+    ITEMS.forEach(item => {
+        const placed = gameState.placements[item.id];
+        const correct = placed === item.zone;
+        
+        if (correct) {
+            correctPlacements++;
+            categoryScore += 5;
+        } else if (!placed) {
+            details.push({ item: item.name, emoji: item.emoji, status: 'missing', msg: 'No ubicado' });
+        } else {
+            // Partial credit: right temperature zone?
+            const fridgeZones = ['freezer', 'frio', 'verduras'];
+            const outsideZones = ['alacena', 'limpieza'];
+            const itemIsFridge = fridgeZones.includes(item.zone);
+            const placedIsFridge = fridgeZones.includes(placed);
+            
+            if (itemIsFridge === placedIsFridge) categoryScore += 2; // at least right area
+            
+            details.push({ item: item.name, emoji: item.emoji, status: 'wrong', 
+                msg: 'Pusiste en ' + zoneLabel(placed) + ', va en ' + zoneLabel(item.zone) });
+        }
+        
+        // SAFETY CHECKS
+        if (item.safety === 'toxic' && placed !== 'limpieza') {
+            safetyViolations.push({ item: item.name, type: 'toxic_with_food', severity: 'critical',
+                msg: '⚠️ ' + item.name + ' junto a alimentos: riesgo de intoxicación' });
+        }
+        if (item.safety === 'raw_meat' && placed === 'verduras') {
+            safetyViolations.push({ item: item.name, type: 'cross_contamination', severity: 'high',
+                msg: '⚠️ Carne cruda en cajón de verduras: contaminación cruzada' });
+        }
+        if (item.cat === 'lacteo' || item.cat === 'verdura' || item.cat === 'fruta') {
+            if (placed === 'limpieza') {
+                safetyViolations.push({ item: item.name, type: 'food_with_chemicals', severity: 'critical',
+                    msg: '⚠️ ' + item.name + ' junto a productos de limpieza' });
+            }
+        }
+    });
+    
+    // SCORES
+    const placementPct = Math.round((correctPlacements / ITEMS.length) * 100);
+    const maxCatScore = ITEMS.length * 5;
+    const categoryPct = Math.round((categoryScore / maxCatScore) * 100);
+    const safetyPct = Math.round(Math.max(0, 100 - (safetyViolations.length * 25)));
+    const overallScore = Math.round((placementPct * 0.4) + (categoryPct * 0.3) + (safetyPct * 0.3));
+    
+    // CLINICAL FLAGS
+    let clinicalFlags = [];
+    if (safetyViolations.some(v => v.type === 'toxic_with_food')) {
+        clinicalFlags.push({ flag: 'SAFETY_JUDGMENT', severity: 'critical', 
+            desc: 'Mezcla productos tóxicos con alimentos — evaluar juicio y AVD' });
+    }
+    if (safetyViolations.some(v => v.type === 'cross_contamination')) {
+        clinicalFlags.push({ flag: 'FOOD_SAFETY', severity: 'moderate',
+            desc: 'Contaminación cruzada — posible déficit en conocimiento procedimental' });
+    }
+    if (correctPlacements < 10) {
+        clinicalFlags.push({ flag: 'SEMANTIC_MEMORY', severity: 'moderate',
+            desc: 'Menos del 50% correcto — evaluar memoria semántica y categorización' });
+    }
+    if (gameState.hesitations.length > 5) {
+        clinicalFlags.push({ flag: 'PROCESSING_SPEED', severity: 'low',
+            desc: 'Múltiples pausas prolongadas — posible lentitud de procesamiento' });
+    }
+    
+    // RENDER RESULTS
+    const resultsDiv = document.getElementById('results');
+    resultsDiv.style.display = 'block';
+    document.getElementById('btn-finish').style.display = 'none';
+    document.getElementById('consigna').style.display = 'none';
+    
+    resultsDiv.innerHTML = `
+        <div style="background: var(--surface); border-radius: 16px; padding: 24px; border: 1px solid rgba(255,255,255,0.08);">
+            <h2 style="margin: 0 0 16px; font-size: 1.3rem;">📊 Resultado</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                <div style="background: var(--card); border-radius: 12px; padding: 16px; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 800; color: ${overallScore >= 70 ? '#22c55e' : overallScore >= 40 ? '#f59e0b' : '#ef4444'};">${overallScore}%</div>
+                    <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">PUNTAJE GLOBAL</div>
+                </div>
+                <div style="background: var(--card); border-radius: 12px; padding: 16px; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 800; color: #60a5fa;">${correctPlacements}/20</div>
+                    <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">CORRECTOS</div>
+                </div>
+                <div style="background: var(--card); border-radius: 12px; padding: 16px; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 800; color: ${safetyPct === 100 ? '#22c55e' : '#ef4444'};">${safetyPct}%</div>
+                    <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">SALUBRIDAD</div>
+                </div>
+                <div style="background: var(--card); border-radius: 12px; padding: 16px; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 800;">${Math.round(totalTime/1000)}s</div>
+                    <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">TIEMPO</div>
+                </div>
+            </div>
+
+            ${safetyViolations.length > 0 ? `
+                <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                    <div style="font-weight: 700; color: #ef4444; margin-bottom: 8px;">⚠️ Alertas de Salubridad</div>
+                    ${safetyViolations.map(v => '<div style="font-size: 0.85rem; margin: 4px 0; color: rgba(255,255,255,0.7);">' + v.msg + '</div>').join('')}
+                </div>
+            ` : `
+                <div style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                    <div style="font-weight: 700; color: #22c55e;">✓ Sin alertas de salubridad</div>
+                </div>
+            `}
+            
+            ${details.filter(d => d.status !== 'missing').length > 0 ? `
+                <details style="margin-bottom: 16px;">
+                    <summary style="cursor: pointer; font-weight: 600; font-size: 0.9rem; color: rgba(255,255,255,0.7);">Ver errores de ubicación (${details.filter(d => d.status === 'wrong').length})</summary>
+                    <div style="margin-top: 8px;">
+                        ${details.filter(d => d.status === 'wrong').map(d => 
+                            '<div style="font-size: 0.8rem; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">' + d.emoji + ' ' + d.msg + '</div>'
+                        ).join('')}
+                    </div>
+                </details>
+            ` : ''}
+
+            <div style="text-align: center; margin-top: 16px;">
+                <button onclick="if(typeof gameEvent===&quot;function&quot;)gameEvent(&quot;game_reset&quot;);setTimeout(function(){location.reload()},200)" style="padding: 10px 24px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: rgba(255,255,255,0.7); cursor: pointer; margin-right: 8px;">Jugar de nuevo</button>
+                <button onclick="goToPortal()" style="padding: 10px 24px; border-radius: 10px; border: none; background: var(--accent); color: #fff; cursor: pointer;">Volver al portal</button>
+            </div>
+        </div>
+    `;
+    
+    // ── Cognitive domain metrics ──
+    const totalItems = ITEMS.length;
+    const omisiones = totalItems - correctPlacements - details.filter(d => d.status === 'wrong').length;
+    const comisiones = details.filter(d => d.status === 'wrong').length;
+    // Memoria semántica: categorización correcta (sabe dónde va cada cosa)
+    const memoria_semantica = +(correctPlacements / totalItems).toFixed(3);
+    // Abstracción: distinguir zonas conceptuales (frío vs alacena vs limpieza)
+    const zonesUsed = new Set(Object.values(gameState.placements));
+    const abstraccion_categorias = +(zonesUsed.size / 5).toFixed(3); // 5 zones possible
+    // Juicio/seguridad: capacidad de inferir riesgo
+    const juicio_seguridad = +(safetyPct / 100).toFixed(3);
+    // Latencia por acción
+    const latencia_por_accion = gameState.actionLog.length > 0 ? Math.round(totalTime / gameState.actionLog.length) : 0;
+    // Perseveraciones: misma zona consecutiva para ítems diferentes
+    let perseveraciones_zona = 0;
+    let lastZone = null;
+    gameState.actionLog.filter(a => a.type === 'place').forEach(a => {
+        if (a.zone === lastZone) perseveraciones_zona++;
+        lastZone = a.zone;
+    });
+
+    // Save to Supabase
+    saveResults({
+        overall_score: overallScore,
+        placement_pct: placementPct,
+        category_pct: categoryPct,
+        safety_pct: safetyPct,
+        correct_placements: correctPlacements,
+        safety_violations: safetyViolations,
+        clinical_flags: clinicalFlags,
+        total_time_ms: totalTime,
+        hesitation_count: gameState.hesitations.length,
+        action_count: gameState.actionLog.length,
+        action_log: gameState.actionLog,
+        // Dominios cognitivos
+        errores_omision: omisiones,
+        errores_comision: comisiones,
+        memoria_semantica_ratio: memoria_semantica,
+        abstraccion_categorias: abstraccion_categorias,
+        juicio_seguridad: juicio_seguridad,
+        latencia_por_accion_ms: latencia_por_accion,
+        perseveraciones_zona: perseveraciones_zona
+    });
+    
+    // Show post-game color modal
+    if (typeof showPostGameColorModal === 'function') {
+        showPostGameColorModal();
+    }
+}
+
+function zoneLabel(z) {
+    return { freezer: 'Freezer', frio: 'Estante frío', verduras: 'Cajón verduras', alacena: 'Alacena', limpieza: 'Estante limpieza' }[z] || z;
+}
+
+function goToPortal() {
+    window.location.href = localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
+}
+
+// ========== SUPABASE SAVE ==========
+async function saveResults(metrics) {
+    if (!sb) { console.warn('[fridge-logic] Supabase offline, resultados no guardados'); return; }
+    try {
+        // Get or create game entry
+        let { data: game } = await sb.from('hdd_games').select('id').eq('slug', 'fridge-logic').single();
+        if (!game) {
+            const { data: newGame } = await sb.from('hdd_games').insert({ 
+                slug: 'fridge-logic', name: 'Heladera Inteligente', therapeutic_areas: ['avd'],
+                description: 'Categorización de alimentos y productos - memoria semántica y juicio'
+            }).select('id').single();
+            game = newGame;
+        }
+        
+        // Save to hdd_game_metrics with numeric patient_id (FK) and patient_dni
+        const patientDni = (gameState.patientId && gameState.patientId !== 'DEMO') ? gameState.patientId : null;
+        const numericPid = parseInt((function(){try{return localStorage.getItem('hdd_patient_dni')}catch(e){return null}})()) || null;
+        if (numericPid) {
+            await sb.from('hdd_game_metrics').insert({
+                patient_id: numericPid,
+                patient_dni: patientDni,
+                game_slug: 'fridge-logic',
+                metric_type: 'session_summary',
+                metric_value: metrics.overall_score,
+                metric_data: {
+                    ...metrics,
+                    game_name: 'Heladera Inteligente',
+                    input_device: (navigator.maxTouchPoints > 0 && 'ontouchstart' in window) ? 'touch' : 'mouse',
+                    duration_ms: Date.now() - gameState.startTime,
+                    session_date: new Date().toISOString()
+                }
+            }).catch(e => console.warn('[fridge-logic] save error:', e.message));
+
+            // Save full biometric data to Supabase Storage bucket 'biometricas'
+            fetch('/api/biometricas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    patient_id: gameState.patientId,
+                    session_id: 'fridge-' + Date.now(),
+                    game_slug: 'fridge-logic',
+                    biometric_data: { ...metrics, game_name: 'Heladera Inteligente' }
+                })
+            }).catch(e => console.warn('[fridge-logic] Bucket save fail:', e.message));
+        }
+    } catch (err) {
+        console.error('Save error:', err);
+    }
+}
+
+// ========== SMART BACK LINK ==========
+(function() {
+    var portalUrl = localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
+    var l = document.getElementById('back-link');
+    if (l) l.href = portalUrl;
+})();
+
+// ========== START ==========
+// initGame() se llama desde beginGame() al presionar COMENZAR
+// No auto-init: el usuario debe ver la pantalla de inicio primero
+</script>
+
+<!-- Mood modals v4 -->
+<script src="/games/shared/mood-modals.js"></script>
+<script>if (typeof initMoodModals === 'function') initMoodModals();</script>
+
+
+<script>
+// Auto-save partial progress on exit
+if (typeof registerAutoSave === 'function') {
+  registerAutoSave(function() {
+    var pid = null;
+    try { pid = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('hdd_patient_dni') || null; } catch(e) {}
+    var dni = null;
+    try { dni = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('hdd_patient_dni'); } catch(e) {}
+    return {
+      patient_dni: pid,
+      patient_dni: dni,
+      game_slug: 'fridge-logic',
+      partial_data: {
+        score: typeof gameState !== 'undefined' && gameState.score ? gameState.score : 
+               typeof state !== 'undefined' && state.score ? state.score : 0,
+        time_played_ms: Date.now() - (typeof startTime !== 'undefined' && startTime ? startTime : Date.now()),
+        completed: false
+      }
+    };
+  });
+}
+</script>
+</body>
+</html>

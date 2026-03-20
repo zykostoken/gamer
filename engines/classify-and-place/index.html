@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cargando... · HDD Gaming</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../shared/telemetry.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#12121a;--card:#1a1a27;--card2:#22222f;--border:rgba(255,255,255,.06);--text:#e8e8ed;--dim:rgba(255,255,255,.4);--accent:#6366f1;--ok:#22c55e;--err:#ef4444;--warn:#f59e0b}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+.grain{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.hdr{background:linear-gradient(180deg,rgba(99,102,241,.08) 0%,transparent 100%);border-bottom:1px solid var(--border);padding:14px 24px;position:sticky;top:0;z-index:100;backdrop-filter:blur(20px)}
+.hdr-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.hdr-left a{color:var(--dim);text-decoration:none;font-size:.75rem;font-family:'Space Mono',monospace;letter-spacing:.05em}
+.hdr-left a:hover{color:var(--accent)}
+.hdr-title{font-size:1.2rem;font-weight:900;margin-top:2px}
+.hdr-right{display:flex;gap:20px;align-items:center}
+.hdr-stat{text-align:center}
+.hdr-stat-v{font-family:'Space Mono',monospace;font-size:1.3rem;font-weight:700}
+.hdr-stat-l{font-size:.55rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim)}
+.timer{color:var(--warn)}.score-v{color:var(--ok)}
+.level-badge{font-family:'Space Mono',monospace;font-size:.65rem;padding:4px 10px;border-radius:6px;background:rgba(99,102,241,.15);color:var(--accent);border:1px solid rgba(99,102,241,.2)}
+.game{max-width:1200px;margin:0 auto;padding:24px}
+.game-intro{text-align:center;padding:40px 20px}
+.game-intro .big-em{font-size:4rem;display:block;margin-bottom:12px}
+.game-intro h2{font-size:1.6rem;font-weight:900;margin-bottom:8px}
+.game-intro p{color:var(--dim);max-width:500px;margin:0 auto 24px;line-height:1.5;font-size:.9rem}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#818cf8;transform:translateY(-1px)}
+.btn-ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{border-color:rgba(255,255,255,.15)}
+.btn-sm{padding:8px 16px;font-size:.78rem}
+.mostrador{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:24px}
+.mostrador-title{font-family:'Space Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.mostrador-title .count{color:var(--accent)}
+.items-row{display:flex;flex-wrap:wrap;gap:8px}
+.item{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:100px;height:100px;border-radius:12px;background:var(--card);border:2px solid var(--border);cursor:grab;user-select:none;gap:2px;padding:8px;transition:all .15s;position:relative}
+.item:hover{transform:scale(1.06);border-color:rgba(255,255,255,.15);z-index:10}
+.item.dragging{opacity:.4;transform:scale(.95)}
+.item .item-em{font-size:1.6rem}.item .item-nm{font-size:.55rem;text-align:center;line-height:1.15;color:var(--dim);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.item .item-price{font-size:.6rem;font-weight:700;color:var(--ok);margin-top:1px}
+.estantes{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.estante{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:14px;min-height:130px;transition:all .25s}
+.estante.drag-over{border-color:var(--accent);background:rgba(99,102,241,.04);box-shadow:0 0 20px rgba(99,102,241,.1)}
+.estante.correct-flash{border-color:var(--ok);background:rgba(34,197,94,.04)}.estante.wrong-flash{border-color:var(--err);background:rgba(239,68,68,.04)}
+.estante-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.estante-em{font-size:1.2rem}.estante-nm{font-size:.8rem;font-weight:700}.estante-count{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--dim);margin-left:auto}
+.estante-items{display:flex;flex-wrap:wrap;gap:6px;min-height:40px}
+.placed-item{display:inline-flex;align-items:center;gap:4px;background:var(--card);border-radius:8px;padding:4px 10px;font-size:.7rem;border:1px solid rgba(34,197,94,.2);animation:popIn .25s ease}
+.placed-item .pi-em{font-size:.9rem}
+.kit-scenario{background:linear-gradient(135deg,var(--surface),var(--card));border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:24px;position:relative;overflow:hidden}
+.kit-scenario::before{content:'';position:absolute;top:-50px;right:-50px;width:200px;height:200px;background:radial-gradient(circle,rgba(99,102,241,.08),transparent 70%);pointer-events:none}
+.kit-em{font-size:2.5rem;margin-bottom:8px}.kit-title{font-size:1.3rem;font-weight:900;margin-bottom:4px}
+.kit-desc{font-size:.9rem;color:#a1a1aa;line-height:1.5;margin-bottom:16px}
+.kit-budget-bar{background:var(--card);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.kit-budget-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim)}
+.kit-budget-val{font-family:'Space Mono',monospace;font-size:1.4rem;font-weight:700}
+.kit-budget-meter{flex:1;min-width:120px;height:8px;border-radius:4px;background:rgba(255,255,255,.06);overflow:hidden}
+.kit-budget-fill{height:100%;border-radius:4px;transition:width .3s,background .3s}
+.kit-spent{font-family:'Space Mono',monospace;font-size:.8rem;color:var(--dim)}
+.kit-remaining{font-family:'Space Mono',monospace;font-size:.8rem;font-weight:700}.kit-remaining.over{color:var(--err)}
+.kit-store{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px}
+.kit-section{background:var(--surface);border-radius:14px;padding:16px;border:1px solid var(--border)}
+.kit-section-hdr{display:flex;align-items:center;gap:6px;margin-bottom:10px;font-size:.82rem;font-weight:700}
+.kit-section-em{font-size:1.1rem}
+.kit-product{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--card);margin-bottom:6px;cursor:pointer;transition:all .2s;user-select:none;position:relative}
+.kit-product:hover{border-color:rgba(255,255,255,.12);background:var(--card2)}
+.kit-product.in-cart{border-color:var(--accent);background:rgba(99,102,241,.06)}
+.kit-product.in-cart::after{content:'✓';position:absolute;right:10px;color:var(--accent);font-weight:700}
+.kit-p-em{font-size:1.2rem;flex-shrink:0}.kit-p-info{flex:1;min-width:0}
+.kit-p-name{font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kit-p-hint{font-size:.65rem;color:var(--dim);margin-top:1px}
+.kit-p-price{font-family:'Space Mono',monospace;font-size:.78rem;color:var(--ok);font-weight:700;flex-shrink:0}
+.kit-cart{background:var(--surface);border:2px solid var(--border);border-radius:16px;padding:20px;margin-bottom:20px}
+.kit-cart-title{font-family:'Space Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:12px}
+.kit-cart-items{display:flex;flex-wrap:wrap;gap:8px;min-height:50px}
+.kit-cart-item{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;background:var(--card);border:1px solid rgba(99,102,241,.2);font-size:.78rem}
+.kit-cart-item .ci-em{font-size:.9rem}.kit-cart-item .ci-price{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--ok)}
+.kit-empty{color:var(--dim);font-size:.82rem;padding:12px;text-align:center}
+.calc-card{background:var(--surface);border-radius:16px;padding:32px;border:1px solid var(--border);max-width:600px;margin:0 auto}
+.calc-q{font-size:1.1rem;line-height:1.6;margin:16px 0 24px}
+.calc-row{display:flex;gap:12px;align-items:center}
+.calc-inp{flex:1;padding:14px 18px;border-radius:10px;background:var(--card);border:2px solid var(--border);color:var(--text);font-size:1.2rem;font-family:'Space Mono',monospace;outline:none;transition:border-color .2s}.calc-inp:focus{border-color:var(--accent)}
+.calc-res{margin-top:20px;padding:16px;border-radius:12px;font-size:.88rem;line-height:1.5}
+.calc-res.ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:var(--ok)}.calc-res.bad{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);color:var(--err)}
+.sim-pair{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:700px;margin:0 auto}
+.sim-card{background:var(--surface);border:2px solid var(--border);border-radius:16px;padding:24px;text-align:center;transition:all .25s}
+.sim-card .s-em{font-size:2.5rem;margin-bottom:8px}.sim-card .s-nm{font-size:1rem;font-weight:700}.sim-card .s-cat{font-size:.72rem;color:var(--dim);margin-top:4px}
+.sim-vs{text-align:center;font-size:1.4rem;font-weight:900;color:var(--dim);padding:20px 0}
+.sim-explain{background:var(--surface);border-radius:14px;padding:20px;border:1px solid var(--border);max-width:700px;margin:16px auto 0;font-size:.88rem;line-height:1.6;color:#a1a1aa}
+.sim-explain strong{color:var(--accent)}
+.results{text-align:center;padding:40px 20px}
+.results h2{font-size:2rem;font-weight:900;margin-bottom:8px}
+.big-score{font-family:'Space Mono',monospace;font-size:4rem;font-weight:700;color:var(--ok);margin:16px 0}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;max-width:600px;margin:24px auto}
+.res-card{background:var(--card);border-radius:12px;padding:16px;text-align:center}
+.res-card .rv{font-family:'Space Mono',monospace;font-size:1.4rem;font-weight:700}
+.res-card .rl{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);margin-top:4px}
+.loading{display:flex;align-items:center;justify-content:center;min-height:60vh;flex-direction:column;gap:16px}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes popIn{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}.shake{animation:shake .4s ease}
+.toast-wrap{position:fixed;top:80px;right:16px;z-index:9998;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:10px 18px;border-radius:10px;font-size:.8rem;font-weight:600;color:#fff;backdrop-filter:blur(12px);pointer-events:auto;animation:tIn .3s ease,tOut .3s ease 2s forwards;box-shadow:0 4px 15px rgba(0,0,0,.3);max-width:320px}
+.toast-ok{background:rgba(34,197,94,.85)}.toast-err{background:rgba(239,68,68,.75)}.toast-info{background:rgba(99,102,241,.8)}
+@keyframes tIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tOut{from{opacity:1}to{opacity:0;transform:translateY(-10px)}}
+.diff-select{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.diff-btn{padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:'Space Mono',monospace;font-size:.75rem;cursor:pointer;transition:all .2s}
+.diff-btn:hover,.diff-btn.active{border-color:var(--accent);background:rgba(99,102,241,.1);color:var(--accent)}
+@media(max-width:768px){.estantes{grid-template-columns:1fr 1fr}.item{width:80px;height:85px}.item .item-em{font-size:1.3rem}.hdr-title{font-size:1rem}.kit-store{grid-template-columns:1fr}.sim-pair{grid-template-columns:1fr}}
+@media(max-width:480px){.estantes{grid-template-columns:1fr}.game{padding:12px}}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="toast-wrap" id="toasts"></div>
+<header class="hdr"><div class="hdr-inner">
+  <div class="hdr-left"><a href="../../index.html">← HDD Gaming</a><div class="hdr-title"><span id="h-em"></span> <span id="h-nm"></span></div></div>
+  <div class="hdr-right"><span class="level-badge" id="h-level">Nivel 1</span><div class="hdr-stat"><div class="hdr-stat-v score-v" id="h-score">0</div><div class="hdr-stat-l">Puntos</div></div><div class="hdr-stat"><div class="hdr-stat-v timer" id="h-timer">--:--</div><div class="hdr-stat-l">Tiempo</div></div></div>
+</div></header>
+<main class="game" id="game"><div class="loading"><div class="spinner"></div><p style="color:var(--dim);font-size:.85rem">Cargando pack...</p></div></main>
+<script>
+const PACK_MAP={'ferreteria':'../../packs/classify-and-place/ferreteria/pack.json','libreria-escolar':'../../packs/classify-and-place/libreria-escolar/pack.json','electrodomesticos':'../../packs/classify-and-place/electrodomesticos/pack.json','almacen-general':'../../packs/classify-and-place/almacen-general/pack.json','supermarket':'../../packs/classify-and-place/supermarket/pack.json'};
+let PACK=null,STATE={phase:'intro',mode:'classify',level:1,score:0,correct:0,errors:0,totalItems:0,placedItems:0,startTime:0,timerInterval:null,currentItems:[],moves:[],mouseData:[],lastMoveTime:0,kitCart:{},kitMissionIdx:0,calcIdx:0,simIdx:0,kitBudget:0,kitSpent:0,kitScenario:null,
+// Kit telemetry
+kitLog:[],       // every add/remove action timestamped
+kitRemovals:0,   // how many times removed item from cart
+kitFirstAction:0,// ms from start to first add
+kitBudgetExceededAt:0, // ms when first exceeded budget (0=never)
+kitSectionClicks:{}, // which category sections were scrolled to / clicked
+kitLastActionTime:0,
+kitDeliberationPauses:0, // pauses >5s between actions
+};
+
+async function loadPack(){const p=new URLSearchParams(location.search),id=p.get('pack')||'ferreteria',url=PACK_MAP[id];if(!url){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--err)">Pack no encontrado</p></div>';return}try{const r=await fetch(url);if(!r.ok)throw new Error(r.status);PACK=await r.json()}catch(e){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--err)">Error: '+e.message+'</p></div>';return}document.title=PACK.meta.name+' · HDD Gaming';document.getElementById('h-em').textContent=PACK.meta.emoji;document.getElementById('h-nm').textContent=PACK.meta.name;if(PACK.meta.colors)document.documentElement.style.setProperty('--accent',PACK.meta.colors.accent);
+// Init telemetry with patient ID (from URL param or localStorage)
+const pid=new URLSearchParams(location.search).get('pid')||localStorage.getItem('hdd_patient_id')||'demo_'+Date.now();
+if(typeof TELEM!=='undefined')TELEM.init(pid).catch(()=>{});
+showIntro()}
+
+function showIntro(){STATE.phase='intro';const ml=Object.keys(PACK.difficulty_scaling||{}).length||4,g=document.getElementById('game'),hm=PACK.missions&&(PACK.missions.grouping||PACK.missions.calculation||PACK.missions.similarity_discrimination);
+g.innerHTML=`<div class="game-intro"><span class="big-em">${PACK.meta.emoji}</span><h2>${PACK.meta.name}</h2><p>${PACK.meta.description||''}</p><p style="font-size:.75rem;color:var(--dim);margin-bottom:20px;font-style:italic">${PACK.meta.setting||''}</p>
+<div style="margin-bottom:20px"><span style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em">Modo de juego</span>
+<div class="diff-select" style="margin-top:12px" id="mode-sel"><button class="diff-btn active" onclick="pickMode(this,'classify')">📦 Clasificar</button><button class="diff-btn" onclick="pickMode(this,'kit')">🧰 Armar Kit</button>${PACK.missions?.calculation?'<button class="diff-btn" onclick="pickMode(this,\'calc\')">🧮 Calcular</button>':''}${PACK.missions?.similarity_discrimination?'<button class="diff-btn" onclick="pickMode(this,\'sim\')">👀 Semejanzas</button>':''}</div></div>
+<div style="margin-bottom:24px"><span style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em">Dificultad</span><div class="diff-select" id="diff-sel"></div></div>
+<button class="btn btn-primary" onclick="startMode()">🎮 Empezar</button></div>`;
+const ds=document.getElementById('diff-sel');for(let i=1;i<=ml;i++){const b=document.createElement('button');b.className='diff-btn'+(i===1?' active':'');b.textContent='Nivel '+i;b.onclick=()=>{STATE.level=i;ds.querySelectorAll('.diff-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('h-level').textContent='Nivel '+i};ds.appendChild(b)}}
+
+function pickMode(btn,m){STATE.mode=m;document.querySelectorAll('#mode-sel .diff-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+function startMode(){STATE.score=0;STATE.correct=0;STATE.errors=0;STATE.placedItems=0;STATE.moves=[];STATE.mouseData=[];STATE.scrollData=[];STATE.startTime=performance.now();STATE.lastMoveTime=0;document.getElementById('h-score').textContent='0';clearInterval(STATE.timerInterval);let el=0;STATE.timerInterval=setInterval(()=>{el++;document.getElementById('h-timer').textContent=String(Math.floor(el/60)).padStart(2,'0')+':'+String(el%60).padStart(2,'0')},1000);
+// Global mouse + scroll telemetry for ALL modes
+document.addEventListener('mousemove',trackMouse);document.addEventListener('scroll',trackScroll,true);
+// Telemetry: start game session
+if(typeof TELEM!=='undefined')TELEM.startGameSession({frame:'classify-and-place',packId:PACK.meta.id,mode:STATE.mode,level:STATE.level}).catch(()=>{});
+({classify:startClassify,kit:startKit,calc:startCalc,sim:startSim})[STATE.mode]()}
+function toast(m,t){const c=document.getElementById('toasts'),d=document.createElement('div');d.className='toast toast-'+(t||'info');d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),2500)}
+
+/* ===== CLASSIFY ===== */
+function startClassify(){STATE.phase='playing';const dk='level_'+STATE.level,diff=(PACK.difficulty_scaling||{})[dk]||{items_per_round:15,categories_visible:5};let cats=[...PACK.categories];if(diff.categories_visible&&diff.categories_visible<cats.length)cats=shuffle(cats).slice(0,diff.categories_visible);const catIds=new Set(cats.map(c=>c.id));let items=shuffle(PACK.items.filter(i=>catIds.has(i.category))).slice(0,Math.min(diff.items_per_round||15,PACK.items.length));STATE.currentItems=items;STATE.totalItems=items.length;
+// ALL items in one shuffled block — no zones, no grouping, no hints
+const allItems=shuffle([...items]).map(it=>{const pr=it.price?'$'+it.price.toLocaleString('es-AR'):(it.price_range?'$'+it.price_range[0].toLocaleString('es-AR'):'');return`<div class="item" draggable="true" data-id="${it.id}" data-cat="${it.category}"><span class="item-em">${it.emoji}</span><span class="item-nm">${it.name}</span>${pr?'<span class="item-price">'+pr+'</span>':''}</div>`}).join('');
+document.getElementById('game').innerHTML=`<div class="mostrador"><div class="mostrador-title">📦 Mostrador — todo mezclado — <span class="count"><span id="remaining">${items.length}</span> por ubicar</span></div><div class="items-row">${allItems}</div></div><div class="estantes" id="estantes"></div>`;
+const ed=document.getElementById('estantes');shuffle([...cats]).forEach(cat=>{const el=document.createElement('div');el.className='estante';el.dataset.cat=cat.id;el.innerHTML=`<div class="estante-hdr"><span class="estante-em">${cat.emoji}</span><span class="estante-nm">${cat.label}</span><span class="estante-count" id="cnt-${cat.id}">0</span></div><div class="estante-items" id="placed-${cat.id}"></div>`;el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag-over')});el.addEventListener('dragleave',()=>el.classList.remove('drag-over'));el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('drag-over');handleDrop(e.dataTransfer.getData('text/plain'),cat.id,document.querySelector('.item[data-id="'+e.dataTransfer.getData('text/plain')+'"]'))});ed.appendChild(el)});
+document.querySelectorAll('.item[draggable]').forEach(el=>{el.addEventListener('dragstart',e=>{el.classList.add('dragging');e.dataTransfer.setData('text/plain',el.dataset.id)});el.addEventListener('dragend',()=>el.classList.remove('dragging'));let tc=null;el.addEventListener('touchstart',e=>{el.classList.add('dragging');tc=el.cloneNode(true);tc.style.cssText='position:fixed;z-index:10000;pointer-events:none;opacity:.8;transform:scale(1.1)';tc.style.left=(e.touches[0].clientX-50)+'px';tc.style.top=(e.touches[0].clientY-50)+'px';document.body.appendChild(tc)},{passive:true});el.addEventListener('touchmove',e=>{e.preventDefault();if(tc){tc.style.left=(e.touches[0].clientX-50)+'px';tc.style.top=(e.touches[0].clientY-50)+'px'}document.querySelectorAll('.estante').forEach(s=>{const r=s.getBoundingClientRect();s.classList.toggle('drag-over',e.touches[0].clientX>=r.left&&e.touches[0].clientX<=r.right&&e.touches[0].clientY>=r.top&&e.touches[0].clientY<=r.bottom)})},{passive:false});el.addEventListener('touchend',e=>{el.classList.remove('dragging');if(tc){tc.remove();tc=null}const t=e.changedTouches[0];document.querySelectorAll('.estante').forEach(s=>{s.classList.remove('drag-over');const r=s.getBoundingClientRect();if(t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom)handleDrop(el.dataset.id,s.dataset.cat,el)})})});
+}
+
+function handleDrop(iid,tcat,iel){const it=STATE.currentItems.find(i=>i.id===iid);if(!it||!iel)return;const ok=it.category===tcat,now=performance.now();STATE.moves.push({itemId:iid,targetCat:tcat,correct:ok,time:now-STATE.startTime,rt:now-(STATE.lastMoveTime||STATE.startTime)});STATE.lastMoveTime=now;
+if(ok){STATE.correct++;STATE.score+=100+STATE.level*20;STATE.placedItems++;const pa=document.getElementById('placed-'+tcat),pill=document.createElement('span');pill.className='placed-item';pill.innerHTML=`<span class="pi-em">${it.emoji}</span> ${it.name}`;pa.appendChild(pill);document.getElementById('cnt-'+tcat).textContent=pa.children.length;const est=document.querySelector('.estante[data-cat="'+tcat+'"]');est.classList.add('correct-flash');setTimeout(()=>est.classList.remove('correct-flash'),400);iel.remove();toast('✓ '+it.name,'ok')}
+else{STATE.errors++;STATE.score=Math.max(0,STATE.score-30);const est=document.querySelector('.estante[data-cat="'+tcat+'"]');est.classList.add('wrong-flash');setTimeout(()=>est.classList.remove('wrong-flash'),500);iel.classList.add('shake');setTimeout(()=>iel.classList.remove('shake'),500);const cc=PACK.categories.find(c=>c.id===it.category);toast('✗ '+it.name+' → '+(it.similarity_note||'Va en '+(cc?cc.label:it.category)),'err')}
+document.getElementById('h-score').textContent=STATE.score;const r=STATE.totalItems-STATE.placedItems;const rE=document.getElementById('remaining');if(rE)rE.textContent=r;if(STATE.placedItems>=STATE.totalItems){clearInterval(STATE.timerInterval);setTimeout(showResults,800)}}
+
+/* ===== KIT ABIERTO ===== */
+const KITS=[
+{emoji:'🥩',title:'Asado del domingo',desc:'Se junta la familia: 8 personas. Comprá TODO lo que necesites para un asado completo. Carne, bebidas, ensalada, pan, descartables — vos decidís. Nadie te dice qué comprar.',budget:50000,areas:['Proteína principal','Acompañamientos','Bebidas','Condimentos','Descartables']},
+{emoji:'🏠',title:'Primera noche solo',desc:'Te mudás a un depto. Primer día solo. Hacé la compra de supervivencia: comida, limpieza, higiene. No te olvides de nada porque mañana no salís.',budget:35000,areas:['Alimentos básicos','Limpieza','Higiene','Cocina']},
+{emoji:'🎂',title:'Cumpleaños de 10 años',desc:'Tu hijo cumple 10. Vienen 12 amigos. Armá toda la compra: comida, bebida, descartables, postre. Vos elegís el menú.',budget:40000,areas:['Comida para 12','Bebidas','Descartables','Postre/torta']},
+{emoji:'🤒',title:'Semana de gripe',desc:'Estás con gripe y no podés salir 5 días. UNA sola compra para toda la semana. Pensá en comidas fáciles de hacer sintiéndote mal.',budget:25000,areas:['Comida fácil','Líquidos','Higiene','Alimentos duraderos']},
+{emoji:'🧹',title:'Viene la suegra el sábado',desc:'Limpieza general de la casa: pisos, baño, cocina, vidrios. Comprá todo lo que necesitás para dejar la casa impecable.',budget:15000,areas:['Pisos','Baño','Cocina','Ambientación']},
+{emoji:'⛺',title:'Camping de fin de semana',desc:'Te vas de camping 2 días con 4 amigos. Comprá la comida y lo básico. No hay heladera, no hay horno. Solo una parrillita y conservadora con hielo.',budget:30000,areas:['Comida sin heladera','Bebidas','Descartables','Snacks']},
+];
+
+function startKit(){STATE.phase='playing';STATE.kitCart={};STATE.kitSpent=0;STATE.kitLog=[];STATE.kitRemovals=0;STATE.kitFirstAction=0;STATE.kitBudgetExceededAt=0;STATE.kitSectionClicks={};STATE.kitLastActionTime=0;STATE.kitDeliberationPauses=0;const sc=KITS[STATE.kitMissionIdx%KITS.length];STATE.kitBudget=sc.budget;STATE.kitScenario=sc;
+const byCat={};PACK.items.forEach(it=>{if(!byCat[it.category])byCat[it.category]=[];byCat[it.category].push(it)});
+const secs=PACK.categories.map(cat=>{const its=byCat[cat.id]||[];if(!its.length)return'';return`<div class="kit-section"><div class="kit-section-hdr"><span class="kit-section-em">${cat.emoji}</span>${cat.label}</div>${its.map(it=>{const pr=it.price||((it.price_range||[])[0])||0;return`<div class="kit-product" data-id="${it.id}" data-price="${pr}" onclick="kitToggle('${it.id}',${pr})"><span class="kit-p-em">${it.emoji}</span><div class="kit-p-info"><div class="kit-p-name">${it.name}</div></div><span class="kit-p-price">$${pr.toLocaleString('es-AR')}</span></div>`}).join('')}</div>`}).join('');
+document.getElementById('game').innerHTML=`<div class="kit-scenario"><div class="kit-em">${sc.emoji}</div><div class="kit-title">${sc.title}</div><div class="kit-desc">${sc.desc}</div><div class="kit-budget-bar"><div><div class="kit-budget-label">Presupuesto</div><div class="kit-budget-val">$${sc.budget.toLocaleString('es-AR')}</div></div><div class="kit-budget-meter"><div class="kit-budget-fill" id="kit-fill" style="width:0%;background:var(--ok)"></div></div><div><div class="kit-spent" id="kit-spent-label">Gastado: $0</div><div class="kit-remaining" id="kit-remain">Quedan: $${sc.budget.toLocaleString('es-AR')}</div></div></div></div><div class="kit-cart" id="kit-cart"><div class="kit-cart-title">🛒 Tu carrito</div><div class="kit-cart-items" id="kit-cart-items"><div class="kit-empty">Tocá productos para agregarlos</div></div></div><div class="kit-store">${secs}</div><div style="text-align:center;padding:20px 0"><button class="btn btn-primary" onclick="kitFinish()">✅ Terminé mi compra</button> <button class="btn btn-ghost btn-sm" onclick="STATE.kitMissionIdx++;startKit()">🔄 Otro escenario</button></div>`}
+
+function kitToggle(id,pr){const now=performance.now(),elapsed=now-STATE.startTime,sinceLastAction=now-STATE.kitLastActionTime;
+// Track deliberation pauses (>5s between actions)
+if(STATE.kitLastActionTime>0&&sinceLastAction>5000)STATE.kitDeliberationPauses++;
+STATE.kitLastActionTime=now;
+// Track first action latency
+if(!STATE.kitFirstAction)STATE.kitFirstAction=elapsed;
+const item=PACK.items.find(i=>i.id===id);
+if(STATE.kitCart[id]){
+  delete STATE.kitCart[id];STATE.kitSpent-=pr;STATE.kitRemovals++;
+  STATE.kitLog.push({action:'remove',itemId:id,name:item?.name||id,category:item?.category||'?',price:pr,time:elapsed,spent:STATE.kitSpent,sinceLastMs:sinceLastAction});
+  document.querySelector('.kit-product[data-id="'+id+'"]')?.classList.remove('in-cart');toast('Quitado','info');
+}else{
+  STATE.kitCart[id]=pr;STATE.kitSpent+=pr;
+  STATE.kitLog.push({action:'add',itemId:id,name:item?.name||id,category:item?.category||'?',price:pr,time:elapsed,spent:STATE.kitSpent,sinceLastMs:sinceLastAction});
+  // Track when budget first exceeded
+  if(STATE.kitSpent>STATE.kitBudget&&!STATE.kitBudgetExceededAt)STATE.kitBudgetExceededAt=elapsed;
+  document.querySelector('.kit-product[data-id="'+id+'"]')?.classList.add('in-cart');toast('Agregado','ok');
+}
+// Track section engagement
+if(item)STATE.kitSectionClicks[item.category]=(STATE.kitSectionClicks[item.category]||0)+1;
+kitUI()}
+
+function kitUI(){const pct=Math.min(100,Math.round(STATE.kitSpent/STATE.kitBudget*100));const f=document.getElementById('kit-fill');f.style.width=pct+'%';f.style.background=pct>100?'var(--err)':pct>80?'var(--warn)':'var(--ok)';document.getElementById('kit-spent-label').textContent='Gastado: $'+STATE.kitSpent.toLocaleString('es-AR');const rem=STATE.kitBudget-STATE.kitSpent;const rE=document.getElementById('kit-remain');rE.textContent=(rem>=0?'Quedan: $':'Excedido: $')+Math.abs(rem).toLocaleString('es-AR');rE.className='kit-remaining'+(rem<0?' over':'');
+const cd=document.getElementById('kit-cart-items'),ids=Object.keys(STATE.kitCart);if(!ids.length){cd.innerHTML='<div class="kit-empty">Tocá productos para agregarlos</div>';return}cd.innerHTML=ids.map(id=>{const it=PACK.items.find(i=>i.id===id);return it?`<div class="kit-cart-item"><span class="ci-em">${it.emoji}</span>${it.name} <span class="ci-price">$${STATE.kitCart[id].toLocaleString('es-AR')}</span></div>`:''}).join('')}
+
+function kitFinish(){clearInterval(STATE.timerInterval);document.removeEventListener('mousemove',trackMouse);document.removeEventListener('scroll',trackScroll,true);const elapsed=Math.floor((performance.now()-STATE.startTime)/1000),ids=Object.keys(STATE.kitCart),sc=STATE.kitScenario,over=STATE.kitSpent>STATE.kitBudget;
+const catsCov=new Set(ids.map(id=>{const it=PACK.items.find(i=>i.id===id);return it?it.category:null}).filter(Boolean));
+// TELEMETRY: send to Supabase
+if(typeof TELEM!=='undefined'){const mm=mouseMetrics();const adds=STATE.kitLog.filter(l=>l.action==='add');const avgDelib=STATE.kitLog.length>1?Math.round(STATE.kitLog.slice(1).reduce((a,l)=>a+l.sinceLastMs,0)/(STATE.kitLog.length-1)):0;
+TELEM.endGameSession({durationMs:elapsed*1000,score:STATE.score,correct:ids.length,errors:0,totalItems:PACK.items.length,accuracyPct:null,completed:true,kitScenario:sc.title,kitBudget:STATE.kitBudget,kitSpent:STATE.kitSpent,kitBudgetExceeded:over,kitBudgetExceededAtMs:STATE.kitBudgetExceededAt||null,kitItemsAdded:adds.length,kitItemsRemoved:STATE.kitRemovals,kitFirstActionMs:Math.round(STATE.kitFirstAction),kitAvgDeliberationMs:avgDelib,kitDeliberationPauses:STATE.kitDeliberationPauses,kitCategoriesCovered:catsCov.size,packId:PACK.meta.id,mode:'kit'}).catch(()=>{});
+TELEM.sendMouseTelemetry(mm).catch(()=>{});
+TELEM.sendKitLog(STATE.kitLog).catch(()=>{});
+}
+const log=STATE.kitLog,adds=log.filter(l=>l.action==='add'),removes=log.filter(l=>l.action==='remove');
+const catSeq=[];adds.forEach(a=>{if(!catSeq.includes(a.category))catSeq.push(a)});
+const firstCatObj=catSeq[0]?PACK.categories.find(c=>c.id===catSeq[0].category):null;
+const firstCatName=firstCatObj?firstCatObj.label:'—';
+const actionGaps=log.slice(1).map(l=>l.sinceLastMs);
+const avgDelibMs=actionGaps.length?Math.round(actionGaps.reduce((a,b)=>a+b,0)/actionGaps.length):0;
+const firstActionSec=STATE.kitFirstAction?Math.round(STATE.kitFirstAction/1000):0;
+const perCat={};ids.forEach(id=>{const it=PACK.items.find(i=>i.id===id);if(it)perCat[it.category]=(perCat[it.category]||0)+1});
+const catBreakdown=PACK.categories.filter(c=>perCat[c.id]).map(c=>`${c.emoji} ${c.label}: ${perCat[c.id]}`).join('<br>');
+const catsMissed=PACK.categories.filter(c=>!perCat[c.id]).map(c=>`${c.emoji} ${c.label}`).join(', ');
+const budgetPct=Math.round(STATE.kitSpent/STATE.kitBudget*100);
+const timeline=adds.slice(0,10).map((a,i)=>`<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:6px;background:var(--card);font-size:.65rem;border:1px solid var(--border)"><span style="color:var(--accent);font-weight:700">${i+1}</span> ${a.name}</span>`).join(' ');
+const removalNames=removes.map(r=>r.name);
+document.getElementById('game').innerHTML=`<div class="results"><h2>${over?'💸 Presupuesto excedido':ids.length>0?'🛒 Compra terminada':'🤷 Carrito vacío'}</h2><div class="big-score" style="color:${over?'var(--err)':'var(--ok)'}">$${STATE.kitSpent.toLocaleString('es-AR')}</div><p style="color:var(--dim)">${ids.length} productos · ${budgetPct}% del presupuesto</p>
+<div class="results-grid" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">
+<div class="res-card"><div class="rv">${ids.length}</div><div class="rl">Productos</div></div>
+<div class="res-card"><div class="rv" style="color:${over?'var(--err)':'var(--ok)'}">$${Math.abs(STATE.kitBudget-STATE.kitSpent).toLocaleString('es-AR')}</div><div class="rl">${over?'Excedido':'Sobrante'}</div></div>
+<div class="res-card"><div class="rv">${catsCov.size}/${PACK.categories.length}</div><div class="rl">Categorías</div></div>
+<div class="res-card"><div class="rv">${elapsed}s</div><div class="rl">Tiempo total</div></div>
+<div class="res-card"><div class="rv">${firstActionSec}s</div><div class="rl">Latencia 1er item</div></div>
+<div class="res-card"><div class="rv">${(avgDelibMs/1000).toFixed(1)}s</div><div class="rl">Deliberación prom</div></div>
+<div class="res-card"><div class="rv">${STATE.kitRemovals}</div><div class="rl">Autocorrecciones</div></div>
+<div class="res-card"><div class="rv">${STATE.kitDeliberationPauses}</div><div class="rl">Pausas &gt;5s</div></div>
+</div>
+<div style="background:var(--surface);border-radius:14px;padding:20px;max-width:620px;margin:24px auto;text-align:left;border:1px solid var(--border)">
+<div style="font-family:'Space Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:14px">📊 Análisis de compra</div>
+<div style="margin-bottom:14px"><div style="font-size:.72rem;font-weight:700;color:var(--accent);margin-bottom:6px">Orden de compra</div><div style="display:flex;flex-wrap:wrap;gap:4px">${timeline||'—'}</div><div style="font-size:.65rem;color:var(--dim);margin-top:4px">Primera categoría: <strong style="color:var(--text)">${firstCatName}</strong> — indica priorización del paciente</div></div>
+<div style="margin-bottom:14px"><div style="font-size:.72rem;font-weight:700;color:var(--accent);margin-bottom:6px">Cobertura por categoría</div><div style="font-size:.75rem;line-height:1.8">${catBreakdown||'—'}</div>${catsMissed?'<div style="font-size:.65rem;color:var(--err);margin-top:4px">Sin compras en: '+catsMissed+'</div>':''}</div>
+${STATE.kitRemovals>0?'<div style="margin-bottom:14px"><div style="font-size:.72rem;font-weight:700;color:var(--accent);margin-bottom:4px">Autocorrecciones ('+STATE.kitRemovals+')</div><div style="font-size:.72rem;color:var(--dim)">'+removalNames.join(', ')+'</div><div style="font-size:.65rem;color:var(--dim);margin-top:3px">'+(STATE.kitRemovals<=2?'Decisiones firmes':STATE.kitRemovals<=5?'Deliberación activa':'Indecisión significativa')+'</div></div>':''}
+${STATE.kitBudgetExceededAt>0?'<div style="margin-bottom:14px"><div style="font-size:.72rem;font-weight:700;color:var(--err);margin-bottom:4px">⚠️ Presupuesto excedido</div><div style="font-size:.72rem;color:var(--dim)">Se pasó a los '+Math.round(STATE.kitBudgetExceededAt/1000)+'s (tras '+log.filter(l=>l.action==='add'&&l.time<=STATE.kitBudgetExceededAt).length+' productos). '+(over?'No corrigió.':'Corrigió sacando items.')+'</div></div>':''}
+<div style="border-top:1px solid var(--border);padding-top:14px;margin-top:8px"><div style="font-size:.72rem;font-weight:700;color:var(--accent);margin-bottom:6px">Indicadores clínicos</div>
+<div style="font-size:.68rem;color:var(--dim);line-height:1.9">
+<strong>Latencia inicial (${firstActionSec}s):</strong> ${firstActionSec<10?'Rápido — impulsividad o familiaridad':firstActionSec<30?'Deliberación razonable':firstActionSec<60?'Prolongada — dificultad para iniciar':'Muy larga — evaluar bloqueo ejecutivo'}<br>
+<strong>Deliberación prom (${(avgDelibMs/1000).toFixed(1)}s):</strong> ${avgDelibMs<2000?'Rápida — posible impulsividad':avgDelibMs<5000?'Normal':avgDelibMs<10000?'Lenta — procesamiento cuidadoso':'Muy lenta — fatiga o dificultad severa'}<br>
+<strong>Pausas &gt;5s (${STATE.kitDeliberationPauses}):</strong> ${STATE.kitDeliberationPauses===0?'Flujo continuo':STATE.kitDeliberationPauses<=3?'Pausas reflexivas esperables':'Muchas pausas — desenganche o fatiga'}<br>
+<strong>Cobertura (${catsCov.size}/${PACK.categories.length}):</strong> ${catsCov.size>=PACK.categories.length-1?'Amplia — visión global':catsCov.size>=Math.ceil(PACK.categories.length/2)?'Parcial — áreas omitidas':'Limitada — rigidez o foco estrecho'}<br>
+<strong>Presupuesto (${budgetPct}%):</strong> ${budgetPct>110?'Excedido significativo — dificultad de cálculo':budgetPct>100?'Levemente excedido':budgetPct>70?'Buen uso':budgetPct>40?'Subutilizado':'Muy poco gastado — posible avolición'}
+</div></div>
+${sc.areas?'<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px"><div style="font-size:.65rem;color:var(--dim)"><strong>Áreas esperables:</strong> '+sc.areas.join(' · ')+'</div></div>':''}
+</div>
+<div style="background:var(--surface);border-radius:14px;padding:20px;max-width:620px;margin:16px auto;text-align:left;border:1px solid var(--border)">${mouseHTML()}</div>
+<div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn btn-primary" onclick="STATE.kitMissionIdx++;startKit()">🔄 Otro escenario</button><button class="btn btn-ghost" onclick="showIntro()">⚙️ Menú</button></div></div>`}
+
+/* ===== CALC ===== */
+function startCalc(){STATE.phase='playing';const cs=PACK.missions?.calculation;if(!cs||!cs.length){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--dim)">Sin cálculos en este pack</p></div>';return}const c=cs[STATE.calcIdx%cs.length];document.getElementById('game').innerHTML=`<div class="calc-card"><div style="font-size:2.5rem">${c.emoji||'🧮'}</div><div style="font-size:1.1rem;font-weight:900;margin-top:8px">${c.name}</div><div class="calc-q">${c.description}</div><div class="calc-row"><input type="number" class="calc-inp" id="calc-a" placeholder="Tu respuesta..." onkeydown="if(event.key==='Enter')checkCalc()"><span style="color:var(--dim);font-size:.85rem">${c.answer_unit||'$'}</span><button class="btn btn-primary btn-sm" onclick="checkCalc()">Verificar</button></div><div id="calc-res"></div></div>`;document.getElementById('calc-a').focus()}
+
+function checkCalc(){const cs=PACK.missions.calculation,c=cs[STATE.calcIdx%cs.length],v=parseFloat(document.getElementById('calc-a').value);if(isNaN(v))return;const exp=typeof c.correct_answer==='object'?Object.values(c.correct_answer)[0]:c.correct_answer;let ok=c.accept_range?v>=c.accept_range[0]&&v<=c.accept_range[1]:Math.abs(v-exp)<Math.max(1,exp*.05);if(ok){STATE.correct++;STATE.score+=150;toast('✅ Correcto','ok')}else{STATE.errors++;toast('❌ Era '+exp.toLocaleString('es-AR'),'err')}document.getElementById('h-score').textContent=STATE.score;const r=document.getElementById('calc-res');r.className='calc-res '+(ok?'ok':'bad');r.innerHTML=`<strong>${ok?'✅ Correcto':'❌ Incorrecto'}</strong><br>${c.explanation}<br><br><button class="btn btn-ghost btn-sm" onclick="STATE.calcIdx++;startCalc()">Siguiente →</button>`;document.getElementById('calc-a').disabled=true}
+
+/* ===== SIMILARITY ===== */
+function startSim(){STATE.phase='playing';const sd=PACK.missions?.similarity_discrimination;if(!sd||!sd[0]?.pairs){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--dim)">Sin pares en este pack</p></div>';return}const pairs=sd[0].pairs,pair=pairs[STATE.simIdx%pairs.length],a=PACK.items.find(i=>i.id===pair.item_a),b=PACK.items.find(i=>i.id===pair.item_b);if(!a||!b){STATE.simIdx++;startSim();return}const ca=PACK.categories.find(c=>c.id===a.category),cb=PACK.categories.find(c=>c.id===b.category);
+document.getElementById('game').innerHTML=`<div style="text-align:center;margin-bottom:20px"><div style="font-size:.75rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em">Par ${(STATE.simIdx%pairs.length)+1} de ${pairs.length}</div><div style="font-size:1.2rem;font-weight:700;margin-top:8px">Estos dos se parecen. ¿En qué se diferencian?</div></div><div class="sim-pair"><div class="sim-card"><div class="s-em">${a.emoji}</div><div class="s-nm">${a.name}</div><div class="s-cat">${ca?.emoji||''} ${ca?.label||''}</div></div><div class="sim-card"><div class="s-em">${b.emoji}</div><div class="s-nm">${b.name}</div><div class="s-cat">${cb?.emoji||''} ${cb?.label||''}</div></div></div><div class="sim-vs">VS</div><div id="sim-rev" style="display:none"><div class="sim-explain"><strong>Diferencia clave:</strong><br>${pair.key_difference}</div><div style="text-align:center;margin-top:16px"><button class="btn btn-ghost btn-sm" onclick="STATE.simIdx++;startSim()">Siguiente →</button></div></div><div style="text-align:center"><button class="btn btn-primary" id="sim-btn" onclick="document.getElementById('sim-rev').style.display='block';this.remove();STATE.correct++;STATE.score+=50;document.getElementById('h-score').textContent=STATE.score">Revelar diferencia</button></div>`}
+
+/* ===== RESULTS (classify) ===== */
+function showResults(){STATE.phase='results';document.removeEventListener('mousemove',trackMouse);document.removeEventListener('scroll',trackScroll,true);const el=((performance.now()-STATE.startTime)/1000).toFixed(1),acc=STATE.correct+STATE.errors>0?Math.round(STATE.correct/(STATE.correct+STATE.errors)*100):0,avgRT=STATE.moves.length?Math.round(STATE.moves.reduce((a,m)=>a+m.rt,0)/STATE.moves.length):0;let pers=0;for(let i=1;i<STATE.moves.length;i++)if(!STATE.moves[i].correct&&!STATE.moves[i-1].correct&&STATE.moves[i].targetCat===STATE.moves[i-1].targetCat)pers++;
+// TELEMETRY: send everything to Supabase
+if(typeof TELEM!=='undefined'){const mm=mouseMetrics();
+TELEM.endGameSession({durationMs:Math.round(performance.now()-STATE.startTime),score:STATE.score,correct:STATE.correct,errors:STATE.errors,totalItems:STATE.totalItems,accuracyPct:acc,completed:true,perseverations:pers,avgReactionTimeMs:avgRT,packId:PACK.meta.id,mode:'classify'}).catch(()=>{});
+TELEM.sendMouseTelemetry(mm).catch(()=>{});
+TELEM.sendClassifyMoves(STATE.moves,STATE.currentItems).catch(()=>{});
+}
+document.getElementById('game').innerHTML=`<div class="results"><h2>${acc>=80?'🎉 ¡Excelente!':acc>=60?'👍 ¡Bien!':'💪 Seguí practicando'}</h2><div class="big-score">${acc}%</div><p style="color:var(--dim)">Precisión · Nivel ${STATE.level}</p><div class="results-grid"><div class="res-card"><div class="rv" style="color:var(--ok)">${STATE.correct}</div><div class="rl">Correctos</div></div><div class="res-card"><div class="rv" style="color:var(--err)">${STATE.errors}</div><div class="rl">Errores</div></div><div class="res-card"><div class="rv">${el}s</div><div class="rl">Tiempo</div></div><div class="res-card"><div class="rv">${avgRT}ms</div><div class="rl">RT promedio</div></div><div class="res-card"><div class="rv" style="color:var(--accent)">${STATE.score}</div><div class="rl">Puntos</div></div><div class="res-card"><div class="rv">${pers}</div><div class="rl">Perseveraciones</div></div></div><div style="margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn btn-primary" onclick="startMode()">🔄 De nuevo</button><button class="btn btn-ghost" onclick="showIntro()">⚙️ Menú</button></div><div style="margin-top:24px;padding:16px;background:var(--surface);border-radius:12px;text-align:left;max-width:600px;margin:auto;border:1px solid var(--border)">${mouseHTML()}</div></div>`}
+
+function trackMouse(e){const n=performance.now();STATE.mouseData.push({x:e.clientX,y:e.clientY,t:n});if(STATE.mouseData.length>8000)STATE.mouseData.shift()}
+function trackScroll(){if(!STATE.scrollData)STATE.scrollData=[];STATE.scrollData.push({y:window.scrollY,t:performance.now()});if(STATE.scrollData.length>2000)STATE.scrollData.shift()}
+
+// === MOUSE METRICS ENGINE ===
+function mouseMetrics(){
+  const md=STATE.mouseData;if(md.length<10)return{pts:md.length,vel:0,velVar:0,pauses:0,dirChanges:0,pathEff:0,totalDist:0,idleRatio:0};
+  // Total distance & velocity per segment
+  let totalDist=0;const vels=[];
+  for(let i=1;i<md.length;i++){
+    const dx=md[i].x-md[i-1].x,dy=md[i].y-md[i-1].y,dist=Math.sqrt(dx*dx+dy*dy);
+    const dt=(md[i].t-md[i-1].t)/1000;
+    totalDist+=dist;
+    if(dt>0&&dt<2)vels.push(dist/dt); // ignore >2s gaps (pauses)
+  }
+  const avgVel=vels.length?Math.round(vels.reduce((a,b)=>a+b,0)/vels.length):0;
+  // Velocity variance
+  const velVar=vels.length>1?Math.round(Math.sqrt(vels.reduce((s,v)=>s+(v-avgVel)**2,0)/(vels.length-1))):0;
+  // Pauses >2s
+  let pauses=0,idleMs=0;
+  for(let i=1;i<md.length;i++){const gap=md[i].t-md[i-1].t;if(gap>2000){pauses++;idleMs+=gap}}
+  const totalMs=md[md.length-1].t-md[0].t;
+  const idleRatio=totalMs>0?Math.round(idleMs/totalMs*100):0;
+  // Direction changes (angle change > 90°)
+  let dirChanges=0;
+  for(let i=2;i<md.length;i++){
+    const ax=md[i-1].x-md[i-2].x,ay=md[i-1].y-md[i-2].y;
+    const bx=md[i].x-md[i-1].x,by=md[i].y-md[i-1].y;
+    const dot=ax*bx+ay*by,magA=Math.sqrt(ax*ax+ay*ay),magB=Math.sqrt(bx*bx+by*by);
+    if(magA>2&&magB>2){const cos=dot/(magA*magB);if(cos<0)dirChanges++} // >90° change
+  }
+  // Path efficiency (straight line start→end / actual distance)
+  const sx=md[0].x,sy=md[0].y,ex=md[md.length-1].x,ey=md[md.length-1].y;
+  const straightDist=Math.sqrt((ex-sx)**2+(ey-sy)**2);
+  const pathEff=totalDist>0?Math.round(straightDist/totalDist*100):0;
+  // Scroll depth
+  const scrollCount=(STATE.scrollData||[]).length;
+  const maxScroll=STATE.scrollData?.length?Math.max(...STATE.scrollData.map(s=>s.y)):0;
+
+  return{pts:md.length,vel:avgVel,velVar,pauses,dirChanges,pathEff,totalDist:Math.round(totalDist),idleRatio,scrollCount,maxScroll};
+}
+
+function mouseHTML(){
+  const m=mouseMetrics();
+  return `<div style="font-family:'Space Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:8px">🖱️ Telemetría de mouse</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:.68rem;margin-bottom:10px">
+  <div style="background:var(--card);padding:8px;border-radius:8px;text-align:center"><div style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700">${m.vel}</div><div style="color:var(--dim);font-size:.55rem;margin-top:2px">px/s velocidad</div></div>
+  <div style="background:var(--card);padding:8px;border-radius:8px;text-align:center"><div style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700">${m.velVar}</div><div style="color:var(--dim);font-size:.55rem;margin-top:2px">varianza vel.</div></div>
+  <div style="background:var(--card);padding:8px;border-radius:8px;text-align:center"><div style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700">${m.pauses}</div><div style="color:var(--dim);font-size:.55rem;margin-top:2px">pausas &gt;2s</div></div>
+  <div style="background:var(--card);padding:8px;border-radius:8px;text-align:center"><div style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700">${m.dirChanges}</div><div style="color:var(--dim);font-size:.55rem;margin-top:2px">cambios dirección</div></div>
+  <div style="background:var(--card);padding:8px;border-radius:8px;text-align:center"><div style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700">${m.pathEff}%</div><div style="color:var(--dim);font-size:.55rem;margin-top:2px">eficiencia trazo</div></div>
+  <div style="background:var(--card);padding:8px;border-radius:8px;text-align:center"><div style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700">${m.idleRatio}%</div><div style="color:var(--dim);font-size:.55rem;margin-top:2px">% inactivo</div></div>
+</div>
+<div style="font-size:.65rem;color:var(--dim);line-height:1.7">
+  Distancia total: ${(m.totalDist/1000).toFixed(1)}K px · ${m.pts} muestras · Scroll: ${m.scrollCount} eventos (max ${m.maxScroll}px)<br>
+  <strong>Vel. prom (${m.vel} px/s):</strong> ${m.vel<100?'Muy lento — posible enlentecimiento psicomotor o sedación':m.vel<300?'Normal':m.vel<600?'Rápido — buena activación motora':'Muy rápido — posible agitación o impulsividad'}<br>
+  <strong>Varianza vel. (${m.velVar}):</strong> ${m.velVar<50?'Muy consistente — movimiento uniforme':m.velVar<150?'Varianza normal':m.velVar<300?'Variable — aceleraciones y desaceleraciones marcadas':'Muy variable — posible tremor, fatiga o agitación'}<br>
+  <strong>Pausas &gt;2s (${m.pauses}):</strong> ${m.pauses===0?'Sin interrupciones':m.pauses<=3?'Pocas — reflexión puntual':m.pauses<=8?'Moderadas — deliberación o fatiga intermitente':'Muchas — fatiga cognitiva, desenganche o distracción'}<br>
+  <strong>Cambios dirección (${m.dirChanges}):</strong> ${m.dirChanges<10?'Movimiento fluido y dirigido':m.dirChanges<30?'Normal — exploración visual':m.dirChanges<60?'Frecuentes — búsqueda visual activa o indecisión':'Excesivos — desorientación visual o agitación motora'}<br>
+  <strong>Eficiencia trazo (${m.pathEff}%):</strong> ${m.pathEff>50?'Alta — movimiento dirigido con objetivo':m.pathEff>20?'Media — exploración con orientación':m.pathEff>5?'Baja — mucha exploración sin rumbo claro':'Muy baja — movimiento errático'}
+</div>`
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+loadPack();
+// Cleanup on exit
+window.addEventListener('beforeunload',()=>{if(typeof TELEM!=='undefined')TELEM.endPlatformSession()});
+</script>
+</body>
+</html>
