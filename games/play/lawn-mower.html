@@ -1224,8 +1224,17 @@
   let metricsHistory = JSON.parse(localStorage.getItem('lawnmower_metrics_history') || '[]');
 
   // ---- SUPABASE LONGITUDINAL SAVE ----
+  // CRITICAL: lmSupa must be lazy-initialized because this inline script
+  // runs BEFORE the Supabase SDK and supabase-config.js are loaded (they
+  // are at the bottom of the body). Eager init silently fails and ALL
+  // saves become no-ops.
   let lmSupa = null;
-  try { lmSupa = getSupabaseClient(); } catch(e) {}
+  function getLmSupa() {
+    if (!lmSupa) {
+      try { lmSupa = getSupabaseClient(); } catch(e) { /* SDK not loaded yet */ }
+    }
+    return lmSupa;
+  }
 
   // Get patient DNI from URL params or localStorage
   const lmParams = new URLSearchParams(window.location.search);
@@ -1233,7 +1242,7 @@
   const lmPatientDni = lmParams.get('dni') || (function(){ try { return localStorage.getItem('hdd_patient_dni'); } catch(e){ return null; } })() || 'HDD-DEMO';
 
   async function lmGetOrCreatePatient(dni) {
-    if (!lmSupa) return null;
+    if (!getLmSupa()) return null;
     try {
       const { data: existing } = await lmSupa.from('hdd_patients').select('id').eq('dni', dni).single();
       if (existing) return existing.id;
@@ -1245,7 +1254,7 @@
   let _lmSaved = false;
   async function lmSaveToSupabase(completed, finalScore, clinicalStats) {
     if (_lmSaved) return; _lmSaved = true;
-    if (!lmSupa || !lmPatientDni) return;
+    if (!getLmSupa() || !lmPatientDni) return;
     const cm = clinicalStats.clinical_markers || {};
     const mm = clinicalStats.motor_markers || {};
     const pm = clinicalStats.planning_markers || {};
