@@ -268,14 +268,14 @@
                 <div id="dispensador-meds" class="space-y-6"></div>
                 <div id="click-hint"> Tocá un casillero para colocar la pastilla seleccionada</div>
 
-                <!-- PANEL DE MÉTRICAS EN TIEMPO REAL -->
+                <!-- PANEL DE METRICAS EN TIEMPO REAL -->
                 <div class="mt-8 p-6 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl border-2 border-purple-200 shadow-inner">
                     <h4 class="text-sm font-bold text-purple-900 mb-4 flex items-center gap-2">
-                        <span>[D]</span> Métricas Biométricas
+                        <span>[D]</span> Metricas Biometricas
                     </h4>
                     <div class="space-y-3 text-sm">
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-700">Precisión motora:</span>
+                            <span class="text-gray-700">Tremor (estabilidad):</span>
                             <span id="tremor-display" class="font-bold text-purple-700 tremor-indicator">--</span>
                         </div>
                         <div class="flex justify-between items-center">
@@ -283,16 +283,28 @@
                             <span id="moves-count" class="font-bold text-gray-800">0</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-700">Precisión:</span>
-                            <span id="accuracy-display" class="font-bold text-teal-700">0%</span>
+                            <span class="text-gray-700">Correctas / Esperadas:</span>
+                            <span id="accuracy-display" class="font-bold text-teal-700">0/0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Omisiones (no colocadas):</span>
+                            <span id="omission-display" class="font-bold text-amber-700">--</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Comisiones (incorrectas):</span>
+                            <span id="commission-display" class="font-bold text-red-700">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Hesitacion media (ms):</span>
+                            <span id="hesitation-display" class="font-bold text-gray-700">--</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-gray-700">Efic. trayecto:</span>
                             <span id="efficiency-display" class="font-bold text-indigo-700">--</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-700">Vel. promedio:</span>
-                            <span id="speed-display" class="font-bold text-gray-700">--</span>
+                            <span class="text-gray-700">Dismetria (offset px):</span>
+                            <span id="dropoffset-display" class="font-bold text-gray-700">--</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-gray-700">Redirecciones:</span>
@@ -627,10 +639,13 @@
             // Reset metrics display
             document.getElementById('tremor-display').textContent = '--';
             document.getElementById('moves-count').textContent = '0';
-            document.getElementById('accuracy-display').textContent = '0%';
-            document.getElementById('tremor-badge').textContent = 'Precisión: --';
+            document.getElementById('accuracy-display').textContent = '0/0';
+            document.getElementById('tremor-badge').textContent = 'Precision: --';
             document.getElementById('efficiency-display').textContent = '--';
-            document.getElementById('speed-display').textContent = '--';
+            document.getElementById('omission-display').textContent = '--';
+            document.getElementById('commission-display').textContent = '0';
+            document.getElementById('hesitation-display').textContent = '--';
+            document.getElementById('dropoffset-display').textContent = '--';
             document.getElementById('redirections-display').textContent = '--';
         }
 
@@ -1088,16 +1103,31 @@
 
             tremorDisplay.textContent = `${avgTremor.toFixed(2)} (${tremorLabel})`;
             tremorDisplay.className = `font-bold tremor-indicator ${tremorClass}`;
-            tremorBadge.textContent = `Precisión: ${tremorLabel}`;
+            tremorBadge.textContent = `Precision: ${tremorLabel}`;
 
-            const accuracy = sessionState.totalMoves > 0
-                ? (sessionState.correctPlacements / sessionState.totalMoves) * 100 : 0;
-            document.getElementById('accuracy-display').textContent = `${accuracy.toFixed(0)}%`;
+            // Correctas / Esperadas
+            const expected = getExpectedPlacements();
+            document.getElementById('accuracy-display').textContent = `${sessionState.correctPlacements}/${expected}`;
             document.getElementById('moves-count').textContent = sessionState.totalMoves;
+
+            // Omisiones = esperadas - correctas (actualiza en vivo)
+            const omissions = Math.max(0, expected - sessionState.correctPlacements);
+            const omEl = document.getElementById('omission-display');
+            omEl.textContent = omissions;
+            omEl.className = 'font-bold ' + (omissions === 0 ? 'text-green-600' : 'text-amber-700');
+
+            // Comisiones = errores (pills en slot incorrecto)
+            const comEl = document.getElementById('commission-display');
+            comEl.textContent = sessionState.totalErrors;
+            comEl.className = 'font-bold ' + (sessionState.totalErrors === 0 ? 'text-green-600' : 'text-red-700');
+
+            // Hesitacion media
+            const avgHesitation = sessionState.movements.reduce((s, m) => s + m.hesitationMs, 0) / sessionState.movements.length;
+            const hesEl = document.getElementById('hesitation-display');
+            hesEl.textContent = Math.round(avgHesitation) + ' ms';
 
             // Eficiencia de movimientos
             const avgEff = sessionState.movements.reduce((s, m) => s + m.pathEfficiency, 0) / sessionState.movements.length;
-            const avgSpeed = sessionState.movements.reduce((s, m) => s + m.avgSpeed, 0) / sessionState.movements.length;
             const avgRedirs = sessionState.movements.reduce((s, m) => s + m.abruptRedirections, 0) / sessionState.movements.length;
 
             const effEl = document.getElementById('efficiency-display');
@@ -1105,8 +1135,20 @@
             effEl.textContent = `${effPct}%`;
             effEl.className = 'font-bold ' + (avgEff > 0.7 ? 'text-green-600' : avgEff > 0.4 ? 'text-yellow-600' : 'text-red-600');
 
-            document.getElementById('speed-display').textContent = `${avgSpeed.toFixed(1)} px/ms`;
+            // Dismetria (drop offset)
+            const dropOffsets = sessionState.movements.map(m => m.dropOffsetPx).filter(v => v != null);
+            const avgOffset = dropOffsets.length > 0 ? dropOffsets.reduce((s, v) => s + v, 0) / dropOffsets.length : 0;
+            const doEl = document.getElementById('dropoffset-display');
+            doEl.textContent = avgOffset > 0 ? avgOffset.toFixed(1) + ' px' : '--';
+
             document.getElementById('redirections-display').textContent = avgRedirs.toFixed(1);
+
+            // Auto-detect all pills placed: prompt to finalize
+            if (sessionState.correctPlacements >= expected && expected > 0 && !sessionState._completionPrompted) {
+                sessionState._completionPrompted = true;
+                document.getElementById('finish-btn').style.animation = 'pulse 1s infinite';
+                document.getElementById('finish-btn').style.transform = 'scale(1.1)';
+            }
         }
 
         // ===========================================
