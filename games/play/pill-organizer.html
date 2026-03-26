@@ -310,6 +310,15 @@
                             <span class="text-gray-700">Redirecciones:</span>
                             <span id="redirections-display" class="font-bold text-gray-700">--</span>
                         </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Perseveraciones:</span>
+                            <span id="perseveration-display" class="font-bold text-gray-700">0</span>
+                        </div>
+                        <div id="clinical-hint" class="mt-3 p-2 rounded-lg text-xs leading-relaxed" style="display:none;background:rgba(99,102,241,0.08);color:#4338ca;"></div>
+                    </div>
+                    <div class="mt-3 pt-2 border-t border-purple-200">
+                        <p class="text-xs text-gray-400">PSYKOS/ZYKOS Cognitive Biomarker Platform v2.4</p>
+                        <p class="text-xs text-gray-400">Dr. G.J. Perez Cortizo - Clinica Jose Ingenieros SRL</p>
                     </div>
                 </div>
             </div>
@@ -486,6 +495,108 @@
                         dosisDesc: '1 comp. Noche (solo Miércoles y Viernes)'
                     }
                 ]
+            },
+            {
+                id: 4,
+                name: 'Nivel 4 — Experto',
+                consigna: '5 medicamentos con horarios alternados. Atenolol solo dias pares, Gabapentin solo noches de fin de semana.',
+                medications: [
+                    {
+                        id: 'risperidona', name: 'Risperidona',
+                        colorFrom: 'from-red-400', colorTo: 'to-red-600', borderColor: 'border-red-700',
+                        bgFrom: 'from-red-50', bgTo: 'to-red-100', borderCard: 'border-red-300',
+                        dotColor: '#ef4444',
+                        schedule: { am: true, pm: true, days: [1,2,3,4,5,6,7] },
+                        dosisDesc: '1 comp. Manana + 1 comp. Noche (todos los dias)'
+                    },
+                    {
+                        id: 'sertralina', name: 'Sertralina',
+                        colorFrom: 'from-green-400', colorTo: 'to-green-600', borderColor: 'border-green-700',
+                        bgFrom: 'from-green-50', bgTo: 'to-green-100', borderCard: 'border-green-300',
+                        dotColor: '#22c55e',
+                        schedule: { am: true, pm: false, days: [1,2,3,4,5] },
+                        dosisDesc: '1 comp. Manana (Lunes a Viernes)'
+                    },
+                    {
+                        id: 'clonazepam', name: 'Clonazepam',
+                        colorFrom: 'from-blue-400', colorTo: 'to-blue-600', borderColor: 'border-blue-700',
+                        bgFrom: 'from-blue-50', bgTo: 'to-blue-100', borderCard: 'border-blue-300',
+                        dotColor: '#3b82f6',
+                        schedule: { am: false, pm: true, days: [1,2,3,4,5,6,7] },
+                        dosisDesc: '1 comp. solo Noche (todos los dias)'
+                    },
+                    {
+                        id: 'atenolol', name: 'Atenolol',
+                        colorFrom: 'from-orange-400', colorTo: 'to-orange-600', borderColor: 'border-orange-700',
+                        bgFrom: 'from-orange-50', bgTo: 'to-orange-100', borderCard: 'border-orange-300',
+                        dotColor: '#f97316',
+                        schedule: { am: true, pm: false, days: [2,4,6] },
+                        dosisDesc: '1 comp. Manana (Martes, Jueves, Sabado)'
+                    },
+                    {
+                        id: 'gabapentin', name: 'Gabapentin',
+                        colorFrom: 'from-cyan-400', colorTo: 'to-cyan-600', borderColor: 'border-cyan-700',
+                        bgFrom: 'from-cyan-50', bgTo: 'to-cyan-100', borderCard: 'border-cyan-300',
+                        dotColor: '#06b6d4',
+                        schedule: { am: false, pm: true, days: [6,7] },
+                        dosisDesc: '1 comp. Noche (solo Sabado y Domingo)'
+                    }
+                ]
+            },
+            {
+                id: 5,
+                name: 'Nivel 5 — Maestro',
+                consigna: '6 medicamentos. Litio requiere Manana Y Noche. Levotiroxina solo Manana en ayunas (Lunes a Viernes). Lorazepam solo si hay ansiedad (Miercoles y Viernes noche).',
+                medications: [
+                    {
+                        id: 'risperidona', name: 'Risperidona',
+                        colorFrom: 'from-red-400', colorTo: 'to-red-600', borderColor: 'border-red-700',
+                        bgFrom: 'from-red-50', bgTo: 'to-red-100', borderCard: 'border-red-300',
+                        dotColor: '#ef4444',
+                        schedule: { am: true, pm: true, days: [1,2,3,4,5,6,7] },
+                        dosisDesc: '1 comp. Manana + 1 comp. Noche (todos los dias)'
+                    },
+                    {
+                        id: 'litio', name: 'Litio',
+                        colorFrom: 'from-yellow-400', colorTo: 'to-yellow-600', borderColor: 'border-yellow-700',
+                        bgFrom: 'from-yellow-50', bgTo: 'to-yellow-100', borderCard: 'border-yellow-300',
+                        dotColor: '#eab308',
+                        schedule: { am: true, pm: true, days: [1,2,3,4,5,6,7] },
+                        dosisDesc: '1 comp. Manana + 1 comp. Noche (todos los dias)'
+                    },
+                    {
+                        id: 'sertralina', name: 'Sertralina',
+                        colorFrom: 'from-green-400', colorTo: 'to-green-600', borderColor: 'border-green-700',
+                        bgFrom: 'from-green-50', bgTo: 'to-green-100', borderCard: 'border-green-300',
+                        dotColor: '#22c55e',
+                        schedule: { am: true, pm: false, days: [1,2,3,4,5] },
+                        dosisDesc: '1 comp. Manana (Lunes a Viernes)'
+                    },
+                    {
+                        id: 'levotiroxina', name: 'Levotiroxina',
+                        colorFrom: 'from-pink-400', colorTo: 'to-pink-600', borderColor: 'border-pink-700',
+                        bgFrom: 'from-pink-50', bgTo: 'to-pink-100', borderCard: 'border-pink-300',
+                        dotColor: '#ec4899',
+                        schedule: { am: true, pm: false, days: [1,2,3,4,5] },
+                        dosisDesc: '1 comp. Manana en ayunas (Lunes a Viernes)'
+                    },
+                    {
+                        id: 'clonazepam', name: 'Clonazepam',
+                        colorFrom: 'from-blue-400', colorTo: 'to-blue-600', borderColor: 'border-blue-700',
+                        bgFrom: 'from-blue-50', bgTo: 'to-blue-100', borderCard: 'border-blue-300',
+                        dotColor: '#3b82f6',
+                        schedule: { am: false, pm: true, days: [1,2,3,4,5,6,7] },
+                        dosisDesc: '1 comp. solo Noche (todos los dias)'
+                    },
+                    {
+                        id: 'lorazepam', name: 'Lorazepam (si ansiedad)',
+                        colorFrom: 'from-indigo-400', colorTo: 'to-indigo-600', borderColor: 'border-indigo-700',
+                        bgFrom: 'from-indigo-50', bgTo: 'to-indigo-100', borderCard: 'border-indigo-300',
+                        dotColor: '#6366f1',
+                        schedule: { am: false, pm: true, days: [3,5] },
+                        dosisDesc: '1 comp. Noche solo si ansiedad (Miercoles y Viernes)'
+                    }
+                ]
             }
         ];
 
@@ -526,6 +637,7 @@
             // Métricas de gameplay (por nivel)
             correctPlacements: 0,
             totalErrors: 0,
+            autoCompleteTriggered: false,
             totalMoves: 0,
 
             // Contexto de hardware
@@ -597,6 +709,7 @@
             // Reset level counters
             sessionState.correctPlacements = 0;
             sessionState.totalErrors = 0;
+            sessionState.autoCompleteTriggered = false;
             sessionState.totalMoves = 0;
             sessionState.movements = [];
 
@@ -647,6 +760,8 @@
             document.getElementById('hesitation-display').textContent = '--';
             document.getElementById('dropoffset-display').textContent = '--';
             document.getElementById('redirections-display').textContent = '--';
+            document.getElementById('perseveration-display').textContent = '0';
+            document.getElementById('clinical-hint').style.display = 'none';
         }
 
         // ===========================================
@@ -1143,12 +1258,56 @@
 
             document.getElementById('redirections-display').textContent = avgRedirs.toFixed(1);
 
-            // Auto-detect all pills placed: prompt to finalize
-            if (sessionState.correctPlacements >= expected && expected > 0 && !sessionState._completionPrompted) {
-                sessionState._completionPrompted = true;
-                document.getElementById('finish-btn').style.animation = 'pulse 1s infinite';
-                document.getElementById('finish-btn').style.transform = 'scale(1.1)';
+            // Perseveraciones: same med placed in already-filled or same-wrong-slot
+            const persevs = countPerseverations();
+            const pvEl = document.getElementById('perseveration-display');
+            pvEl.textContent = persevs;
+            pvEl.className = 'font-bold ' + (persevs === 0 ? 'text-green-600' : persevs <= 2 ? 'text-amber-600' : 'text-red-600');
+
+            // Clinical hint (real-time interpretation)
+            const hintEl = document.getElementById('clinical-hint');
+            const hint = generateClinicalHint(avgTremor, omissions, sessionState.totalErrors, avgHesitation, avgEff, persevs);
+            if (hint) { hintEl.textContent = hint; hintEl.style.display = 'block'; }
+
+            // AUTO-COMPLETE: when all expected placements are made
+            const totalPlaced = sessionState.correctPlacements + sessionState.totalErrors;
+            if (totalPlaced >= expected && !sessionState.autoCompleteTriggered) {
+                sessionState.autoCompleteTriggered = true;
+                const btn = document.getElementById('finish-btn');
+                btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+                btn.style.animation = 'pulse 1s infinite';
+                btn.textContent = 'FINALIZAR (todo colocado)';
+                // Auto-finalize after 3 seconds
+                setTimeout(function() {
+                    if (sessionState.gameActive) btn.click();
+                }, 3000);
             }
+        }
+
+        function countPerseverations() {
+            var mvs = sessionState.movements;
+            if (mvs.length < 2) return 0;
+            var count = 0;
+            for (var i = 1; i < mvs.length; i++) {
+                // Same med to same slot as previous attempt = perseveration
+                if (mvs[i].to_compartment === mvs[i-1].to_compartment && mvs[i].med === mvs[i-1].med) count++;
+                // Placing in already-filled slot = perseveration
+                if (!mvs[i].isCorrect && i >= 2 && !mvs[i-1].isCorrect && mvs[i].med === mvs[i-1].med) count++;
+            }
+            return count;
+        }
+
+        function generateClinicalHint(tremor, omissions, commissions, hesitation, efficiency, persevs) {
+            // Hint based on the Guia de Interpretacion Clinica
+            if (tremor > 2.0) return 'Tremor elevado: si predomina en reposo, considerar parkinsonismo farmacologico. Si aumenta al acercarse al target, patron cerebeloso. Cruzar con medicacion actual.';
+            if (commissions > 2 && omissions <= 1 && hesitation < 800) return 'Patron impulsivo: comisiones altas + omisiones bajas + decision rapida. Sugiere fallo inhibitorio sin deficit mnesico.';
+            if (omissions > 2 && commissions <= 1 && hesitation > 2000) return 'Patron conservador-ansioso: evita errores pero omite. Enlentecimiento por ansiedad anticipatoria, no por deficit de procesamiento.';
+            if (omissions > 1 && commissions > 1) return 'Patron desorganizado: comisiones + omisiones simultaneas. No discrimina correctamente el esquema. Evaluar comprension de consigna.';
+            if (persevs > 2) return 'Perseveracion: repite el mismo error sin corregir. Patron frontal clasico. Diferente de impulsividad (que es rapida y variada).';
+            if (efficiency < 0.5) return 'Eficiencia motora baja: trayectorias erraticas. Si tremor tambien elevado = componente extrapiramidal. Si tremor normal = descoordinacion visuomotora.';
+            if (tremor > 1.5 && efficiency > 0.7) return 'Tremor presente pero precision conservada: posible compensacion activa. Monitorear longitudinalmente.';
+            if (hesitation > 3000) return 'Hesitacion elevada: latencia pre-movimiento alta. Puede indicar retardo psicomotor (depresion), ansiedad anticipatoria, o confusion con el esquema.';
+            return null;
         }
 
         // ===========================================
