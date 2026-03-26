@@ -74,19 +74,19 @@
     <div class="header-inner">
         <div class="header-title">
             <a href="/games/portal/">← Volver al portal</a>
-            <h1>📊 Dashboard Biométrico HDD</h1>
+            <h1>[D] Dashboard Biométrico HDD</h1>
             <p>ZYKOS GAMER - Dashboard</p>
         </div>
         <div class="filters">
             <select id="filter-patient"><option value="">Todos los pacientes</option></select>
             <select id="filter-game">
                 <option value="">Todos los juegos</option>
-                <option value="super-market">🛒 Supermercado</option>
-                <option value="pill-organizer">💊 Pastillero</option>
-                <option value="fridge-logic">🧊 Heladera</option>
-                <option value="lawn-mower">🌿 Cortadora</option>
-                <option value="neuro-chef">👨‍🍳 NeuroCHEF</option>
-                <option value="medication-memory">💊 Medicación</option>
+                <option value="super-market">[K] Supermercado</option>
+                <option value="pill-organizer">[+] Pastillero</option>
+                <option value="fridge-logic">[F] Heladera</option>
+                <option value="lawn-mower">[V] Cortadora</option>
+                <option value="neuro-chef">[C] NeuroCHEF</option>
+                <option value="medication-memory">[+] Medicación</option>
             </select>
             <input type="date" id="filter-from" title="Desde">
             <input type="date" id="filter-to" title="Hasta">
@@ -129,11 +129,11 @@
         <!-- CHARTS -->
         <div class="charts-grid">
             <div class="chart-card">
-                <h3>📈 Sesiones por día</h3>
+                <h3>[T] Sesiones por día</h3>
                 <canvas id="chart-sessions"></canvas>
             </div>
             <div class="chart-card">
-                <h3>🎮 Distribución por juego</h3>
+                <h3>[G] Distribución por juego</h3>
                 <canvas id="chart-games"></canvas>
             </div>
             <div class="chart-card">
@@ -141,14 +141,14 @@
                 <canvas id="chart-times"></canvas>
             </div>
             <div class="chart-card">
-                <h3>🎨 Colores post-juego (Lüscher)</h3>
+                <h3> Colores post-juego (Lüscher)</h3>
                 <div id="mood-colors-container" style="padding:20px 0;"></div>
             </div>
         </div>
 
         <!-- SESSIONS TABLE -->
         <div class="table-card">
-            <h3>📋 Últimas sesiones</h3>
+            <h3>[L] Últimas sesiones</h3>
             <table>
                 <thead>
                     <tr>
@@ -167,7 +167,7 @@
         
         <!-- BIOMETRICS TABLE -->
         <div class="table-card" style="margin-top:18px;">
-            <h3>🔬 Biométricos recientes</h3>
+            <h3>[X] Biométricos recientes</h3>
             <table>
                 <thead>
                     <tr>
@@ -186,7 +186,7 @@
         <!-- MOTOR & CLINICAL METRICS PANEL -->
         <div class="charts-grid" style="margin-top:18px;">
             <div class="chart-card" style="grid-column:1/-1;">
-                <h3>🧠 Perfil Motor y Cognitivo (últimas sesiones)</h3>
+                <h3>[B] Perfil Motor y Cognitivo (últimas sesiones)</h3>
                 <div id="motor-profile-panel" style="padding:10px 0;">
                     <p style="color:var(--muted);font-size:0.85rem;">Seleccione un paciente para ver su perfil motor</p>
                 </div>
@@ -195,7 +195,7 @@
 
         <!-- DETAILED METRICS TABLE -->
         <div class="table-card" style="margin-top:18px;">
-            <h3>📊 Métricas Clínicas Detalladas</h3>
+            <h3>[D] Métricas Clínicas Detalladas</h3>
             <table>
                 <thead>
                     <tr>

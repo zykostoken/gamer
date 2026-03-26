@@ -138,7 +138,7 @@ function showPreGameChat() {
 
         // X button siempre presente
         var xBtn = document.createElement('button');
-        xBtn.innerHTML = '✕';
+        xBtn.innerHTML = '';
         xBtn.title = 'Saltar';
         xBtn.style.cssText = 'position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);cursor:pointer;font-size:0.9rem;line-height:1;display:flex;align-items:center;justify-content:center;';
         xBtn.onclick = function() {

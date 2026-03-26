@@ -184,7 +184,7 @@
 
 <div id="start-screen">
     <div class="start-card">
-        <div style="font-size:3rem;margin-bottom:8px;">🌅</div>
+        <div style="font-size:3rem;margin-bottom:8px;">[A]</div>
         <h2>Mi Rutina Diaria</h2>
         <p>Recorré tu casa y hacé las actividades del día. Cada habitación tiene objetos para interactuar. Vos decidís qué hacer y en qué orden.</p>
         <button class="btn-primary" onclick="beginGame()">Comenzar el día</button>
@@ -208,12 +208,12 @@ const SCENES = [
     {
         id: 'dormitorio',
         name: 'Dormitorio',
-        icon: '🛏️',
+        icon: '️',
         description: 'Te acabás de despertar. La cama está destendida y hay ropa en el piso.',
         items: [
-            { id: 'tender_cama', label: 'Tender la cama', emoji: '🛏️', type: 'positive', points: 10, feedback: 'Bien, cama tendida.' },
-            { id: 'juntar_ropa', label: 'Juntar la ropa del piso', emoji: '👕', type: 'positive', points: 10, feedback: 'Ropa juntada y guardada.' },
-            { id: 'abrir_cortinas', label: 'Abrir las cortinas', emoji: '🪟', type: 'positive', points: 5, feedback: 'Entra luz natural, muy bien.' },
+            { id: 'tender_cama', label: 'Tender la cama', emoji: '️', type: 'positive', points: 10, feedback: 'Bien, cama tendida.' },
+            { id: 'juntar_ropa', label: 'Juntar la ropa del piso', emoji: '', type: 'positive', points: 10, feedback: 'Ropa juntada y guardada.' },
+            { id: 'abrir_cortinas', label: 'Abrir las cortinas', emoji: '', type: 'positive', points: 5, feedback: 'Entra luz natural, muy bien.' },
         ],
         skipLabel: 'Salir sin hacer nada →',
         nextLabel: 'Ir al baño →',
@@ -222,16 +222,16 @@ const SCENES = [
     {
         id: 'bano',
         name: 'Baño',
-        icon: '🪥',
+        icon: '',
         description: 'Estás frente al espejo del baño. Tenés los utensilios de higiene a mano.',
         items: [
-            { id: 'abrir_canilla', label: 'Abrir la canilla', emoji: '🚰', type: 'sequence', points: 5, feedback: 'Canilla abierta.' },
-            { id: 'jabon', label: 'Usar jabón', emoji: '🧼', type: 'sequence', points: 5, requires: ['abrir_canilla'], feedback: 'Te enjabonás las manos.' },
-            { id: 'lavarse_manos', label: 'Lavarse las manos', emoji: '🤲', type: 'sequence', points: 10, requires: ['jabon'], feedback: 'Manos limpias.' },
-            { id: 'secarse', label: 'Secarse con toalla', emoji: '🧖', type: 'sequence', points: 5, requires: ['lavarse_manos'], feedback: 'Manos secas.' },
-            { id: 'pasta_dental', label: 'Poner pasta dental', emoji: '🦷', type: 'sequence', points: 5, requires: ['lavarse_manos'], feedback: 'Pasta en el cepillo.' },
-            { id: 'cepillarse', label: 'Cepillarse los dientes', emoji: '🪥', type: 'sequence', points: 10, requires: ['pasta_dental'], feedback: 'Dientes limpios.' },
-            { id: 'peinarse', label: 'Peinarse', emoji: '💇', type: 'positive', points: 5, feedback: 'Pelo prolijo.' },
+            { id: 'abrir_canilla', label: 'Abrir la canilla', emoji: '', type: 'sequence', points: 5, feedback: 'Canilla abierta.' },
+            { id: 'jabon', label: 'Usar jabón', emoji: '', type: 'sequence', points: 5, requires: ['abrir_canilla'], feedback: 'Te enjabonás las manos.' },
+            { id: 'lavarse_manos', label: 'Lavarse las manos', emoji: '', type: 'sequence', points: 10, requires: ['jabon'], feedback: 'Manos limpias.' },
+            { id: 'secarse', label: 'Secarse con toalla', emoji: '', type: 'sequence', points: 5, requires: ['lavarse_manos'], feedback: 'Manos secas.' },
+            { id: 'pasta_dental', label: 'Poner pasta dental', emoji: '', type: 'sequence', points: 5, requires: ['lavarse_manos'], feedback: 'Pasta en el cepillo.' },
+            { id: 'cepillarse', label: 'Cepillarse los dientes', emoji: '', type: 'sequence', points: 10, requires: ['pasta_dental'], feedback: 'Dientes limpios.' },
+            { id: 'peinarse', label: 'Peinarse', emoji: '', type: 'positive', points: 5, feedback: 'Pelo prolijo.' },
         ],
         skipLabel: 'Salir sin higiene →',
         nextLabel: 'Ir a la cocina →',
@@ -246,16 +246,16 @@ const SCENES = [
     {
         id: 'cocina',
         name: 'Cocina',
-        icon: '🍳',
+        icon: '',
         description: 'Estás en la cocina. Sobre la mesada hay ingredientes para preparar el desayuno.',
         items: [
-            { id: 'galletitas', label: 'Sacar galletitas', emoji: '🍪', type: 'positive', points: 5, feedback: 'Galletitas listas.' },
-            { id: 'chocolatada', label: 'Preparar chocolatada', emoji: '🥛', type: 'positive', points: 10, feedback: 'Chocolatada servida.' },
-            { id: 'naranjas', label: 'Tomar naranjas', emoji: '🍊', type: 'sequence', points: 5, feedback: 'Naranjas listas para exprimir.' },
-            { id: 'exprimidor', label: 'Usar el exprimidor', emoji: '🧃', type: 'sequence', points: 10, requires: ['naranjas'], feedback: 'Jugo de naranja exprimido.' },
-            { id: 'pan', label: 'Poner pan en tostadora', emoji: '🍞', type: 'sequence', points: 5, feedback: 'Pan en la tostadora.' },
-            { id: 'tostadora', label: 'Tostar el pan', emoji: '🔥', type: 'sequence', points: 5, requires: ['pan'], feedback: 'Tostadas listas.' },
-            { id: 'cafe', label: 'Preparar café', emoji: '☕', type: 'positive', points: 10, feedback: 'Café preparado.' },
+            { id: 'galletitas', label: 'Sacar galletitas', emoji: '', type: 'positive', points: 5, feedback: 'Galletitas listas.' },
+            { id: 'chocolatada', label: 'Preparar chocolatada', emoji: '', type: 'positive', points: 10, feedback: 'Chocolatada servida.' },
+            { id: 'naranjas', label: 'Tomar naranjas', emoji: '', type: 'sequence', points: 5, feedback: 'Naranjas listas para exprimir.' },
+            { id: 'exprimidor', label: 'Usar el exprimidor', emoji: '', type: 'sequence', points: 10, requires: ['naranjas'], feedback: 'Jugo de naranja exprimido.' },
+            { id: 'pan', label: 'Poner pan en tostadora', emoji: '', type: 'sequence', points: 5, feedback: 'Pan en la tostadora.' },
+            { id: 'tostadora', label: 'Tostar el pan', emoji: '', type: 'sequence', points: 5, requires: ['pan'], feedback: 'Tostadas listas.' },
+            { id: 'cafe', label: 'Preparar café', emoji: '', type: 'positive', points: 10, feedback: 'Café preparado.' },
         ],
         skipLabel: 'No desayunar →',
         nextLabel: 'Sentarse a desayunar →',
@@ -264,13 +264,13 @@ const SCENES = [
     {
         id: 'mesa',
         name: 'Mesa del desayuno',
-        icon: '🍽️',
+        icon: '️',
         description: 'Terminaste de desayunar. La mesa tiene platos, tazas y migas.',
         items: [
-            { id: 'juntar_platos', label: 'Juntar platos y tazas', emoji: '🍽️', type: 'positive', points: 10, feedback: 'Platos recogidos.' },
-            { id: 'limpiar_migas', label: 'Limpiar las migas', emoji: '🧹', type: 'positive', points: 5, feedback: 'Mesa limpia.' },
-            { id: 'lavar_vajilla', label: 'Lavar la vajilla', emoji: '🧽', type: 'positive', points: 10, requires: ['juntar_platos'], feedback: 'Vajilla lavada.' },
-            { id: 'guardar_comida', label: 'Guardar lo que sobró', emoji: '🫙', type: 'positive', points: 5, feedback: 'Comida guardada en la heladera.' },
+            { id: 'juntar_platos', label: 'Juntar platos y tazas', emoji: '️', type: 'positive', points: 10, feedback: 'Platos recogidos.' },
+            { id: 'limpiar_migas', label: 'Limpiar las migas', emoji: '', type: 'positive', points: 5, feedback: 'Mesa limpia.' },
+            { id: 'lavar_vajilla', label: 'Lavar la vajilla', emoji: '', type: 'positive', points: 10, requires: ['juntar_platos'], feedback: 'Vajilla lavada.' },
+            { id: 'guardar_comida', label: 'Guardar lo que sobró', emoji: '', type: 'positive', points: 5, feedback: 'Comida guardada en la heladera.' },
         ],
         skipLabel: 'Dejar la mesa sucia →',
         nextLabel: 'Ir al living →',
@@ -279,14 +279,14 @@ const SCENES = [
     {
         id: 'vestibulo',
         name: 'Vestíbulo / Salida',
-        icon: '🚪',
+        icon: '',
         description: 'Estás cerca de la puerta de salida. En el perchero y la mesita hay tus cosas.',
         items: [
-            { id: 'abrigo', label: 'Ponerse abrigo', emoji: '🧥', type: 'positive', points: 5, feedback: 'Abrigo puesto.' },
-            { id: 'celular', label: 'Agarrar celular', emoji: '📱', type: 'essential', points: 10, feedback: 'Celular en el bolsillo.' },
-            { id: 'llaves', label: 'Agarrar las llaves', emoji: '🔑', type: 'essential', points: 10, feedback: 'Llaves listas.' },
-            { id: 'billetera', label: 'Agarrar billetera', emoji: '👛', type: 'positive', points: 5, feedback: 'Billetera lista.' },
-            { id: 'control_remoto', label: 'Agarrar el control remoto', emoji: '📺', type: 'distractor', points: -5, feedback: 'Agarraste el control... ¿vas a salir o te quedás?' },
+            { id: 'abrigo', label: 'Ponerse abrigo', emoji: '', type: 'positive', points: 5, feedback: 'Abrigo puesto.' },
+            { id: 'celular', label: 'Agarrar celular', emoji: '', type: 'essential', points: 10, feedback: 'Celular en el bolsillo.' },
+            { id: 'llaves', label: 'Agarrar las llaves', emoji: '', type: 'essential', points: 10, feedback: 'Llaves listas.' },
+            { id: 'billetera', label: 'Agarrar billetera', emoji: '', type: 'positive', points: 5, feedback: 'Billetera lista.' },
+            { id: 'control_remoto', label: 'Agarrar el control remoto', emoji: '', type: 'distractor', points: -5, feedback: 'Agarraste el control... ¿vas a salir o te quedás?' },
         ],
         skipLabel: null,
         nextLabel: 'Salir de casa →',
@@ -296,12 +296,12 @@ const SCENES = [
     {
         id: 'sillon',
         name: 'Sillón',
-        icon: '🛋️',
+        icon: '️',
         description: 'Te sentaste en el sillón con el control remoto. ¿Qué mirás?',
         items: [
-            { id: 'noticieros', label: 'Noticieros', emoji: '📰', type: 'neutral', points: 5, feedback: 'Estás viendo las noticias del día.' },
-            { id: 'pelicula', label: 'Película / Serie', emoji: '🎬', type: 'neutral', points: 0, feedback: 'Empezaste a ver una película...' },
-            { id: 'levantarse', label: 'Apagar TV y salir', emoji: '🚶', type: 'positive', points: 10, feedback: 'Decidiste salir. Buena decisión.' },
+            { id: 'noticieros', label: 'Noticieros', emoji: '', type: 'neutral', points: 5, feedback: 'Estás viendo las noticias del día.' },
+            { id: 'pelicula', label: 'Película / Serie', emoji: '', type: 'neutral', points: 0, feedback: 'Empezaste a ver una película...' },
+            { id: 'levantarse', label: 'Apagar TV y salir', emoji: '', type: 'positive', points: 10, feedback: 'Decidiste salir. Buena decisión.' },
         ],
         skipLabel: null,
         nextLabel: 'Terminar el día →',
@@ -485,7 +485,7 @@ function renderScene(idx) {
         const entry = document.createElement('div');
         entry.className = 'log-entry';
         const item = scene.items.find(it => it.id === a.itemId);
-        entry.innerHTML = '<span class="log-icon">' + (a.correct ? '✓' : a.warning ? '⚠' : '✗') + '</span> ' + (item ? item.label : a.itemId);
+        entry.innerHTML = '<span class="log-icon">' + (a.correct ? '' : a.warning ? '[!]' : '') + '</span> ' + (item ? item.label : a.itemId);
         logList.appendChild(entry);
     });
 
@@ -588,7 +588,7 @@ function handleAction(scene, item) {
 
         const entry = document.createElement('div');
         entry.className = 'log-entry animate-in';
-        entry.innerHTML = '<span class="log-icon">' + (correct ? '✓' : '⚠') + '</span> ' + item.label;
+        entry.innerHTML = '<span class="log-icon">' + (correct ? '' : '[!]') + '</span> ' + item.label;
         logList.appendChild(entry);
     }
 

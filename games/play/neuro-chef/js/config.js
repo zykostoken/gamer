@@ -619,38 +619,38 @@ const LICUADOS = {
 
 // ========== MESA: ELEMENTOS ==========
 const ELEMENTOS_MESA = {
-    mantel: { id: 'mantel', nombre: 'Mantel', emoji: '🧺', zona: 'base', orden: 1 },
-    plato_base: { id: 'plato_base', nombre: 'Plato grande', emoji: '🍽️', zona: 'centro', orden: 2 },
-    plato_hondo: { id: 'plato_hondo', nombre: 'Plato hondo', emoji: '🥣', zona: 'centro', orden: 3 },
-    tenedor: { id: 'tenedor', nombre: 'Tenedor', emoji: '🍴', zona: 'izquierda', orden: 4 },
-    cuchillo: { id: 'cuchillo', nombre: 'Cuchillo', emoji: '🔪', zona: 'derecha', orden: 5 },
-    cuchara: { id: 'cuchara', nombre: 'Cuchara', emoji: '🥄', zona: 'derecha', orden: 6 },
-    vaso: { id: 'vaso', nombre: 'Vaso', emoji: '🥛', zona: 'derecha_arriba', orden: 7 },
-    servilleta: { id: 'servilleta', nombre: 'Servilleta', emoji: '🧻', zona: 'izquierda', orden: 8 },
+    mantel: { id: 'mantel', nombre: 'Mantel', emoji: '', zona: 'base', orden: 1 },
+    plato_base: { id: 'plato_base', nombre: 'Plato grande', emoji: '️', zona: 'centro', orden: 2 },
+    plato_hondo: { id: 'plato_hondo', nombre: 'Plato hondo', emoji: '', zona: 'centro', orden: 3 },
+    tenedor: { id: 'tenedor', nombre: 'Tenedor', emoji: '', zona: 'izquierda', orden: 4 },
+    cuchillo: { id: 'cuchillo', nombre: 'Cuchillo', emoji: '', zona: 'derecha', orden: 5 },
+    cuchara: { id: 'cuchara', nombre: 'Cuchara', emoji: '', zona: 'derecha', orden: 6 },
+    vaso: { id: 'vaso', nombre: 'Vaso', emoji: '', zona: 'derecha_arriba', orden: 7 },
+    servilleta: { id: 'servilleta', nombre: 'Servilleta', emoji: '', zona: 'izquierda', orden: 8 },
     // Distractores
-    sarten: { id: 'sarten', nombre: 'Sartén', emoji: '🍳', zona: 'NO_VA', orden: 0 },
-    olla: { id: 'olla', nombre: 'Olla', emoji: '🫕', zona: 'NO_VA', orden: 0 },
-    esponja: { id: 'esponja', nombre: 'Esponja', emoji: '🧽', zona: 'NO_VA', orden: 0 },
-    tabla: { id: 'tabla', nombre: 'Tabla de picar', emoji: '🪵', zona: 'NO_VA', orden: 0 }
+    sarten: { id: 'sarten', nombre: 'Sartén', emoji: '', zona: 'NO_VA', orden: 0 },
+    olla: { id: 'olla', nombre: 'Olla', emoji: '', zona: 'NO_VA', orden: 0 },
+    esponja: { id: 'esponja', nombre: 'Esponja', emoji: '', zona: 'NO_VA', orden: 0 },
+    tabla: { id: 'tabla', nombre: 'Tabla de picar', emoji: '', zona: 'NO_VA', orden: 0 }
 };
 
 // ========== HABITACIÓN: ROPA ==========
 const ROPA = {
-    camisa: { id: 'camisa', nombre: 'Camisa', emoji: '👔', destino: 'placard' },
-    pantalon: { id: 'pantalon', nombre: 'Pantalón', emoji: '👖', destino: 'placard' },
-    campera: { id: 'campera', nombre: 'Campera', emoji: '🧥', destino: 'placard' },
-    vestido: { id: 'vestido', nombre: 'Vestido', emoji: '👗', destino: 'placard' },
-    remera: { id: 'remera', nombre: 'Remera', emoji: '👕', destino: 'cajon' },
-    medias: { id: 'medias', nombre: 'Medias', emoji: '🧦', destino: 'cajon' },
-    ropa_interior: { id: 'ropa_interior', nombre: 'Ropa interior', emoji: '🩲', destino: 'cajon' },
-    pijama: { id: 'pijama', nombre: 'Pijama', emoji: '🛌', destino: 'cajon' },
-    zapatos: { id: 'zapatos', nombre: 'Zapatos', emoji: '👞', destino: 'zapatera' },
-    zapatillas: { id: 'zapatillas', nombre: 'Zapatillas', emoji: '👟', destino: 'zapatera' },
-    ojotas: { id: 'ojotas', nombre: 'Ojotas', emoji: '🩴', destino: 'zapatera' },
-    botas: { id: 'botas', nombre: 'Botas', emoji: '🥾', destino: 'zapatera' },
+    camisa: { id: 'camisa', nombre: 'Camisa', emoji: '', destino: 'placard' },
+    pantalon: { id: 'pantalon', nombre: 'Pantalón', emoji: '', destino: 'placard' },
+    campera: { id: 'campera', nombre: 'Campera', emoji: '', destino: 'placard' },
+    vestido: { id: 'vestido', nombre: 'Vestido', emoji: '', destino: 'placard' },
+    remera: { id: 'remera', nombre: 'Remera', emoji: '', destino: 'cajon' },
+    medias: { id: 'medias', nombre: 'Medias', emoji: '', destino: 'cajon' },
+    ropa_interior: { id: 'ropa_interior', nombre: 'Ropa interior', emoji: '', destino: 'cajon' },
+    pijama: { id: 'pijama', nombre: 'Pijama', emoji: '', destino: 'cajon' },
+    zapatos: { id: 'zapatos', nombre: 'Zapatos', emoji: '', destino: 'zapatera' },
+    zapatillas: { id: 'zapatillas', nombre: 'Zapatillas', emoji: '', destino: 'zapatera' },
+    ojotas: { id: 'ojotas', nombre: 'Ojotas', emoji: '', destino: 'zapatera' },
+    botas: { id: 'botas', nombre: 'Botas', emoji: '', destino: 'zapatera' },
     // Distractores - NO va en ninguno
-    paraguas: { id: 'paraguas', nombre: 'Paraguas', emoji: '☂️', destino: 'NO_VA' },
-    toalla: { id: 'toalla', nombre: 'Toalla', emoji: '🧖', destino: 'NO_VA' }
+    paraguas: { id: 'paraguas', nombre: 'Paraguas', emoji: '️', destino: 'NO_VA' },
+    toalla: { id: 'toalla', nombre: 'Toalla', emoji: '', destino: 'NO_VA' }
 };
 
 // ========== ESTADO DEL JUEGO ==========

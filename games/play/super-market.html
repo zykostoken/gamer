@@ -92,7 +92,7 @@
     <div style="max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
         <div>
             <a id="back-link" href="/hdd/portal/" style="color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.85rem;">← Volver al portal</a>
-            <h1 style="margin: 4px 0 0; font-size: 1.4rem; font-weight: 700;">🛒 Desafío Milanesas</h1>
+            <h1 style="margin: 4px 0 0; font-size: 1.4rem; font-weight: 700;">[K] Desafío Milanesas</h1>
             <p style="margin: 2px 0 0; font-size: 0.75rem; color: rgba(255,255,255,0.5);">Clínica Psiquiátrica José Ingenieros · HDD</p>
         </div>
         <div style="text-align: right;">
@@ -104,7 +104,7 @@
 <!-- RECIPE READING OVERLAY — comprensión lectora phase -->
 <div id="flash-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9998; align-items:center; justify-content:center; flex-direction:column; backdrop-filter:blur(8px); animation:mfadeIn .3s ease; overflow-y:auto; padding:24px;">
     <div style="text-align:center; color:#e2e8f0; font-family:system-ui,sans-serif; max-width:640px; width:100%;">
-        <p style="font-size:0.85rem; opacity:0.5; margin:0 0 8px;">📖 COMPRENSIÓN LECTORA</p>
+        <p style="font-size:0.85rem; opacity:0.5; margin:0 0 8px;">[B] COMPRENSIÓN LECTORA</p>
         <p id="flash-recipe-name" style="font-size:2rem; font-weight:800; margin:0 0 16px; text-shadow:0 0 30px rgba(59,130,246,0.5);"></p>
         <div id="recipe-reading-box" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:24px 28px; text-align:left; margin:0 auto 20px; line-height:1.75; font-size:1.05rem; color:rgba(255,255,255,0.88); letter-spacing:0.01em;">
             <p id="recipe-narrative-text" style="margin:0;"></p>
@@ -112,7 +112,7 @@
         <p style="font-size:0.8rem; opacity:0.4; margin:0 0 8px;">Leé con atención — después tenés que elegir los ingredientes correctos</p>
         <div style="display:flex; align-items:center; justify-content:center; gap:12px; margin-top:16px;">
             <div id="flash-countdown" style="font-size:2rem; font-weight:700; color:#3b82f6;"></div>
-            <button id="recipe-ready-btn" onclick="skipRecipeReading()" style="display:none; padding:10px 28px; border-radius:10px; border:2px solid #22c55e; background:rgba(34,197,94,0.15); color:#22c55e; font-weight:700; font-size:0.95rem; cursor:pointer; transition:all 0.2s;">✓ Ya la leí, ¡empezar!</button>
+            <button id="recipe-ready-btn" onclick="skipRecipeReading()" style="display:none; padding:10px 28px; border-radius:10px; border:2px solid #22c55e; background:rgba(34,197,94,0.15); color:#22c55e; font-weight:700; font-size:0.95rem; cursor:pointer; transition:all 0.2s;"> Ya la leí, ¡empezar!</button>
         </div>
         <div id="reading-progress" style="width:100%; max-width:400px; margin:12px auto 0; height:4px; border-radius:2px; background:rgba(255,255,255,0.08); overflow:hidden;">
             <div id="reading-progress-fill" style="height:100%; width:0%; background:linear-gradient(90deg,#3b82f6,#22c55e); border-radius:2px; transition:width 1s linear;"></div>
@@ -122,7 +122,7 @@
 
 <!-- CONSIGNA -->
 <div id="consigna" style="background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.25); margin: 12px auto; max-width: 1100px; border-radius: 12px; padding: 14px 20px;">
-    <p id="consigna-text" style="margin: 0; font-size: 0.95rem;">🍽️ <strong>Consigna:</strong> Cargando receta...</p>
+    <p id="consigna-text" style="margin: 0; font-size: 0.95rem;">️ <strong>Consigna:</strong> Cargando receta...</p>
 </div>
 
 <!-- BUDGET BAR (sticky) -->
@@ -130,7 +130,7 @@
     <div class="budget-bar" id="budget-bar">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">💰 Presupuesto:</span>
+                <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5);"> Presupuesto:</span>
                 <span id="budget-total" style="font-weight: 700; font-size: 1rem; margin-left: 4px;">$0</span>
             </div>
             <div style="text-align: right;">
@@ -151,27 +151,27 @@
 
     <!-- GONDOLAS -->
     <div class="gondola-section" id="sec-carnes">
-        <div class="gondola-title" style="color: #f87171;">🥩 Carnicería</div>
+        <div class="gondola-title" style="color: #f87171;">[R] Carnicería</div>
         <div class="gondola-grid" id="gondola-carnes" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
     </div>
     <div class="gondola-section" id="sec-almacen">
-        <div class="gondola-title" style="color: #fbbf24;">🏪 Almacén</div>
+        <div class="gondola-title" style="color: #fbbf24;"> Almacén</div>
         <div class="gondola-grid" id="gondola-almacen" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
     </div>
     <div class="gondola-section" id="sec-verduras">
-        <div class="gondola-title" style="color: #86efac;">🥬 Verdulería</div>
+        <div class="gondola-title" style="color: #86efac;"> Verdulería</div>
         <div class="gondola-grid" id="gondola-verduras" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
     </div>
     <div class="gondola-section" id="sec-lacteos">
-        <div class="gondola-title" style="color: #93c5fd;">🧊 Lácteos y Refrigerados</div>
+        <div class="gondola-title" style="color: #93c5fd;">[F] Lácteos y Refrigerados</div>
         <div class="gondola-grid" id="gondola-lacteos" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
     </div>
     <div class="gondola-section" id="sec-bebidas">
-        <div class="gondola-title" style="color: #67e8f9;">🥤 Bebidas</div>
+        <div class="gondola-title" style="color: #67e8f9;"> Bebidas</div>
         <div class="gondola-grid" id="gondola-bebidas" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
     </div>
     <div class="gondola-section" id="sec-bazar">
-        <div class="gondola-title" style="color: #c084fc;">🧹 Limpieza y Bazar</div>
+        <div class="gondola-title" style="color: #c084fc;"> Limpieza y Bazar</div>
         <div class="gondola-grid" id="gondola-bazar" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
     </div>
 
@@ -179,12 +179,12 @@
     <div style="position: sticky; bottom: 0; z-index: 100; background: linear-gradient(0deg, var(--bg) 70%, transparent); padding: 12px 0 6px;">
         <div class="cart-area" id="cart-area">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <span style="font-weight: 700; font-size: 0.85rem;">🛒 Tu carrito <span id="cart-badge" style="color: var(--success);"></span></span>
-                <span id="over-budget-warn" style="display: none; font-size: 0.75rem; font-weight: 700; color: var(--danger);">⚠️ ¡Te pasás del presupuesto!</span>
+                <span style="font-weight: 700; font-size: 0.85rem;">[K] Tu carrito <span id="cart-badge" style="color: var(--success);"></span></span>
+                <span id="over-budget-warn" style="display: none; font-size: 0.75rem; font-weight: 700; color: var(--danger);">[!]️ ¡Te pasás del presupuesto!</span>
             </div>
             <div id="cart-items" style="min-height: 32px;"></div>
             <div style="text-align: right; margin-top: 8px;">
-                <button id="btn-pay" onclick="tryFinish()" style="display: none; padding: 11px 28px; border-radius: 12px; border: none; background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; font-size: 0.95rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(34,197,94,0.3);">💳 Ir a pagar</button>
+                <button id="btn-pay" onclick="tryFinish()" style="display: none; padding: 11px 28px; border-radius: 12px; border: none; background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; font-size: 0.95rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(34,197,94,0.3);"> Ir a pagar</button>
             </div>
         </div>
     </div>
@@ -204,70 +204,70 @@ var supabase = getSupabaseClient();
 // altGroup: items with same altGroup are interchangeable (pick any one = ok)
 var PRODUCTS = [
     // CARNICERÍA
-    { id: 'bife', emoji: '🥩', name: 'Bife de nalga', gondola: 'carnes', tier: 'essential', altGroup: 'carne', priceRange: [2800, 4500], desc: 'Carne clásica para milanesas' },
-    { id: 'pollo', emoji: '🍗', name: 'Suprema de pollo', gondola: 'carnes', tier: 'essential', altGroup: 'carne', priceRange: [1800, 3200], desc: 'Alternativa válida — milanesa de pollo' },
-    { id: 'carne_picada', emoji: '🥩', name: 'Carne picada', gondola: 'carnes', tier: 'neutral', priceRange: [2200, 3800] },
-    { id: 'chorizo', emoji: '🌭', name: 'Chorizo', gondola: 'carnes', tier: 'neutral', priceRange: [1500, 2500] },
-    { id: 'pescado', emoji: '🐟', name: 'Filet de merluza', gondola: 'carnes', tier: 'neutral', priceRange: [2500, 4000] },
+    { id: 'bife', emoji: '[R]', name: 'Bife de nalga', gondola: 'carnes', tier: 'essential', altGroup: 'carne', priceRange: [2800, 4500], desc: 'Carne clásica para milanesas' },
+    { id: 'pollo', emoji: '', name: 'Suprema de pollo', gondola: 'carnes', tier: 'essential', altGroup: 'carne', priceRange: [1800, 3200], desc: 'Alternativa válida — milanesa de pollo' },
+    { id: 'carne_picada', emoji: '[R]', name: 'Carne picada', gondola: 'carnes', tier: 'neutral', priceRange: [2200, 3800] },
+    { id: 'chorizo', emoji: '', name: 'Chorizo', gondola: 'carnes', tier: 'neutral', priceRange: [1500, 2500] },
+    { id: 'pescado', emoji: '', name: 'Filet de merluza', gondola: 'carnes', tier: 'neutral', priceRange: [2500, 4000] },
 
     // ALMACÉN
-    { id: 'pan_rallado', emoji: '🍞', name: 'Pan rallado', gondola: 'almacen', tier: 'essential', altGroup: 'rebozado', priceRange: [600, 1200], desc: 'Indispensable para el rebozado' },
-    { id: 'rebozador', emoji: '📦', name: 'Rebozador', gondola: 'almacen', tier: 'essential', altGroup: 'rebozado', priceRange: [700, 1400], desc: 'Alternativa práctica al pan rallado' },
-    { id: 'aceite', emoji: '🫒', name: 'Aceite', gondola: 'almacen', tier: 'essential', priceRange: [1200, 2500], desc: 'Imprescindible — sin aceite no hay fritura' },
-    { id: 'sal', emoji: '🧂', name: 'Sal', gondola: 'almacen', tier: 'advanced', priceRange: [300, 600], desc: 'Condimento esencial' },
-    { id: 'pimienta', emoji: '🌶️', name: 'Pimienta', gondola: 'almacen', tier: 'advanced', priceRange: [400, 900], desc: 'Condimento clásico' },
-    { id: 'ajo', emoji: '🧄', name: 'Ajo', gondola: 'almacen', tier: 'advanced', priceRange: [200, 500], desc: 'Sabor argentino — para el batido o la guarnición' },
-    { id: 'nuez_moscada', emoji: '🫘', name: 'Nuez moscada', gondola: 'almacen', tier: 'advanced', priceRange: [500, 1100], desc: 'El toque secreto del experto' },
-    { id: 'escarbadientes', emoji: '🪥', name: 'Escarbadientes', gondola: 'almacen', tier: 'advanced', priceRange: [200, 500], desc: 'Para sostener/cerrar milanesas' },
-    { id: 'arroz', emoji: '🍚', name: 'Arroz', gondola: 'almacen', tier: 'neutral', priceRange: [800, 1500] },
-    { id: 'fideos', emoji: '🍝', name: 'Fideos', gondola: 'almacen', tier: 'neutral', priceRange: [600, 1200] },
-    { id: 'azucar', emoji: '🍬', name: 'Azúcar', gondola: 'almacen', tier: 'neutral', priceRange: [500, 1000] },
-    { id: 'cafe', emoji: '☕', name: 'Café', gondola: 'almacen', tier: 'neutral', priceRange: [1500, 3000] },
-    { id: 'galletitas', emoji: '🍪', name: 'Galletitas', gondola: 'almacen', tier: 'neutral', priceRange: [700, 1300] },
+    { id: 'pan_rallado', emoji: '', name: 'Pan rallado', gondola: 'almacen', tier: 'essential', altGroup: 'rebozado', priceRange: [600, 1200], desc: 'Indispensable para el rebozado' },
+    { id: 'rebozador', emoji: '', name: 'Rebozador', gondola: 'almacen', tier: 'essential', altGroup: 'rebozado', priceRange: [700, 1400], desc: 'Alternativa práctica al pan rallado' },
+    { id: 'aceite', emoji: '', name: 'Aceite', gondola: 'almacen', tier: 'essential', priceRange: [1200, 2500], desc: 'Imprescindible — sin aceite no hay fritura' },
+    { id: 'sal', emoji: '', name: 'Sal', gondola: 'almacen', tier: 'advanced', priceRange: [300, 600], desc: 'Condimento esencial' },
+    { id: 'pimienta', emoji: '️', name: 'Pimienta', gondola: 'almacen', tier: 'advanced', priceRange: [400, 900], desc: 'Condimento clásico' },
+    { id: 'ajo', emoji: '', name: 'Ajo', gondola: 'almacen', tier: 'advanced', priceRange: [200, 500], desc: 'Sabor argentino — para el batido o la guarnición' },
+    { id: 'nuez_moscada', emoji: '', name: 'Nuez moscada', gondola: 'almacen', tier: 'advanced', priceRange: [500, 1100], desc: 'El toque secreto del experto' },
+    { id: 'escarbadientes', emoji: '', name: 'Escarbadientes', gondola: 'almacen', tier: 'advanced', priceRange: [200, 500], desc: 'Para sostener/cerrar milanesas' },
+    { id: 'arroz', emoji: '', name: 'Arroz', gondola: 'almacen', tier: 'neutral', priceRange: [800, 1500] },
+    { id: 'fideos', emoji: '', name: 'Fideos', gondola: 'almacen', tier: 'neutral', priceRange: [600, 1200] },
+    { id: 'azucar', emoji: '', name: 'Azúcar', gondola: 'almacen', tier: 'neutral', priceRange: [500, 1000] },
+    { id: 'cafe', emoji: '', name: 'Café', gondola: 'almacen', tier: 'neutral', priceRange: [1500, 3000] },
+    { id: 'galletitas', emoji: '', name: 'Galletitas', gondola: 'almacen', tier: 'neutral', priceRange: [700, 1300] },
 
     // VERDULERÍA
-    { id: 'limon', emoji: '🍋', name: 'Limón', gondola: 'verduras', tier: 'advanced', priceRange: [200, 500], desc: 'Acompañamiento clásico' },
-    { id: 'lechuga', emoji: '🥬', name: 'Lechuga', gondola: 'verduras', tier: 'neutral', priceRange: [400, 800] },
-    { id: 'tomate', emoji: '🍅', name: 'Tomate', gondola: 'verduras', tier: 'neutral', priceRange: [500, 1000] },
-    { id: 'papa', emoji: '🥔', name: 'Papas', gondola: 'verduras', tier: 'advanced', priceRange: [600, 1200], desc: 'Guarnición estrella: papas fritas' },
-    { id: 'cebolla', emoji: '🧅', name: 'Cebolla', gondola: 'verduras', tier: 'neutral', priceRange: [300, 700] },
-    { id: 'banana', emoji: '🍌', name: 'Banana', gondola: 'verduras', tier: 'neutral', priceRange: [400, 800] },
-    { id: 'perejil', emoji: '🌿', name: 'Perejil', gondola: 'verduras', tier: 'advanced', priceRange: [150, 400], desc: 'Para la mezcla del rebozado' },
+    { id: 'limon', emoji: '', name: 'Limón', gondola: 'verduras', tier: 'advanced', priceRange: [200, 500], desc: 'Acompañamiento clásico' },
+    { id: 'lechuga', emoji: '', name: 'Lechuga', gondola: 'verduras', tier: 'neutral', priceRange: [400, 800] },
+    { id: 'tomate', emoji: '', name: 'Tomate', gondola: 'verduras', tier: 'neutral', priceRange: [500, 1000] },
+    { id: 'papa', emoji: '', name: 'Papas', gondola: 'verduras', tier: 'advanced', priceRange: [600, 1200], desc: 'Guarnición estrella: papas fritas' },
+    { id: 'cebolla', emoji: '', name: 'Cebolla', gondola: 'verduras', tier: 'neutral', priceRange: [300, 700] },
+    { id: 'banana', emoji: '', name: 'Banana', gondola: 'verduras', tier: 'neutral', priceRange: [400, 800] },
+    { id: 'perejil', emoji: '[V]', name: 'Perejil', gondola: 'verduras', tier: 'advanced', priceRange: [150, 400], desc: 'Para la mezcla del rebozado' },
 
     // LÁCTEOS
-    { id: 'huevos', emoji: '🥚', name: 'Huevos (docena)', gondola: 'lacteos', tier: 'essential', priceRange: [1200, 2200], desc: 'Fundamental para el batido' },
-    { id: 'leche', emoji: '🥛', name: 'Leche', gondola: 'lacteos', tier: 'neutral', priceRange: [700, 1300] },
-    { id: 'queso', emoji: '🧀', name: 'Queso', gondola: 'lacteos', tier: 'advanced', priceRange: [1500, 3000], desc: 'Para milanesas rellenas' },
-    { id: 'jamon', emoji: '🥓', name: 'Jamón', gondola: 'lacteos', tier: 'advanced', priceRange: [1200, 2500], desc: 'Para napolitana o rellenas' },
-    { id: 'mayonesa', emoji: '🫙', name: 'Mayonesa', gondola: 'lacteos', tier: 'advanced', priceRange: [800, 1600], desc: 'Acompañamiento clásico argentino' },
-    { id: 'yogur', emoji: '🥛', name: 'Yogur', gondola: 'lacteos', tier: 'neutral', priceRange: [600, 1200] },
-    { id: 'manteca', emoji: '🧈', name: 'Manteca', gondola: 'lacteos', tier: 'neutral', priceRange: [900, 1800] },
+    { id: 'huevos', emoji: '', name: 'Huevos (docena)', gondola: 'lacteos', tier: 'essential', priceRange: [1200, 2200], desc: 'Fundamental para el batido' },
+    { id: 'leche', emoji: '', name: 'Leche', gondola: 'lacteos', tier: 'neutral', priceRange: [700, 1300] },
+    { id: 'queso', emoji: '', name: 'Queso', gondola: 'lacteos', tier: 'advanced', priceRange: [1500, 3000], desc: 'Para milanesas rellenas' },
+    { id: 'jamon', emoji: '', name: 'Jamón', gondola: 'lacteos', tier: 'advanced', priceRange: [1200, 2500], desc: 'Para napolitana o rellenas' },
+    { id: 'mayonesa', emoji: '', name: 'Mayonesa', gondola: 'lacteos', tier: 'advanced', priceRange: [800, 1600], desc: 'Acompañamiento clásico argentino' },
+    { id: 'yogur', emoji: '', name: 'Yogur', gondola: 'lacteos', tier: 'neutral', priceRange: [600, 1200] },
+    { id: 'manteca', emoji: '', name: 'Manteca', gondola: 'lacteos', tier: 'neutral', priceRange: [900, 1800] },
 
     // BEBIDAS (distractores semánticos — parecen ir con comida pero no con milanesas)
-    { id: 'gaseosa', emoji: '🥤', name: 'Gaseosa', gondola: 'bebidas', tier: 'neutral', priceRange: [800, 1800] },
-    { id: 'agua', emoji: '💧', name: 'Agua mineral', gondola: 'bebidas', tier: 'neutral', priceRange: [400, 800] },
-    { id: 'jugo', emoji: '🧃', name: 'Jugo', gondola: 'bebidas', tier: 'neutral', priceRange: [600, 1200] },
-    { id: 'vino', emoji: '🍷', name: 'Vino', gondola: 'bebidas', tier: 'neutral', priceRange: [1500, 4000] },
-    { id: 'cerveza', emoji: '🍺', name: 'Cerveza', gondola: 'bebidas', tier: 'neutral', priceRange: [800, 2000] },
+    { id: 'gaseosa', emoji: '', name: 'Gaseosa', gondola: 'bebidas', tier: 'neutral', priceRange: [800, 1800] },
+    { id: 'agua', emoji: '', name: 'Agua mineral', gondola: 'bebidas', tier: 'neutral', priceRange: [400, 800] },
+    { id: 'jugo', emoji: '', name: 'Jugo', gondola: 'bebidas', tier: 'neutral', priceRange: [600, 1200] },
+    { id: 'vino', emoji: '', name: 'Vino', gondola: 'bebidas', tier: 'neutral', priceRange: [1500, 4000] },
+    { id: 'cerveza', emoji: '', name: 'Cerveza', gondola: 'bebidas', tier: 'neutral', priceRange: [800, 2000] },
 
     // BAZAR & LIMPIEZA (errores)
-    { id: 'detergente', emoji: '🧴', name: 'Detergente', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [800, 1500] },
-    { id: 'esponja', emoji: '🧽', name: 'Esponja', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [300, 700] },
-    { id: 'cepillo_dientes', emoji: '🪥', name: 'Cepillo dientes', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [500, 1200] },
-    { id: 'shampoo', emoji: '🧴', name: 'Shampoo', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [1200, 2500] },
-    { id: 'velas', emoji: '🕯️', name: 'Velas', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [400, 900] },
-    { id: 'papel_higienico', emoji: '🧻', name: 'Papel higiénico', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [600, 1300] },
+    { id: 'detergente', emoji: '', name: 'Detergente', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [800, 1500] },
+    { id: 'esponja', emoji: '', name: 'Esponja', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [300, 700] },
+    { id: 'cepillo_dientes', emoji: '', name: 'Cepillo dientes', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [500, 1200] },
+    { id: 'shampoo', emoji: '', name: 'Shampoo', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [1200, 2500] },
+    { id: 'velas', emoji: '️', name: 'Velas', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [400, 900] },
+    { id: 'papel_higienico', emoji: '', name: 'Papel higiénico', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [600, 1300] },
     // SEMI-DISTRACTORES (parecen útiles pero son irrelevantes para milanesas)
-    { id: 'servilletas', emoji: '🧻', name: 'Servilletas', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [300, 700] },
-    { id: 'film', emoji: '📦', name: 'Film transparente', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [500, 1100] },
+    { id: 'servilletas', emoji: '', name: 'Servilletas', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [300, 700] },
+    { id: 'film', emoji: '', name: 'Film transparente', gondola: 'bazar', tier: 'error', baseTier: 'error', priceRange: [500, 1100] },
 ];
 
 // ========== RECIPE SYSTEM ==========
 var RECIPES = {
     milanesas: {
-        name: 'Milanesas', emoji: '🥩',
+        name: 'Milanesas', emoji: '[R]',
         consigna: 'Comprá todo lo necesario para hacer <strong>milanesas</strong> según la receta que leíste.',
-        flash: '🥩 MILANESAS',
+        flash: '[R] MILANESAS',
         // Receta narrativa para comprensión lectora (NO es una lista de ingredientes)
         recipeText: 'Para preparar unas buenas milanesas al estilo argentino, lo primero es conseguir bifes de nalga o cuadrada bien finitos. Si no encontrás, el pollo funciona igual de bien. Se arma una estación de empanizado: en un plato hondo batí los huevos con un poco de ajo picado, sal, pimienta y una pizca de nuez moscada que es el secreto de la abuela. En otro plato poné el pan rallado mezclado con perejil picado. Pasá cada bife primero por el huevo y después por el pan rallado, apretando bien para que se adhiera. Calentá bastante aceite en una sartén grande y cuando esté bien caliente, dorá las milanesas de ambos lados. Servilas con un chorrito de limón y acompañalas con unas papas fritas crocantes.',
         recipeReadTime: 45, // seconds to read
@@ -291,9 +291,9 @@ var RECIPES = {
         recallCorrect: 0
     },
     fideos_con_tuco: {
-        name: 'Fideos con tuco', emoji: '🍝',
+        name: 'Fideos con tuco', emoji: '',
         consigna: 'Comprá todo lo necesario para hacer <strong>fideos con tuco</strong> según la receta que leíste.',
-        flash: '🍝 FIDEOS CON TUCO',
+        flash: ' FIDEOS CON TUCO',
         recipeText: 'Los fideos con tuco son un clásico de los domingos. Empezá picando una cebolla bien finita y unos dientes de ajo. Poné una olla con un buen chorro de aceite y cuando esté caliente dorá la cebolla hasta que quede transparente, después agregá el ajo. Si querés que el tuco tenga más cuerpo, sumale carne picada y cocinala hasta que pierda el color rosado. Después volcá los tomates triturados, una pizca de sal, pimienta y dejá que hierva a fuego lento unos veinte minutos para que se concentren los sabores. Algunos le agregan un chorrito de vino tinto que le da un toque especial. Mientras tanto, cociná los fideos en agua con sal. Cuando estén al dente, servilos con el tuco por encima y una lluvia generosa de queso rallado. Si tenés perejil fresco, picalo y ponelo arriba de todo.',
         recipeReadTime: 45,
         essential: {
@@ -312,9 +312,9 @@ var RECIPES = {
         recallCorrect: 1
     },
     tortilla_de_papas: {
-        name: 'Tortilla de papas', emoji: '🥔',
+        name: 'Tortilla de papas', emoji: '',
         consigna: 'Comprá todo lo necesario para hacer una <strong>tortilla de papas</strong> según la receta que leíste.',
-        flash: '🥔 TORTILLA DE PAPAS',
+        flash: ' TORTILLA DE PAPAS',
         recipeText: 'La tortilla de papas es más sencilla de lo que parece. Pelá y cortá las papas en rodajas finas, y hacé lo mismo con una cebolla grande. Poné un buen chorro de aceite en una sartén profunda y cuando esté caliente sumergí las papas y la cebolla. No las frías, confitalas a fuego medio hasta que estén tiernas pero sin dorarse demasiado. Mientras tanto, batí varios huevos en un bowl grande con sal y pimienta. Cuando las papas estén listas, escurrilas bien del aceite y mezclalas con los huevos batidos. Dejá reposar la mezcla cinco minutos para que se integre todo. Después volcá toda la preparación en la sartén con un poquito de aceite y cociná a fuego bajo. El truco está en darla vuelta con un plato cuando la base esté firme y dorar del otro lado. Si te animás, ponele queso rallado adentro o acompañala con un buen chorro de mayonesa.',
         recipeReadTime: 45,
         essential: {
@@ -496,7 +496,7 @@ function initGame() {
             div.innerHTML = '<span class="emoji">' + p.emoji + '</span>' +
                 '<span class="label">' + p.name + '</span>' +
                 '<span class="price-tag">$' + productPrices[p.id].toLocaleString('es-AR') + '</span>' +
-                '<span class="check-badge">✓</span>';
+                '<span class="check-badge"></span>';
             div.addEventListener('click', function() { toggleProduct(p.id); });
             container.appendChild(div);
         });
@@ -565,7 +565,7 @@ function toggleProduct(id) {
         if (prod) {
             var newTotal = getCartTotal();
             if (newTotal > BUDGET) {
-                showToast('⚠️ ' + prod.emoji + ' ' + prod.name + '  ¡Pasaste el presupuesto!', 'warn');
+                showToast('[!]️ ' + prod.emoji + ' ' + prod.name + '  ¡Pasaste el presupuesto!', 'warn');
             } else {
                 showToast('+ ' + prod.emoji + ' ' + prod.name + '  $' + price.toLocaleString('es-AR'), 'add');
             }
@@ -607,7 +607,7 @@ function updateUI() {
         container.innerHTML = cart.map(function(id) {
             var p = PRODUCTS.find(function(x) { return x.id === id; });
             return '<span class="cart-item" onclick="toggleProduct(\'' + id + '\')">' +
-                p.emoji + ' ' + p.name + ' <span class="cart-price">$' + productPrices[id].toLocaleString('es-AR') + '</span> <span class="remove">✕</span></span>';
+                p.emoji + ' ' + p.name + ' <span class="cart-price">$' + productPrices[id].toLocaleString('es-AR') + '</span> <span class="remove"></span></span>';
         }).join('');
     }
 
@@ -636,7 +636,7 @@ function tryFinish() {
         setTimeout(function() { bar.classList.remove('shake'); }, 500);
 
         var warn = document.getElementById('over-budget-warn');
-        warn.textContent = '⚠️ Te pasás $' + (getCartTotal() - BUDGET).toLocaleString('es-AR') + ' — sacá algo para poder pagar';
+        warn.textContent = '[!]️ Te pasás $' + (getCartTotal() - BUDGET).toLocaleString('es-AR') + ' — sacá algo para poder pagar';
         warn.style.display = 'inline';
         return;
     }
@@ -656,7 +656,7 @@ function showRecipeRecallQuiz() {
     var card = document.createElement('div');
     card.style.cssText = 'background:#1e293b;border-radius:20px;padding:32px 28px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);text-align:center;color:#e2e8f0;font-family:system-ui,sans-serif';
 
-    card.innerHTML = '<p style="font-size:0.85rem;opacity:0.5;margin:0 0 8px;">🧠 Test de memoria</p>' +
+    card.innerHTML = '<p style="font-size:0.85rem;opacity:0.5;margin:0 0 8px;">[B] Test de memoria</p>' +
         '<p style="font-size:1.2rem;font-weight:700;margin:0 0 24px;">¿Qué receta tenías que cocinar?</p>';
 
     var options = activeRecipe.recallOptions;
@@ -678,16 +678,16 @@ function showRecipeRecallQuiz() {
             if (i === correct) {
                 btn.style.background = 'rgba(34,197,94,0.3)';
                 btn.style.borderColor = '#22c55e';
-                btn.textContent = '✅ ' + opt + ' — ¡Correcto!';
+                btn.textContent = '[ok] ' + opt + ' — ¡Correcto!';
             } else {
                 btn.style.background = 'rgba(239,68,68,0.3)';
                 btn.style.borderColor = '#ef4444';
-                btn.textContent = '❌ ' + opt;
+                btn.textContent = '[x] ' + opt;
                 // Highlight correct
                 var allBtns = card.querySelectorAll('button');
                 allBtns[correct].style.background = 'rgba(34,197,94,0.3)';
                 allBtns[correct].style.borderColor = '#22c55e';
-                allBtns[correct].textContent = '✅ ' + options[correct] + ' — Era esta';
+                allBtns[correct].textContent = '[ok] ' + options[correct] + ' — Era esta';
             }
 
             actionLog.push({
@@ -912,7 +912,7 @@ function finishGame() {
         if (r.got.length > 0) {
             // Got at least one from group
             return r.got.map(function(p) {
-                return '<div style="font-size: 0.8rem; padding: 3px 0;">✅ ' + p.emoji + ' ' + p.name +
+                return '<div style="font-size: 0.8rem; padding: 3px 0;">[ok] ' + p.emoji + ' ' + p.name +
                     ' <span style="color: var(--success); font-size: 0.7rem;">$' + productPrices[p.id].toLocaleString('es-AR') + '</span>' +
                     (p.desc ? ' <span style="color:rgba(255,255,255,0.3);">— ' + p.desc + '</span>' : '') + '</div>';
             }).join('') +
@@ -922,7 +922,7 @@ function finishGame() {
             }).join('');
         } else {
             // Missed entire group
-            return '<div style="font-size: 0.8rem; padding: 3px 0;">❌ <span style="color: #f59e0b;">' +
+            return '<div style="font-size: 0.8rem; padding: 3px 0;">[x] <span style="color: #f59e0b;">' +
                 r.group.items.map(function(p) { return p.emoji + ' ' + p.name; }).join(' ó ') +
                 '</span> <span style="color:rgba(255,255,255,0.3);">— falta</span></div>';
         }
@@ -930,7 +930,7 @@ function finishGame() {
 
     resultsDiv.innerHTML =
         '<div style="background: var(--surface); border-radius: 16px; padding: 24px; border: 1px solid rgba(255,255,255,0.08);">' +
-            '<h2 style="margin: 0 0 4px; font-size: 1.3rem;">🧾 Ticket de compra</h2>' +
+            '<h2 style="margin: 0 0 4px; font-size: 1.3rem;"> Ticket de compra</h2>' +
             '<p style="margin: 0 0 20px; font-size: 0.85rem; color: rgba(255,255,255,0.4);">Evaluación de planificación para hacer ' + (activeRecipe ? activeRecipe.name : 'milanesas') + '</p>' +
 
             // Score cards row
@@ -945,7 +945,7 @@ function finishGame() {
 
             // Budget card
             '<div class="tier tier-budget" style="margin-bottom: 14px;">' +
-                '<div style="font-weight: 700; font-size: 0.85rem; color: ' + budgetColor + '; margin-bottom: 8px;">💰 Gestión del presupuesto</div>' +
+                '<div style="font-weight: 700; font-size: 0.85rem; color: ' + budgetColor + '; margin-bottom: 8px;"> Gestión del presupuesto</div>' +
                 '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; text-align: center;">' +
                     '<div><div style="font-size: 1.1rem; font-weight: 700;">$' + BUDGET.toLocaleString('es-AR') + '</div><div style="font-size: 0.65rem; color: rgba(255,255,255,0.4);">Presupuesto</div></div>' +
                     '<div><div style="font-size: 1.1rem; font-weight: 700;">$' + cartTotal.toLocaleString('es-AR') + '</div><div style="font-size: 0.65rem; color: rgba(255,255,255,0.4);">Gastado</div></div>' +
@@ -958,7 +958,7 @@ function finishGame() {
 
             // Essentials
             '<div class="tier tier-basic">' +
-                '<div style="font-weight: 700; font-size: 0.85rem; color: #60a5fa; margin-bottom: 6px;">📋 Esenciales (Aprobado)</div>' +
+                '<div style="font-weight: 700; font-size: 0.85rem; color: #60a5fa; margin-bottom: 6px;">[L] Esenciales (Aprobado)</div>' +
                 essentialHTML +
             '</div>' +
 
@@ -967,7 +967,7 @@ function finishGame() {
                 '<div style="font-weight: 700; font-size: 0.85rem; color: var(--gold); margin-bottom: 6px;">⭐ Avanzados (Excelente)</div>' +
                 advanced.map(function(p) {
                     var got = cart.indexOf(p.id) >= 0;
-                    return '<div style="font-size: 0.8rem; padding: 3px 0;">' + (got ? '✅' : '⬜') + ' ' + p.emoji + ' ' + p.name +
+                    return '<div style="font-size: 0.8rem; padding: 3px 0;">' + (got ? '[ok]' : '⬜') + ' ' + p.emoji + ' ' + p.name +
                         (got ? ' <span style="color: var(--success); font-size: 0.7rem;">$' + productPrices[p.id].toLocaleString('es-AR') + '</span>' : '') +
                         (p.desc ? ' <span style="color:rgba(255,255,255,0.3);">— ' + p.desc + '</span>' : '') + '</div>';
                 }).join('') +
@@ -976,16 +976,16 @@ function finishGame() {
             // Errors
             (gotErrors.length > 0 ?
                 '<div class="tier tier-error">' +
-                    '<div style="font-weight: 700; font-size: 0.85rem; color: var(--danger); margin-bottom: 6px;">⚠️ Errores de planificación</div>' +
+                    '<div style="font-weight: 700; font-size: 0.85rem; color: var(--danger); margin-bottom: 6px;">[!]️ Errores de planificación</div>' +
                     gotErrors.map(function(p) {
-                        return '<div style="font-size: 0.8rem; padding: 3px 0;">❌ ' + p.emoji + ' ' + p.name + ' $' + productPrices[p.id].toLocaleString('es-AR') + ' — irrelevante para ' + (activeRecipe ? activeRecipe.name.toLowerCase() : 'la receta') + '</div>';
+                        return '<div style="font-size: 0.8rem; padding: 3px 0;">[x] ' + p.emoji + ' ' + p.name + ' $' + productPrices[p.id].toLocaleString('es-AR') + ' — irrelevante para ' + (activeRecipe ? activeRecipe.name.toLowerCase() : 'la receta') + '</div>';
                     }).join('') +
                 '</div>'
             : '') +
 
             // NEW: Cognitive Metrics Panel
             '<div style="margin-top: 14px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); border-radius: 14px; padding: 16px;">' +
-                '<div style="font-weight: 700; font-size: 0.85rem; color: #818cf8; margin-bottom: 10px;">🧠 Métricas Cognitivas</div>' +
+                '<div style="font-weight: 700; font-size: 0.85rem; color: #818cf8; margin-bottom: 10px;">[B] Métricas Cognitivas</div>' +
                 '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px;">' +
                     '<div class="score-card" style="padding:12px;"><div style="font-size:1rem;font-weight:700;color:#a5b4fc;">' + firstClickSec + 's</div><div style="font-size:0.6rem;color:rgba(255,255,255,0.4);">Latencia de inicio</div></div>' +
                     '<div class="score-card" style="padding:12px;"><div style="font-size:1rem;font-weight:700;color:#a5b4fc;">' + avgHesitation + 's</div><div style="font-size:0.6rem;color:rgba(255,255,255,0.4);">Hesitación promedio</div></div>' +
@@ -1000,9 +1000,9 @@ function finishGame() {
             // Clinical flags
             (clinicalFlags.length > 0 ?
                 '<div style="margin-top: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 16px;">' +
-                    '<div style="font-weight: 700; font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px;">📊 Indicadores clínicos</div>' +
+                    '<div style="font-weight: 700; font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px;">[D] Indicadores clínicos</div>' +
                     clinicalFlags.map(function(f) {
-                        var icon = f.severity === 'positive' ? '🟢' : f.severity === 'high' ? '🔴' : f.severity === 'moderate' ? '🟡' : '🔵';
+                        var icon = f.severity === 'positive' ? '' : f.severity === 'high' ? '' : f.severity === 'moderate' ? '' : '';
                         return '<div style="font-size: 0.75rem; padding: 3px 0; color: rgba(255,255,255,0.5);">' + icon + ' <strong>' + f.flag + '</strong> — ' + f.desc + '</div>';
                     }).join('') +
                 '</div>'
@@ -1010,8 +1010,8 @@ function finishGame() {
 
             // Buttons
             '<div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">' +
-                '<button onclick="if(typeof gameEvent===&quot;function&quot;)gameEvent(&quot;game_reset&quot;);setTimeout(function(){location.reload()},200)" style="padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: #94a3b8; cursor: pointer; font-size: 0.85rem;">🔄 Jugar de nuevo</button>' +
-                '<button onclick="goToPortal()" style="padding: 12px 24px; border-radius: 12px; border: none; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; cursor: pointer; font-size: 0.85rem; font-weight: 600;">🏠 Volver al portal</button>' +
+                '<button onclick="if(typeof gameEvent===&quot;function&quot;)gameEvent(&quot;game_reset&quot;);setTimeout(function(){location.reload()},200)" style="padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: #94a3b8; cursor: pointer; font-size: 0.85rem;"> Jugar de nuevo</button>' +
+                '<button onclick="goToPortal()" style="padding: 12px 24px; border-radius: 12px; border: none; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; cursor: pointer; font-size: 0.85rem; font-weight: 600;">[H] Volver al portal</button>' +
             '</div>' +
         '</div>';
 

@@ -347,7 +347,7 @@ global.showMetricsModal = async function(resultData) {
             card.innerHTML += 'Completitud: ' + moodInference.completion_pattern + ' | ';
             card.innerHTML += 'Errores: ' + moodInference.error_pattern;
             if (moodInference.frustration_signal === 'presente') {
-                card.innerHTML += ' | ⚠️ Señal de frustración';
+                card.innerHTML += ' | [!]️ Señal de frustración';
             }
             card.innerHTML += '</p>';
             card.innerHTML += '</div>';

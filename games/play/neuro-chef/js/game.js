@@ -114,8 +114,8 @@ function setupPreGameModal() {
     
     const playerName = gameState.patientName?.split(' ')[0] || 'Chef';
     const chatQuestions = [
-        { key: 'q1', greet: `¡Hola ${playerName}! 👋`, ask: '¿Cómo estás hoy?', react: ['Bien ahí 💪', 'Entendido 👍', 'Ok, anotado ✍️'] },
-        { key: 'q2', ask: '¿Qué comiste hoy?', react: ['Interesante 🍽️', 'Anotado 📝', 'Ok ok 👌'] },
+        { key: 'q1', greet: `¡Hola ${playerName}! `, ask: '¿Cómo estás hoy?', react: ['Bien ahí ', 'Entendido ', 'Ok, anotado ️'] },
+        { key: 'q2', ask: '¿Qué comiste hoy?', react: ['Interesante ️', 'Anotado [E]', 'Ok ok '] },
         { key: 'q3', ask: '¿Cómo dormiste anoche?', react: ['Perfecto, gracias por contarme', 'Entendido, gracias', 'Ok, todo registrado'] }
     ];
     let currentQ = 0;
@@ -180,7 +180,7 @@ function setupPreGameModal() {
             chatInput.disabled = false;
             await askNext();
         } else {
-            await chefSays('¡Vamos a cocinar! 🔥', 600);
+            await chefSays('¡Vamos a cocinar! ', 600);
             chatInput.disabled = true;
             document.getElementById('chat-input-area').style.display = 'none';
             btnSkip.style.display = 'none';
@@ -351,7 +351,7 @@ function loadLevel2_Heladera() {
         <div style="max-width:1100px; margin:0 auto; padding:1rem;">
             <!-- BOLSA DE COMPRAS (arriba, centrada) -->
             <div class="bolsa-compras" style="margin-bottom:1.2rem;">
-                <h3>🛍️ Bolsa de Compras — arrastrá cada producto a su lugar</h3>
+                <h3>️ Bolsa de Compras — arrastrá cada producto a su lugar</h3>
                 <div class="bolsa-grid" id="bolsa">
                     ${selected.map(f=>`<div class="food-item" draggable="true" data-id="${f.id}"><img src="${f.imagen}" alt="${f.nombre}" loading="lazy" onerror="this.style.display='none';this.parentElement.querySelector('.label').style.padding='18px 6px';"><div class="label">${f.nombre}</div></div>`).join('')}
                 </div>
@@ -367,19 +367,19 @@ function loadLevel2_Heladera() {
                     
                     <!-- FREEZER -->
                     <div class="heladera-zone" data-zone="freezer" style="background:linear-gradient(135deg,rgba(180,210,240,0.3),rgba(200,225,250,0.15)); border-bottom:4px solid #8a9aa8; border-radius:10px 10px 0 0; margin:4px; padding:0.6rem 0.75rem; min-height:90px;">
-                        <h4 style="color:#1e40af; font-size:0.7rem; font-weight:700; margin-bottom:0.4rem; letter-spacing:0.5px; text-transform:uppercase;">❄️ FREEZER (-18°C)</h4>
+                        <h4 style="color:#1e40af; font-size:0.7rem; font-weight:700; margin-bottom:0.4rem; letter-spacing:0.5px; text-transform:uppercase;">️ FREEZER (-18°C)</h4>
                         <div class="zone-grid" id="zone-freezer" data-zone="freezer">${Array(4).fill(0).map((_,i)=>`<div class="zone-slot" data-slot="${i}"></div>`).join('')}</div>
                     </div>
                     
                     <!-- ZONA FRIA -->
                     <div class="heladera-zone" data-zone="fria" style="background:linear-gradient(135deg,rgba(200,225,250,0.2),rgba(220,235,250,0.1)); border-bottom:3px solid rgba(140,160,180,0.4); margin:0 4px; padding:0.6rem 0.75rem; min-height:100px;">
-                        <h4 style="color:#2563eb; font-size:0.7rem; font-weight:700; margin-bottom:0.4rem; letter-spacing:0.5px; text-transform:uppercase;">🥛 ZONA FRÍA (2-4°C) — Lácteos, carnes, huevos</h4>
+                        <h4 style="color:#2563eb; font-size:0.7rem; font-weight:700; margin-bottom:0.4rem; letter-spacing:0.5px; text-transform:uppercase;"> ZONA FRÍA (2-4°C) — Lácteos, carnes, huevos</h4>
                         <div class="zone-grid" id="zone-fria" data-zone="fria">${Array(8).fill(0).map((_,i)=>`<div class="zone-slot" data-slot="${i}"></div>`).join('')}</div>
                     </div>
                     
                     <!-- CAJON VERDURAS -->
                     <div class="heladera-zone" data-zone="verduras" style="background:linear-gradient(135deg,rgba(74,222,128,0.12),rgba(180,240,200,0.08)); border-radius:0 0 10px 10px; margin:0 4px 4px; padding:0.6rem 0.75rem; min-height:80px; border-top:2px solid rgba(74,222,128,0.2);">
-                        <h4 style="color:#16a34a; font-size:0.7rem; font-weight:700; margin-bottom:0.4rem; letter-spacing:0.5px; text-transform:uppercase;">🥬 CAJÓN VERDURAS (5-8°C)</h4>
+                        <h4 style="color:#16a34a; font-size:0.7rem; font-weight:700; margin-bottom:0.4rem; letter-spacing:0.5px; text-transform:uppercase;"> CAJÓN VERDURAS (5-8°C)</h4>
                         <div class="zone-grid" id="zone-verduras" data-zone="verduras">${Array(6).fill(0).map((_,i)=>`<div class="zone-slot" data-slot="${i}"></div>`).join('')}</div>
                     </div>
                 </div>
@@ -392,7 +392,7 @@ function loadLevel2_Heladera() {
                     <div style="position:absolute; right:10px; top:45%; width:6px; height:40px; background:linear-gradient(180deg,#d4a853,#aa8030,#d4a853); border-radius:3px; box-shadow:1px 1px 3px rgba(0,0,0,0.4);"></div>
                     
                     <div class="heladera-zone" data-zone="afuera" style="background:linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02)); margin:8px; padding:1rem; min-height:240px; border-radius:8px; border:1px solid rgba(139,105,20,0.3);">
-                        <h4 style="color:#3d2800; font-size:0.75rem; font-weight:700; margin-bottom:0.6rem; letter-spacing:0.5px; text-transform:uppercase; text-shadow:0 1px 0 rgba(255,255,200,0.3);">🏠 ALACENA — No va en heladera</h4>
+                        <h4 style="color:#3d2800; font-size:0.75rem; font-weight:700; margin-bottom:0.6rem; letter-spacing:0.5px; text-transform:uppercase; text-shadow:0 1px 0 rgba(255,255,200,0.3);">[H] ALACENA — No va en heladera</h4>
                         <p style="color:#5a4010; font-size:0.65rem; margin:0 0 0.6rem; opacity:0.8;">Productos secos, conservas, especias</p>
                         <div class="zone-grid" id="zone-afuera" data-zone="afuera">${Array(6).fill(0).map((_,i)=>`<div class="zone-slot" data-slot="${i}" style="border-color:rgba(139,105,20,0.3);"></div>`).join('')}</div>
                     </div>
@@ -791,7 +791,7 @@ function showEducationalModal(levelId, score, errors={}) {
         qDiv.className = 'educational-box info';
         qDiv.style.marginTop = '1rem';
         qDiv.innerHTML = `
-            <h4>🧠 Pregunta de Razonamiento</h4>
+            <h4>[B] Pregunta de Razonamiento</h4>
             <p style="margin:0.5rem 0;font-weight:600">${logicQ.question}</p>
             <div id="logic-options" style="display:flex;flex-direction:column;gap:0.4rem;margin-top:0.5rem;">
                 ${logicQ.options.map((opt, i) => `
@@ -824,8 +824,8 @@ function showEducationalModal(levelId, score, errors={}) {
 
                     fb.style.display = 'block';
                     fb.innerHTML = isCorrect
-                        ? `<p style="color:var(--green)">✅ ¡Correcto! ${logicQ.explanation}</p>`
-                        : `<p style="color:var(--red)">❌ Incorrecto. ${logicQ.explanation}</p>`;
+                        ? `<p style="color:var(--green)">[ok] ¡Correcto! ${logicQ.explanation}</p>`
+                        : `<p style="color:var(--red)">[x] Incorrecto. ${logicQ.explanation}</p>`;
 
                     // Track logic answer
                     if (!gameState.logicAnswers) gameState.logicAnswers = [];

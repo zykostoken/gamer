@@ -147,7 +147,11 @@ async function startGame(game) {
     }
     updateBadge(data.sessions_remaining);
     localStorage.setItem('zykos_current_game', game.slug);
-    window.location.href = game.url + '?source=zykos&uid=' + (userData ? userData.user_id : '');
+    // Use real DNI if registered, fallback to zykos_user_id
+    var playerDni = (userData && userData.dni) ? userData.dni : 'zykos_' + (userData ? userData.user_id : 'anon');
+    localStorage.setItem('hdd_patient_dni', playerDni);
+    localStorage.setItem('zykos_player_id', userData ? userData.user_id : '');
+    window.location.href = game.url + '?dni=' + playerDni + '&source=zykos';
   } catch(e) { alert('Error: ' + e.message); }
 }
 
@@ -172,8 +176,10 @@ async function init() {
       return;
     }
     userData = data;
+    // Persist DNI for game metric linking
+    if (data.dni) localStorage.setItem('hdd_patient_dni', data.dni);
     document.getElementById('greeting').textContent = 'Hola, ' + (data.display_name || 'Jugador');
-    document.getElementById('user-name').textContent = data.email;
+    document.getElementById('user-name').textContent = data.dni ? (data.email + ' | DNI ' + data.dni) : data.email;
 
     // Superadmin: show role badge, unlimited sessions
     if (data.role === 'superadmin') {

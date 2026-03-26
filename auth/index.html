@@ -85,6 +85,10 @@ body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var
         <label>Nombre o apodo</label>
         <input type="text" id="reg-name" placeholder="Como quieras que te llamemos">
       </div>
+      <div class="field">
+        <label>DNI (opcional pero recomendado)</label>
+        <input type="text" id="reg-dni" placeholder="Ej: 30.612.984" inputmode="numeric" autocomplete="off">
+      </div>
       <div class="row">
         <div class="field">
           <label>Fecha de nacimiento *</label>
@@ -207,9 +211,13 @@ async function doLogin() {
     localStorage.setItem('zykos_user', JSON.stringify({
       id: data.user_id,
       name: data.display_name,
+      dni: data.dni || null,
+      role: data.role,
       sessions_remaining: data.sessions_remaining,
       metrics_shown: data.metrics_shown
     }));
+    // Set DNI for game metric linking
+    if (data.dni) localStorage.setItem('hdd_patient_dni', data.dni);
 
     // Redirect to game portal
     window.location.href = '/games/portal/';
@@ -223,6 +231,7 @@ async function doRegister() {
   var email = document.getElementById('reg-email').value.trim();
   var pass = document.getElementById('reg-pass').value;
   var name = document.getElementById('reg-name').value.trim() || 'Jugador';
+  var dni = document.getElementById('reg-dni').value.trim() || null;
   var dob = document.getElementById('reg-dob').value || null;
   var sexo = document.getElementById('reg-sexo').value || null;
   var edu = document.getElementById('reg-edu').value || null;
@@ -250,6 +259,7 @@ async function doRegister() {
       p_email: email,
       p_password: pass,
       p_display_name: name,
+      p_dni: dni,
       p_fecha_nacimiento: dob,
       p_sexo: sexo,
       p_nivel_educativo: edu,
@@ -267,9 +277,12 @@ async function doRegister() {
     localStorage.setItem('zykos_user', JSON.stringify({
       id: data.user_id,
       name: data.display_name,
+      dni: data.dni || null,
       sessions_remaining: data.sessions_remaining,
       metrics_shown: false
     }));
+    // Set DNI for game metric linking
+    if (data.dni) localStorage.setItem('hdd_patient_dni', data.dni);
 
     window.location.href = '/games/portal/';
   } catch(e) {

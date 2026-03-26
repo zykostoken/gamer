@@ -192,7 +192,7 @@ async function ensureModalContent() {
         };
         
         script.onerror = () => {
-            console.error('[ensureModalContent] ❌ Failed to load modal-content.js');
+            console.error('[ensureModalContent] [x] Failed to load modal-content.js');
             resolve(); // Resolve anyway to avoid blocking
         };
         
@@ -226,13 +226,13 @@ async function openModal(id) {
                     telemedFetchCurrentPrice();
                 }
             } else {
-                console.error('[openModal] ❌ modal-overlay NOT FOUND IN DOM');
+                console.error('[openModal] [x] modal-overlay NOT FOUND IN DOM');
             }
         } else {
-            console.error('[openModal] ❌ modal-inner NOT FOUND IN DOM');
+            console.error('[openModal] [x] modal-inner NOT FOUND IN DOM');
         }
     } else {
-        console.error('[openModal] ❌ NO CONTENT FOUND for id:', id);
+        console.error('[openModal] [x] NO CONTENT FOUND for id:', id);
     }
     console.log('============================================');
 }
@@ -551,10 +551,10 @@ async function loadAnnouncements() {
             list.innerHTML = filteredAnnouncements.map(a => {
                 const typeEmoji = {
                     'info': 'ℹ️',
-                    'event': '📅',
-                    'alert': '⚠️',
-                    'celebration': '🎉'
-                }[a.type] || '📢';
+                    'event': '',
+                    'alert': '[!]️',
+                    'celebration': ''
+                }[a.type] || '';
 
                 const date = new Date(a.createdAt).toLocaleDateString('es-AR');
 
@@ -813,8 +813,8 @@ async function loadConsultations(statusFilter) {
                     <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px;">
                         ${S(typeLabel)} · ${S(date)}
                     </div>
-                    ${c.email ? `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">📧 <a href="mailto:${S(c.email)}" style="color: var(--accent-green);">${S(c.email)}</a></div>` : ''}
-                    ${c.phone ? `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">📞 <a href="tel:${S(c.phone)}" style="color: var(--accent-green);">${S(c.phone)}</a></div>` : ''}
+                    ${c.email ? `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;"> <a href="mailto:${S(c.email)}" style="color: var(--accent-green);">${S(c.email)}</a></div>` : ''}
+                    ${c.phone ? `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;"> <a href="tel:${S(c.phone)}" style="color: var(--accent-green);">${S(c.phone)}</a></div>` : ''}
                     ${c.subject ? `<div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;"><em>${S(c.subject)}</em></div>` : ''}
                     <div style="font-size: 0.85rem; color: var(--text-primary); background: var(--bg-primary); padding: 8px; border-radius: 6px; margin: 6px 0; white-space: pre-wrap; word-break: break-word;">${S(c.message)}</div>
                     ${c.respondedByName ? `<div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 4px;">Respondida por: ${S(c.respondedByName)}</div>` : ''}
