@@ -148,8 +148,8 @@ async function startGame(game) {
     updateBadge(data.sessions_remaining);
     localStorage.setItem('zykos_current_game', game.slug);
     // DNI obligatorio — linkea metricas al usuario
-    localStorage.setItem('hdd_patient_dni', userData.dni);
-    window.location.href = game.url + '?dni=' + userData.dni + '&source=zykos';
+    localStorage.setItem('hdd_patient_dni', userData.personal_id);
+    window.location.href = game.url + '?dni=' + userData.personal_id + '&source=zykos';
   } catch(e) { alert('Error: ' + e.message); }
 }
 
@@ -175,9 +175,9 @@ async function init() {
     }
     userData = data;
     // DNI obligatorio — persistir para juegos
-    localStorage.setItem('hdd_patient_dni', data.dni);
+    localStorage.setItem('hdd_patient_dni', data.personal_id);
     document.getElementById('greeting').textContent = 'Hola, ' + (data.display_name || 'Jugador');
-    document.getElementById('user-name').textContent = 'DNI ' + data.dni + ' | ' + data.email;
+    document.getElementById('user-name').textContent = 'ID ' + data.personal_id + ' | ' + data.email;
 
     // Superadmin: show role badge, unlimited sessions
     if (data.role === 'superadmin') {
