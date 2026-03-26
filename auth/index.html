@@ -86,8 +86,8 @@ body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var
         <input type="text" id="reg-name" placeholder="Como quieras que te llamemos">
       </div>
       <div class="field">
-        <label>Numero de identificacion * (DNI, pasaporte, SSN)</label>
-        <input type="text" id="reg-personal-id" placeholder="DNI sin puntos, pasaporte o SSN" autocomplete="off" required>
+        <label>DNI * (o pasaporte/SSN, sin puntos)</label>
+        <input type="text" id="reg-dni" placeholder="DNI sin puntos, pasaporte o SSN" autocomplete="off" required>
       </div>
       <div class="row">
         <div class="field">
@@ -211,13 +211,13 @@ async function doLogin() {
     localStorage.setItem('zykos_user', JSON.stringify({
       id: data.user_id,
       name: data.display_name,
-      personal_id: data.personal_id || null,
+      dni: data.dni || null,
       role: data.role,
       sessions_remaining: data.sessions_remaining,
       metrics_shown: data.metrics_shown
     }));
     // Set DNI for game metric linking
-    if (data.personal_id) localStorage.setItem('hdd_patient_dni', data.personal_id);
+    if (data.dni) localStorage.setItem('hdd_patient_dni', data.dni);
 
     // Redirect to game portal
     window.location.href = '/games/portal/';
@@ -231,7 +231,7 @@ async function doRegister() {
   var email = document.getElementById('reg-email').value.trim();
   var pass = document.getElementById('reg-pass').value;
   var name = document.getElementById('reg-name').value.trim() || 'Jugador';
-  var pid = (document.getElementById('reg-personal-id').value || '').replace(/[^a-zA-Z0-9]/g, '');
+  var pid = (document.getElementById('reg-dni').value || '').replace(/[^a-zA-Z0-9]/g, '');
   var dob = document.getElementById('reg-dob').value || null;
   var sexo = document.getElementById('reg-sexo').value || null;
   var edu = document.getElementById('reg-edu').value || null;
@@ -260,7 +260,7 @@ async function doRegister() {
       p_email: email,
       p_password: pass,
       p_display_name: name,
-      p_personal_id: pid,
+      p_dni: pid,
       p_fecha_nacimiento: dob,
       p_sexo: sexo,
       p_nivel_educativo: edu,
@@ -278,12 +278,12 @@ async function doRegister() {
     localStorage.setItem('zykos_user', JSON.stringify({
       id: data.user_id,
       name: data.display_name,
-      personal_id: data.personal_id || null,
+      dni: data.dni || null,
       sessions_remaining: data.sessions_remaining,
       metrics_shown: false
     }));
     // Set DNI for game metric linking
-    if (data.personal_id) localStorage.setItem('hdd_patient_dni', data.personal_id);
+    if (data.dni) localStorage.setItem('hdd_patient_dni', data.dni);
 
     window.location.href = '/games/portal/';
   } catch(e) {

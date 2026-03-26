@@ -141,6 +141,31 @@
             width: 100%;
         }
 
+        .nav-btn-register {
+            background: linear-gradient(135deg, var(--electric-blue), #0099cc);
+            color: #000 !important;
+            -webkit-text-fill-color: initial;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 12px !important;
+            letter-spacing: 0.5px;
+        }
+        .nav-btn-register::after { display: none !important; }
+        .nav-btn-register:hover { opacity: 0.9; color: #000 !important; }
+
+        #nav-user-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(168,85,247,0.15);
+            color: #a855f7;
+            border: 1px solid rgba(168,85,247,0.3);
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
         /* Hero Section */
         .hero {
             padding: 120px 0 80px;
@@ -494,6 +519,20 @@
 
         /* Responsive */
         @media (max-width: 968px) {
+            header {
+                flex-direction: column;
+                gap: 12px;
+            }
+            nav {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                justify-content: center;
+            }
+            nav a {
+                margin-left: 0;
+                font-size: 12px;
+            }
             .hero {
                 grid-template-columns: 1fr;
                 gap: 60px;
@@ -512,6 +551,13 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+
+        @media (max-width: 480px) {
+            .hero-content h1 { font-size: 36px; }
+            .cta-buttons { flex-direction: column; align-items: stretch; }
+            .cta-buttons .btn { text-align: center; }
+            nav a { font-size: 11px; margin-left: 0; }
+        }
     </style>
 </head>
 <body>
@@ -522,11 +568,14 @@
     <div class="container">
         <header>
             <div class="logo">ZYKOS GAMER</div>
-            <nav>
+            <nav id="main-nav">
                 <a href="#features">Funciones</a>
-                <a href="#packages">Modulos</a>
                 <a href="#demos">Demos</a>
-                <a href="/auth/" style="color:#39FF14;font-weight:700;">Jugar Gratis</a>
+                <a href="/games/portal/" id="nav-portal" style="display:none;">Portal de Juegos</a>
+                <a href="/dashboard/" id="nav-dash" style="display:none;">Dashboard</a>
+                <a href="#" id="nav-logout" style="display:none;color:#ef4444;" onclick="zykosLogout();return false;">Salir</a>
+                <a href="/auth/" id="nav-login" style="color:#39FF14;font-weight:700;">Ingresar</a>
+                <a href="/auth/" id="nav-register" class="nav-btn-register">Registrarse gratis</a>
             </nav>
         </header>
 
@@ -732,21 +781,82 @@
         </section>
 
         <footer>
-            <p>&copy; 2026 ZYKOS GAMER. Mental Health Gaming Engine for Institutional Deployment.</p>
-            <p><a href="https://github.com/zykostoken/gamer">GitHub</a> · <a href="https://www.notion.so/3242f93ce71381108aa3cb6caba2b9af">Documentation</a> · <a href="https://zykos.ar">Reference Implementation</a></p>
+            <p>2026 ZYKOS GAMER. Motor de Juegos para Salud Mental - Evaluacion Cognitiva Gamificada.</p>
+            <p style="margin-top:8px;">
+                <a href="/auth/">Registrarse / Ingresar</a> ·
+                <a href="/games/portal/">Portal de Juegos</a> ·
+                <a href="/dashboard/">Dashboard Clinico</a> ·
+                <a href="https://github.com/zykostoken/gamer">GitHub</a> ·
+                <a href="https://www.notion.so/3242f93ce71381108aa3cb6caba2b9af">Documentacion</a>
+            </p>
+            <p style="margin-top:12px;font-size:0.7rem;color:#475569;">Clinica Psiquiatrica Privada Jose Ingenieros SRL · Necochea, Buenos Aires, Argentina · CUIT 30-61202984-5</p>
         </footer>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase-config.js"></script>
     <script>
         // Smooth scroll
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
+                var target = document.querySelector(this.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth' });
             });
         });
+
+        // Detect login state and update nav
+        (function() {
+            var token = localStorage.getItem('zykos_token');
+            if (!token) return; // Not logged in, show default nav
+
+            var sb = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+            if (!sb) return;
+
+            sb.rpc('zykos_validate_session', { p_token: token }).then(function(res) {
+                var data = res.data;
+                if (!data || !data.ok) {
+                    localStorage.removeItem('zykos_token');
+                    localStorage.removeItem('zykos_user');
+                    return;
+                }
+
+                // User is logged in — update nav
+                document.getElementById('nav-login').style.display = 'none';
+                document.getElementById('nav-register').style.display = 'none';
+                document.getElementById('nav-portal').style.display = '';
+                document.getElementById('nav-dash').style.display = '';
+                document.getElementById('nav-logout').style.display = '';
+
+                // Add user name badge
+                var badge = document.createElement('span');
+                badge.id = 'nav-user-badge';
+                badge.textContent = data.display_name || data.email;
+                if (data.role === 'superadmin') badge.textContent += ' [ADMIN]';
+                document.getElementById('main-nav').appendChild(badge);
+
+                // Update hero CTA
+                var heroBtn = document.querySelector('.cta-buttons .btn-primary');
+                if (heroBtn) {
+                    heroBtn.href = '/games/portal/';
+                    heroBtn.textContent = 'Ir al Portal de Juegos';
+                    if (data.role !== 'superadmin' && data.role !== 'admin') {
+                        heroBtn.textContent += ' (' + data.sessions_remaining + ' sesiones)';
+                    }
+                }
+            }).catch(function() {});
+        })();
+
+        function zykosLogout() {
+            var token = localStorage.getItem('zykos_token');
+            var sb = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+            if (sb && token) sb.rpc('zykos_logout', { p_token: token }).catch(function(){});
+            localStorage.removeItem('zykos_token');
+            localStorage.removeItem('zykos_user');
+            localStorage.removeItem('zykos_player_id');
+            localStorage.removeItem('hdd_patient_dni');
+            window.location.reload();
+        }
     </script>
 </body>
 </html>
