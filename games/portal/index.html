@@ -171,8 +171,43 @@ async function init() {
     userData = data;
     document.getElementById('greeting').textContent = 'Hola, ' + (data.display_name || 'Jugador');
     document.getElementById('user-name').textContent = data.email;
-    updateBadge(data.sessions_remaining);
-    showZykosConsent(function() { renderGames(data.sessions_remaining); });
+
+    // Superadmin: show role badge, unlimited sessions
+    if (data.role === 'superadmin') {
+      updateBadge(999);
+      document.getElementById('sessions-badge').textContent = 'SUPERADMIN';
+      document.getElementById('sessions-badge').className = 'sessions-badge';
+      document.getElementById('sessions-badge').style.background = 'rgba(168,85,247,0.15)';
+      document.getElementById('sessions-badge').style.borderColor = 'rgba(168,85,247,0.3)';
+      document.getElementById('sessions-badge').style.color = '#a855f7';
+    } else {
+      updateBadge(data.sessions_remaining);
+    }
+
+    // Metrics button (visible if can_view_metrics or superadmin)
+    if (data.can_view_metrics || data.role === 'superadmin') {
+      var mb = document.createElement('a');
+      mb.href = '/dashboard/?token=' + token;
+      mb.className = 'cta-btn';
+      mb.style.cssText = 'font-size:0.8rem;padding:8px 18px;margin-top:8px;display:inline-block;';
+      var viewsLeft = data.role === 'superadmin' ? 'ilimitado' : (data.metrics_allowed_views - data.metrics_view_count) + ' vista(s) restante(s)';
+      mb.textContent = 'Ver Metricas (' + viewsLeft + ')';
+      mb.onclick = function(e) {
+        if (data.role !== 'superadmin') {
+          e.preventDefault();
+          sb.rpc('zykos_view_metrics', { p_token: token }).then(function(r) {
+            if (r.data && r.data.can_view) {
+              window.location.href = '/dashboard/?token=' + token;
+            } else {
+              alert(r.data ? r.data.message : 'No podes ver metricas');
+            }
+          });
+        }
+      };
+      document.querySelector('.welcome').appendChild(mb);
+    }
+
+    showZykosConsent(function() { renderGames(data.role === 'superadmin' ? 999 : data.sessions_remaining); });
   } catch(e) { document.getElementById('greeting').textContent = 'Error: ' + e.message; }
 }
 
