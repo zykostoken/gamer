@@ -86,8 +86,8 @@ body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var
         <input type="text" id="reg-name" placeholder="Como quieras que te llamemos">
       </div>
       <div class="field">
-        <label>DNI (opcional pero recomendado)</label>
-        <input type="text" id="reg-dni" placeholder="Ej: 30.612.984" inputmode="numeric" autocomplete="off">
+        <label>DNI * (sin puntos)</label>
+        <input type="text" id="reg-dni" placeholder="Ej: 30612984" inputmode="numeric" autocomplete="off" required>
       </div>
       <div class="row">
         <div class="field">
@@ -231,7 +231,7 @@ async function doRegister() {
   var email = document.getElementById('reg-email').value.trim();
   var pass = document.getElementById('reg-pass').value;
   var name = document.getElementById('reg-name').value.trim() || 'Jugador';
-  var dni = document.getElementById('reg-dni').value.trim() || null;
+  var dni = (document.getElementById('reg-dni').value || '').replace(/[^0-9]/g, '');
   var dob = document.getElementById('reg-dob').value || null;
   var sexo = document.getElementById('reg-sexo').value || null;
   var edu = document.getElementById('reg-edu').value || null;
@@ -246,6 +246,7 @@ async function doRegister() {
   // Validate
   if (!email) { showError('reg-error', 'Email requerido'); return; }
   if (!pass || pass.length < 8) { showError('reg-error', 'Password minimo 8 caracteres'); return; }
+  if (!dni || dni.length < 7 || dni.length > 8) { showError('reg-error', 'DNI obligatorio (7 u 8 digitos, sin puntos)'); return; }
   if (!dob) { showError('reg-error', 'Fecha de nacimiento requerida (dato demografico para normas)'); return; }
   if (!sexo) { showError('reg-error', 'Sexo requerido (dato demografico para normas)'); return; }
   if (!edu) { showError('reg-error', 'Nivel educativo requerido (dato demografico para normas)'); return; }
