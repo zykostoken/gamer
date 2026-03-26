@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portal de Juegos - Clinica Jose Ingenieros</title>
+  <title>Portal de Juegos - ZYKOS GAMER</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <style>
     :root {
@@ -282,6 +282,8 @@
       }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <script src="/js/sanitize.js"></script>
 </head>
@@ -292,7 +294,7 @@
         <div class="logo-icon">🎮</div>
         <div class="logo-text">
           <h1>Juegos Terapeuticos</h1>
-          <p>Clinica Jose Ingenieros</p>
+          <p>ZYKOS GAMER</p>
         </div>
       </a>
 
@@ -307,6 +309,7 @@
     <div class="welcome-section">
       <h2>Bienvenido, <span id="userName">Visitante</span>!</h2>
       <p>Explora nuestros juegos terapeuticos diseñados para ejercitar la mente</p>
+      <p id="sessionsInfo" style="font-size:0.9rem;color:#22c55e;margin-top:6px;"></p>
     </div>
 
     <div id="gamesContainer">
@@ -318,181 +321,121 @@
 
     <div class="info-card">
       <h3>Sobre estos juegos</h3>
-      <p>Estos juegos fueron diseñados con fines terapeuticos para trabajar diferentes areas cognitivas como atencion, memoria, planificacion y motricidad fina. Son parte del programa de Hospital de Dia de la Clinica Jose Ingenieros.</p>
+      <p>Estos juegos fueron diseñados con fines terapeuticos para trabajar diferentes areas cognitivas como atencion, memoria, planificacion y motricidad fina. Son parte de la plataforma ZYKOS GAMER de evaluacion cognitiva gamificada.</p>
     </div>
   </main>
 
   <script>
-    // Auth check
-    const sessionToken = localStorage.getItem('games_session');
-    const userData = localStorage.getItem('games_user');
+    var sb = null;
+    var zykosUser = null;
 
-    if (!sessionToken) {
-      window.location.href = '/games/';
-    }
+    // ---- SESSION VALIDATION ----
+    async function init() {
+      var token = localStorage.getItem('zykos_token');
+      if (!token) { window.location.href = '/auth/'; return; }
 
-    // Display user info
-    if (userData) {
+      sb = getSupabaseClient();
+      if (!sb) { window.location.href = '/auth/'; return; }
+
       try {
-        const user = JSON.parse(userData);
-        const userName = document.getElementById('userName');
-        const userBadge = document.getElementById('userBadge');
-
-        if (user.displayName) {
-          userName.textContent = user.displayName;
-        } else if (user.codeName) {
-          userName.textContent = user.codeName.split(' - ')[0];
+        var { data, error } = await sb.rpc('zykos_validate_session', { p_token: token });
+        if (error || !data || !data.ok) {
+          localStorage.removeItem('zykos_token');
+          localStorage.removeItem('zykos_user');
+          window.location.href = '/auth/';
+          return;
         }
-
-        const typeLabels = {
-          'partner': 'Partner',
-          'researcher': 'Investigador',
-          'colleague': 'Colega',
-          'demo': 'Demo'
-        };
-        userBadge.textContent = typeLabels[user.codeType] || 'Acceso';
-      } catch (e) {}
-    }
-
-    // Verify session on load (resilient to serverless cold starts)
-    async function verifySession() {
-      try {
-        const response = await fetch('/api/games/auth?action=verify&sessionToken=' + sessionToken);
-        const data = await response.json();
-
-        if (!data.valid) {
-          // Only clear session if we DON'T have cached user data
-          // (protects against serverless cold start losing in-memory sessions)
-          if (!userData) {
-            localStorage.removeItem('games_session');
-            localStorage.removeItem('games_user');
-            window.location.href = '/games/';
-            return false;
-          }
-          // Have user data = was logged in successfully before, keep session
-          console.warn('Session verify failed but user data exists, keeping session');
-          return true;
-        }
-        return true;
-      } catch (error) {
-        return true; // Allow offline access if verification fails
+        zykosUser = data;
+        localStorage.setItem('zykos_user', JSON.stringify(data));
+      } catch(e) {
+        // Offline fallback: use cached user
+        var cached = localStorage.getItem('zykos_user');
+        if (cached) { zykosUser = JSON.parse(cached); }
+        else { window.location.href = '/auth/'; return; }
       }
+
+      // Display user info
+      document.getElementById('userName').textContent = zykosUser.display_name || 'Jugador';
+      document.getElementById('userBadge').textContent = zykosUser.sessions_remaining + ' sesiones';
+      document.getElementById('sessionsInfo').textContent =
+        zykosUser.sessions_remaining > 0
+          ? 'Te quedan ' + zykosUser.sessions_remaining + ' de ' + (zykosUser.max_sessions || 15) + ' sesiones gratuitas'
+          : 'Sesiones agotadas. Contacta a tu institucion para acceso completo.';
+
+      if (zykosUser.sessions_remaining <= 0) {
+        document.getElementById('sessionsInfo').style.color = '#ef4444';
+      }
+
+      loadGames();
     }
 
-    // Load games
-    async function loadGames() {
-      const container = document.getElementById('gamesContainer');
+    // ---- CONSUME SESSION BEFORE PLAYING ----
+    async function playGame(slug) {
+      if (!zykosUser || zykosUser.sessions_remaining <= 0) {
+        alert('Sin sesiones disponibles. Contacta a tu institucion para acceso completo.');
+        return;
+      }
 
-      // Games data (static for reliability)
-      const games = [
-        {
-          slug: 'lawn-mower',
-          name: 'Cortadora de Cesped',
-          icon: '🌿',
-          description: 'Corta el pasto del jardin sin dañar las flores ni ensuciar la pileta. Trabaja motricidad fina, planificacion y atencion.',
-          therapeuticAreas: ['Motricidad Fina', 'Planificacion', 'Atencion', 'Control de Impulsos'],
-          difficultyLevels: 5
-        },
-        {
-          slug: 'medication-memory',
-          name: 'Memoria de Medicacion',
-          icon: '💊',
-          description: 'Observa la receta medica y arma correctamente la dosis del dia. Estimula memoria de trabajo y atencion al detalle.',
-          therapeuticAreas: ['Memoria', 'Atencion', 'Comprension Lectora'],
-          difficultyLevels: 5
-        },
-        {
-          slug: 'pill-organizer',
-          name: 'Organizador de Medicacion',
-          icon: '🎯',
-          description: 'Arrastra cada medicacion al casillero correcto organizando por dia y horario. Evalua motricidad fina, planificacion y precision.',
-          therapeuticAreas: ['Motricidad Fina', 'Planificacion', 'Atencion'],
-          difficultyLevels: 1
-        },
-        {
-          slug: 'neuro-chef/index',
-          name: 'Neuro-Chef',
-          icon: '🧠',
-          description: '6 niveles de evaluacion cognitiva: supermercado, heladera, cocina, licuadora, mesa y habitacion. Evalua memoria, categorizacion, secuenciacion y razonamiento.',
-          therapeuticAreas: ['Memoria', 'Categorizacion', 'Secuenciacion', 'Razonamiento'],
-          difficultyLevels: 6
-        },
-        // TEMPORALMENTE OCULTO - En mejora (multi-nivel)
-        // {
-        //   slug: 'fridge-logic',
-        //   name: 'Heladera Inteligente',
-        //   icon: '🧊',
-        //   description: 'Organiza los alimentos en la heladera segun su zona correcta: freezer, estante frio, cajon de verduras, alacena o limpieza. Evalua categorizacion, seguridad alimentaria y razonamiento.',
-        //   therapeuticAreas: ['Categorizacion', 'Razonamiento', 'Planificacion', 'Seguridad'],
-        //   difficultyLevels: 1
-        // },
-        {
-          slug: 'super-market',
-          name: 'Supermercado',
-          icon: '🛒',
-          description: 'Recorre las gondolas del supermercado y selecciona los productos de la lista. Trabaja memoria de trabajo, atencion selectiva y planificacion de compras.',
-          therapeuticAreas: ['Memoria', 'Atencion', 'Planificacion', 'Autonomia'],
-          difficultyLevels: 3
-        },
-        // TEMPORALMENTE OCULTO - En reconstrucción (multi-escena primera persona)
-        // {
-        //   slug: 'daily-routine',
-        //   name: 'Mi Rutina Diaria',
-        //   icon: '🌅',
-        //   description: 'Arma tu rutina diaria ideal: elegi habitos saludables y ubicalos en el horario correcto. Evalua planificacion, secuenciacion, juicio y toma de decisiones.',
-        //   therapeuticAreas: ['Planificacion', 'Secuenciacion', 'Juicio', 'AVD'],
-        //   difficultyLevels: 2
-        // }
+      var token = localStorage.getItem('zykos_token');
+      if (!sb || !token) { window.location.href = '/auth/'; return; }
+
+      try {
+        var { data, error } = await sb.rpc('zykos_consume_session', { p_token: token, p_game_slug: slug });
+        if (error || !data || !data.ok) {
+          if (data && data.error) alert(data.error);
+          return;
+        }
+        // Update local
+        zykosUser.sessions_remaining = data.sessions_remaining;
+        localStorage.setItem('zykos_user', JSON.stringify(zykosUser));
+      } catch(e) {
+        // Allow play offline
+      }
+
+      // Navigate — store user ID for game saves
+      localStorage.setItem('zykos_player_id', zykosUser.user_id);
+      window.location.href = '/games/play/' + slug + '.html';
+    }
+
+    // ---- GAME LIST ----
+    function loadGames() {
+      var container = document.getElementById('gamesContainer');
+      var noSessions = zykosUser && zykosUser.sessions_remaining <= 0;
+
+      var games = [
+        { slug:'lawn-mower', name:'Cortadora de Cesped', icon:'*', desc:'Planificacion espacial, motricidad fina, control de impulsos, doble/triple tarea.', areas:['Planificacion','Motricidad','Atencion','Carga Cognitiva'], levels:'20+3' },
+        { slug:'medication-memory', name:'Memoria de Medicacion', icon:'*', desc:'Memoria de trabajo, adherencia, decision bajo incertidumbre.', areas:['Memoria','Atencion','Comprension'], levels:'5' },
+        { slug:'pill-organizer', name:'Organizador de Medicacion', icon:'*', desc:'Drag-and-drop con medicion de tremor, dismetria, eficiencia de trayectoria.', areas:['Motricidad Fina','Planificacion','Praxis'], levels:'1' },
+        { slug:'neuro-chef/index', name:'Cocinero Neuronal', icon:'*', desc:'SDT (signal detection theory), categorizacion, d-prime, falsas alarmas.', areas:['Memoria','SDT','Categorizacion'], levels:'6' },
+        { slug:'super-market', name:'Desafio Milanesas', icon:'*', desc:'Comprension de receta, memoria de trabajo, estimacion numerica, planificacion de compras.', areas:['Memoria','Comprension','Calculo','Planificacion'], levels:'3' },
+        { slug:'daily-routine', name:'Mi Rutina Diaria', icon:'*', desc:'Secuenciacion temporal, juicio social, toma de decisiones en AVD.', areas:['Secuenciacion','Juicio','AVD'], levels:'2' },
+        { slug:'fridge-logic', name:'Heladera Inteligente', icon:'*', desc:'Categorizacion semantica, razonamiento logico, seguridad alimentaria.', areas:['Categorizacion','Razonamiento','Planificacion'], levels:'1' }
       ];
 
-      container.innerHTML = `
-        <div class="games-grid">
-          ${games.map(game => `
-            <div class="game-card">
-              <div class="game-header">
-                <div class="game-icon">${game.icon}</div>
-                <div class="game-title">
-                  <h3>${game.name}</h3>
-                  <span>${game.difficultyLevels} niveles de dificultad</span>
-                </div>
-              </div>
-              <p class="game-description">${game.description}</p>
-              <div class="game-tags">
-                ${game.therapeuticAreas.map(area => `<span class="game-tag">${area}</span>`).join('')}
-              </div>
-              <a href="/games/play/${game.slug}.html" class="btn-play">
-                ▶ Jugar Ahora
-              </a>
-            </div>
-          `).join('')}
-        </div>
-      `;
+      var iconMap = { 'lawn-mower':'&#127793;', 'medication-memory':'&#128138;', 'pill-organizer':'&#127919;', 'neuro-chef/index':'&#129504;', 'super-market':'&#128722;', 'daily-routine':'&#127749;', 'fridge-logic':'&#129482;' };
+
+      container.innerHTML = '<div class="games-grid">' + games.map(function(g){
+        return '<div class="game-card">' +
+          '<div class="game-header"><div class="game-icon">' + (iconMap[g.slug]||'&#127918;') + '</div>' +
+          '<div class="game-title"><h3>' + g.name + '</h3><span>' + g.levels + ' niveles</span></div></div>' +
+          '<p class="game-description">' + g.desc + '</p>' +
+          '<div class="game-tags">' + g.areas.map(function(a){ return '<span class="game-tag">' + a + '</span>'; }).join('') + '</div>' +
+          '<a href="#" onclick="playGame(\'' + g.slug + '\');return false;" class="btn-play" ' +
+          (noSessions ? 'style="opacity:0.4;pointer-events:none;"' : '') + '>' +
+          (noSessions ? 'Sin sesiones' : '&#9654; Jugar') + '</a></div>';
+      }).join('') + '</div>';
     }
 
-    // Logout handler
-    document.getElementById('logoutBtn').addEventListener('click', async function() {
-      try {
-        await fetch('/api/games/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'logout',
-            sessionToken: sessionToken
-          })
-        });
-      } catch (e) {}
-
-      localStorage.removeItem('games_session');
-      localStorage.removeItem('games_user');
-      window.location.href = '/games/';
+    // ---- LOGOUT ----
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      localStorage.removeItem('zykos_token');
+      localStorage.removeItem('zykos_user');
+      localStorage.removeItem('zykos_player_id');
+      window.location.href = '/';
     });
 
     // Initialize
-    verifySession().then(valid => {
-      if (valid) {
-        loadGames();
-      }
-    });
+    init();
   </script>
 </body>
 </html>

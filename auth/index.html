@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZYKOS GAMER - Ingresar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #0A0E27; --surface: #111633; --border: rgba(255,255,255,0.08); --neon: #00D4FF; --neon2: #39FF14; --danger: #ef4444; --text: #e2e8f0; --dim: #64748b; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; align-items:center; justify-content:center; }
+.container { width:100%; max-width:480px; padding:24px; }
+.logo { text-align:center; margin-bottom:32px; }
+.logo h1 { font-family:'Orbitron',monospace; font-size:2rem; background:linear-gradient(135deg,var(--neon),var(--neon2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.logo p { color:var(--dim); font-size:0.85rem; margin-top:6px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px; }
+.tabs { display:flex; gap:0; margin-bottom:24px; border-radius:10px; overflow:hidden; border:1px solid var(--border); }
+.tab { flex:1; padding:12px; text-align:center; cursor:pointer; font-weight:600; font-size:0.9rem; background:transparent; color:var(--dim); border:none; transition:all .2s; }
+.tab.active { background:rgba(0,212,255,0.1); color:var(--neon); }
+.form { display:none; }
+.form.active { display:block; }
+.field { margin-bottom:16px; }
+.field label { display:block; font-size:0.8rem; font-weight:600; color:var(--dim); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em; }
+.field input, .field select { width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--text); font-size:0.95rem; outline:none; transition:border .2s; }
+.field input:focus, .field select:focus { border-color:var(--neon); }
+.field select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; }
+.field select option { background:var(--surface); color:var(--text); }
+.row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.btn { width:100%; padding:14px; border:none; border-radius:12px; font-size:1rem; font-weight:700; cursor:pointer; transition:all .2s; }
+.btn-primary { background:linear-gradient(135deg,var(--neon),#0099cc); color:#000; }
+.btn-primary:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(0,212,255,0.3); }
+.btn-primary:disabled { opacity:0.5; cursor:not-allowed; transform:none; box-shadow:none; }
+.consent-box { background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:16px; }
+.consent-box label { display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-size:0.85rem; line-height:1.5; color:var(--dim); }
+.consent-box input[type=checkbox] { margin-top:3px; accent-color:var(--neon); min-width:18px; }
+.error { color:var(--danger); font-size:0.8rem; margin-top:6px; display:none; }
+.error.show { display:block; }
+.info { color:var(--neon); font-size:0.8rem; text-align:center; margin-top:16px; }
+.sessions-info { text-align:center; margin-top:16px; padding:12px; background:rgba(57,255,20,0.05); border:1px solid rgba(57,255,20,0.15); border-radius:10px; font-size:0.85rem; color:var(--neon2); }
+.back { text-align:center; margin-top:20px; }
+.back a { color:var(--dim); font-size:0.85rem; text-decoration:none; }
+.back a:hover { color:var(--neon); }
+.loading { display:none; text-align:center; padding:20px; color:var(--dim); }
+.loading.show { display:block; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <h1>ZYKOS GAMER</h1>
+    <p>Plataforma de evaluacion cognitiva gamificada</p>
+  </div>
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('login')">Ingresar</button>
+      <button class="tab" onclick="showTab('register')">Registrarse</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="form active" id="form-login">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="tu@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Contrasena</label>
+        <input type="password" id="login-pass" placeholder="Tu contrasena" autocomplete="current-password">
+      </div>
+      <div class="error" id="login-error"></div>
+      <button class="btn btn-primary" onclick="doLogin()">Ingresar</button>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="form" id="form-register">
+      <div class="field">
+        <label>Email *</label>
+        <input type="email" id="reg-email" placeholder="tu@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Contrasena * (minimo 8 caracteres)</label>
+        <input type="password" id="reg-pass" placeholder="Minimo 8 caracteres" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label>Nombre o apodo</label>
+        <input type="text" id="reg-name" placeholder="Como quieras que te llamemos">
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Fecha de nacimiento *</label>
+          <input type="date" id="reg-dob">
+        </div>
+        <div class="field">
+          <label>Sexo *</label>
+          <select id="reg-sexo">
+            <option value="">Seleccionar</option>
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+            <option value="NB">No binario</option>
+            <option value="NR">Prefiero no decir</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Nivel educativo *</label>
+          <select id="reg-edu">
+            <option value="">Seleccionar</option>
+            <option value="primario">Primario</option>
+            <option value="secundario">Secundario</option>
+            <option value="terciario">Terciario</option>
+            <option value="universitario">Universitario</option>
+            <option value="posgrado">Posgrado</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Lateralidad *</label>
+          <select id="reg-lat">
+            <option value="">Seleccionar</option>
+            <option value="diestro">Diestro</option>
+            <option value="zurdo">Zurdo</option>
+            <option value="ambidiestro">Ambidiestro</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Pais</label>
+          <input type="text" id="reg-pais" placeholder="Argentina" value="Argentina">
+        </div>
+        <div class="field">
+          <label>Ocupacion</label>
+          <input type="text" id="reg-ocup" placeholder="Ej: estudiante">
+        </div>
+      </div>
+
+      <div class="consent-box">
+        <label>
+          <input type="checkbox" id="reg-consent-research">
+          Acepto que mis datos anonimizados sean utilizados con fines de investigacion para construir valores normativos poblacionales. Mis datos personales (email, nombre) nunca seran compartidos. Solo se usaran las metricas de juego asociadas a mi perfil demografico (edad, sexo, nivel educativo, lateralidad).
+        </label>
+      </div>
+      <div class="consent-box">
+        <label>
+          <input type="checkbox" id="reg-consent-terms">
+          Acepto los terminos de uso y la politica de privacidad de ZYKOS GAMER.
+        </label>
+      </div>
+
+      <div class="error" id="reg-error"></div>
+      <button class="btn btn-primary" onclick="doRegister()">Crear cuenta gratuita</button>
+      <div class="sessions-info">15 sesiones gratuitas para explorar todos los juegos</div>
+    </div>
+
+    <div class="loading" id="loading">Conectando...</div>
+  </div>
+  <div class="back"><a href="/">Volver a ZYKOS GAMER</a></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/supabase-config.js"></script>
+<script>
+var sb = null;
+
+function showTab(tab) {
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.form').forEach(function(f){ f.classList.remove('active'); });
+  if (tab === 'login') {
+    document.querySelectorAll('.tab')[0].classList.add('active');
+    document.getElementById('form-login').classList.add('active');
+  } else {
+    document.querySelectorAll('.tab')[1].classList.add('active');
+    document.getElementById('form-register').classList.add('active');
+  }
+  // Clear errors
+  document.querySelectorAll('.error').forEach(function(e){ e.classList.remove('show'); e.textContent = ''; });
+}
+
+function showError(id, msg) {
+  var el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function setLoading(on) {
+  var btns = document.querySelectorAll('.btn-primary');
+  btns.forEach(function(b){ b.disabled = on; });
+  document.getElementById('loading').classList.toggle('show', on);
+}
+
+async function doLogin() {
+  var email = document.getElementById('login-email').value.trim();
+  var pass = document.getElementById('login-pass').value;
+  document.getElementById('login-error').classList.remove('show');
+
+  if (!email || !pass) { showError('login-error', 'Completa email y contrasena'); return; }
+
+  setLoading(true);
+  try {
+    sb = sb || getSupabaseClient();
+    var { data, error } = await sb.rpc('zykos_login', { p_email: email, p_password: pass });
+    if (error) { showError('login-error', 'Error de conexion: ' + error.message); setLoading(false); return; }
+    if (!data || !data.ok) { showError('login-error', data ? data.error : 'Error desconocido'); setLoading(false); return; }
+
+    // Save session
+    localStorage.setItem('zykos_token', data.token);
+    localStorage.setItem('zykos_user', JSON.stringify({
+      id: data.user_id,
+      name: data.display_name,
+      sessions_remaining: data.sessions_remaining,
+      metrics_shown: data.metrics_shown
+    }));
+
+    // Redirect to game portal
+    window.location.href = '/games/portal/';
+  } catch(e) {
+    showError('login-error', 'Error: ' + e.message);
+  }
+  setLoading(false);
+}
+
+async function doRegister() {
+  var email = document.getElementById('reg-email').value.trim();
+  var pass = document.getElementById('reg-pass').value;
+  var name = document.getElementById('reg-name').value.trim() || 'Jugador';
+  var dob = document.getElementById('reg-dob').value || null;
+  var sexo = document.getElementById('reg-sexo').value || null;
+  var edu = document.getElementById('reg-edu').value || null;
+  var lat = document.getElementById('reg-lat').value || null;
+  var pais = document.getElementById('reg-pais').value.trim() || 'Argentina';
+  var ocup = document.getElementById('reg-ocup').value.trim() || null;
+  var consentR = document.getElementById('reg-consent-research').checked;
+  var consentT = document.getElementById('reg-consent-terms').checked;
+
+  document.getElementById('reg-error').classList.remove('show');
+
+  // Validate
+  if (!email) { showError('reg-error', 'Email requerido'); return; }
+  if (!pass || pass.length < 8) { showError('reg-error', 'Password minimo 8 caracteres'); return; }
+  if (!dob) { showError('reg-error', 'Fecha de nacimiento requerida (dato demografico para normas)'); return; }
+  if (!sexo) { showError('reg-error', 'Sexo requerido (dato demografico para normas)'); return; }
+  if (!edu) { showError('reg-error', 'Nivel educativo requerido (dato demografico para normas)'); return; }
+  if (!lat) { showError('reg-error', 'Lateralidad requerida (dato demografico para normas)'); return; }
+  if (!consentT) { showError('reg-error', 'Debes aceptar los terminos de uso'); return; }
+
+  setLoading(true);
+  try {
+    sb = sb || getSupabaseClient();
+    var { data, error } = await sb.rpc('zykos_register', {
+      p_email: email,
+      p_password: pass,
+      p_display_name: name,
+      p_fecha_nacimiento: dob,
+      p_sexo: sexo,
+      p_nivel_educativo: edu,
+      p_lateralidad: lat,
+      p_pais: pais,
+      p_ocupacion: ocup,
+      p_research_consent: consentR,
+      p_terms_accepted: consentT
+    });
+    if (error) { showError('reg-error', 'Error: ' + error.message); setLoading(false); return; }
+    if (!data || !data.ok) { showError('reg-error', data ? data.error : 'Error desconocido'); setLoading(false); return; }
+
+    // Save session
+    localStorage.setItem('zykos_token', data.token);
+    localStorage.setItem('zykos_user', JSON.stringify({
+      id: data.user_id,
+      name: data.display_name,
+      sessions_remaining: data.sessions_remaining,
+      metrics_shown: false
+    }));
+
+    window.location.href = '/games/portal/';
+  } catch(e) {
+    showError('reg-error', 'Error: ' + e.message);
+  }
+  setLoading(false);
+}
+
+// Auto-check session on load
+(function(){
+  var token = localStorage.getItem('zykos_token');
+  if (!token) return;
+  sb = getSupabaseClient();
+  if (!sb) return;
+  sb.rpc('zykos_validate_session', { p_token: token }).then(function(res){
+    if (res.data && res.data.ok) {
+      localStorage.setItem('zykos_user', JSON.stringify({
+        id: res.data.user_id,
+        name: res.data.display_name,
+        sessions_remaining: res.data.sessions_remaining,
+        metrics_shown: res.data.metrics_shown
+      }));
+      window.location.href = '/games/portal/';
+    } else {
+      localStorage.removeItem('zykos_token');
+      localStorage.removeItem('zykos_user');
+    }
+  });
+})();
+
+// Enter key submits
+document.getElementById('login-pass').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+document.getElementById('reg-ocup').addEventListener('keydown', function(e){ if(e.key==='Enter') doRegister(); });
+</script>
+</body>
+</html>
