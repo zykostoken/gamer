@@ -101,9 +101,12 @@ var GAMES = [
 var sb, userData;
 
 function doLogout() {
+  var token = localStorage.getItem('zykos_token');
+  if (sb && token) sb.rpc('zykos_logout', { p_token: token }).catch(function(){});
   localStorage.removeItem('zykos_token');
   localStorage.removeItem('zykos_user');
-  window.location.href = '/auth/';
+  localStorage.removeItem('zykos_player_id');
+  window.location.href = '/';
 }
 
 function renderGames(remaining) {
@@ -184,22 +187,23 @@ async function init() {
       updateBadge(data.sessions_remaining);
     }
 
-    // Metrics button (visible if can_view_metrics or superadmin)
-    if (data.can_view_metrics || data.role === 'superadmin') {
+    // Metrics button: superadmin unlimited, free users 3 views
+    var canView = data.role === 'superadmin' || data.role === 'admin' || (data.metrics_view_count < 3 && data.sessions_total > 0);
+    if (canView) {
       var mb = document.createElement('a');
       mb.href = '/dashboard/?token=' + token;
       mb.className = 'cta-btn';
       mb.style.cssText = 'font-size:0.8rem;padding:8px 18px;margin-top:8px;display:inline-block;';
-      var viewsLeft = data.role === 'superadmin' ? 'ilimitado' : (data.metrics_allowed_views - data.metrics_view_count) + ' vista(s) restante(s)';
+      var viewsLeft = data.role === 'superadmin' || data.role === 'admin' ? 'ilimitado' : (3 - data.metrics_view_count) + ' vista(s) restante(s)';
       mb.textContent = 'Ver Metricas (' + viewsLeft + ')';
       mb.onclick = function(e) {
-        if (data.role !== 'superadmin') {
+        if (data.role !== 'superadmin' && data.role !== 'admin') {
           e.preventDefault();
-          sb.rpc('zykos_view_metrics', { p_token: token }).then(function(r) {
-            if (r.data && r.data.can_view) {
+          sb.rpc('zykos_record_metrics_view', { p_token: token, p_context: 'portal_button' }).then(function(r) {
+            if (r.data && r.data.can_view_more) {
               window.location.href = '/dashboard/?token=' + token;
             } else {
-              alert(r.data ? r.data.message : 'No podes ver metricas');
+              alert('Llegaste al limite de vistas de metricas. Contacta a tu institucion para acceso completo.');
             }
           });
         }
