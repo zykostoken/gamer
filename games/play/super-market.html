@@ -1090,7 +1090,7 @@ function finishGame() {
     if (typeof showPostGameColorModal === 'function') showPostGameColorModal();
 }
 function goToPortal() {
-    window.location.href = localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
+    window.location.href = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
 }
 
 // ========== SUPABASE ==========
@@ -1130,7 +1130,7 @@ async function saveSupermarketResult(metrics) {
 
 // ========== SMART BACK ==========
 (function() {
-    var portalUrl = localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
+    var portalUrl = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
     var l = document.getElementById('back-link');
     if (l) l.href = portalUrl;
 })();

@@ -842,7 +842,7 @@ async function saveResults(metrics, biometData) {
 
 // Back link
 (function(){
-    var p = (function(){try{return localStorage.getItem('games_session')}catch(e){return null}})();
+    var p = (function(){try{return localStorage.getItem('zykos_token') || localStorage.getItem('games_session')}catch(e){return null}})();
     var l = document.getElementById('back-link');
     if (l) l.href = p ? '/games/portal/' : '/hdd/portal/';
 })();

@@ -143,7 +143,7 @@
     <script src="js/game.js"></script>
     <script>
     // Smart back link: detect partner vs portal origin
-    (function(){var portalUrl=localStorage.getItem('games_session')?'/games/portal/':'/hdd/portal/';var l=document.getElementById('back-link');if(l)l.href=portalUrl;})();
+    (function(){var portalUrl=localStorage.getItem('zykos_token')?'/games/portal/':localStorage.getItem('games_session')?'/games/portal/':'/hdd/portal/';var l=document.getElementById('back-link');if(l)l.href=portalUrl;})();
     </script>
     <!-- Mood modals v4 -->
     <script src="/games/shared/mood-modals.js"></script>

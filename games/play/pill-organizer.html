@@ -1436,7 +1436,7 @@
         }
 
         function goToPortal() {
-            const portalUrl = localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
+            const portalUrl = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
             window.location.href = portalUrl;
         }
 
@@ -1513,7 +1513,7 @@
   <script>
   // Smart back link
   (function(){
-    var portalUrl = localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
+    var portalUrl = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
     var l = document.getElementById('pill-back-link');
     if (l) {
       l.href = portalUrl;

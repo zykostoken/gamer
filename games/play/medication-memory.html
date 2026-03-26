@@ -3422,7 +3422,7 @@
     var backBtn = $('backBtn');
     if (!backBtn) return;
     var portalUrl;
-    if (localStorage.getItem('games_session')) {
+    if (localStorage.getItem('zykos_token') || localStorage.getItem('games_session')) {
       portalUrl = '/games/portal/';
     } else if (token) {
       portalUrl = '/hdd/portal?token=' + encodeURIComponent(token);
