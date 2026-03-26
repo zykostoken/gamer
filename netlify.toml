@@ -18,3 +18,13 @@
   from = "/informe"
   to = "/hdd/admin/informe-clinico.html"
   status = 301
+
+[[redirects]]
+  from = "/portal"
+  to = "/games/portal/"
+  status = 301
+
+[[redirects]]
+  from = "/portal/*"
+  to = "/games/portal/:splat"
+  status = 301

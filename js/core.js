@@ -741,7 +741,7 @@ const consultationTypeLabels = {
     general: 'Consulta General',
     telemedicina: 'Telemedicina',
     internacion: 'Internación',
-    hdd: 'Hospital de Día',
+    hdd: 'ZYKOS GAMER',
     turnos: 'Turnos'
 };
 

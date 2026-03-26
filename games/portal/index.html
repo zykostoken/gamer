@@ -1,441 +1,182 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portal de Juegos - ZYKOS GAMER</title>
-  <link rel="icon" type="image/png" href="/favicon.png">
-  <style>
-    :root {
-      --primary: #2563eb;
-      --primary-dark: #1d4ed8;
-      --secondary: #10b981;
-      --background: #f8fafc;
-      --surface: #ffffff;
-      --text: #1e293b;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --error: #ef4444;
-      --success: #22c55e;
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background: var(--background);
-      color: var(--text);
-      line-height: 1.6;
-      min-height: 100vh;
-    }
-
-    .header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 1.5rem;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .header-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      text-decoration: none;
-      color: var(--text);
-    }
-
-    .logo-icon {
-      width: 45px;
-      height: 45px;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-    }
-
-    .logo-text h1 {
-      font-size: 1.2rem;
-      font-weight: 700;
-    }
-
-    .logo-text p {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .user-badge {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 0.4rem 0.8rem;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 500;
-    }
-
-    .btn-logout {
-      background: var(--border);
-      color: var(--text);
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 500;
-      transition: background 0.2s;
-    }
-
-    .btn-logout:hover {
-      background: #cbd5e1;
-    }
-
-    .main-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem;
-    }
-
-    .welcome-section {
-      text-align: center;
-      margin-bottom: 3rem;
-    }
-
-    .welcome-section h2 {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-      color: var(--text);
-    }
-
-    .welcome-section p {
-      color: var(--text-muted);
-      font-size: 1.1rem;
-    }
-
-    .games-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .game-card {
-      background: var(--surface);
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-      transition: all 0.3s;
-      border: 1px solid var(--border);
-    }
-
-    .game-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
-
-    .game-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .game-icon {
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.8rem;
-    }
-
-    .game-title {
-      flex: 1;
-    }
-
-    .game-title h3 {
-      font-size: 1.25rem;
-      margin-bottom: 0.25rem;
-    }
-
-    .game-title span {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .game-description {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-      margin-bottom: 1rem;
-      line-height: 1.5;
-    }
-
-    .game-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .game-tag {
-      background: #e0f2fe;
-      color: #0369a1;
-      padding: 0.25rem 0.6rem;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-
-    .btn-play {
-      width: 100%;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      color: white;
-      border: none;
-      padding: 0.9rem;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      text-decoration: none;
-    }
-
-    .btn-play:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
-    }
-
-    .loading-state {
-      text-align: center;
-      padding: 3rem;
-      color: var(--text-muted);
-    }
-
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 1rem;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .info-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border-radius: 16px;
-      padding: 2rem;
-      margin-top: 2rem;
-      text-align: center;
-    }
-
-    .info-card h3 {
-      font-size: 1.25rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .info-card p {
-      opacity: 0.9;
-      font-size: 0.95rem;
-    }
-
-    @media (max-width: 640px) {
-      .header-content {
-        flex-direction: column;
-        text-align: center;
-      }
-
-      .welcome-section h2 {
-        font-size: 1.5rem;
-      }
-
-      .games-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="/js/supabase-config.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
-  <script src="/js/sanitize.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Juegos - ZYKOS GAMER</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #0A0E27; --surface: #111633; --border: rgba(255,255,255,0.08); --neon: #00D4FF; --neon2: #39FF14; --danger: #ef4444; --warn: #f59e0b; --text: #e2e8f0; --dim: #64748b; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+header { background:var(--surface); border-bottom:1px solid var(--border); padding:16px 24px; }
+.header-inner { max-width:1100px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+.logo { font-family:'Orbitron',monospace; font-size:1.3rem; font-weight:800; background:linear-gradient(135deg,var(--neon),var(--neon2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-decoration:none; }
+.user-bar { display:flex; align-items:center; gap:16px; font-size:0.85rem; }
+.sessions-badge { background:rgba(57,255,20,0.1); border:1px solid rgba(57,255,20,0.2); padding:6px 14px; border-radius:20px; color:var(--neon2); font-weight:600; }
+.sessions-badge.low { background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.2); color:var(--danger); }
+.logout-btn { background:none; border:1px solid var(--border); color:var(--dim); padding:6px 14px; border-radius:8px; cursor:pointer; font-size:0.8rem; }
+.logout-btn:hover { border-color:var(--danger); color:var(--danger); }
+.container { max-width:1100px; margin:0 auto; padding:24px 16px; }
+.welcome { margin-bottom:24px; }
+.welcome h1 { font-size:1.4rem; font-weight:700; margin-bottom:4px; }
+.welcome p { color:var(--dim); font-size:0.85rem; }
+.games-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:16px; }
+.game-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; transition:all 0.2s; cursor:pointer; text-decoration:none; color:inherit; display:block; }
+.game-card:hover { border-color:var(--neon); transform:translateY(-2px); box-shadow:0 4px 20px rgba(0,212,255,0.1); }
+.game-header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.game-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; }
+.game-title { font-weight:700; font-size:1rem; }
+.game-desc { font-size:0.8rem; color:var(--dim); line-height:1.5; margin-bottom:12px; }
+.game-domains { display:flex; flex-wrap:wrap; gap:4px; }
+.domain-tag { font-size:0.6rem; padding:2px 7px; border-radius:4px; background:rgba(0,212,255,0.08); color:var(--neon); border:1px solid rgba(0,212,255,0.15); }
+.no-sessions { text-align:center; padding:48px 24px; }
+.no-sessions h2 { font-size:1.3rem; margin-bottom:12px; color:var(--warn); }
+.no-sessions p { color:var(--dim); font-size:0.9rem; max-width:500px; margin:0 auto 24px; line-height:1.6; }
+.cta-btn { display:inline-block; padding:14px 32px; border-radius:12px; background:linear-gradient(135deg,var(--neon),#0099cc); color:#000; font-weight:700; text-decoration:none; font-size:1rem; }
+</style>
 </head>
 <body>
-  <header class="header">
-    <div class="header-content">
-      <a href="/" class="logo">
-        <div class="logo-icon">🎮</div>
-        <div class="logo-text">
-          <h1>Juegos Terapeuticos</h1>
-          <p>ZYKOS GAMER</p>
-        </div>
-      </a>
-
-      <div class="user-info">
-        <span class="user-badge" id="userBadge">Partner</span>
-        <button class="btn-logout" id="logoutBtn">Cerrar Sesion</button>
-      </div>
+<header>
+  <div class="header-inner">
+    <a href="/" class="logo">ZYKOS GAMER</a>
+    <div class="user-bar">
+      <span id="user-name" style="color:var(--dim)"></span>
+      <span class="sessions-badge" id="sessions-badge">-- sesiones</span>
+      <button class="logout-btn" onclick="doLogout()">Salir</button>
     </div>
-  </header>
+  </div>
+</header>
+<div class="container">
+  <div class="welcome">
+    <h1 id="greeting">Cargando...</h1>
+    <p>Selecciona un juego. Cada sesion evalua funciones cognitivas distintas.</p>
+  </div>
+  <div id="games-area">
+    <div class="games-grid" id="games-grid"></div>
+  </div>
+  <div id="no-sessions" style="display:none" class="no-sessions">
+    <h2>Sesiones agotadas</h2>
+    <p>Usaste todas tus sesiones gratuitas. Los datos que generaste contribuyen a construir normas poblacionales para evaluacion cognitiva.</p>
+    <p>Para acceder a un dashboard completo con tus metricas, o para usar ZYKOS en tu institucion:</p>
+    <a href="mailto:info@zykos.ar" class="cta-btn">Contactar ZYKOS</a>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/supabase-config.js"></script>
+<script src="/js/consent-modal.js"></script>
+<script>
+var GAMES = [
+  { slug:'lawn-mower', name:'Cortadora de Cesped', icon:'&#127793;', color:'#22c55e',
+    desc:'Planifica el recorrido para cortar todo el cesped. Planificacion, praxis motora, manejo de recursos, patron ante errores.',
+    domains:['E2 Planificacion','M3 Precision','AFEC1 Frustracion','A1 Atencion'],
+    url:'/games/play/lawn-mower.html' },
+  { slug:'pill-organizer', name:'Organizador de Medicacion', icon:'&#128138;', color:'#3b82f6',
+    desc:'Coloca cada medicamento en el dia y horario correcto. Tremor, dismetria, memoria de trabajo, secuenciacion.',
+    domains:['M1 Tremor','M3 Precision','MEM1 Trabajo','E2 Planificacion'],
+    url:'/games/play/pill-organizer.html' },
+  { slug:'super-market', name:'Desafio Milanesas', icon:'&#128722;', color:'#f59e0b',
+    desc:'Lee la receta, recorda los ingredientes y compra con presupuesto. Comprension, memoria, estimacion numerica.',
+    domains:['C1 Comprension','MEM1 Trabajo','CAL1 Estimacion','E1 Inhibicion'],
+    url:'/games/play/super-market.html' },
+  { slug:'neuro-chef', name:'Cocinero Neuronal', icon:'&#127859;', color:'#ef4444',
+    desc:'Selecciona ingredientes correctos. Signal Detection: discriminar signal de ruido.',
+    domains:['MEM1 Trabajo','E1 Inhibicion','M1 Tremor'],
+    url:'/games/play/neuro-chef/index.html' },
+  { slug:'medication-memory', name:'Memoria de Medicacion', icon:'&#128218;', color:'#8b5cf6',
+    desc:'Recorda que medicamentos tomar en cada horario. Memory span, decision time, adherencia.',
+    domains:['MEM1 Trabajo','E2 Planificacion','A1 Atencion'],
+    url:'/games/play/medication-memory.html' },
+  { slug:'daily-routine', name:'Mi Rutina Diaria', icon:'&#127748;', color:'#06b6d4',
+    desc:'Ordena actividades de la rutina. Secuenciacion, planificacion temporal, comprension.',
+    domains:['E2 Planificacion','C1 Comprension','MEM1 Trabajo'],
+    url:'/games/play/daily-routine.html' },
+  { slug:'fridge-logic', name:'Heladera Inteligente', icon:'&#10052;', color:'#10b981',
+    desc:'Organiza alimentos en la heladera. Categorizacion, abstraccion, organizacion espacial.',
+    domains:['E2 Planificacion','MEM1 Trabajo','E3 Flexibilidad'],
+    url:'/games/play/fridge-logic.html' }
+];
 
-  <main class="main-content">
-    <div class="welcome-section">
-      <h2>Bienvenido, <span id="userName">Visitante</span>!</h2>
-      <p>Explora nuestros juegos terapeuticos diseñados para ejercitar la mente</p>
-      <p id="sessionsInfo" style="font-size:0.9rem;color:#22c55e;margin-top:6px;"></p>
-    </div>
+var sb, userData;
 
-    <div id="gamesContainer">
-      <div class="loading-state">
-        <div class="loading-spinner"></div>
-        <p>Cargando juegos...</p>
-      </div>
-    </div>
+function doLogout() {
+  localStorage.removeItem('zykos_token');
+  localStorage.removeItem('zykos_user');
+  window.location.href = '/auth/';
+}
 
-    <div class="info-card">
-      <h3>Sobre estos juegos</h3>
-      <p>Estos juegos fueron diseñados con fines terapeuticos para trabajar diferentes areas cognitivas como atencion, memoria, planificacion y motricidad fina. Son parte de la plataforma ZYKOS GAMER de evaluacion cognitiva gamificada.</p>
-    </div>
-  </main>
+function renderGames(remaining) {
+  var grid = document.getElementById('games-grid');
+  if (remaining <= 0) {
+    document.getElementById('games-area').style.display = 'none';
+    document.getElementById('no-sessions').style.display = 'block';
+    return;
+  }
+  grid.innerHTML = '';
+  GAMES.forEach(function(g) {
+    var a = document.createElement('a');
+    a.href = '#';
+    a.className = 'game-card';
+    a.onclick = function(e) { e.preventDefault(); startGame(g); };
+    a.innerHTML =
+      '<div class="game-header">' +
+        '<div class="game-icon" style="background:' + g.color + '22;border:1px solid ' + g.color + '44;">' + g.icon + '</div>' +
+        '<div><div class="game-title">' + g.name + '</div></div>' +
+      '</div>' +
+      '<div class="game-desc">' + g.desc + '</div>' +
+      '<div class="game-domains">' + g.domains.map(function(d){ return '<span class="domain-tag">' + d + '</span>'; }).join('') + '</div>';
+    grid.appendChild(a);
+  });
+}
 
-  <script>
-    var sb = null;
-    var zykosUser = null;
-
-    // ---- SESSION VALIDATION ----
-    async function init() {
-      var token = localStorage.getItem('zykos_token');
-      if (!token) { window.location.href = '/auth/'; return; }
-
-      sb = getSupabaseClient();
-      if (!sb) { window.location.href = '/auth/'; return; }
-
-      try {
-        var { data, error } = await sb.rpc('zykos_validate_session', { p_token: token });
-        if (error || !data || !data.ok) {
-          localStorage.removeItem('zykos_token');
-          localStorage.removeItem('zykos_user');
-          window.location.href = '/auth/';
-          return;
-        }
-        zykosUser = data;
-        localStorage.setItem('zykos_user', JSON.stringify(data));
-      } catch(e) {
-        // Offline fallback: use cached user
-        var cached = localStorage.getItem('zykos_user');
-        if (cached) { zykosUser = JSON.parse(cached); }
-        else { window.location.href = '/auth/'; return; }
-      }
-
-      // Display user info
-      document.getElementById('userName').textContent = zykosUser.display_name || 'Jugador';
-      document.getElementById('userBadge').textContent = zykosUser.sessions_remaining + ' sesiones';
-      document.getElementById('sessionsInfo').textContent =
-        zykosUser.sessions_remaining > 0
-          ? 'Te quedan ' + zykosUser.sessions_remaining + ' de ' + (zykosUser.max_sessions || 15) + ' sesiones gratuitas'
-          : 'Sesiones agotadas. Contacta a tu institucion para acceso completo.';
-
-      if (zykosUser.sessions_remaining <= 0) {
-        document.getElementById('sessionsInfo').style.color = '#ef4444';
-      }
-
-      loadGames();
+async function startGame(game) {
+  var token = localStorage.getItem('zykos_token');
+  if (!token) { window.location.href = '/auth/'; return; }
+  try {
+    sb = sb || getSupabaseClient();
+    var res = await sb.rpc('zykos_consume_session', { p_token: token, p_game_slug: game.slug });
+    var data = res.data;
+    if (!data || !data.ok) {
+      if (data && data.sessions_remaining === 0) { renderGames(0); return; }
+      alert(data ? data.error : 'Error al iniciar juego');
+      return;
     }
+    updateBadge(data.sessions_remaining);
+    localStorage.setItem('zykos_current_game', game.slug);
+    window.location.href = game.url + '?source=zykos&uid=' + (userData ? userData.user_id : '');
+  } catch(e) { alert('Error: ' + e.message); }
+}
 
-    // ---- CONSUME SESSION BEFORE PLAYING ----
-    async function playGame(slug) {
-      if (!zykosUser || zykosUser.sessions_remaining <= 0) {
-        alert('Sin sesiones disponibles. Contacta a tu institucion para acceso completo.');
-        return;
-      }
+function updateBadge(n) {
+  var b = document.getElementById('sessions-badge');
+  b.textContent = n + ' sesion' + (n !== 1 ? 'es' : '');
+  b.className = 'sessions-badge' + (n <= 3 ? ' low' : '');
+}
 
-      var token = localStorage.getItem('zykos_token');
-      if (!sb || !token) { window.location.href = '/auth/'; return; }
-
-      try {
-        var { data, error } = await sb.rpc('zykos_consume_session', { p_token: token, p_game_slug: slug });
-        if (error || !data || !data.ok) {
-          if (data && data.error) alert(data.error);
-          return;
-        }
-        // Update local
-        zykosUser.sessions_remaining = data.sessions_remaining;
-        localStorage.setItem('zykos_user', JSON.stringify(zykosUser));
-      } catch(e) {
-        // Allow play offline
-      }
-
-      // Navigate — store user ID for game saves
-      localStorage.setItem('zykos_player_id', zykosUser.user_id);
-      window.location.href = '/games/play/' + slug + '.html';
-    }
-
-    // ---- GAME LIST ----
-    function loadGames() {
-      var container = document.getElementById('gamesContainer');
-      var noSessions = zykosUser && zykosUser.sessions_remaining <= 0;
-
-      var games = [
-        { slug:'lawn-mower', name:'Cortadora de Cesped', icon:'*', desc:'Planificacion espacial, motricidad fina, control de impulsos, doble/triple tarea.', areas:['Planificacion','Motricidad','Atencion','Carga Cognitiva'], levels:'20+3' },
-        { slug:'medication-memory', name:'Memoria de Medicacion', icon:'*', desc:'Memoria de trabajo, adherencia, decision bajo incertidumbre.', areas:['Memoria','Atencion','Comprension'], levels:'5' },
-        { slug:'pill-organizer', name:'Organizador de Medicacion', icon:'*', desc:'Drag-and-drop con medicion de tremor, dismetria, eficiencia de trayectoria.', areas:['Motricidad Fina','Planificacion','Praxis'], levels:'1' },
-        { slug:'neuro-chef/index', name:'Cocinero Neuronal', icon:'*', desc:'SDT (signal detection theory), categorizacion, d-prime, falsas alarmas.', areas:['Memoria','SDT','Categorizacion'], levels:'6' },
-        { slug:'super-market', name:'Desafio Milanesas', icon:'*', desc:'Comprension de receta, memoria de trabajo, estimacion numerica, planificacion de compras.', areas:['Memoria','Comprension','Calculo','Planificacion'], levels:'3' },
-        { slug:'daily-routine', name:'Mi Rutina Diaria', icon:'*', desc:'Secuenciacion temporal, juicio social, toma de decisiones en AVD.', areas:['Secuenciacion','Juicio','AVD'], levels:'2' },
-        { slug:'fridge-logic', name:'Heladera Inteligente', icon:'*', desc:'Categorizacion semantica, razonamiento logico, seguridad alimentaria.', areas:['Categorizacion','Razonamiento','Planificacion'], levels:'1' }
-      ];
-
-      var iconMap = { 'lawn-mower':'&#127793;', 'medication-memory':'&#128138;', 'pill-organizer':'&#127919;', 'neuro-chef/index':'&#129504;', 'super-market':'&#128722;', 'daily-routine':'&#127749;', 'fridge-logic':'&#129482;' };
-
-      container.innerHTML = '<div class="games-grid">' + games.map(function(g){
-        return '<div class="game-card">' +
-          '<div class="game-header"><div class="game-icon">' + (iconMap[g.slug]||'&#127918;') + '</div>' +
-          '<div class="game-title"><h3>' + g.name + '</h3><span>' + g.levels + ' niveles</span></div></div>' +
-          '<p class="game-description">' + g.desc + '</p>' +
-          '<div class="game-tags">' + g.areas.map(function(a){ return '<span class="game-tag">' + a + '</span>'; }).join('') + '</div>' +
-          '<a href="#" onclick="playGame(\'' + g.slug + '\');return false;" class="btn-play" ' +
-          (noSessions ? 'style="opacity:0.4;pointer-events:none;"' : '') + '>' +
-          (noSessions ? 'Sin sesiones' : '&#9654; Jugar') + '</a></div>';
-      }).join('') + '</div>';
-    }
-
-    // ---- LOGOUT ----
-    document.getElementById('logoutBtn').addEventListener('click', function() {
+async function init() {
+  var token = localStorage.getItem('zykos_token');
+  if (!token) { window.location.href = '/auth/'; return; }
+  sb = getSupabaseClient();
+  if (!sb) { document.getElementById('greeting').textContent = 'Error de conexion'; return; }
+  try {
+    var res = await sb.rpc('zykos_validate_session', { p_token: token });
+    var data = res.data;
+    if (res.error || !data || !data.ok) {
       localStorage.removeItem('zykos_token');
       localStorage.removeItem('zykos_user');
-      localStorage.removeItem('zykos_player_id');
-      window.location.href = '/';
-    });
+      window.location.href = '/auth/';
+      return;
+    }
+    userData = data;
+    document.getElementById('greeting').textContent = 'Hola, ' + (data.display_name || 'Jugador');
+    document.getElementById('user-name').textContent = data.email;
+    updateBadge(data.sessions_remaining);
+    showZykosConsent(function() { renderGames(data.sessions_remaining); });
+  } catch(e) { document.getElementById('greeting').textContent = 'Error: ' + e.message; }
+}
 
-    // Initialize
-    init();
-  </script>
+init();
+</script>
 </body>
 </html>

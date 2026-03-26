@@ -1,6 +1,6 @@
 // ================================================================
 // show-metrics.js — Modal de métricas post-juego con colores históricos
-// Clínica José Ingenieros — Hospital de Día
+// ZYKOS GAMER
 // ================================================================
 
 (function(global) {
