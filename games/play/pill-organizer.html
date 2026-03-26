@@ -330,8 +330,8 @@
                         <span></span> Organizador Semanal
                     </h3>
                     <button id="finish-btn"
-                            class="bg-gradient-to-r from-indigo-600 to-purple-700 text-white px-8 py-3 rounded-2xl font-bold text-lg hover:shadow-2xl transition-all glow-animation">
-                         FINALIZAR
+                            style="display:none;padding:12px 32px;border-radius:16px;border:none;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 4px 16px rgba(34,197,94,0.4);animation:pulse 1s infinite;">
+                         COMPLETADO
                     </button>
                 </div>
 
@@ -1269,19 +1269,7 @@
             const hint = generateClinicalHint(avgTremor, omissions, sessionState.totalErrors, avgHesitation, avgEff, persevs);
             if (hint) { hintEl.textContent = hint; hintEl.style.display = 'block'; }
 
-            // AUTO-COMPLETE: when all expected placements are made
-            const totalPlaced = sessionState.correctPlacements + sessionState.totalErrors;
-            if (totalPlaced >= expected && !sessionState.autoCompleteTriggered) {
-                sessionState.autoCompleteTriggered = true;
-                const btn = document.getElementById('finish-btn');
-                btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
-                btn.style.animation = 'pulse 1s infinite';
-                btn.textContent = 'FINALIZAR (todo colocado)';
-                // Auto-finalize after 3 seconds
-                setTimeout(function() {
-                    if (sessionState.gameActive) btn.click();
-                }, 3000);
-            }
+            // NO auto-complete: el paciente decide cuando termino
         }
 
         function countPerseverations() {
@@ -1311,40 +1299,39 @@
         }
 
         // ===========================================
-        // FINALIZACIÓN
+        // FINALIZACION
         // ===========================================
-        document.getElementById('finish-btn').addEventListener('click', () => {
-            // Check if any pills placed
+        document.getElementById('finish-btn').addEventListener('click', function() {
+            // Prevent double-click
+            if (!sessionState.gameActive) return;
+
+            // Must have placed at least 1 pill
             if (sessionState.totalMoves === 0) {
-                alert('Todavía no colocaste ninguna pastilla. Arrastrá las pastillas a los casilleros antes de finalizar.');
+                alert('Todavia no colocaste ninguna pastilla.');
                 return;
             }
 
+            // STOP everything
             sessionState.endTime = Date.now();
             sessionState.gameActive = false;
 
-            // Pasar métricas al shared system
-            if (typeof updateGameMetrics === 'function') {
-                updateGameMetrics({
-                    total_placements: sessionState.totalMoves,
-                    correct_placements: sessionState.correctPlacements,
-                    errors: sessionState.totalErrors,
-                    movements: sessionState.movements
-                });
+            // Stop the timer visually
+            if (sessionState.timerInterval) {
+                clearInterval(sessionState.timerInterval);
+                sessionState.timerInterval = null;
             }
-            // Mostrar modal de colores (shared) → luego muestra resultados
-            if (typeof showPostGameColorModal === 'function') {
-                showPostGameColorModal();
-            } else {
-                // Si no hay modal de colores, ir directo a resultados
-                completeSession();
-            }
+
+            // Go straight to results (color modal after)
+            completeSession().then(function() {
+                // After results are shown, offer color selection
+                if (typeof showPostGameColorModal === 'function') {
+                    try { showPostGameColorModal(); } catch(e) { console.warn('Color modal:', e.message); }
+                }
+            }).catch(function(e) { console.error('completeSession error:', e); });
         });
 
-        // Callback que el shared modal invoca tras elegir color
-        window.showMetricsModal = function() {
-            completeSession();
-        };
+        // Legacy callback — no longer needed but keep for safety
+        window.showMetricsModal = function() {};
 
         async function completeSession() {
             const duration = Math.floor(((sessionState.endTime || Date.now()) - (sessionState.levelStartTime || sessionState.startTime)) / 1000);
@@ -1438,6 +1425,9 @@
                             input_device: sessionState.inputDevice || 'unknown',
                             level: LEVELS[sessionState.currentLevelIndex].id,
                             completed: true,
+                            omission_errors: Math.max(0, expected - sessionState.correctPlacements),
+                            commission_errors: sessionState.totalErrors,
+                            perseveration_count: countPerseverations(),
                             drop_precision: avgDropPrecision != null ? parseFloat(avgDropPrecision.toFixed(3)) : null,
                             drop_offset_mean_px: avgDropOffset != null ? parseFloat(avgDropOffset.toFixed(1)) : null,
                             drop_offset_max_px: maxDropOffset != null ? parseFloat(maxDropOffset.toFixed(1)) : null,
@@ -1508,13 +1498,16 @@
             }
 
             // === MOSTRAR MODAL DE RESULTADOS ===
-            showResultsModal(finalScore, accuracy, completeness, avgTremor, avgHesitation, avgPathEff, duration, expected);
+            var omissions = Math.max(0, expected - sessionState.correctPlacements);
+            var commissions = sessionState.totalErrors;
+            var perseverations = countPerseverations();
+            showResultsModal(finalScore, accuracy, completeness, avgTremor, avgHesitation, avgPathEff, duration, expected, omissions, commissions, perseverations);
         }
 
         // ===========================================
         // RESULTADOS — Modal visual
         // ===========================================
-        function showResultsModal(score, accuracy, completeness, tremor, hesitation, pathEff, duration, expected) {
+        function showResultsModal(score, accuracy, completeness, tremor, hesitation, pathEff, duration, expected, omissions, commissions, perseverations) {
             const level = LEVELS[sessionState.currentLevelIndex];
             const hasNextLevel = sessionState.currentLevelIndex < LEVELS.length - 1;
             const passed = accuracy >= 60 && completeness >= 50;
@@ -1557,6 +1550,18 @@
                     <div class="metric-row">
                         <span class="text-gray-600">Errores</span>
                         <span class="font-bold ${sessionState.totalErrors > 0 ? 'text-red-600' : 'text-green-600'}">${sessionState.totalErrors}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="text-gray-600">Omisiones</span>
+                        <span class="font-bold ${omissions > 0 ? 'text-amber-600' : 'text-green-600'}">${omissions}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="text-gray-600">Comisiones</span>
+                        <span class="font-bold ${commissions > 0 ? 'text-red-600' : 'text-green-600'}">${commissions}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="text-gray-600">Perseveraciones</span>
+                        <span class="font-bold ${perseverations > 0 ? 'text-red-600' : 'text-green-600'}">${perseverations}</span>
                     </div>
                     <div class="metric-row">
                         <span class="text-gray-600">Tiempo</span>
