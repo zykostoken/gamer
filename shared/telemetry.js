@@ -42,6 +42,12 @@ const TELEM = (() => {
     const sb = _getSb();
     if (!sb) { console.warn('[TELEM] No Supabase client'); return null; }
     try {
+      // Evidence hash chain for metric tables
+      if (table.includes('game_metrics') || table.includes('game_sessions') || table.includes('clinical_alerts')) {
+        if (typeof ZykosEvidence !== 'undefined' && ZykosEvidence.prepare) {
+          data = await ZykosEvidence.prepare(data);
+        }
+      }
       const { data: result, error } = await sb.from(table).insert(data).select().single();
       if (error) { console.error(`[TELEM] Insert ${table}:`, error.message); return null; }
       return result;
@@ -52,6 +58,12 @@ const TELEM = (() => {
     const sb = _getSb();
     if (!sb || !rows.length) return;
     try {
+      // Evidence hash chain for batch inserts on metric tables
+      if (table.includes('game_metrics') && typeof ZykosEvidence !== 'undefined' && ZykosEvidence.prepare) {
+        for (var i = 0; i < rows.length; i++) {
+          rows[i] = await ZykosEvidence.prepare(rows[i]);
+        }
+      }
       const { error } = await sb.from(table).insert(rows);
       if (error) console.error(`[TELEM] InsertMany ${table}:`, error.message);
     } catch (e) { console.error(`[TELEM] InsertMany ${table}:`, e); }
