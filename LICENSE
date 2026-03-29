@@ -1,0 +1,121 @@
+ZYKOS GAMER — PROPRIETARY SOFTWARE LICENSE
+============================================
+
+Copyright (c) 2025-2026 Gonzalo Pérez Cortizo
+All Rights Reserved.
+
+INTELLECTUAL PROPERTY NOTICE
+----------------------------
+
+ZYKOS GAMER is proprietary software. The source code, game designs,
+biometric measurement algorithms, cognitive assessment frameworks,
+content packs, scoring systems, clinical metrics schemas, and all
+associated documentation constitute protected intellectual property.
+
+This software, in whole or in part, may NOT be:
+  - Copied, reproduced, or distributed
+  - Modified, adapted, or translated
+  - Reverse-engineered, decompiled, or disassembled
+  - Used to create derivative works
+  - Sublicensed, leased, or transferred
+  - Deployed on any server or domain without written authorization
+
+without the prior written consent of the copyright holder.
+
+COMPONENTS COVERED
+------------------
+
+1. GAME ENGINES
+   - classify-and-place engine and all content packs
+   - kitchen engine
+   - inkblot engine (Rorschach-inspired cognitive assessment)
+   - All future engines developed under this repository
+
+2. BIOMETRIC FRAMEWORK
+   - biomet.js — universal biometric measurement engine
+   - telemetry.js — unified telemetry sender
+   - auto-save.js — session capture system
+   - show-metrics.js — clinical metrics display
+   - mood-modals.js — projective color assessment
+   - input-calibration.js — input baseline measurement
+   - All cognitive metric calculations and clinical flag algorithms
+
+3. CONTENT PACKS
+   - La Ferretería de Berugo (90 items, 9 categories, 7 missions)
+   - El Almacén de Don Tito (79 items, 9 categories, 7 missions)
+   - Electrodomésticos El Rayo (61 items, 8 categories, 7 missions)
+   - La Librería de la Seño Marta (72 items, 8 categories, 7 missions)
+   - Desafío Milanesas — Supermarket (44 items, 6 categories)
+   - All future content packs
+
+4. THERAPEUTIC GAMES
+   - Cortadora de Césped (lawn-mower) — spatial planning
+   - Organizador de Medicación (pill-organizer) — pharmacological praxis
+   - Desafío Milanesas (super-market) — reading + episodic recall
+   - Cocinero Neuronal (neuro-chef) — signal detection theory
+   - Memoria de Medicación (medication-memory) — working memory
+   - Mi Rutina Diaria (daily-routine) — ADL sequencing
+   - Heladera Inteligente (fridge-logic) — food safety classification
+   - All future games developed under this platform
+
+5. CLINICAL ASSESSMENT METHODOLOGY
+   - 140+ biometric variables captured per game session
+   - 14 clinical constructs across 7 neuropsychological domains
+   - Luria/Lezak/Miyake theoretical framework implementation
+   - Reliable Change Index (RCI) based change detection
+   - Cluster classification system (FUNCIONAL/HIPOACTIVO/HIPERACTIVO/DESORGANIZADO)
+   - Longitudinal baseline detection algorithms
+   - Normative population database schema and methodology
+
+6. DATABASE SCHEMAS AND RPCS
+   - All Supabase migrations (zykos_* tables)
+   - Authentication RPC functions (zykos_register, zykos_login, zykos_validate_session)
+   - Session management and telemetry schemas
+   - Hash-based data integrity verification system
+
+7. PLATFORM ARCHITECTURE
+   - Multi-tenant B2B deployment model
+   - Pack-based content system with JSON schema
+   - Engine-agnostic game framework
+   - Regional compliance packages (EU GDPR, USA HIPAA, Argentina ReNaPDiS)
+
+COMMERCIAL LICENSING
+--------------------
+
+For institutional licensing, B2B deployment, or commercial use:
+  Email: profesional@zykos.ar
+  Web: https://zykos.ar
+
+APPLICABLE LAW
+--------------
+
+This license is governed by the laws of the Argentine Republic.
+Any dispute shall be resolved in the courts of Necochea,
+Province of Buenos Aires, Argentina.
+
+International protections under the Berne Convention for the
+Protection of Literary and Artistic Works apply.
+
+ORIGIN AND AUTHORSHIP
+---------------------
+
+Original concept, clinical methodology, and project direction:
+  Dr. Gonzalo Pérez Cortizo
+  Medical Director, Clínica Psiquiátrica José Ingenieros SRL
+  Necochea, Buenos Aires, Argentina
+  CUIT: 30-61202984-5
+
+Software development assisted by AI tools (Claude, Anthropic).
+All creative decisions, clinical frameworks, game concepts,
+character designs, and therapeutic methodology are original
+works of the copyright holder.
+
+FIRST PUBLICATION DATE: 2025
+REGISTRATION PENDING: INPI Argentina (Software Registry)
+                      DNDA Argentina (Dirección Nacional del Derecho de Autor)
+
+---
+
+THIS IS NOT OPEN SOURCE SOFTWARE.
+Unauthorized use is a violation of Argentine Law 11.723
+(Intellectual Property) and international copyright treaties.

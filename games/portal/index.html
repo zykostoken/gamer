@@ -57,10 +57,22 @@ header { background:var(--surface); border-bottom:1px solid var(--border); paddi
     <div class="games-grid" id="games-grid"></div>
   </div>
   <div id="no-sessions" style="display:none" class="no-sessions">
-    <h2>Sesiones agotadas</h2>
-    <p>Usaste todas tus sesiones gratuitas. Los datos que generaste contribuyen a construir normas poblacionales para evaluacion cognitiva.</p>
-    <p>Para acceder a un dashboard completo con tus metricas, o para usar ZYKOS en tu institucion:</p>
-    <a href="mailto:info@zykos.ar" class="cta-btn">Contactar ZYKOS</a>
+    <h2>Sesiones gratuitas completadas</h2>
+    <p>Tus 15 sesiones gratuitas terminaron. Tu perfil y todos tus datos siguen guardados — cuando vuelvas, todo estara ahi.</p>
+    <p style="margin-bottom:32px;">Los datos que generaste contribuyen a construir la primera base normativa poblacional de metricas cognitivas digitales de habla hispana.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center;max-width:700px;margin:0 auto 32px;">
+      <div style="flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:left;">
+        <div style="font-size:0.7rem;text-transform:uppercase;color:var(--neon2);font-weight:700;margin-bottom:8px;">Jugador</div>
+        <div style="font-size:0.85rem;color:var(--text);margin-bottom:8px;">Sesiones ilimitadas para vos y tu grupo familiar. Dashboard personal con historico completo.</div>
+        <a href="mailto:membresia@zykos.ar?subject=Membresia%20Jugador" style="color:var(--neon);font-size:0.8rem;font-weight:600;">Solicitar acceso →</a>
+      </div>
+      <div style="flex:1;min-width:200px;background:var(--surface);border:1px solid rgba(168,85,247,0.3);border-radius:12px;padding:20px;text-align:left;">
+        <div style="font-size:0.7rem;text-transform:uppercase;color:#a78bfa;font-weight:700;margin-bottom:8px;">Profesional</div>
+        <div style="font-size:0.85rem;color:var(--text);margin-bottom:8px;">Panel clinico con metricas de tus pacientes. Sin infraestructura propia. Efecto perdigon.</div>
+        <a href="mailto:profesional@zykos.ar?subject=Membresia%20Profesional" style="color:#a78bfa;font-size:0.8rem;font-weight:600;">Solicitar acceso →</a>
+      </div>
+    </div>
+    <p style="font-size:0.75rem;color:var(--dim);">Tu perfil permanece activo indefinidamente. Cada vez que vuelvas, tus datos estaran ahi — asi pasen 10 anos.</p>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -144,7 +156,7 @@ async function startGame(game) {
     updateBadge(data.sessions_remaining);
     localStorage.setItem('zykos_current_game', game.slug);
     // DNI obligatorio — linkea metricas al usuario
-    localStorage.setItem('hdd_patient_dni', userData.dni);
+    localStorage.setItem('zykos_patient_dni', userData.dni);
     window.location.href = game.url + '?dni=' + userData.dni + '&source=zykos';
   } catch(e) { alert('Error: ' + e.message); }
 }
@@ -171,7 +183,7 @@ async function init() {
     }
     userData = data;
     // DNI obligatorio — persistir para juegos
-    localStorage.setItem('hdd_patient_dni', data.dni);
+    localStorage.setItem('zykos_patient_dni', data.dni);
     document.getElementById('greeting').textContent = 'Hola, ' + (data.display_name || 'Jugador');
     document.getElementById('user-name').textContent = 'ID ' + data.dni + ' | ' + data.email;
 

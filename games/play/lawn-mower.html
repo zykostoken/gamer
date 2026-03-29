@@ -732,7 +732,7 @@
   <header class="header" role="banner">
     <div class="header-content">
       <div class="header-left">
-        <a href="/hdd/portal/" class="back-btn" id="backBtn" aria-label="Volver al portal de juegos">&#8592; Volver</a>
+        <a href="/games/portal/" class="back-btn" id="backBtn" aria-label="Volver al portal de juegos">&#8592; Volver</a>
         <span class="game-title" id="gameTitle" role="heading" aria-level="1">Cortadora de Cesped</span>
         <span class="demo-badge" id="demoBadge" style="display:none; background:#f59e0b; color:#fff; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:600;">MODO DEMO</span>
         <button class="restart-btn" id="restartBtn" title="Reiniciar nivel" aria-label="Reiniciar nivel actual">&#8635; Reiniciar</button>
@@ -799,7 +799,7 @@
   <div class="screen-overlay" id="levelSelectScreen">
     <div class="screen-card" style="max-height: 90vh; overflow-y: auto;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
-        <a id="levelSelectBackBtn" href="/hdd/portal/" style="color:#5b7eff;text-decoration:none;font-size:0.9rem;display:flex;align-items:center;gap:4px;">← Volver al portal</a>
+        <a id="levelSelectBackBtn" href="/games/portal/" style="color:#5b7eff;text-decoration:none;font-size:0.9rem;display:flex;align-items:center;gap:4px;">← Volver al portal</a>
       </div>
       <h1>Cortadora de Cesped</h1>
       <p class="subtitle">Corta todo el cesped del jardin sin dañar las flores ni caer en la piscina.</p>
@@ -1296,14 +1296,14 @@
   // Get patient DNI from URL params or localStorage
   const lmParams = new URLSearchParams(window.location.search);
   // DNI is the universal identifier
-  const lmPatientDni = lmParams.get('dni') || (function(){ try { return localStorage.getItem('hdd_patient_dni'); } catch(e){ return null; } })() || 'HDD-DEMO';
+  const lmPatientDni = lmParams.get('dni') || (function(){ try { return localStorage.getItem('zykos_patient_dni'); } catch(e){ return null; } })() || 'HDD-DEMO';
 
   async function lmGetOrCreatePatient(dni) {
     if (!getLmSupa()) return null;
     try {
-      const { data: existing } = await lmSupa.from('hdd_patients').select('id').eq('dni', dni).single();
+      const { data: existing } = await lmSupa.from('zykos_patients').select('id').eq('dni', dni).single();
       if (existing) return existing.id;
-      const { data: np } = await lmSupa.from('hdd_patients').insert({ dni, full_name: 'Paciente ' + dni, admission_date: new Date().toISOString().split('T')[0] }).select('id').single();
+      const { data: np } = await lmSupa.from('zykos_patients').insert({ dni, full_name: 'Paciente ' + dni, admission_date: new Date().toISOString().split('T')[0] }).select('id').single();
       return np?.id;
     } catch(e) { return null; }
   }
@@ -1383,7 +1383,7 @@
         decaimiento_vigilancia = m1 > 0 ? Math.round(m2/m1*100)/100 : null;
       }
 
-      await lmSupa.from('hdd_game_metrics').insert({
+      await lmSupa.from('zykos_game_metrics').insert({
         patient_dni: lmPatientDni,
         game_slug: 'lawn-mower',
         metric_type: 'session_summary',
@@ -1503,7 +1503,7 @@
         }));
         // Batch insert (max 50 to avoid payload limits)
         for (let b = 0; b < rtRecords.length; b += 50) {
-          await lmSupa.from('hdd_game_metrics').insert(rtRecords.slice(b, b + 50));
+          await lmSupa.from('zykos_game_metrics').insert(rtRecords.slice(b, b + 50));
         }
       }
 
@@ -1523,7 +1523,7 @@
           }
         }));
         for (let b = 0; b < pathRecords.length; b += 50) {
-          await lmSupa.from('hdd_game_metrics').insert(pathRecords.slice(b, b + 50));
+          await lmSupa.from('zykos_game_metrics').insert(pathRecords.slice(b, b + 50));
         }
       }
 
@@ -2187,9 +2187,9 @@
   if (isDemoMode()) {
     document.getElementById('demoBadge').style.display = 'inline';
   }
-  // Smart back button: detect if came from partner (/games/) or portal (/hdd/)
+  // Smart back button: detect auth source
   (function() {
-    var portalUrl = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
+    var portalUrl = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/games/portal/';
     var backBtn = document.getElementById('backBtn');
     if (backBtn) backBtn.href = portalUrl;
     var lsBackBtn = document.getElementById('levelSelectBackBtn');
@@ -2200,7 +2200,7 @@
     const token = getToken();
     if (!token) return null;
     try {
-      const res = await fetch('/api/hdd/games', {
+      const res = await fetch('/api/games', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -4884,7 +4884,7 @@
     clearInterval(blockedCheckInterval);
 
     // Show post-game color modal if available, then redirect
-    var portalUrl = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
+    var portalUrl = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/games/portal/';
     if (typeof showPostGameColorModal === 'function') {
       showPostGameColorModal(function() {
         window.location.href = portalUrl;
@@ -5480,7 +5480,7 @@
           } catch(e) { return {}; }
         })())
       };
-      if (lmSupa) { navigator.sendBeacon && navigator.sendBeacon('https://' + SUPABASE_URL.replace('https://','') + '/rest/v1/hdd_game_metrics', ''); }
+      if (lmSupa) { navigator.sendBeacon && navigator.sendBeacon('https://' + SUPABASE_URL.replace('https://','') + '/rest/v1/zykos_game_metrics', ''); }
       // Fallback: direct insert (may not complete)
       try { lmSaveToSupabase(false, score, calculateClinicalStats()); } catch(e) {}
     }
@@ -5512,7 +5512,7 @@
 if (typeof registerAutoSave === 'function') {
   registerAutoSave(function() {
     var dni = null;
-    try { dni = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('hdd_patient_dni'); } catch(e) {}
+    try { dni = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni'); } catch(e) {}
     return {
       patient_dni: dni,
       game_slug: 'lawn-mower',

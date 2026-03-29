@@ -69,8 +69,8 @@
     const patientId = params.get('patient_id');
 
     // Restrict: only accessible from admin session
-    if (!localStorage.getItem('hdd_admin_session')) {
-        document.getElementById('content').innerHTML = '<div class="no-data">Acceso restringido a profesionales. <a href="/hdd/admin/" style="color:#D4A574;">Iniciar sesión</a></div>';
+    if (!localStorage.getItem('zykos_admin_session')) {
+        document.getElementById('content').innerHTML = '<div class="no-data">Acceso restringido a profesionales. <a href="/dashboard/" style="color:#D4A574;">Iniciar sesión</a></div>';
     } else if (!patientId) {
         document.getElementById('content').innerHTML = '<div class="no-data">No se especificó paciente. Agregá ?patient_id=UUID a la URL.</div>';
     } else {
@@ -80,21 +80,21 @@
     async function loadDashboard(pid) {
         try {
             // Get patient info
-            const { data: patient } = await sb.from('hdd_patients').select('*').eq('id', pid).single();
+            const { data: patient } = await sb.from('zykos_patients').select('*').eq('id', pid).single();
             if (patient) {
                 document.getElementById('patient-info').innerHTML = `<strong>${patient.full_name || patient.dni}</strong> | DNI: ${patient.dni}`;
             }
 
             // Get all sessions
-            const { data: sessions } = await sb.from('hdd_game_sessions')
+            const { data: sessions } = await sb.from('zykos_game_sessions')
                 .select('*').eq('patient_id', pid).order('started_at', { ascending: true });
 
             // Get all metrics
-            const { data: metrics } = await sb.from('hdd_game_metrics')
+            const { data: metrics } = await sb.from('zykos_game_metrics')
                 .select('*').eq('patient_id', pid).eq('game_slug', 'neuro-chef-v2').order('created_at', { ascending: true });
 
             // Get mood checkins
-            const { data: moods } = await sb.from('hdd_mood_checkins')
+            const { data: moods } = await sb.from('zykos_mood_checkins')
                 .select('*').eq('patient_id', pid).order('created_at', { ascending: true });
 
             if (!sessions || sessions.length === 0) {

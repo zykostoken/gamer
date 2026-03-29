@@ -217,7 +217,7 @@ async function doLogin() {
       metrics_shown: data.metrics_shown
     }));
     // Set DNI for game metric linking
-    if (data.dni) localStorage.setItem('hdd_patient_dni', data.dni);
+    if (data.dni) localStorage.setItem('zykos_patient_dni', data.dni);
 
     // Redirect to game portal
     window.location.href = '/games/portal/';
@@ -283,7 +283,7 @@ async function doRegister() {
       metrics_shown: false
     }));
     // Set DNI for game metric linking
-    if (data.dni) localStorage.setItem('hdd_patient_dni', data.dni);
+    if (data.dni) localStorage.setItem('zykos_patient_dni', data.dni);
 
     window.location.href = '/games/portal/';
   } catch(e) {

@@ -91,9 +91,9 @@
 <header style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 16px 24px;">
     <div style="max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
         <div>
-            <a id="back-link" href="/hdd/portal/" style="color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.85rem;">← Volver al portal</a>
+            <a id="back-link" href="/games/portal/" style="color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.85rem;">← Volver al portal</a>
             <h1 style="margin: 4px 0 0; font-size: 1.4rem; font-weight: 700;">[K] Desafío Milanesas</h1>
-            <p style="margin: 2px 0 0; font-size: 0.75rem; color: rgba(255,255,255,0.5);">Clínica Psiquiátrica José Ingenieros · HDD</p>
+            <p style="margin: 2px 0 0; font-size: 0.75rem; color: rgba(255,255,255,0.5);">ZYKOS GAMER</p>
         </div>
         <div style="text-align: right;">
             <div id="timer" style="font-size: 1.6rem; font-family: monospace; font-weight: 700;">00:00</div>
@@ -406,7 +406,7 @@ var priceCheckCount = 0;  // times user removed items to fit budget
 function initGame() {
     startTime = Date.now();
     var urlParams = new URLSearchParams(window.location.search);
-    patientId = urlParams.get('dni') || localStorage.getItem('hdd_patient_dni') || 'DEMO';
+    patientId = urlParams.get('dni') || localStorage.getItem('zykos_patient_dni') || 'DEMO';
 
     // === SELECT RANDOM RECIPE ===
     var recipeKeys = Object.keys(RECIPES);
@@ -1090,7 +1090,7 @@ function finishGame() {
     if (typeof showPostGameColorModal === 'function') showPostGameColorModal();
 }
 function goToPortal() {
-    window.location.href = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
+    window.location.href = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/games/portal/';
 }
 
 // ========== SUPABASE ==========
@@ -1105,7 +1105,7 @@ async function saveSupermarketResult(metrics) {
         var dni = patientId !== 'DEMO' ? patientId : null;
         if (!dni) { console.warn('[super-market] No DNI, skipping save'); return; }
 
-        await supabaseClient.from('hdd_game_metrics').insert({
+        await supabaseClient.from('zykos_game_metrics').insert({
             patient_id: null,
             patient_dni: dni,
             game_slug: 'super-market',
@@ -1130,7 +1130,7 @@ async function saveSupermarketResult(metrics) {
 
 // ========== SMART BACK ==========
 (function() {
-    var portalUrl = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
+    var portalUrl = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/games/portal/';
     var l = document.getElementById('back-link');
     if (l) l.href = portalUrl;
 })();
@@ -1147,12 +1147,10 @@ document.addEventListener('DOMContentLoaded', function() { initGame(); updateUI(
 // Auto-save partial progress on exit
 if (typeof registerAutoSave === 'function') {
   registerAutoSave(function() {
-    var pid = null;
-    try { pid = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('hdd_patient_dni') || null; } catch(e) {}
+    try { pid = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni') || null; } catch(e) {}
     var dni = null;
-    try { dni = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('hdd_patient_dni'); } catch(e) {}
+    try { dni = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni'); } catch(e) {}
     return {
-      patient_dni: pid,
       patient_dni: dni,
       game_slug: 'super-market',
       partial_data: {

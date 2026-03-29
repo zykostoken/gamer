@@ -1,5 +1,6 @@
+// (c) 2025-2026 Gonzalo Perez Cortizo. Proprietary. See LICENSE.
 /* ============================================================
-   HDD GAMING — UNIFIED TELEMETRY SENDER
+   ZYKOS GAMER — UNIFIED TELEMETRY SENDER
    shared/telemetry.js
    
    Importar en cualquier juego:
@@ -76,7 +77,7 @@ const TELEM = (() => {
   async function init(patientId) {
     _patientId = patientId || 'anonymous';
     const now = new Date();
-    const result = await _insert('hdd_platform_sessions', {
+    const result = await _insert('zykos_platform_sessions', {
       patient_id: _patientId,
       login_hour: now.getHours(),
       login_day_of_week: now.getDay(),
@@ -102,7 +103,7 @@ const TELEM = (() => {
    */
   async function startGameSession({ frame, packId, mode, level }) {
     _gamesPlayedCount++;
-    const result = await _insert('hdd_game_sessions', {
+    const result = await _insert('zykos_game_sessions', {
       platform_session_id: _platformSessionId,
       patient_id: _patientId,
       frame: frame || 'classify-and-place',
@@ -154,7 +155,7 @@ const TELEM = (() => {
       sim_pairs_viewed: results.simPairsViewed || null,
     };
 
-    await _update('hdd_game_sessions', _gameSessionId, data);
+    await _update('zykos_game_sessions', _gameSessionId, data);
 
     // Check for alerts
     if (results.accuracyPct !== undefined && results.accuracyPct < 30) {
@@ -193,7 +194,7 @@ const TELEM = (() => {
     else if (metrics.pauses > 4 || metrics.idleRatio > 25) fatigueClass = 'moderate';
     else if (metrics.pauses > 2 || metrics.idleRatio > 15) fatigueClass = 'mild';
 
-    await _insert('hdd_mouse_telemetry', {
+    await _insert('zykos_mouse_telemetry', {
       game_session_id: _gameSessionId,
       patient_id: _patientId,
       total_points: metrics.pts || 0,
@@ -230,7 +231,7 @@ const TELEM = (() => {
       since_last_action_ms: Math.round(a.sinceLastMs || 0),
       action_order: i + 1,
     }));
-    await _insertMany('hdd_kit_action_log', rows);
+    await _insertMany('zykos_kit_action_log', rows);
   }
 
   /**
@@ -254,7 +255,7 @@ const TELEM = (() => {
         had_similarity_note: !!item?.similarity_note,
       };
     });
-    await _insertMany('hdd_classify_moves', rows);
+    await _insertMany('zykos_classify_moves', rows);
   }
 
   /**
@@ -262,7 +263,7 @@ const TELEM = (() => {
    */
   async function endPlatformSession() {
     if (!_platformSessionId) return;
-    await _update('hdd_platform_sessions', _platformSessionId, {
+    await _update('zykos_platform_sessions', _platformSessionId, {
       ended_at: new Date().toISOString(),
       duration_ms: Math.round(performance.now()),
       games_played: _gamesPlayedCount,
@@ -271,7 +272,7 @@ const TELEM = (() => {
 
   // ---- ALERTS ----
   async function _createAlert(type, severity, message, data) {
-    await _insert('hdd_clinical_alerts', {
+    await _insert('zykos_clinical_alerts', {
       patient_id: _patientId,
       alert_type: type,
       severity: severity,
@@ -297,7 +298,7 @@ const TELEM = (() => {
           });
           // sendBeacon no permite PATCH, así que logueamos el cierre como evento
           navigator.sendBeacon(
-            `${SUPABASE_URL}/rest/v1/hdd_platform_sessions?id=eq.${_platformSessionId}`,
+            `${SUPABASE_URL}/rest/v1/zykos_platform_sessions?id=eq.${_platformSessionId}`,
             body
           );
         }

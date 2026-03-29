@@ -1,3 +1,4 @@
+// (c) 2025-2026 Gonzalo Perez Cortizo. Proprietary. See LICENSE.
 // ============================================================
 // ZYKOS GAMER — Centralized Supabase Configuration
 // Each deployment gets its own Supabase project.

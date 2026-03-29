@@ -1,12 +1,13 @@
+// (c) 2025-2026 Gonzalo Perez Cortizo. Proprietary. See LICENSE.
 // ====================================================================
-// MOOD MODALS v7.0 - Clínica José Ingenieros
+// MOOD MODALS v7.0 - ZYKOS GAMER
 // v7: NO auto-trigger - cada juego llama showPreGameChat() manualmente
 //     despues de que el usuario hace click en COMENZAR.
 //     Así el modal nunca bloquea la pantalla de inicio.
 // ====================================================================
 
 // ====================================================================
-// MOOD MODALS v8.0 - Clínica José Ingenieros
+// MOOD MODALS v8.0 - ZYKOS GAMER
 // v8: color como registro clínico puro — sin valencia, sin sugerencia.
 //     Solo se registra el color elegido, el contexto y el momento.
 //     La interpretación es exclusivamente del profesional.
@@ -58,9 +59,9 @@ function _moodSaveToSupabase(type, data, context) {
         var now = new Date().toISOString();
         // DNI is the universal identifier
         var pDni = _moodState.patientDni || _moodState.patientId || null;
-        if (!pDni || pDni === 'DEMO') { try { pDni = localStorage.getItem('hdd_patient_dni'); } catch(e){} }
+        if (!pDni || pDni === 'DEMO') { try { pDni = localStorage.getItem('zykos_patient_dni'); } catch(e){} }
 
-        // Guardar en hdd_mood_entries — registro clínico puro
+        // Guardar en zykos_mood_entries — registro clínico puro
         var entryRow = {
             patient_id: null,
             patient_dni: pDni,
@@ -74,13 +75,13 @@ function _moodSaveToSupabase(type, data, context) {
             entry_type: type,
             created_at: now
         };
-        client.from('hdd_mood_entries').insert(entryRow).then(function(){}).catch(function(e){ console.warn('mood_entry save:', e); });
+        client.from('zykos_mood_entries').insert(entryRow).then(function(){}).catch(function(e){ console.warn('mood_entry save:', e); });
 
-        // Guardar en hdd_game_metrics para serie longitudinal
+        // Guardar en zykos_game_metrics para serie longitudinal
         // Se guarda el color tal cual — sin ningún mapeo numérico a priori.
         // La secuencia de colores en el tiempo es el dato; la interpretación es clínica.
         if (data && data.color && !data.skipped) {
-            client.from('hdd_game_metrics').insert({
+            client.from('zykos_game_metrics').insert({
                 patient_id: null,
                 patient_dni: pDni,
                 game_slug: ctx === 'game' ? (gameSlug + '_color') : (ctx + '_color'),
@@ -107,8 +108,8 @@ function showPreGameChat() {
     if (document.getElementById('mood-pre-overlay')) return;
 
     var urlParams = new URLSearchParams(window.location.search);
-    _moodState.patientId = urlParams.get('dni') || _moodStorageGet('hdd_patient_dni') || 'DEMO';
-    _moodState.patientDni = urlParams.get('dni') || _moodStorageGet('hdd_patient_dni') || null;
+    _moodState.patientId = urlParams.get('dni') || _moodStorageGet('zykos_patient_dni') || 'DEMO';
+    _moodState.patientDni = urlParams.get('dni') || _moodStorageGet('zykos_patient_dni') || null;
     _moodState.gameSlug = window.location.pathname.split('/').pop().replace('.html','');
     _moodState.step = 0;
     _moodState.responses = [];
@@ -208,20 +209,19 @@ function showPreGameChat() {
 
 // ====================================================================
 // POST-ACTIVIDAD COLOR PICKER — medida de satisfacción universal
-// Funciona para: juego, chat clínico, telemedicina, taller grupal, etc.
+// Funciona para: juego, taller grupal, etc.
 //
 // Uso desde juego:
 //   showPostGameColorModal()                             // contexto auto-detectado
 //
-// Uso desde telemedicina / chat / taller:
-//   showSatisfactionColor({ context: 'telemedicina', session_id: '...' })
+// Uso desde taller grupal:
 //   showSatisfactionColor({ context: 'taller_grupal', room: 'Sala B' })
 //   showSatisfactionColor({ context: 'chat_clinico' })
 // ====================================================================
 
 /**
  * Muestra el selector de color post-actividad.
- * @param {object} opts  - context: string ('game'|'telemedicina'|'taller_grupal'|'chat_clinico'|otro)
+ * @param {object} opts  - context: string ('game'|'taller_grupal'|otro)
  *                       - cualquier campo extra se guarda en metric_data
  * @param {function} onDone - callback opcional cuando el paciente elige
  */

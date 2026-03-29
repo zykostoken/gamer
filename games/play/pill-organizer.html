@@ -199,7 +199,7 @@
     <header class="bg-white/10 backdrop-blur-md text-white p-5 shadow-2xl border-b-2 border-white/20">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div>
-                <a id="pill-back-link" href="/hdd/portal/" style="color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.85rem;">← Volver al portal</a>
+                <a id="pill-back-link" href="/games/portal/" style="color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.85rem;">← Volver al portal</a>
                 <h1 class="text-3xl font-bold tracking-tight">[+] Organizador de Medicación</h1>
                 <p class="text-sm opacity-85 mt-1">ZYKOS GAMER - Evaluacion cognitiva gamificada</p>
             </div>
@@ -653,7 +653,7 @@
         async function initGame() {
             try {
                 var urlParams = new URLSearchParams(window.location.search);
-                sessionState.patientDni = urlParams.get('dni') || (function(){try{return localStorage.getItem('hdd_patient_dni')}catch(e){return null}})() || 'HDD-DEMO';
+                sessionState.patientDni = urlParams.get('dni') || (function(){try{return localStorage.getItem('zykos_patient_dni')}catch(e){return null}})() || 'HDD-DEMO';
                 document.getElementById('patient-display').textContent = 'Paciente: ' + sessionState.patientDni;
 
                 if (sb) {
@@ -665,7 +665,7 @@
                             .catch(e => { console.warn('[pill-organizer] Patient lookup failed:', e.message); });
                     }
 
-                    sb.from('hdd_games').select('id').eq('slug', 'pill-organizer').single()
+                    sb.from('zykos_games').select('id').eq('slug', 'pill-organizer').single()
                         .then(({ data }) => { sessionState.gameId = data?.id || null; })
                         .catch(e => { console.warn('[pill-organizer] Game lookup failed:', e.message); });
                 }
@@ -954,7 +954,7 @@
 
                 // Fire-and-forget a Supabase (con .then() para que .catch() funcione en v2)
                 if (sb && sessionState.patientDni && sessionState.patientDni !== 'HDD-DEMO') {
-                    sb.from('hdd_game_metrics').insert({
+                    sb.from('zykos_game_metrics').insert({
                         patient_dni: sessionState.patientDni,
                         game_session_id: sessionState.sessionId,
                         game_slug: 'pill-organizer',
@@ -1401,7 +1401,7 @@
             const _dni = sessionState.patientDni && sessionState.patientDni !== 'HDD-DEMO' ? sessionState.patientDni : null;
             if (sb && _dni) {
                 try {
-                    const { error: metricErr } = await sb.from('hdd_game_metrics').insert({
+                    const { error: metricErr } = await sb.from('zykos_game_metrics').insert({
                         patient_dni: _dni,
                         game_slug: 'pill-organizer',
                         metric_type: 'session_summary',
@@ -1470,7 +1470,7 @@
 
             if (sb && sessionState.sessionId) {
                 try {
-                    const { error: sessErr } = await sb.from('hdd_game_sessions')
+                    const { error: sessErr } = await sb.from('zykos_game_sessions')
                         .update({
                             completed_at: new Date().toISOString(),
                             completed: true,
@@ -1642,7 +1642,7 @@
         }
 
         function goToPortal() {
-            const portalUrl = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
+            const portalUrl = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/games/portal/';
             window.location.href = portalUrl;
         }
 
@@ -1652,7 +1652,7 @@
         async function getOrCreatePatient(dni) {
             if (!sb) return null;
             const { data: existing } = await sb
-                .from('hdd_patients')
+                .from('zykos_patients')
                 .select('id')
                 .eq('dni', dni)
                 .single();
@@ -1660,7 +1660,7 @@
             if (existing) return existing.id;
 
             const { data: newPatient } = await sb
-                .from('hdd_patients')
+                .from('zykos_patients')
                 .insert({
                     dni: dni,
                     full_name: 'Paciente Demo HDD',
@@ -1680,7 +1680,7 @@
             if (sb) {
                 try {
                     const { data: session } = await sb
-                        .from('hdd_game_sessions')
+                        .from('zykos_game_sessions')
                         .insert({
                             patient_id: sessionState.patientId,
                             game_id: sessionState.gameId,
@@ -1719,7 +1719,7 @@
   <script>
   // Smart back link
   (function(){
-    var portalUrl = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
+    var portalUrl = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/games/portal/';
     var l = document.getElementById('pill-back-link');
     if (l) {
       l.href = portalUrl;
@@ -1741,12 +1741,10 @@
 // Auto-save partial progress on exit
 if (typeof registerAutoSave === 'function') {
   registerAutoSave(function() {
-    var pid = null;
-    try { pid = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('hdd_patient_dni') || null; } catch(e) {}
+    try { pid = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni') || null; } catch(e) {}
     var dni = null;
-    try { dni = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('hdd_patient_dni'); } catch(e) {}
+    try { dni = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni'); } catch(e) {}
     return {
-      patient_dni: pid,
       patient_dni: dni,
       game_slug: 'pill-organizer',
       partial_data: {

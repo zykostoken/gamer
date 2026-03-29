@@ -257,7 +257,7 @@ var DOMAINS={
 
 document.addEventListener('DOMContentLoaded',function(){
   sb=getSupabaseClient();if(!sb){document.getElementById('ld').innerHTML='<p style="color:var(--rd)">Sin conexion</p>';return}
-  sb.from('hdd_patients').select('dni,full_name,status,is_test').order('full_name').then(function(res){
+  sb.from('zykos_patients').select('dni,full_name,status,is_test').order('full_name').then(function(res){
     var sel=document.getElementById('ps');sel.innerHTML='<option value="">Seleccionar paciente...</option>';
     (res.data||[]).forEach(function(p){var o=document.createElement('option');o.value=p.dni;o.textContent=p.full_name+(p.is_test?' (TEST)':'')+' — DNI: '+p.dni;sel.appendChild(o)});
     document.getElementById('ld').style.display='none';document.getElementById('em').style.display='block';
@@ -269,8 +269,8 @@ function load(){
   ['em','composites','alerts','sections'].forEach(function(id){document.getElementById(id).style.display='none'});
   document.getElementById('ld').style.display='block';document.getElementById('ld').innerHTML='<div class="spin"></div>Cargando biomarcadores...';
   Promise.all([
-    sb.from('hdd_game_metrics').select('*').eq('patient_dni',dni).order('created_at',{ascending:false}),
-    sb.from('hdd_mood_entries').select('*').eq('patient_dni',dni).order('created_at',{ascending:false})
+    sb.from('zykos_game_metrics').select('*').eq('patient_dni',dni).order('created_at',{ascending:false}),
+    sb.from('zykos_mood_entries').select('*').eq('patient_dni',dni).order('created_at',{ascending:false})
   ]).then(function(results){
     if(results[0].error)throw results[0].error;
     allM=results[0].data||[];allMood=results[1].data||[];

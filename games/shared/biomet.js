@@ -1,3 +1,4 @@
+// (c) 2025-2026 Gonzalo Perez Cortizo. Proprietary. See LICENSE.
 // ================================================================
 // biomet.js — Captura biométrica psicomotora universal
 // Clínica Psiquiátrica José Ingenieros · HDD Digital
@@ -678,10 +679,10 @@ function save(extra_data) {
 
         // DNI is the universal identifier — no internal id needed
         var dni = (BM.patientDni && BM.patientDni !== 'DEMO') ? BM.patientDni : null;
-        if (!dni) { try { dni = localStorage.getItem('hdd_patient_dni'); } catch(e){} }
+        if (!dni) { try { dni = localStorage.getItem('zykos_patient_dni'); } catch(e){} }
         if (!dni) { console.warn('[biomet] No DNI, skipping save'); return result; }
 
-        client.from('hdd_game_metrics').insert({
+        client.from('zykos_game_metrics').insert({
             patient_id:   null,
             patient_dni:  dni,
             game_slug:    result.game_slug,

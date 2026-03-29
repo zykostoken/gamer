@@ -138,7 +138,7 @@ kitDeliberationPauses:0, // pauses >5s between actions
 
 async function loadPack(){const p=new URLSearchParams(location.search),id=p.get('pack')||'ferreteria',url=PACK_MAP[id];if(!url){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--err)">Pack no encontrado</p></div>';return}try{const r=await fetch(url);if(!r.ok)throw new Error(r.status);PACK=await r.json()}catch(e){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--err)">Error: '+e.message+'</p></div>';return}document.title=PACK.meta.name+' · HDD Gaming';document.getElementById('h-em').textContent=PACK.meta.emoji;document.getElementById('h-nm').textContent=PACK.meta.name;if(PACK.meta.colors)document.documentElement.style.setProperty('--accent',PACK.meta.colors.accent);
 // Init telemetry with patient ID (from URL param or localStorage)
-const pid=new URLSearchParams(location.search).get('pid')||localStorage.getItem('hdd_patient_id')||'demo_'+Date.now();
+const pid=new URLSearchParams(location.search).get('pid')||localStorage.getItem('zykos_patient_id')||'demo_'+Date.now();
 if(typeof TELEM!=='undefined')TELEM.init(pid).catch(()=>{});
 showIntro()}
 

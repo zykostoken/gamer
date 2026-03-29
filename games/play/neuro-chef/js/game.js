@@ -7,7 +7,7 @@ async function initGame() {
     const urlParams = new URLSearchParams(window.location.search);
     // DNI is the universal identifier — no internal id in URLs
     const playerDni = urlParams.get('dni') ||
-        (function(){try{return localStorage.getItem('hdd_patient_dni')}catch(e){return null}})() ||
+        (function(){try{return localStorage.getItem('zykos_patient_dni')}catch(e){return null}})() ||
         ('DEMO-' + Date.now());
     gameState.patientDni = playerDni;
     // Ocultar modal de login — no se usa mas
@@ -77,7 +77,7 @@ function saveRecentPlayer(dni, name) {
 async function loadPlayerHistory() {
     if (!gameState.patientId || !sb) return;
     try {
-        const { data } = await sb.from('hdd_game_sessions').select('id, started_at, completed_at, final_score')
+        const { data } = await sb.from('zykos_game_sessions').select('id, started_at, completed_at, final_score')
             .eq('patient_id', gameState.patientId).order('started_at', { ascending: false }).limit(10);
         gameState.playerHistory = data || [];
         console.log(`[Neuro-Chef] ${(data||[]).length} previous sessions`);
@@ -87,7 +87,7 @@ async function loadPlayerHistory() {
 async function getOrCreatePatient(dni, name) {
     if (!sb) { console.warn('[neuro-chef] Offline, usando ID local'); return 'offline-' + dni; }
     try {
-        const { data: existing } = await sb.from('hdd_patients').select('id, full_name').eq('dni', dni).single();
+        const { data: existing } = await sb.from('zykos_patients').select('id, full_name').eq('dni', dni).single();
         if (existing) { document.getElementById('patient-display').textContent = existing.full_name || `Pac: ${dni}`; return existing.id; }
         // Patient not found — do NOT auto-create (was creating garbage DEMO patients)
         console.warn('[neuro-chef] Patient not found for DNI:', dni);
@@ -222,15 +222,15 @@ async function startGame() {
     Biometrics.resetCount = 0;
     
     if (sb) {
-        try { const { data: g } = await sb.from('hdd_games').select('id').eq('slug', 'neuro-chef-v2').single(); gameState.gameId = g?.id; } catch(e) {}
+        try { const { data: g } = await sb.from('zykos_games').select('id').eq('slug', 'neuro-chef-v2').single(); gameState.gameId = g?.id; } catch(e) {}
         try {
-            const { data: s } = await sb.from('hdd_game_sessions').insert({ patient_id: gameState.patientId, game_id: gameState.gameId, level: 1, started_at: new Date().toISOString() }).select('id').single();
+            const { data: s } = await sb.from('zykos_game_sessions').insert({ patient_id: gameState.patientId, game_id: gameState.gameId, level: 1, started_at: new Date().toISOString() }).select('id').single();
             gameState.sessionId = s?.id;
         } catch(e) { console.warn('[Neuro-Chef] Session fail:', e); }
     }
     
     if (gameState.preMood && !gameState.preMood.skipped && sb) {
-        try { await sb.from('hdd_mood_checkins').insert({ patient_id: gameState.patientId, context: 'pre_game_neuro_chef', mood_level: null, notes: JSON.stringify(gameState.preMood) }); } catch(e) {}
+        try { await sb.from('zykos_mood_checkins').insert({ patient_id: gameState.patientId, context: 'pre_game_neuro_chef', mood_level: null, notes: JSON.stringify(gameState.preMood) }); } catch(e) {}
     }
     
     document.getElementById('game-container').classList.remove('hidden');
@@ -952,7 +952,7 @@ function showColorSelectorDirect(btnContinue) {
 }
 
 async function savePostMoodAndFinish() {
-    if (sb) { try { await sb.from('hdd_mood_checkins').insert({ patient_id:gameState.patientId, context:'post_game_neuro_chef', mood_level:null, color_intensity:null, color_selected:gameState.postMood.color, skipped:gameState.postMood.skipped||false }); } catch(e) {} }
+    if (sb) { try { await sb.from('zykos_mood_checkins').insert({ patient_id:gameState.patientId, context:'post_game_neuro_chef', mood_level:null, color_intensity:null, color_selected:gameState.postMood.color, skipped:gameState.postMood.skipped||false }); } catch(e) {} }
     document.getElementById('post-game-modal').classList.add('hidden'); finishGame();
 }
 
@@ -981,8 +981,8 @@ async function finishGame() {
         }
     };
     if (sb) {
-        try { await sb.from('hdd_game_sessions').update({ completed_at:new Date().toISOString(), final_score:gameState.totalCorrect-gameState.totalErrors, metadata:summary }).eq('id',gameState.sessionId); } catch(e) {}
-        try { await sb.from('hdd_game_metrics').insert({
+        try { await sb.from('zykos_game_sessions').update({ completed_at:new Date().toISOString(), final_score:gameState.totalCorrect-gameState.totalErrors, metadata:summary }).eq('id',gameState.sessionId); } catch(e) {}
+        try { await sb.from('zykos_game_metrics').insert({
             patient_id: gameState.patientId,
             patient_dni: (gameState.patientDni && gameState.patientDni.indexOf('DEMO') === -1) ? gameState.patientDni : null,
             game_session_id: gameState.sessionId,
@@ -1064,13 +1064,13 @@ function showResultsScreen(summary) {
 async function saveLevelMetrics(metric) {
     if (!sb) return;
     const clean={...metric};if(clean.biometrics){clean.biometrics={...clean.biometrics};delete clean.biometrics.action_log;delete clean.biometrics.tremor_details;delete clean.biometrics.hesitation_details}
-    try { await sb.from('hdd_game_metrics').insert({ patient_id:gameState.patientId, patient_dni:(gameState.patientDni&&gameState.patientDni.indexOf('DEMO')===-1)?gameState.patientDni:null, game_session_id:gameState.sessionId, game_slug:'neuro-chef-v2', metric_type:`level_${metric.level}`, metric_value:metric.score, metric_data:clean }); } catch(e) { console.warn('Metric save fail:',e); }
+    try { await sb.from('zykos_game_metrics').insert({ patient_id:gameState.patientId, patient_dni:(gameState.patientDni&&gameState.patientDni.indexOf('DEMO')===-1)?gameState.patientDni:null, game_session_id:gameState.sessionId, game_slug:'neuro-chef-v2', metric_type:`level_${metric.level}`, metric_value:metric.score, metric_data:clean }); } catch(e) { console.warn('Metric save fail:',e); }
 }
 
 async function saveBiometrics(bio) {
     if (!sb) return;
     // Save summary to DB (without heavy raw data)
-    try { await sb.from('hdd_game_metrics').insert({
+    try { await sb.from('zykos_game_metrics').insert({
         patient_id:gameState.patientId, patient_dni:(gameState.patientDni&&gameState.patientDni.indexOf('DEMO')===-1)?gameState.patientDni:null, game_session_id:gameState.sessionId, game_slug:'neuro-chef-v2',
         metric_type:`biometric_level_${bio.level}`, metric_value:bio.d_prime||0,
         metric_data:{ reaction_time_ms:bio.reaction_time_ms, total_time_ms:bio.total_time_ms, hits:bio.hits, misses:bio.misses, false_alarms:bio.false_alarms, correct_rejects:bio.correct_rejects, d_prime:bio.d_prime, tremor_avg:bio.tremor_avg, tremor_speed_var:bio.tremor_speed_var, tremor_samples:bio.tremor_samples, hesitation_count:bio.hesitation_count, hesitation_total_ms:bio.hesitation_total_ms, undo_count:bio.undo_count, reset_count:bio.reset_count, total_interactions:bio.total_interactions, abrupt_direction_changes:bio.abrupt_direction_changes, avg_action_interval_ms:bio.avg_action_interval_ms }
@@ -1099,7 +1099,7 @@ async function saveBiometricsToBucket(bio) {
 function shuffleArray(a){const arr=[...a];for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}return arr}
 function avg(arr){if(!arr||!arr.length)return 0;return arr.reduce((a,b)=>a+(b||0),0)/arr.length}
 function sum(arr){if(!arr||!arr.length)return 0;return arr.reduce((a,b)=>a+(b||0),0)}
-function getPortalUrl(){return localStorage.getItem('games_session')?'/games/portal/':'/hdd/portal/'}
+function getPortalUrl(){return localStorage.getItem('games_session')?'/games/portal/':'/games/portal/'}
 
 window.addEventListener('DOMContentLoaded', function(){
     // Smart back link

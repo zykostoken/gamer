@@ -1,3 +1,4 @@
+// (c) 2025-2026 Gonzalo Perez Cortizo. Proprietary. See LICENSE.
 // DOMPurify wrapper for safe innerHTML usage
 // Include DOMPurify CDN before this script:
 // <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>

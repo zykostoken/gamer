@@ -1,3 +1,4 @@
+// (c) 2025-2026 Gonzalo Perez Cortizo. Proprietary. See LICENSE.
 // ================================================================
 // show-metrics.js — Modal de métricas post-juego con colores históricos
 // ZYKOS GAMER
@@ -16,8 +17,8 @@ global.showMetricsModal = async function(resultData) {
     var dni = null;
     try { 
         dni = new URLSearchParams(window.location.search).get('dni') || 
-              localStorage.getItem('hdd_patient_dni') ||
-              sessionStorage.getItem('hdd_patient_dni');
+              localStorage.getItem('zykos_patient_dni') ||
+              sessionStorage.getItem('zykos_patient_dni');
     } catch(e) {}
     
     if (!dni || dni === 'DEMO') {
@@ -185,7 +186,7 @@ global.showMetricsModal = async function(resultData) {
         if (!client || !dni || dni === 'DEMO') return;
         
         try {
-            await client.from('hdd_game_metrics').insert({
+            await client.from('zykos_game_metrics').insert({
                 patient_dni: dni,
                 game_slug: gameSlug,
                 metric_type: 'clinical_analysis',
@@ -246,7 +247,7 @@ global.showMetricsModal = async function(resultData) {
         try {
             // Últimas 10 selecciones de color para este juego
             var { data, error } = await client
-                .from('hdd_mood_entries')
+                .from('zykos_mood_entries')
                 .select('color_hex, color_name, created_at, context_type')
                 .eq('patient_dni', dni)
                 .eq('source_activity', gameSlug)

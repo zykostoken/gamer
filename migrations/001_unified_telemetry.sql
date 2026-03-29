@@ -1,14 +1,15 @@
 -- ============================================================
--- HDD GAMING: UNIFIED TELEMETRY SCHEMA
--- Supabase project: buzblnkpfydeheingzgn
+-- ZYKOS GAMER: UNIFIED TELEMETRY SCHEMA
+-- Supabase project: aypljitzifwjosjkqsuu
 -- Todas las métricas de todos los juegos convergen acá
+-- Datos con hash de integridad, guarda eterna, sin borrado
 -- ============================================================
 
 -- 1. SESIONES DE PLATAFORMA
 -- Una fila cada vez que el paciente abre la plataforma de gaming
-CREATE TABLE IF NOT EXISTS hdd_platform_sessions (
+CREATE TABLE IF NOT EXISTS zykos_platform_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  patient_id TEXT NOT NULL,              -- ID del paciente HDD
+  patient_id TEXT NOT NULL,              -- ID del jugador ZYKOS
   started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   ended_at TIMESTAMPTZ,
   duration_ms INTEGER,                   -- duración total
@@ -21,9 +22,9 @@ CREATE TABLE IF NOT EXISTS hdd_platform_sessions (
 
 -- 2. SESIONES DE JUEGO INDIVIDUALES
 -- Una fila por cada partida (1 pack + 1 modo + 1 nivel = 1 sesión)
-CREATE TABLE IF NOT EXISTS hdd_game_sessions (
+CREATE TABLE IF NOT EXISTS zykos_game_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  platform_session_id UUID REFERENCES hdd_platform_sessions(id),
+  platform_session_id UUID REFERENCES zykos_platform_sessions(id),
   patient_id TEXT NOT NULL,
   -- Qué jugó
   frame TEXT NOT NULL,                   -- 'classify-and-place', 'sequence-builder', etc.
@@ -68,9 +69,9 @@ CREATE TABLE IF NOT EXISTS hdd_game_sessions (
 
 -- 3. TELEMETRÍA DE MOUSE — UNA FILA POR SESIÓN DE JUEGO
 -- Resumen comprimido, no los puntos crudos
-CREATE TABLE IF NOT EXISTS hdd_mouse_telemetry (
+CREATE TABLE IF NOT EXISTS zykos_mouse_telemetry (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  game_session_id UUID NOT NULL REFERENCES hdd_game_sessions(id) ON DELETE CASCADE,
+  game_session_id UUID NOT NULL REFERENCES zykos_game_sessions(id) ON DELETE CASCADE,
   patient_id TEXT NOT NULL,
   -- Métricas core
   total_points INTEGER,                  -- muestras capturadas
@@ -93,9 +94,9 @@ CREATE TABLE IF NOT EXISTS hdd_mouse_telemetry (
 
 -- 4. LOG DE ACCIONES EN KIT ABIERTO
 -- Cada add/remove timestampeado — la data cruda del kit
-CREATE TABLE IF NOT EXISTS hdd_kit_action_log (
+CREATE TABLE IF NOT EXISTS zykos_kit_action_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  game_session_id UUID NOT NULL REFERENCES hdd_game_sessions(id) ON DELETE CASCADE,
+  game_session_id UUID NOT NULL REFERENCES zykos_game_sessions(id) ON DELETE CASCADE,
   patient_id TEXT NOT NULL,
   action TEXT NOT NULL,                  -- 'add' | 'remove'
   item_id TEXT NOT NULL,
@@ -111,9 +112,9 @@ CREATE TABLE IF NOT EXISTS hdd_kit_action_log (
 
 -- 5. MOVIMIENTOS EN CLASSIFY (errores y aciertos)
 -- Cada drag-and-drop registrado
-CREATE TABLE IF NOT EXISTS hdd_classify_moves (
+CREATE TABLE IF NOT EXISTS zykos_classify_moves (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  game_session_id UUID NOT NULL REFERENCES hdd_game_sessions(id) ON DELETE CASCADE,
+  game_session_id UUID NOT NULL REFERENCES zykos_game_sessions(id) ON DELETE CASCADE,
   patient_id TEXT NOT NULL,
   item_id TEXT NOT NULL,
   item_name TEXT,
@@ -129,7 +130,7 @@ CREATE TABLE IF NOT EXISTS hdd_classify_moves (
 
 -- 6. PERFIL ACUMULADO DEL PACIENTE
 -- Se recalcula periódicamente con los datos de todas las sesiones
-CREATE TABLE IF NOT EXISTS hdd_patient_gaming_profile (
+CREATE TABLE IF NOT EXISTS zykos_patient_gaming_profile (
   patient_id TEXT PRIMARY KEY,
   -- Engagement
   total_sessions INTEGER DEFAULT 0,
@@ -169,14 +170,14 @@ CREATE TABLE IF NOT EXISTS hdd_patient_gaming_profile (
 );
 
 -- 7. ALERTAS CLÍNICAS AUTOMÁTICAS
-CREATE TABLE IF NOT EXISTS hdd_clinical_alerts (
+CREATE TABLE IF NOT EXISTS zykos_clinical_alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   patient_id TEXT NOT NULL,
   alert_type TEXT NOT NULL,              -- 'night_login', 'accuracy_drop', 'level_regression', 'absence', 'budget_pattern', 'motor_change'
   severity TEXT NOT NULL,                -- 'info', 'low', 'medium', 'high'
   message TEXT NOT NULL,
   data JSONB,                            -- datos contextuales de la alerta
-  game_session_id UUID REFERENCES hdd_game_sessions(id),
+  game_session_id UUID REFERENCES zykos_game_sessions(id),
   acknowledged BOOLEAN DEFAULT false,    -- el profesional la vio
   acknowledged_by TEXT,
   acknowledged_at TIMESTAMPTZ,
@@ -186,42 +187,42 @@ CREATE TABLE IF NOT EXISTS hdd_clinical_alerts (
 -- ============================================================
 -- ÍNDICES
 -- ============================================================
-CREATE INDEX IF NOT EXISTS idx_platform_sessions_patient ON hdd_platform_sessions(patient_id);
-CREATE INDEX IF NOT EXISTS idx_platform_sessions_time ON hdd_platform_sessions(started_at DESC);
-CREATE INDEX IF NOT EXISTS idx_game_sessions_patient ON hdd_game_sessions(patient_id);
-CREATE INDEX IF NOT EXISTS idx_game_sessions_time ON hdd_game_sessions(started_at DESC);
-CREATE INDEX IF NOT EXISTS idx_game_sessions_pack ON hdd_game_sessions(pack_id);
-CREATE INDEX IF NOT EXISTS idx_mouse_session ON hdd_mouse_telemetry(game_session_id);
-CREATE INDEX IF NOT EXISTS idx_mouse_patient ON hdd_mouse_telemetry(patient_id);
-CREATE INDEX IF NOT EXISTS idx_kit_log_session ON hdd_kit_action_log(game_session_id);
-CREATE INDEX IF NOT EXISTS idx_classify_moves_session ON hdd_classify_moves(game_session_id);
-CREATE INDEX IF NOT EXISTS idx_alerts_patient ON hdd_clinical_alerts(patient_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_alerts_unacked ON hdd_clinical_alerts(acknowledged, severity) WHERE NOT acknowledged;
+CREATE INDEX IF NOT EXISTS idx_platform_sessions_patient ON zykos_platform_sessions(patient_id);
+CREATE INDEX IF NOT EXISTS idx_platform_sessions_time ON zykos_platform_sessions(started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_game_sessions_patient ON zykos_game_sessions(patient_id);
+CREATE INDEX IF NOT EXISTS idx_game_sessions_time ON zykos_game_sessions(started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_game_sessions_pack ON zykos_game_sessions(pack_id);
+CREATE INDEX IF NOT EXISTS idx_mouse_session ON zykos_mouse_telemetry(game_session_id);
+CREATE INDEX IF NOT EXISTS idx_mouse_patient ON zykos_mouse_telemetry(patient_id);
+CREATE INDEX IF NOT EXISTS idx_kit_log_session ON zykos_kit_action_log(game_session_id);
+CREATE INDEX IF NOT EXISTS idx_classify_moves_session ON zykos_classify_moves(game_session_id);
+CREATE INDEX IF NOT EXISTS idx_alerts_patient ON zykos_clinical_alerts(patient_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_alerts_unacked ON zykos_clinical_alerts(acknowledged, severity) WHERE NOT acknowledged;
 
 -- ============================================================
 -- RLS (Row Level Security)
 -- ============================================================
-ALTER TABLE hdd_platform_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hdd_game_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hdd_mouse_telemetry ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hdd_kit_action_log ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hdd_classify_moves ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hdd_patient_gaming_profile ENABLE ROW LEVEL SECURITY;
-ALTER TABLE hdd_clinical_alerts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE zykos_platform_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE zykos_game_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE zykos_mouse_telemetry ENABLE ROW LEVEL SECURITY;
+ALTER TABLE zykos_kit_action_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE zykos_classify_moves ENABLE ROW LEVEL SECURITY;
+ALTER TABLE zykos_patient_gaming_profile ENABLE ROW LEVEL SECURITY;
+ALTER TABLE zykos_clinical_alerts ENABLE ROW LEVEL SECURITY;
 
 -- Pacientes pueden insertar sus propios datos
-CREATE POLICY IF NOT EXISTS "patients_insert_own" ON hdd_game_sessions FOR INSERT WITH CHECK (true);
-CREATE POLICY IF NOT EXISTS "patients_insert_own" ON hdd_mouse_telemetry FOR INSERT WITH CHECK (true);
-CREATE POLICY IF NOT EXISTS "patients_insert_own" ON hdd_kit_action_log FOR INSERT WITH CHECK (true);
-CREATE POLICY IF NOT EXISTS "patients_insert_own" ON hdd_classify_moves FOR INSERT WITH CHECK (true);
-CREATE POLICY IF NOT EXISTS "patients_insert_own" ON hdd_platform_sessions FOR INSERT WITH CHECK (true);
+CREATE POLICY IF NOT EXISTS "patients_insert_own" ON zykos_game_sessions FOR INSERT WITH CHECK (true);
+CREATE POLICY IF NOT EXISTS "patients_insert_own" ON zykos_mouse_telemetry FOR INSERT WITH CHECK (true);
+CREATE POLICY IF NOT EXISTS "patients_insert_own" ON zykos_kit_action_log FOR INSERT WITH CHECK (true);
+CREATE POLICY IF NOT EXISTS "patients_insert_own" ON zykos_classify_moves FOR INSERT WITH CHECK (true);
+CREATE POLICY IF NOT EXISTS "patients_insert_own" ON zykos_platform_sessions FOR INSERT WITH CHECK (true);
 
 -- Profesionales pueden leer todo
-CREATE POLICY IF NOT EXISTS "professionals_read_all" ON hdd_game_sessions FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "professionals_read_all" ON hdd_mouse_telemetry FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "professionals_read_all" ON hdd_kit_action_log FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "professionals_read_all" ON hdd_classify_moves FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "professionals_read_all" ON hdd_platform_sessions FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "professionals_read_all" ON hdd_patient_gaming_profile FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "professionals_read_all" ON hdd_clinical_alerts FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "professionals_update_alerts" ON hdd_clinical_alerts FOR UPDATE USING (true);
+CREATE POLICY IF NOT EXISTS "professionals_read_all" ON zykos_game_sessions FOR SELECT USING (true);
+CREATE POLICY IF NOT EXISTS "professionals_read_all" ON zykos_mouse_telemetry FOR SELECT USING (true);
+CREATE POLICY IF NOT EXISTS "professionals_read_all" ON zykos_kit_action_log FOR SELECT USING (true);
+CREATE POLICY IF NOT EXISTS "professionals_read_all" ON zykos_classify_moves FOR SELECT USING (true);
+CREATE POLICY IF NOT EXISTS "professionals_read_all" ON zykos_platform_sessions FOR SELECT USING (true);
+CREATE POLICY IF NOT EXISTS "professionals_read_all" ON zykos_patient_gaming_profile FOR SELECT USING (true);
+CREATE POLICY IF NOT EXISTS "professionals_read_all" ON zykos_clinical_alerts FOR SELECT USING (true);
+CREATE POLICY IF NOT EXISTS "professionals_update_alerts" ON zykos_clinical_alerts FOR UPDATE USING (true);

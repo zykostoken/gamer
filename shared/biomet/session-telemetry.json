@@ -350,11 +350,11 @@
     "capture_method": "Todos los eventos se capturan client-side con timestamps precisos (performance.now()) y se envían a Supabase en batch al final de cada sesión o cada 60 segundos (lo que ocurra primero), para no perder datos si el paciente cierra abruptamente.",
     "privacy": "Datos asociados al ID de paciente HDD, no a datos personales. Almacenamiento en Supabase con RLS por profesional tratante.",
     "storage_tables": [
-      "hdd_session_log — una fila por sesión (login, duración, juegos jugados)",
-      "hdd_game_attempts — una fila por intento de nivel (juego, pack, nivel, score, errores, duración, métricas)",
-      "hdd_mouse_telemetry — datos crudos de movimiento por sesión (comprimidos)",
-      "hdd_alerts — alertas generadas automáticamente por las reglas definidas",
-      "hdd_patient_profile — perfil adaptativo acumulado (nivel actual por juego, duración óptima, preferencias)"
+      "zykos_session_log — una fila por sesión (login, duración, juegos jugados)",
+      "zykos_game_attempts — una fila por intento de nivel (juego, pack, nivel, score, errores, duración, métricas)",
+      "zykos_mouse_telemetry — datos crudos de movimiento por sesión (comprimidos)",
+      "zykos_alerts — alertas generadas automáticamente por las reglas definidas",
+      "zykos_patient_profile — perfil adaptativo acumulado (nivel actual por juego, duración óptima, preferencias)"
     ],
     "dashboard_views": [
       "Vista paciente individual: timeline de sesiones, curva de rendimiento, alertas activas",

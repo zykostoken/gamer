@@ -28,12 +28,12 @@
 
 [[redirects]]
   from = "/dashboard"
-  to = "/hdd/admin/informe-clinico.html"
+  to = "/dashboard/report.html"
   status = 301
 
 [[redirects]]
   from = "/informe"
-  to = "/hdd/admin/informe-clinico.html"
+  to = "/dashboard/report.html"
   status = 301
 
 [[redirects]]

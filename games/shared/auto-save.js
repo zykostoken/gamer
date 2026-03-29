@@ -1,3 +1,4 @@
+// (c) 2025-2026 Gonzalo Perez Cortizo. Proprietary. See LICENSE.
 // ============================================================
 // auto-save.js — Captura TOTAL de eventos de sesión de juego
 // TODO a Supabase. Cada evento es una métrica clínica.
@@ -29,7 +30,7 @@
   function getPatientInfo() {
     var dni = null;
     try { dni = new URLSearchParams(window.location.search).get('dni'); } catch(e) {}
-    if (!dni) try { dni = localStorage.getItem('hdd_patient_dni'); } catch(e) {}
+    if (!dni) try { dni = localStorage.getItem('zykos_patient_dni'); } catch(e) {}
     return { dni: dni || null };
   }
 
@@ -58,7 +59,7 @@
     // sendBeacon para eventos de cierre (más confiable que fetch)
     if (eventType === 'tab_close' || eventType === 'page_hide') {
       if (navigator.sendBeacon) {
-        var blob = new Blob([JSON.stringify({ table: 'hdd_game_metrics', data: payload })], { type: 'application/json' });
+        var blob = new Blob([JSON.stringify({ table: 'zykos_game_metrics', data: payload })], { type: 'application/json' });
         navigator.sendBeacon('/api/beacon-save', blob);
       }
     }
@@ -67,7 +68,7 @@
     try {
       var client = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
       if (client) {
-        client.from('hdd_game_metrics').insert(payload)
+        client.from('zykos_game_metrics').insert(payload)
           .then(function() { /* saved */ })
           .catch(function(e) { console.warn('[auto-save] ' + eventType + ':', e.message); });
       }

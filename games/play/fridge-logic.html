@@ -94,9 +94,9 @@
 <header style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 16px 24px;">
     <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
         <div>
-            <a id="back-link" href="/hdd/portal/" style="color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.85rem;">← Volver al portal</a>
+            <a id="back-link" href="/games/portal/" style="color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.85rem;">← Volver al portal</a>
             <h1 style="margin: 4px 0 0; font-size: 1.5rem; font-weight: 700;">[F] Heladera Inteligente</h1>
-            <p style="margin: 2px 0 0; font-size: 0.8rem; color: rgba(255,255,255,0.5);">Clínica Psiquiátrica José Ingenieros · HDD</p>
+            <p style="margin: 2px 0 0; font-size: 0.8rem; color: rgba(255,255,255,0.5);">ZYKOS GAMER</p>
         </div>
         <div style="text-align: right;">
             <div id="timer" style="font-size: 1.8rem; font-family: monospace; font-weight: 700;">00:00</div>
@@ -257,7 +257,7 @@ function initGame() {
     gameState.startTime = Date.now();
     const _p = new URLSearchParams(window.location.search);
     // Read numeric ID and DNI separately  
-    gameState.patientDni = _p.get('dni') || (function(){try{return localStorage.getItem('hdd_patient_dni')}catch(e){return null}})() || 'DEMO';
+    gameState.patientDni = _p.get('dni') || (function(){try{return localStorage.getItem('zykos_patient_dni')}catch(e){return null}})() || 'DEMO';
     
     // Shuffle items
     const shuffled = [...ITEMS].sort(() => Math.random() - 0.5);
@@ -666,7 +666,7 @@ function zoneLabel(z) {
 }
 
 function goToPortal() {
-    window.location.href = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
+    window.location.href = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/games/portal/';
 }
 
 // ========== SUPABASE SAVE ==========
@@ -674,20 +674,20 @@ async function saveResults(metrics) {
     if (!sb) { console.warn('[fridge-logic] Supabase offline, resultados no guardados'); return; }
     try {
         // Get or create game entry
-        let { data: game } = await sb.from('hdd_games').select('id').eq('slug', 'fridge-logic').single();
+        let { data: game } = await sb.from('zykos_games').select('id').eq('slug', 'fridge-logic').single();
         if (!game) {
-            const { data: newGame } = await sb.from('hdd_games').insert({ 
+            const { data: newGame } = await sb.from('zykos_games').insert({ 
                 slug: 'fridge-logic', name: 'Heladera Inteligente', therapeutic_areas: ['avd'],
                 description: 'Categorización de alimentos y productos - memoria semántica y juicio'
             }).select('id').single();
             game = newGame;
         }
         
-        // Save to hdd_game_metrics with numeric patient_id (FK) and patient_dni
+        // Save to zykos_game_metrics with numeric patient_id (FK) and patient_dni
         const patientDni = (gameState.patientId && gameState.patientId !== 'DEMO') ? gameState.patientId : null;
-        const numericPid = parseInt((function(){try{return localStorage.getItem('hdd_patient_dni')}catch(e){return null}})()) || null;
+        const numericPid = parseInt((function(){try{return localStorage.getItem('zykos_patient_dni')}catch(e){return null}})()) || null;
         if (numericPid) {
-            await sb.from('hdd_game_metrics').insert({
+            await sb.from('zykos_game_metrics').insert({
                 patient_id: numericPid,
                 patient_dni: patientDni,
                 game_slug: 'fridge-logic',
@@ -721,7 +721,7 @@ async function saveResults(metrics) {
 
 // ========== SMART BACK LINK ==========
 (function() {
-    var portalUrl = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/hdd/portal/';
+    var portalUrl = localStorage.getItem('zykos_token') ? '/games/portal/' : localStorage.getItem('games_session') ? '/games/portal/' : '/games/portal/';
     var l = document.getElementById('back-link');
     if (l) l.href = portalUrl;
 })();
@@ -740,12 +740,10 @@ async function saveResults(metrics) {
 // Auto-save partial progress on exit
 if (typeof registerAutoSave === 'function') {
   registerAutoSave(function() {
-    var pid = null;
-    try { pid = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('hdd_patient_dni') || null; } catch(e) {}
+    try { pid = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni') || null; } catch(e) {}
     var dni = null;
-    try { dni = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('hdd_patient_dni'); } catch(e) {}
+    try { dni = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni'); } catch(e) {}
     return {
-      patient_dni: pid,
       patient_dni: dni,
       game_slug: 'fridge-logic',
       partial_data: {

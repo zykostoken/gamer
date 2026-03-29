@@ -1,3 +1,4 @@
+// (c) 2025-2026 Gonzalo Perez Cortizo. Proprietary. See LICENSE.
 // ================================================================
 // input-calibration.js — Calibracion de hardware pre-sesion
 // Clinica Psiquiatrica Jose Ingenieros - HDD Digital
@@ -387,7 +388,7 @@ function finishCalibration() {
     var client = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
     var dni = profile._patientDni || null;
     if (client && dni) {
-        client.from('hdd_game_metrics').insert({
+        client.from('zykos_game_metrics').insert({
             patient_dni: dni,
             game_slug: 'calibration',
             metric_type: 'hardware_profile',

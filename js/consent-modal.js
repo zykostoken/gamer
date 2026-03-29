@@ -1,3 +1,4 @@
+// (c) 2025-2026 Gonzalo Perez Cortizo. Proprietary. See LICENSE.
 // =============================================
 // ZYKOS GAMER — Consent Modal
 // Independent product — zero CJI references
