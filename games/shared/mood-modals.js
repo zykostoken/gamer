@@ -334,3 +334,21 @@ function showPostGameColorModal(customCallback) {
 function initMoodModals() {
     // v7: no-op. Los juegos llaman showPreGameChat() manualmente.
 }
+
+// ====================================================================
+// AUTO-CALIBRATION HOOK
+// If InputCalibration is available and needs calibration,
+// run it before the pre-game mood flow
+// ====================================================================
+var _originalShowPreGameChat = showPreGameChat;
+showPreGameChat = function() {
+    if (typeof InputCalibration !== 'undefined' && InputCalibration.needsCalibration()) {
+        var dni = null;
+        try { dni = localStorage.getItem('zykos_patient_dni'); } catch(e) {}
+        InputCalibration.run({ patientDni: dni }).then(function() {
+            _originalShowPreGameChat();
+        });
+    } else {
+        _originalShowPreGameChat();
+    }
+};

@@ -1741,7 +1741,6 @@
 // Auto-save partial progress on exit
 if (typeof registerAutoSave === 'function') {
   registerAutoSave(function() {
-    try { pid = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni') || null; } catch(e) {}
     var dni = null;
     try { dni = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni'); } catch(e) {}
     return {
@@ -1758,5 +1757,6 @@ if (typeof registerAutoSave === 'function') {
 }
 </script>
 <script src="/games/shared/show-metrics.js"></script>
+<script>/*Pre-game hook*/(function(){var b=document.getElementById("btn-start");if(!b)return;b.onclick=function(){if(typeof showPreGameChat==="function"&&!window._pgd){window._pgd=true;showPreGameChat();var w=setInterval(function(){if(!document.getElementById("mood-pre-overlay")&&!document.getElementById("input-calibration-overlay")){clearInterval(w);startGame();}},200);setTimeout(function(){clearInterval(w);startGame();},15000);}else{startGame();}}})();</script>
 </body>
 </html>

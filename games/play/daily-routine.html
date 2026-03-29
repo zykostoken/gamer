@@ -335,6 +335,20 @@ const state = {
 // INIT
 // ================================================================
 function beginGame() {
+    if (typeof showPreGameChat === 'function' && !window._preGameDone) {
+        window._preGameDone = true;
+        showPreGameChat();
+        var _w = setInterval(function() {
+            if (!document.getElementById('mood-pre-overlay') && !document.getElementById('input-calibration-overlay')) {
+                clearInterval(_w); _beginGameReal();
+            }
+        }, 200);
+        setTimeout(function() { clearInterval(_w); _beginGameReal(); }, 15000);
+        return;
+    }
+    _beginGameReal();
+}
+function _beginGameReal() {
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('game-area').style.display = 'block';
     document.getElementById('progress-wrap').style.display = 'flex';
@@ -855,7 +869,6 @@ async function saveResults(metrics, biometData) {
 // Auto-save partial progress on exit
 if (typeof registerAutoSave === 'function') {
   registerAutoSave(function() {
-    try { pid = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni') || null; } catch(e) {}
     var dni = null;
     try { dni = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni'); } catch(e) {}
     return {

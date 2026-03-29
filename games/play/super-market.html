@@ -1147,7 +1147,6 @@ document.addEventListener('DOMContentLoaded', function() { initGame(); updateUI(
 // Auto-save partial progress on exit
 if (typeof registerAutoSave === 'function') {
   registerAutoSave(function() {
-    try { pid = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni') || null; } catch(e) {}
     var dni = null;
     try { dni = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni'); } catch(e) {}
     return {

@@ -1,7 +1,7 @@
 // (c) 2025-2026 Gonzalo Perez Cortizo. Proprietary. See LICENSE.
 // ================================================================
 // input-calibration.js — Calibracion de hardware pre-sesion
-// Clinica Psiquiatrica Jose Ingenieros - HDD Digital
+// ZYKOS GAMER
 //
 // Proposito: medir las caracteristicas del dispositivo de input
 // (mouse, trackpad, touch) y generar un perfil de hardware que
@@ -363,8 +363,8 @@ function finishCalibration() {
 
     // Store in localStorage for current session
     try {
-        localStorage.setItem('cji_hw_profile', JSON.stringify(profile));
-        localStorage.setItem('cji_hw_profile_ts', profile.timestamp);
+        localStorage.setItem('zykos_hw_profile', JSON.stringify(profile));
+        localStorage.setItem('zykos_hw_profile_ts', profile.timestamp);
     } catch(e) {}
 
     // Show summary
@@ -433,8 +433,8 @@ function run(opts) {
     // Check if we have a recent calibration
     if (!opts.force) {
         try {
-            var cached = localStorage.getItem('cji_hw_profile');
-            var cachedTs = localStorage.getItem('cji_hw_profile_ts');
+            var cached = localStorage.getItem('zykos_hw_profile');
+            var cachedTs = localStorage.getItem('zykos_hw_profile_ts');
             if (cached && cachedTs) {
                 var age = Date.now() - new Date(cachedTs).getTime();
                 if (age < maxAge) {
@@ -465,7 +465,7 @@ function run(opts) {
  */
 function getProfile() {
     try {
-        var cached = localStorage.getItem('cji_hw_profile');
+        var cached = localStorage.getItem('zykos_hw_profile');
         return cached ? JSON.parse(cached) : null;
     } catch(e) { return null; }
 }
@@ -553,7 +553,7 @@ function adjust(metricType, rawValue, hwProfile) {
 function needsCalibration(maxAgeMs) {
     var maxAge = maxAgeMs || (4 * 60 * 60 * 1000);
     try {
-        var ts = localStorage.getItem('cji_hw_profile_ts');
+        var ts = localStorage.getItem('zykos_hw_profile_ts');
         if (!ts) return true;
         return (Date.now() - new Date(ts).getTime()) > maxAge;
     } catch(e) { return true; }
