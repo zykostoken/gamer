@@ -231,7 +231,7 @@ async function doRegister() {
   var email = document.getElementById('reg-email').value.trim();
   var pass = document.getElementById('reg-pass').value;
   var name = document.getElementById('reg-name').value.trim() || 'Jugador';
-  var pid = (document.getElementById('reg-dni').value || '').replace(/[^a-zA-Z0-9]/g, '');
+  var dni = (document.getElementById('reg-dni').value || '').replace(/[^a-zA-Z0-9]/g, '');
   var dob = document.getElementById('reg-dob').value || null;
   var sexo = document.getElementById('reg-sexo').value || null;
   var edu = document.getElementById('reg-edu').value || null;
@@ -246,7 +246,7 @@ async function doRegister() {
   // Validate
   if (!email) { showError('reg-error', 'Email requerido'); return; }
   if (!pass || pass.length < 8) { showError('reg-error', 'Password minimo 8 caracteres'); return; }
-  if (!dni || pid.length < 6 || pid.length > 20) { showError('reg-error', 'Identificacion obligatoria (6-20 caracteres)'); return; }
+  if (!dni || dni.length < 6 || dni.length > 20) { showError('reg-error', 'Identificacion obligatoria (6-20 caracteres)'); return; }
   if (!dob) { showError('reg-error', 'Fecha de nacimiento requerida (dato demografico para normas)'); return; }
   if (!sexo) { showError('reg-error', 'Sexo requerido (dato demografico para normas)'); return; }
   if (!edu) { showError('reg-error', 'Nivel educativo requerido (dato demografico para normas)'); return; }
@@ -260,7 +260,7 @@ async function doRegister() {
       p_email: email,
       p_password: pass,
       p_display_name: name,
-      p_dni: pid,
+      p_dni: dni,
       p_fecha_nacimiento: dob,
       p_sexo: sexo,
       p_nivel_educativo: edu,
