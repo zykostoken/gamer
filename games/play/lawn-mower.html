@@ -4783,7 +4783,22 @@
     btn.addEventListener('click', function() {
       const level = parseInt(this.getAttribute('data-level'));
       levelSelectScreen.classList.add('hidden');
-      startLevel(level);
+      // Pre-game mood color prompt (projective, no labels shown to player)
+      if (typeof showPreGameChat === 'function') {
+        showPreGameChat();
+        // showPreGameChat is non-blocking, starts level after color selection
+        // Wait for modal to close then start
+        var _checkMood = setInterval(function() {
+          if (!document.getElementById('mood-pre-overlay')) {
+            clearInterval(_checkMood);
+            startLevel(level);
+          }
+        }, 200);
+        // Fallback: if modal doesn't appear in 3s, start anyway
+        setTimeout(function() { clearInterval(_checkMood); startLevel(level); }, 3000);
+      } else {
+        startLevel(level);
+      }
     });
   });
 

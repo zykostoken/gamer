@@ -122,7 +122,8 @@ function showPreGameChat() {
     card.style.cssText = 'position:relative;background:#1e293b;border-radius:20px;padding:28px 24px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);text-align:center;color:#e2e8f0;font-family:system-ui,sans-serif';
 
     var questions = [
-        { q: '¡Hola! ¿Cómo estás hoy?', placeholder: 'Bien, más o menos, cansado/a...', input: true },
+        { q: 'Elegí un color', placeholder: null, input: false, colorPicker: true },
+        { q: '¿Cómo estás hoy?', placeholder: 'Bien, más o menos, cansado/a...', input: true },
         { q: '¿Descansaste bien anoche?', placeholder: 'Sí, no mucho, regular...', input: true },
         { q: '¡Genial! ¿Listo/a para empezar?', placeholder: null, input: false }
     ];
@@ -153,7 +154,33 @@ function showPreGameChat() {
         qEl.textContent = s.q;
         card.appendChild(qEl);
 
-        if (s.input) {
+        if (s.colorPicker) {
+            // Projective color grid — no labels, no interpretation shown to player
+            var grid = document.createElement('div');
+            grid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0';
+            MOOD_COLORS.forEach(function(c) {
+                var btn = document.createElement('button');
+                btn.style.cssText = 'width:100%;aspect-ratio:1;border-radius:12px;border:2px solid transparent;cursor:pointer;transition:all .2s;background:' + c.hex;
+                btn.title = ''; // No label for player
+                btn.onclick = function() {
+                    _moodState.preGameColor = c.name;
+                    _moodState.preGameColorHex = c.hex;
+                    _moodState.responses.push('color:' + c.name);
+                    _moodState.step++;
+                    renderStep();
+                };
+                btn.onmouseenter = function() { btn.style.transform = 'scale(1.15)'; btn.style.borderColor = 'rgba(255,255,255,0.5)'; };
+                btn.onmouseleave = function() { btn.style.transform = 'scale(1)'; btn.style.borderColor = 'transparent'; };
+                grid.appendChild(btn);
+            });
+            card.appendChild(grid);
+
+            var skipBtn = document.createElement('button');
+            skipBtn.textContent = 'Saltar';
+            skipBtn.style.cssText = 'padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;font-size:0.8rem;margin-top:8px';
+            skipBtn.onclick = function() { _moodState.responses.push('color:(saltado)'); _moodState.step++; renderStep(); };
+            card.appendChild(skipBtn);
+        } else if (s.input) {
             var inp = document.createElement('input');
             inp.type = 'text';
             inp.placeholder = s.placeholder;
