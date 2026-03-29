@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cargando... · HDD Gaming</title>
+<title>Cargando... · ZYKOS GAMER</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../../shared/telemetry.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -119,7 +119,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 <div class="grain"></div>
 <div class="toast-wrap" id="toasts"></div>
 <header class="hdr"><div class="hdr-inner">
-  <div class="hdr-left"><a href="../../index.html">← HDD Gaming</a><div class="hdr-title"><span id="h-em"></span> <span id="h-nm"></span></div></div>
+  <div class="hdr-left"><a href="/games/portal/">← ZYKOS GAMER</a><div class="hdr-title"><span id="h-em"></span> <span id="h-nm"></span></div></div>
   <div class="hdr-right"><span class="level-badge" id="h-level">Nivel 1</span><div class="hdr-stat"><div class="hdr-stat-v score-v" id="h-score">0</div><div class="hdr-stat-l">Puntos</div></div><div class="hdr-stat"><div class="hdr-stat-v timer" id="h-timer">--:--</div><div class="hdr-stat-l">Tiempo</div></div></div>
 </div></header>
 <main class="game" id="game"><div class="loading"><div class="spinner"></div><p style="color:var(--dim);font-size:.85rem">Cargando pack...</p></div></main>
@@ -136,7 +136,7 @@ kitLastActionTime:0,
 kitDeliberationPauses:0, // pauses >5s between actions
 };
 
-async function loadPack(){const p=new URLSearchParams(location.search),id=p.get('pack')||'ferreteria',url=PACK_MAP[id];if(!url){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--err)">Pack no encontrado</p></div>';return}try{const r=await fetch(url);if(!r.ok)throw new Error(r.status);PACK=await r.json()}catch(e){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--err)">Error: '+e.message+'</p></div>';return}document.title=PACK.meta.name+' · HDD Gaming';document.getElementById('h-em').textContent=PACK.meta.emoji;document.getElementById('h-nm').textContent=PACK.meta.name;if(PACK.meta.colors)document.documentElement.style.setProperty('--accent',PACK.meta.colors.accent);
+async function loadPack(){const p=new URLSearchParams(location.search),id=p.get('pack')||'ferreteria',url=PACK_MAP[id];if(!url){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--err)">Pack no encontrado</p></div>';return}try{const r=await fetch(url);if(!r.ok)throw new Error(r.status);PACK=await r.json()}catch(e){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--err)">Error: '+e.message+'</p></div>';return}document.title=PACK.meta.name+' · ZYKOS GAMER';document.getElementById('h-em').textContent=PACK.meta.emoji;document.getElementById('h-nm').textContent=PACK.meta.name;if(PACK.meta.colors)document.documentElement.style.setProperty('--accent',PACK.meta.colors.accent);
 // Init telemetry with patient ID (from URL param or localStorage)
 const pid=new URLSearchParams(location.search).get('pid')||localStorage.getItem('zykos_patient_id')||'demo_'+Date.now();
 if(typeof TELEM!=='undefined')TELEM.init(pid).catch(()=>{});
