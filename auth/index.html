@@ -293,6 +293,16 @@ async function doRegister() {
     // Set DNI for game metric linking
     if (data.dni) localStorage.setItem('zykos_patient_dni', data.dni);
 
+    // Log registration event for admin notification
+    try {
+      sb.from('zykos_registration_events').insert({
+        user_id: data.user_id,
+        email: email,
+        display_name: name,
+        dni: dni
+      });
+    } catch(e2) { console.warn('Registration event log:', e2); }
+
     window.location.href = '/games/portal/';
   } catch(e) {
     showError('reg-error', 'Error: ' + e.message);
