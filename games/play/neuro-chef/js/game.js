@@ -997,7 +997,7 @@ async function finishGame() {
         try { await sb.from('zykos_game_sessions').update({ completed_at:new Date().toISOString(), final_score:gameState.totalCorrect-gameState.totalErrors, metadata:summary }).eq('id',gameState.sessionId); } catch(e) {}
         try { await sb.from('zykos_game_metrics').insert({
             patient_id: gameState.patientId,
-            patient_dni: (gameState.patientDni && gameState.patientDni.indexOf('DEMO') === -1) ? gameState.patientDni : null,
+            patient_dni: (gameState.patientDni && gameState.patientDni!== null) ? gameState.patientDni : null,
             game_session_id: gameState.sessionId,
             game_slug: 'neuro-chef-v2',
             metric_type: 'session_complete',
@@ -1077,14 +1077,14 @@ function showResultsScreen(summary) {
 async function saveLevelMetrics(metric) {
     if (!sb) return;
     const clean={...metric};if(clean.biometrics){clean.biometrics={...clean.biometrics};delete clean.biometrics.action_log;delete clean.biometrics.tremor_details;delete clean.biometrics.hesitation_details}
-    try { await sb.from('zykos_game_metrics').insert({ patient_id:gameState.patientId, patient_dni:(gameState.patientDni&&gameState.patientDni.indexOf('DEMO')===-1)?gameState.patientDni:null, game_session_id:gameState.sessionId, game_slug:'neuro-chef-v2', metric_type:`level_${metric.level}`, metric_value:metric.score, metric_data:clean }); } catch(e) { console.warn('Metric save fail:',e); }
+    try { await sb.from('zykos_game_metrics').insert({ patient_id:gameState.patientId, patient_dni:gameState.patientDni || null, game_session_id:gameState.sessionId, game_slug:'neuro-chef-v2', metric_type:`level_${metric.level}`, metric_value:metric.score, metric_data:clean }); } catch(e) { console.warn('Metric save fail:',e); }
 }
 
 async function saveBiometrics(bio) {
     if (!sb) return;
     // Save summary to DB (without heavy raw data)
     try { await sb.from('zykos_game_metrics').insert({
-        patient_id:gameState.patientId, patient_dni:(gameState.patientDni&&gameState.patientDni.indexOf('DEMO')===-1)?gameState.patientDni:null, game_session_id:gameState.sessionId, game_slug:'neuro-chef-v2',
+        patient_id:gameState.patientId, patient_dni:gameState.patientDni || null, game_session_id:gameState.sessionId, game_slug:'neuro-chef-v2',
         metric_type:`biometric_level_${bio.level}`, metric_value:bio.d_prime||0,
         metric_data:{ reaction_time_ms:bio.reaction_time_ms, total_time_ms:bio.total_time_ms, hits:bio.hits, misses:bio.misses, false_alarms:bio.false_alarms, correct_rejects:bio.correct_rejects, d_prime:bio.d_prime, tremor_avg:bio.tremor_avg, tremor_speed_var:bio.tremor_speed_var, tremor_samples:bio.tremor_samples, hesitation_count:bio.hesitation_count, hesitation_total_ms:bio.hesitation_total_ms, undo_count:bio.undo_count, reset_count:bio.reset_count, total_interactions:bio.total_interactions, abrupt_direction_changes:bio.abrupt_direction_changes, avg_action_interval_ms:bio.avg_action_interval_ms }
     }); } catch(e) { console.warn('Bio save fail:',e); }

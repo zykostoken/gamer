@@ -21,7 +21,7 @@ global.showMetricsModal = async function(resultData) {
               sessionStorage.getItem('zykos_patient_dni');
     } catch(e) {}
     
-    if (!dni || dni === 'DEMO') {
+    if (!dni || dni === null) {
         console.log('[show-metrics] No DNI - skipping color history');
         return;
     }
@@ -183,7 +183,7 @@ global.showMetricsModal = async function(resultData) {
     // GUARDAR ANÁLISIS CLÍNICO EN SUPABASE
     // ================================================================
     async function saveClinicalAnalysis(analysis) {
-        if (!client || !dni || dni === 'DEMO') return;
+        if (!client || !dni || dni === null) return;
         
         try {
             await client.from('zykos_game_metrics').insert({

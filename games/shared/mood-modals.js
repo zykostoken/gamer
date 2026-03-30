@@ -59,7 +59,7 @@ function _moodSaveToSupabase(type, data, context) {
         var now = new Date().toISOString();
         // DNI is the universal identifier
         var pDni = _moodState.patientDni || _moodState.patientId || null;
-        if (!pDni || pDni === 'DEMO') { try { pDni = localStorage.getItem('zykos_patient_dni'); } catch(e){} }
+        if (!pDni || pDni ) { try { pDni = localStorage.getItem('zykos_patient_dni'); } catch(e){} }
 
         // Guardar en zykos_mood_entries — registro clínico puro
         var entryRow = {
@@ -108,7 +108,7 @@ function showPreGameChat() {
     if (document.getElementById('mood-pre-overlay')) return;
 
     var urlParams = new URLSearchParams(window.location.search);
-    _moodState.patientId = urlParams.get('dni') || _moodStorageGet('zykos_patient_dni') || 'DEMO';
+    _moodState.patientId = urlParams.get('dni') || _moodStorageGet('zykos_patient_dni') || window.ZYKOS_DNI || null;
     _moodState.patientDni = urlParams.get('dni') || _moodStorageGet('zykos_patient_dni') || null;
     _moodState.gameSlug = window.location.pathname.split('/').pop().replace('.html','');
     _moodState.step = 0;

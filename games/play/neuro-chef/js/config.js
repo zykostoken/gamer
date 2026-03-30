@@ -24,7 +24,7 @@ const ALIMENTOS = {
     bife: {
         id: 'bife',
         nombre: 'Bife',
-        imagen: 'https://images.unsplash.com/photo-1588347818036-c97cbf4e3c23?w=300',
+        imagen: 'https://images.unsplash.com/photo-1546964124-0cce460f38ef?w=300',
         categoria: 'proteina_animal',
         estado: 'crudo',
         zona_heladera: 'fria',
@@ -228,7 +228,7 @@ const ALIMENTOS = {
     mayonesa: {
         id: 'mayonesa',
         nombre: 'Mayonesa',
-        imagen: 'https://images.unsplash.com/photo-1608068803864-fd1b3a98e7d6?w=300',
+        imagen: 'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=300',
         categoria: 'aderezo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -237,7 +237,7 @@ const ALIMENTOS = {
     mostaza: {
         id: 'mostaza',
         nombre: 'Mostaza',
-        imagen: 'https://images.unsplash.com/photo-1582454613151-7fb7302b8e05?w=300',
+        imagen: 'https://images.unsplash.com/photo-1528750717929-32abb73d3bd9?w=300',
         categoria: 'aderezo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -255,7 +255,7 @@ const ALIMENTOS = {
     aceitunas: {
         id: 'aceitunas',
         nombre: 'Aceitunas',
-        imagen: 'https://images.unsplash.com/photo-1577003833154-a2e6762f0a8f?w=300',
+        imagen: 'https://images.unsplash.com/photo-1504544750208-dc0358e63f7f?w=300',
         categoria: 'aderezo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -266,7 +266,7 @@ const ALIMENTOS = {
     hielo: {
         id: 'hielo',
         nombre: 'Hielo',
-        imagen: 'https://images.unsplash.com/photo-1563428537-afe72eb83fd4?w=300',
+        imagen: 'https://images.unsplash.com/photo-1514373941175-0a141072bbc8?w=300',
         categoria: 'freezer',
         zona_heladera: 'freezer',
         temperatura: -18,
@@ -324,7 +324,7 @@ const ALIMENTOS = {
     pan_rallado: {
         id: 'pan_rallado',
         nombre: 'Pan Rallado',
-        imagen: 'https://images.unsplash.com/photo-1586444248879-bc604bc77bdd?w=300',
+        imagen: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300',
         categoria: 'cereal',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -333,7 +333,7 @@ const ALIMENTOS = {
     sal: {
         id: 'sal',
         nombre: 'Sal',
-        imagen: 'https://images.unsplash.com/photo-1563199094-ba6e24bfff7f?w=300',
+        imagen: 'https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=300',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -342,7 +342,7 @@ const ALIMENTOS = {
     azucar: {
         id: 'azucar',
         nombre: 'Azúcar',
-        imagen: 'https://images.unsplash.com/photo-1563368605-72cdb692fea9?w=300',
+        imagen: 'https://images.unsplash.com/photo-1581006852262-e4307cf6283a?w=300',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -380,7 +380,7 @@ const ALIMENTOS = {
     pasas_uva: {
         id: 'pasas_uva',
         nombre: 'Pasas de Uva',
-        imagen: 'https://images.unsplash.com/photo-1596273501691-9dba1b5f5337?w=300',
+        imagen: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=300',
         categoria: 'fruto_seco',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -434,7 +434,7 @@ const ALIMENTOS = {
     nuez_moscada: {
         id: 'nuez_moscada',
         nombre: 'Nuez Moscada',
-        imagen: 'https://images.unsplash.com/photo-1599909533503-f2781e5dcfd4?w=300',
+        imagen: 'https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=300',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -443,7 +443,7 @@ const ALIMENTOS = {
     ciruelas_pasas: {
         id: 'ciruelas_pasas',
         nombre: 'Ciruelas Pasas',
-        imagen: 'https://images.unsplash.com/photo-1590282610690-6bbb53fa2e5f?w=300',
+        imagen: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=300',
         categoria: 'fruto_seco',
         zona_heladera: 'afuera',
         temperatura: 20,

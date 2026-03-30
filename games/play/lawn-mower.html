@@ -1064,8 +1064,8 @@
         <button class="level-btn" data-level="203">
           <div class="level-num" style="background:#ef4444;">P3-3</div>
           <div class="level-info">
-            <div class="level-name">Triple Tarea: Nene + Pileta</div>
-            <div class="level-desc">Corta, vigila la pileta Y cuida al nene. Maxima carga cognitiva.</div>
+            <div class="level-name">Triple Tarea: Nene cruza el camino</div>
+            <div class="level-desc">Corta el pasto, cuida la pileta Y esquiva al nene que se cruza. Maxima carga cognitiva.</div>
           </div>
         </button>
       </div>
@@ -1296,7 +1296,7 @@
   // Get patient DNI from URL params or localStorage
   const lmParams = new URLSearchParams(window.location.search);
   // DNI is the universal identifier
-  const lmPatientDni = lmParams.get('dni') || (function(){ try { return localStorage.getItem('zykos_patient_dni'); } catch(e){ return null; } })() || 'HDD-DEMO';
+  const lmPatientDni = lmParams.get('dni') || (function(){ try { return localStorage.getItem('zykos_patient_dni'); } catch(e){ return null; } })() || window.ZYKOS_DNI;
 
   async function lmGetOrCreatePatient(dni) {
     if (!getLmSupa()) return null;
@@ -3033,31 +3033,12 @@
         moveChild();
       }
 
-      // Check if child is adjacent to pool
-      let childNearPool = false;
-      for (let dr = -1; dr <= 1; dr++) {
-        for (let dc = -1; dc <= 1; dc++) {
-          if (dr === 0 && dc === 0) continue;
-          var cr = childY + dr, cc = childX + dc;
-          if (cr >= 0 && cr < gridH && cc >= 0 && cc < gridW) {
-            if (grid[cr][cc] === T.POOL) childNearPool = true;
-          }
-        }
-      }
-
-      if (childNearPool) {
+      // Check if child is in player's immediate path (within 2 tiles)
+      var childDistToPlayer = Math.abs(childX - playerX) + Math.abs(childY - playerY);
+      if (childDistToPlayer <= 2 && childDistToPlayer > 0) {
         if (childNearPoolStart === 0) {
-          childNearPoolStart = Date.now();
-          showToast('El nene esta cerca de la pileta!', 'error', 2000);
-        }
-        // If near pool for >4 seconds = danger event
-        if (Date.now() - childNearPoolStart > 4000) {
-          childDangerCount++;
-          score -= 300;
-          showToast('El nene llego a la pileta sin supervision! -300pts', 'error', 3000);
-          // Relocate child to safe spot
-          childX = 1; childY = 1;
-          childNearPoolStart = 0;
+          childNearPoolStart = Date.now(); // reuse as "child near player" timestamp
+          showToast('Cuidado! El nene se cruza!', 'error', 1500);
         }
       } else {
         childNearPoolStart = 0;
@@ -3068,59 +3049,74 @@
   }
 
   function moveChild() {
-    // Determine direction: random or attracted to pool
-    let dirs = [];
-    const poolPositions = [];
+    // MECHANIC: child periodically crosses in front of the player's path
+    // Player must STOP to avoid hitting the child
+    // If player moves into child = commission error (impulse control failure)
+    // If player stops in time = good inhibition response
 
-    // Find pool tiles
-    for (let r = 0; r < gridH; r++) {
-      for (let c = 0; c < gridW; c++) {
-        if (grid[r][c] === T.POOL) poolPositions.push({r, c});
-      }
+    // Calculate player's likely next position (based on last direction)
+    var targetX, targetY;
+    
+    // Position child to cross player's path
+    // Child appears 2-3 tiles ahead of player's last direction, perpendicular
+    if (clinicalMetrics.lastDirection) {
+      var ld = clinicalMetrics.lastDirection;
+      // Place child in the path ahead
+      var aheadX = playerX + ld.dx * (2 + Math.floor(Math.random() * 2));
+      var aheadY = playerY + ld.dy * (2 + Math.floor(Math.random() * 2));
+      
+      // Child crosses perpendicular to player direction
+      var perpDx = ld.dy !== 0 ? (Math.random() > 0.5 ? 1 : -1) : 0;
+      var perpDy = ld.dx !== 0 ? (Math.random() > 0.5 ? 1 : -1) : 0;
+      
+      targetX = aheadX + perpDx;
+      targetY = aheadY + perpDy;
+    } else {
+      // Random position if no direction yet
+      targetX = childX + (Math.random() > 0.5 ? 1 : -1);
+      targetY = childY + (Math.random() > 0.5 ? 1 : -1);
     }
 
-    // Decide: move toward pool or random?
-    let moveTowardPool = poolPositions.length > 0 && Math.random() * 100 < childPoolAttractionPct;
-
-    if (moveTowardPool) {
-      // Find closest pool tile
-      let closest = poolPositions[0];
-      let minDist = Math.abs(childX - closest.c) + Math.abs(childY - closest.r);
-      for (var pi = 1; pi < poolPositions.length; pi++) {
-        var d = Math.abs(childX - poolPositions[pi].c) + Math.abs(childY - poolPositions[pi].r);
-        if (d < minDist) { minDist = d; closest = poolPositions[pi]; }
-      }
-      // Move one step toward closest pool
-      var ddx = closest.c > childX ? 1 : closest.c < childX ? -1 : 0;
-      var ddy = closest.r > childY ? 1 : closest.r < childY ? -1 : 0;
-      if (ddx !== 0 && Math.random() > 0.5) ddy = 0;
-      else if (ddy !== 0) ddx = 0;
-      dirs.push({dx: ddx, dy: ddy});
+    // Move one step toward target
+    var ddx = targetX > childX ? 1 : targetX < childX ? -1 : 0;
+    var ddy = targetY > childY ? 1 : targetY < childY ? -1 : 0;
+    
+    // Prefer horizontal or vertical randomly
+    if (ddx !== 0 && ddy !== 0) {
+      if (Math.random() > 0.5) ddy = 0;
+      else ddx = 0;
     }
 
-    // Also add random directions
+    var nx = childX + ddx;
+    var ny = childY + ddy;
+    
+    // Validate target
+    if (ny >= 0 && ny < gridH && nx >= 0 && nx < gridW) {
+      var t = grid[ny][nx];
+      if (t === T.GRASS || t === T.CUT || t === T.PATH || t === T.DRAIN ||
+          t === T.FLOWER || t === T.FLOWER_WATERED) {
+        childX = nx;
+        childY = ny;
+        return;
+      }
+    }
+    
+    // Fallback: random walkable direction
     var allDirs = [{dx:0,dy:-1},{dx:1,dy:0},{dx:0,dy:1},{dx:-1,dy:0}];
     for (var di = allDirs.length - 1; di > 0; di--) {
       var j = Math.floor(Math.random() * (di + 1));
       var tmp = allDirs[di]; allDirs[di] = allDirs[j]; allDirs[j] = tmp;
     }
-    dirs = dirs.concat(allDirs);
-
-    // Try each direction
-    for (var d = 0; d < dirs.length; d++) {
-      var nx = childX + dirs[d].dx;
-      var ny = childY + dirs[d].dy;
+    for (var d = 0; d < allDirs.length; d++) {
+      nx = childX + allDirs[d].dx;
+      ny = childY + allDirs[d].dy;
       if (ny >= 0 && ny < gridH && nx >= 0 && nx < gridW) {
-        var t = grid[ny][nx];
-        // Child can walk on grass, cut grass, path, drain, flowers
-        if (t === T.GRASS || t === T.CUT || t === T.PATH || t === T.DRAIN ||
-            t === T.FLOWER || t === T.FLOWER_WATERED) {
-          // Don't walk onto player
-          if (nx !== playerX || ny !== playerY) {
-            childX = nx;
-            childY = ny;
-            return;
-          }
+        var t2 = grid[ny][nx];
+        if (t2 === T.GRASS || t2 === T.CUT || t2 === T.PATH || t2 === T.DRAIN ||
+            t2 === T.FLOWER || t2 === T.FLOWER_WATERED) {
+          childX = nx;
+          childY = ny;
+          return;
         }
       }
     }
@@ -3295,7 +3291,7 @@
         'El desague solo drena cuando vos estas parado en el.',
       ];
     } else if (level >= 203) {
-      title = 'Parte 3 - Triple Tarea: Nene + Pileta + Cesped';
+      title = 'Parte 3 - Triple Tarea: Nene cruza el camino + Cesped';
       specific = [
         'Un nene camina por el jardin. Si se acerca a la pileta, anda a buscarlo!',
         'Acercate al nene (celda adyacente) para alejarlo del peligro.',
@@ -3726,7 +3722,7 @@
       const PART3_NAMES = {
         201: 'Doble Tarea: Pileta',
         202: 'Doble Tarea Avanzada',
-        203: 'Triple Tarea: Nene + Pileta'
+        203: 'Triple Tarea: Nene cruza el camino'
       };
       levelName = 'Parte 3 - ' + (level - 200) + ': ' + (PART3_NAMES[level] || 'Carga Cognitiva');
     } else if (level >= 101) {
@@ -4285,6 +4281,23 @@
       return;
     }
 
+    // CHILD COLLISION — player moved into child's tile
+    // This is a commission error: failed to inhibit movement when child crossed path
+    if (isPart3 && childActive && nx === childX && ny === childY) {
+      errors++;
+      childDangerCount++;
+      score -= 200;
+      showToast('Cuidado con el nene! -200 pts', 'error', 2000);
+      metricsTimeSeries.commissionEvents.push({ time: Math.floor((Date.now() - startTime) / 1000), type: 'child_hit' });
+      // Relocate child to safe spot
+      childX = Math.floor(Math.random() * (gridW - 4)) + 2;
+      childY = Math.floor(Math.random() * (gridH - 4)) + 2;
+      recordMovement(dx, dy, false, timestamp); // Commission error - failed inhibition
+      updateUI();
+      render();
+      return;
+    }
+
     // Pool dirty - need pool cleaner
     if (tile === T.POOL_DIRTY) {
       if (usingPoolCleaner) {
@@ -4485,19 +4498,14 @@
       return;
     }
 
-    // Part 3: Check child intercept (player moved adjacent to child near pool)
-    if (isPart3 && childActive && childNearPoolStart > 0) {
+    // Part 3: Child avoidance tracking
+    // If child is within 2 tiles of player and player STOPPED, that's good inhibition
+    if (isPart3 && childActive && childX >= 0) {
       var distToChild = Math.abs(nx - childX) + Math.abs(ny - childY);
-      if (distToChild <= 1) {
-        // Player intercepted child!
-        childInterceptCount++;
-        childInterceptRTs.push(Date.now() - childNearPoolStart);
-        // Relocate child to safe spot (away from pool)
-        childX = 1; childY = 1;
-        childNearPoolStart = 0;
-        score += 100;
-        showToast('Nene a salvo! +100pts', 'info');
-        taskSwitchCount++;
+      if (distToChild <= 2) {
+        // Player moved AWAY from child or stopped — good avoidance
+        childInterceptCount++; // reusing as "successful avoidances"
+        showToast('Bien! Esquivaste al nene', 'info', 1000);
       }
     }
 
@@ -5512,6 +5520,7 @@
   <!-- Mood modals v4: self-contained overlay system -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/supabase-config.js"></script>
+<script src="/games/shared/require-auth.js"></script>
 <script src="/games/shared/evidence-hash.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <script src="/js/sanitize.js"></script>

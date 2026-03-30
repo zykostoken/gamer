@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/supabase-config.js"></script>
+<script src="/games/shared/require-auth.js"></script>
 <script src="/games/shared/evidence-hash.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
     <script src="/js/sanitize.js"></script>
@@ -422,7 +423,7 @@ function initGame() {
 function _initGameReal() {
     startTime = Date.now();
     var urlParams = new URLSearchParams(window.location.search);
-    patientId = urlParams.get('dni') || localStorage.getItem('zykos_patient_dni') || 'DEMO';
+    patientId = urlParams.get('dni') || localStorage.getItem('zykos_patient_dni') || window.ZYKOS_DNI;
 
     // === SELECT RANDOM RECIPE ===
     var recipeKeys = Object.keys(RECIPES);
@@ -1118,7 +1119,7 @@ async function saveSupermarketResult(metrics) {
 
         // patient_id comes from URL — portal now sends numeric id
         // DNI is the universal identifier
-        var dni = patientId !== 'DEMO' ? patientId : null;
+        var dni = patientId !== null ? patientId : null;
         if (!dni) { console.warn('[super-market] No DNI, skipping save'); return; }
 
         await supabaseClient.from('zykos_game_metrics').insert({

@@ -474,8 +474,8 @@ function start(opts) {
     if (BM.active) return;
     BM.active = true;
     BM.sessionStart = Date.now();
-    BM.patientId  = opts.patientId  || opts.patientDni || 'DEMO';
-    BM.patientDni = opts.patientDni || opts.patientId  || 'DEMO';
+    BM.patientId  = opts.patientId  || opts.patientDni || window.ZYKOS_DNI || null;
+    BM.patientDni = opts.patientDni || opts.patientId  || window.ZYKOS_DNI || null;
     BM.gameSlug = opts.gameSlug || 'unknown';
 
     // Reset
@@ -678,7 +678,7 @@ function save(extra_data) {
         if (!client) return result;
 
         // DNI is the universal identifier — no internal id needed
-        var dni = (BM.patientDni && BM.patientDni !== 'DEMO') ? BM.patientDni : null;
+        var dni = (BM.patientDni && BM.patientDni !== null) ? BM.patientDni : null;
         if (!dni) { try { dni = localStorage.getItem('zykos_patient_dni'); } catch(e){} }
         if (!dni) { console.warn('[biomet] No DNI, skipping save'); return result; }
 

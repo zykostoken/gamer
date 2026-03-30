@@ -6,6 +6,7 @@
     <title>Rutina Diaria - ZYKOS GAMER</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/supabase-config.js"></script>
+<script src="/games/shared/require-auth.js"></script>
 <script src="/games/shared/evidence-hash.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
     <script src="/js/sanitize.js"></script>
@@ -314,7 +315,7 @@ const SCENES = [
 // GAME STATE
 // ================================================================
 const state = {
-    patientDni: 'DEMO',
+    patientDni: window.ZYKOS_DNI || null,
     startTime: null,
     timerInterval: null,
     currentSceneIdx: 0,
@@ -357,7 +358,7 @@ function _beginGameReal() {
     const params = new URLSearchParams(window.location.search);
     state.patientDni = params.get('dni') || params.get('patient_id')
         || (function(){try{return localStorage.getItem('zykos_patient_dni')||localStorage.getItem('zykos_patient_dni')}catch(e){return null}})()
-        || 'DEMO';
+        || window.ZYKOS_DNI;
     document.getElementById('patient-display').textContent = state.patientDni;
 
     state.startTime = Date.now();
@@ -815,7 +816,7 @@ async function saveResults(metrics, biometData) {
             try { dailyPatientId = parseInt(localStorage.getItem('zykos_patient_dni')); } catch(e) {}
         }
         // Fallback: lookup by DNI if still no numeric ID
-        if (!dailyPatientId && state.patientDni && state.patientDni !== 'HDD-DEMO') {
+        if (!dailyPatientId && state.patientDni && state.patientDni !== null) {
             try {
                 const { data: pdata } = await sb.from('zykos_patients').select('id').eq('dni', state.patientDni).single();
                 if (pdata) dailyPatientId = pdata.id;
