@@ -301,6 +301,12 @@ async function doRegister() {
         display_name: name,
         dni: dni
       });
+      // Notify admin via Netlify function
+      fetch('/api/notify-registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, display_name: name, dni: dni, user_id: data.user_id })
+      }).catch(function(){});
     } catch(e2) { console.warn('Registration event log:', e2); }
 
     window.location.href = '/games/portal/';

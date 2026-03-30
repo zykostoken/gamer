@@ -8,5 +8,9 @@
   },
   "devDependencies": {
     "javascript-obfuscator": "^4.1.1"
+  },
+  "dependencies": {
+    "@netlify/functions": "^5.1.5",
+    "nodemailer": "^8.0.4"
   }
 }
