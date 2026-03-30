@@ -146,6 +146,12 @@ body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var
       </div>
       <div class="consent-box">
         <label>
+          <input type="checkbox" id="reg-consent-health">
+          Declaro conocer que ZYKOS GAMER es una herramienta de rehabilitacion cognitiva y captura de biometrias digitales. No constituye diagnostico medico ni reemplaza la evaluacion profesional. Los datos generados durante el uso de la plataforma seran almacenados de forma permanente con hash de integridad, y podran ser utilizados por el profesional de salud a cargo de mi tratamiento. El manejo de datos se rige por la normativa de salud vigente en la jurisdiccion correspondiente.
+        </label>
+      </div>
+      <div class="consent-box">
+        <label>
           <input type="checkbox" id="reg-consent-terms">
           Acepto los terminos de uso y la politica de privacidad de ZYKOS GAMER.
         </label>
@@ -239,6 +245,7 @@ async function doRegister() {
   var pais = document.getElementById('reg-pais').value.trim() || 'Argentina';
   var ocup = document.getElementById('reg-ocup').value.trim() || null;
   var consentR = document.getElementById('reg-consent-research').checked;
+  var consentH = document.getElementById('reg-consent-health').checked;
   var consentT = document.getElementById('reg-consent-terms').checked;
 
   document.getElementById('reg-error').classList.remove('show');
@@ -251,6 +258,7 @@ async function doRegister() {
   if (!sexo) { showError('reg-error', 'Sexo requerido (dato demografico para normas)'); return; }
   if (!edu) { showError('reg-error', 'Nivel educativo requerido (dato demografico para normas)'); return; }
   if (!lat) { showError('reg-error', 'Lateralidad requerida (dato demografico para normas)'); return; }
+  if (!consentH) { showError('reg-error', 'Debes aceptar el descargo de uso en salud'); return; }
   if (!consentT) { showError('reg-error', 'Debes aceptar los terminos de uso'); return; }
 
   setLoading(true);

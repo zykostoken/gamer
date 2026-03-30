@@ -215,6 +215,19 @@ function setupPreGameModal() {
 
 // ========== GAME START ==========
 async function startGame() {
+    // Pre-game: calibration → mood color → mood questions → then start
+    if (typeof showPreGameChat === 'function' && !window._preGameDone) {
+        window._preGameDone = true;
+        showPreGameChat();
+        await new Promise(function(resolve) {
+            var _w = setInterval(function() {
+                if (!document.getElementById('mood-pre-overlay') && !document.getElementById('input-calibration-overlay')) {
+                    clearInterval(_w); resolve();
+                }
+            }, 200);
+            setTimeout(function() { clearInterval(_w); resolve(); }, 15000);
+        });
+    }
     console.log('[Neuro-Chef] Starting session...');
     gameState.startTime = Date.now(); gameState.currentLevel = 1;
     gameState.totalCorrect = 0; gameState.totalErrors = 0;
