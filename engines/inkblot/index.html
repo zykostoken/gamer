@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manchas ZYKOS · ZYKOS GAMER</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../js/supabase-config.js"></script>
+<script src="../../shared/telemetry.js"></script>
+<script src="../../games/shared/evidence-hash.js"></script>
+<script src="../../games/shared/input-calibration.js"></script>
+<script src="../../games/shared/mood-modals.js"></script>
+<script src="../../games/shared/show-metrics.js"></script>
+<script src="../../games/shared/auto-save.js"></script>
+<script src="../../js/sanitize.js"></script>
+<style>
+:root{--bg:#0a0e1e;--surface:#111827;--border:rgba(255,255,255,.08);--text:#e2e8f0;--dim:rgba(255,255,255,.4);--accent:#8b5cf6;--ok:#34d399;--err:#f87171;--warn:#fbbf24}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+.hdr{background:linear-gradient(180deg,rgba(139,92,246,.06) 0%,transparent 100%);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.hdr a{color:var(--dim);text-decoration:none;font-size:.85rem}
+.hdr-title{font-family:'Space Mono',monospace;font-weight:700;font-size:1rem;color:var(--accent)}
+.hdr-info{font-size:.75rem;color:var(--dim)}
+.container{max-width:800px;margin:0 auto;padding:20px}
+canvas{display:block;margin:0 auto;border-radius:16px;background:#f5f0eb;cursor:crosshair}
+.intro{text-align:center;padding:60px 20px}
+.intro h1{font-size:2rem;font-weight:700;margin-bottom:12px;background:linear-gradient(135deg,var(--accent),#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.intro p{color:var(--dim);font-size:.95rem;max-width:500px;margin:0 auto 24px;line-height:1.6}
+.btn{padding:14px 32px;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(139,92,246,.3)}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--dim)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--text)}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:20px}
+.choice-btn{padding:16px;border-radius:12px;border:2px solid var(--border);background:var(--surface);color:var(--text);font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
+.choice-btn:hover{border-color:var(--accent);transform:translateY(-2px)}
+.choice-btn.correct{border-color:var(--ok);background:rgba(52,211,153,.1)}
+.choice-btn.wrong{border-color:var(--err);background:rgba(248,113,113,.1)}
+.timer-bar{height:4px;background:var(--surface);border-radius:2px;margin:16px 0;overflow:hidden}
+.timer-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--ok));transition:width .1s linear;border-radius:2px}
+.score-display{display:flex;gap:20px;justify-content:center;margin:16px 0;font-family:'Space Mono',monospace;font-size:.85rem;color:var(--dim)}
+.score-display span{color:var(--text);font-weight:700}
+.results{text-align:center;padding:40px 20px}
+.results h2{font-size:1.5rem;margin-bottom:8px}
+.results .big-score{font-size:3rem;font-weight:800;font-family:'Space Mono',monospace;color:var(--accent)}
+.res-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0}
+.res-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px}
+.res-card .rv{font-size:1.3rem;font-weight:700;font-family:'Space Mono',monospace}
+.res-card .rl{font-size:.7rem;color:var(--dim);margin-top:4px}
+.create-area{position:relative;touch-action:none}
+.create-tools{display:flex;gap:8px;justify-content:center;margin:16px 0;flex-wrap:wrap}
+.tool-btn{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:.8rem;cursor:pointer}
+.tool-btn.active{border-color:var(--accent);background:rgba(139,92,246,.15)}
+.phase-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:700;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <a href="/games/portal/">← Portal</a>
+  <div class="hdr-title">Manchas ZYKOS</div>
+  <div class="hdr-info" id="hdr-info"></div>
+</div>
+
+<div class="container">
+  <!-- INTRO -->
+  <div id="screen-intro" class="intro">
+    <h1>Manchas ZYKOS</h1>
+    <p>Manchas simétricas generadas algorítmicamente. Cada mancha esconde un local de Necochea. Tu tarea: identificar cuál es.</p>
+    <p style="font-size:.8rem;color:var(--dim)">Después: creá tu propia mancha simétrica.</p>
+    <button class="btn btn-primary" onclick="startClassify()">Empezar</button>
+  </div>
+
+  <!-- CLASSIFY PHASE -->
+  <div id="screen-classify" style="display:none">
+    <div class="phase-label">Fase 1 · Clasificación</div>
+    <canvas id="blot-canvas" width="500" height="400"></canvas>
+    <div class="timer-bar"><div class="timer-fill" id="timer-fill"></div></div>
+    <div class="score-display">
+      Ronda <span id="round-num">1</span>/10 &nbsp; Correctas <span id="correct-count">0</span> &nbsp; Tiempo <span id="elapsed">0s</span>
+    </div>
+    <div class="choices" id="choices"></div>
+  </div>
+
+  <!-- CREATE PHASE -->
+  <div id="screen-create" style="display:none">
+    <div class="phase-label">Fase 2 · Creación</div>
+    <p style="color:var(--dim);font-size:.85rem;text-align:center;margin-bottom:12px">Dibujá en la mitad izquierda. La mancha se refleja automáticamente.</p>
+    <div class="create-area">
+      <canvas id="create-canvas" width="500" height="400"></canvas>
+    </div>
+    <div class="create-tools">
+      <button class="tool-btn active" onclick="setTool('brush')" id="tool-brush">Pincel</button>
+      <button class="tool-btn" onclick="setTool('splash')" id="tool-splash">Salpicadura</button>
+      <button class="tool-btn" onclick="setColor('#1a1a2e')" id="clr-dark">Negro</button>
+      <button class="tool-btn" onclick="setColor('#ef4444')" id="clr-red">Rojo</button>
+      <button class="tool-btn" onclick="setColor('#3b82f6')" id="clr-blue">Azul</button>
+      <button class="tool-btn" onclick="setColor('#22c55e')" id="clr-green">Verde</button>
+      <button class="tool-btn" onclick="clearCreate()">Limpiar</button>
+      <button class="btn btn-primary" onclick="finishCreate()" style="padding:8px 20px;font-size:.85rem">Guardar mancha</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="screen-results" style="display:none" class="results"></div>
+</div>
+
+<script>
+// ============================================================
+// MANCHAS ZYKOS — Inkblot engine
+// (c) 2025-2026 Gonzalo Perez Cortizo. Proprietary. See LICENSE.
+// Métricas son la monarquía. Los juegos son siervos.
+// ============================================================
+
+var LOCALS = [
+  {id:'ferreteria',name:'La Ferretería de Berugo',emoji:'🔧',palette:['#4a3728','#6b4f3a','#8b6914','#a0522d']},
+  {id:'almacen',name:'El Almacén de Don Tito',emoji:'🏪',palette:['#2d4a2d','#3a6b3a','#1a4a1a','#5a8a5a']},
+  {id:'electrodomesticos',name:'Electrodomésticos El Rayo',emoji:'⚡',palette:['#1a1a4a','#2a2a6b','#4a4a8b','#3333aa']},
+  {id:'libreria',name:'La Librería de la Seño Marta',emoji:'📚',palette:['#8b1a4a','#a0336b','#c44a8b','#6b1a3a']},
+  {id:'carniceria',name:'La Carnicería de Pancho y el Negro',emoji:'🥩',palette:['#8b1a1a','#a03333','#c44a4a','#6b0000']},
+  {id:'chino',name:'El Chino de la Vuelta',emoji:'🏮',palette:['#c44a1a','#e06030','#ff8c00','#a03010']},
+  {id:'merceria',name:'La Mercería de Pituka',emoji:'🧵',palette:['#6b1a6b','#8b338b','#a04aa0','#c46bc4']},
+  {id:'concesionario',name:'El Concesionario de Agustín',emoji:'🚗',palette:['#1a3a5a','#2a5a8b','#3a7abb','#0a2a4a']},
+  {id:'bar',name:'El Bar de Andrés',emoji:'🍺',palette:['#5a4a1a','#7b6a2a','#9b8a3a','#bba44a']}
+];
+
+var STATE = {
+  phase: 'intro',
+  round: 0,
+  maxRounds: 10,
+  correct: 0,
+  errors: 0,
+  responses: [],
+  startTime: 0,
+  roundStartTime: 0,
+  currentLocal: null,
+  distractors: [],
+  timerInterval: null,
+  roundTimeLimit: 15000, // 15 sec per round
+  createStrokes: [],
+  createTool: 'brush',
+  createColor: '#1a1a2e',
+  isDrawing: false,
+  patientDni: null
+};
+
+// ---- BLOT GENERATION ----
+function generateBlot(canvas, palette, complexity) {
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height;
+  var hw = w / 2;
+  
+  // Cream/aged paper background
+  ctx.fillStyle = '#f5f0eb';
+  ctx.fillRect(0, 0, w, h);
+  
+  // Add paper texture
+  for (var i = 0; i < 2000; i++) {
+    ctx.fillStyle = 'rgba(0,0,0,' + (Math.random() * 0.03) + ')';
+    ctx.fillRect(Math.random() * w, Math.random() * h, 1, 1);
+  }
+  
+  // Generate random blobs on left half, mirror to right
+  var numBlobs = complexity || (8 + Math.floor(Math.random() * 8));
+  
+  for (var b = 0; b < numBlobs; b++) {
+    var color = palette[Math.floor(Math.random() * palette.length)];
+    var cx = Math.random() * hw * 0.8 + hw * 0.1;
+    var cy = Math.random() * h * 0.7 + h * 0.15;
+    var rx = 20 + Math.random() * 60;
+    var ry = 20 + Math.random() * 50;
+    var alpha = 0.5 + Math.random() * 0.5;
+    
+    // Draw organic blob shape
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    
+    var points = 12 + Math.floor(Math.random() * 8);
+    for (var p = 0; p < points; p++) {
+      var angle = (p / points) * Math.PI * 2;
+      var r = (p === 0 ? rx : rx * (0.6 + Math.random() * 0.8));
+      var ry2 = (p === 0 ? ry : ry * (0.6 + Math.random() * 0.8));
+      var px = cx + Math.cos(angle) * r;
+      var py = cy + Math.sin(angle) * ry2;
+      if (p === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    
+    // Mirror to right half
+    ctx.save();
+    ctx.translate(w, 0);
+    ctx.scale(-1, 1);
+    ctx.fill();
+    ctx.restore();
+    
+    ctx.restore();
+    
+    // Add some drip/splash effects
+    if (Math.random() > 0.6) {
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.6;
+      ctx.fillStyle = color;
+      for (var s = 0; s < 3; s++) {
+        var sx = cx + (Math.random() - 0.5) * rx * 2;
+        var sy = cy + ry + Math.random() * 30;
+        var sr = 2 + Math.random() * 5;
+        ctx.beginPath();
+        ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+        ctx.fill();
+        // Mirror
+        ctx.beginPath();
+        ctx.arc(w - sx, sy, sr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+  }
+  
+  // Center fold line
+  ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(hw, 0);
+  ctx.lineTo(hw, h);
+  ctx.stroke();
+}
+
+// ---- CLASSIFY PHASE ----
+function startClassify() {
+  // Pre-game: calibration + mood
+  if (typeof showPreGameChat === 'function' && !window._preGameDone) {
+    window._preGameDone = true;
+    showPreGameChat();
+    var _w = setInterval(function() {
+      if (!document.getElementById('mood-pre-overlay') && !document.getElementById('input-calibration-overlay')) {
+        clearInterval(_w); _startClassifyReal();
+      }
+    }, 200);
+    setTimeout(function() { clearInterval(_w); _startClassifyReal(); }, 15000);
+    return;
+  }
+  _startClassifyReal();
+}
+
+function _startClassifyReal() {
+  STATE.phase = 'classify';
+  STATE.round = 0;
+  STATE.correct = 0;
+  STATE.errors = 0;
+  STATE.responses = [];
+  STATE.startTime = Date.now();
+  
+  var params = new URLSearchParams(location.search);
+  STATE.patientDni = params.get('dni') || localStorage.getItem('zykos_patient_dni') || 'DEMO';
+  
+  if (typeof TELEM !== 'undefined') TELEM.init(STATE.patientDni).catch(function(){});
+  if (typeof TELEM !== 'undefined') TELEM.startGameSession({frame:'inkblot',packId:'necochea-locals',mode:'classify',level:1}).catch(function(){});
+  
+  document.getElementById('screen-intro').style.display = 'none';
+  document.getElementById('screen-classify').style.display = 'block';
+  nextRound();
+}
+
+function nextRound() {
+  if (STATE.round >= STATE.maxRounds) { endClassify(); return; }
+  STATE.round++;
+  STATE.roundStartTime = Date.now();
+  
+  // Pick a random local
+  var idx = Math.floor(Math.random() * LOCALS.length);
+  STATE.currentLocal = LOCALS[idx];
+  
+  // Generate blot with that local's palette
+  var canvas = document.getElementById('blot-canvas');
+  generateBlot(canvas, STATE.currentLocal.palette);
+  
+  // Pick 3 distractors + correct answer, shuffle
+  var options = [STATE.currentLocal];
+  var available = LOCALS.filter(function(l) { return l.id !== STATE.currentLocal.id; });
+  for (var i = 0; i < 3 && available.length > 0; i++) {
+    var ri = Math.floor(Math.random() * available.length);
+    options.push(available.splice(ri, 1)[0]);
+  }
+  // Shuffle
+  options.sort(function() { return Math.random() - 0.5; });
+  STATE.distractors = options;
+  
+  // Render choices
+  var choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+  options.forEach(function(opt) {
+    var btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = opt.emoji + ' ' + opt.name;
+    btn.onclick = function() { selectAnswer(opt.id, btn); };
+    choicesEl.appendChild(btn);
+  });
+  
+  // Update UI
+  document.getElementById('round-num').textContent = STATE.round;
+  document.getElementById('correct-count').textContent = STATE.correct;
+  
+  // Start timer
+  clearInterval(STATE.timerInterval);
+  var fill = document.getElementById('timer-fill');
+  fill.style.width = '100%';
+  var startT = Date.now();
+  STATE.timerInterval = setInterval(function() {
+    var pct = 1 - (Date.now() - startT) / STATE.roundTimeLimit;
+    if (pct <= 0) { clearInterval(STATE.timerInterval); selectAnswer(null, null); return; }
+    fill.style.width = (pct * 100) + '%';
+    fill.style.background = pct < 0.3 ? 'var(--err)' : 'linear-gradient(90deg,var(--accent),var(--ok))';
+    document.getElementById('elapsed').textContent = Math.round((Date.now() - STATE.startTime) / 1000) + 's';
+  }, 50);
+}
+
+function selectAnswer(selectedId, btnEl) {
+  clearInterval(STATE.timerInterval);
+  var rt = Date.now() - STATE.roundStartTime;
+  var isCorrect = selectedId === STATE.currentLocal.id;
+  var isTimeout = selectedId === null;
+  
+  if (isCorrect) STATE.correct++;
+  else STATE.errors++;
+  
+  STATE.responses.push({
+    round: STATE.round,
+    correctLocal: STATE.currentLocal.id,
+    selectedLocal: selectedId,
+    correct: isCorrect,
+    timeout: isTimeout,
+    reactionTime: rt,
+    palette: STATE.currentLocal.palette[0]
+  });
+  
+  // Visual feedback
+  if (btnEl) {
+    btnEl.classList.add(isCorrect ? 'correct' : 'wrong');
+    if (!isCorrect) {
+      // Highlight the correct one
+      var btns = document.querySelectorAll('.choice-btn');
+      btns.forEach(function(b) {
+        if (b.textContent.includes(STATE.currentLocal.name)) b.classList.add('correct');
+      });
+    }
+  }
+  
+  // Disable all buttons
+  document.querySelectorAll('.choice-btn').forEach(function(b) { b.onclick = null; b.style.pointerEvents = 'none'; });
+  
+  setTimeout(nextRound, isCorrect ? 800 : 1500);
+}
+
+function endClassify() {
+  var totalTime = Date.now() - STATE.startTime;
+  var accuracy = STATE.maxRounds > 0 ? Math.round((STATE.correct / STATE.maxRounds) * 100) : 0;
+  var rts = STATE.responses.filter(function(r) { return !r.timeout; }).map(function(r) { return r.reactionTime; });
+  var meanRT = rts.length > 0 ? Math.round(rts.reduce(function(a, b) { return a + b; }, 0) / rts.length) : 0;
+  var timeouts = STATE.responses.filter(function(r) { return r.timeout; }).length;
+  
+  // Perseverations: same wrong answer repeated
+  var perseverations = 0;
+  for (var i = 1; i < STATE.responses.length; i++) {
+    if (!STATE.responses[i].correct && !STATE.responses[i-1].correct && 
+        STATE.responses[i].selectedLocal === STATE.responses[i-1].selectedLocal) {
+      perseverations++;
+    }
+  }
+  
+  // Save metrics
+  var metrics = {
+    session_summary: {
+      accuracy_pct: accuracy,
+      correct: STATE.correct,
+      errors: STATE.errors,
+      timeouts: timeouts,
+      mean_rt_ms: meanRT,
+      total_time_ms: totalTime,
+      perseverations: perseverations,
+      rounds: STATE.maxRounds
+    },
+    responses: STATE.responses,
+    clinical_markers: {
+      accuracy: accuracy,
+      mean_reaction_time_ms: meanRT,
+      omission_errors: timeouts,
+      commission_errors: STATE.errors - timeouts,
+      perseverations: perseverations,
+      fastest_rt_ms: rts.length > 0 ? Math.min.apply(null, rts) : 0,
+      slowest_rt_ms: rts.length > 0 ? Math.max.apply(null, rts) : 0,
+      rt_variability_sd: rts.length > 1 ? Math.round(Math.sqrt(rts.reduce(function(s, v) { var m = meanRT; return s + Math.pow(v - m, 2); }, 0) / (rts.length - 1))) : 0
+    }
+  };
+  
+  // Save to Supabase
+  var sb = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+  if (sb) {
+    var saveData = {
+      patient_dni: STATE.patientDni,
+      game_slug: 'inkblot-classify',
+      metric_type: 'session_summary',
+      metric_data: metrics
+    };
+    if (typeof ZykosEvidence !== 'undefined' && ZykosEvidence.prepare) {
+      ZykosEvidence.prepare(saveData).then(function(hashed) {
+        sb.from('zykos_game_metrics').insert(hashed).then(function() { console.log('[inkblot] saved'); });
+      });
+    } else {
+      sb.from('zykos_game_metrics').insert(saveData).then(function() { console.log('[inkblot] saved'); });
+    }
+  }
+  
+  if (typeof TELEM !== 'undefined') {
+    TELEM.endGameSession({
+      durationMs: totalTime, score: STATE.correct * 10, correct: STATE.correct,
+      errors: STATE.errors, totalItems: STATE.maxRounds, accuracyPct: accuracy,
+      completed: true, perseverations: perseverations, avgReactionTimeMs: meanRT,
+      packId: 'necochea-locals', mode: 'classify'
+    }).catch(function(){});
+  }
+  
+  // Show results then transition to create phase
+  document.getElementById('screen-classify').style.display = 'none';
+  document.getElementById('screen-results').style.display = 'block';
+  document.getElementById('screen-results').innerHTML = 
+    '<h2>' + (accuracy >= 80 ? '¡Excelente!' : accuracy >= 50 ? '¡Bien!' : 'Seguí practicando') + '</h2>' +
+    '<div class="big-score">' + accuracy + '%</div>' +
+    '<p style="color:var(--dim)">Precisión en ' + STATE.maxRounds + ' rondas</p>' +
+    '<div class="res-grid">' +
+      '<div class="res-card"><div class="rv" style="color:var(--ok)">' + STATE.correct + '</div><div class="rl">Correctas</div></div>' +
+      '<div class="res-card"><div class="rv" style="color:var(--err)">' + STATE.errors + '</div><div class="rl">Errores</div></div>' +
+      '<div class="res-card"><div class="rv">' + meanRT + 'ms</div><div class="rl">RT promedio</div></div>' +
+      '<div class="res-card"><div class="rv">' + timeouts + '</div><div class="rl">Timeouts</div></div>' +
+      '<div class="res-card"><div class="rv">' + perseverations + '</div><div class="rl">Perseveraciones</div></div>' +
+      '<div class="res-card"><div class="rv">' + Math.round(totalTime / 1000) + 's</div><div class="rl">Tiempo total</div></div>' +
+    '</div>' +
+    '<div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">' +
+      '<button class="btn btn-primary" onclick="startCreatePhase()">Crear tu mancha</button>' +
+      '<button class="btn btn-ghost" onclick="window.location.href=\'/games/portal/\'">Volver al portal</button>' +
+    '</div>';
+  
+  // Post-game color
+  if (typeof showPostGameColorModal === 'function') showPostGameColorModal();
+}
+
+// ---- CREATE PHASE ----
+function startCreatePhase() {
+  document.getElementById('screen-results').style.display = 'none';
+  document.getElementById('screen-create').style.display = 'block';
+  STATE.phase = 'create';
+  STATE.createStrokes = [];
+  STATE.createStartTime = Date.now();
+  
+  var canvas = document.getElementById('create-canvas');
+  var ctx = canvas.getContext('2d');
+  
+  // Cream background
+  ctx.fillStyle = '#f5f0eb';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Center fold line
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.moveTo(canvas.width / 2, 0);
+  ctx.lineTo(canvas.width / 2, canvas.height);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  
+  // Drawing handlers
+  canvas.onpointerdown = function(e) { STATE.isDrawing = true; drawAt(e); };
+  canvas.onpointermove = function(e) { if (STATE.isDrawing) drawAt(e); };
+  canvas.onpointerup = function() { STATE.isDrawing = false; };
+  canvas.onpointerleave = function() { STATE.isDrawing = false; };
+}
+
+function drawAt(e) {
+  var canvas = document.getElementById('create-canvas');
+  var ctx = canvas.getContext('2d');
+  var rect = canvas.getBoundingClientRect();
+  var x = (e.clientX - rect.left) * (canvas.width / rect.width);
+  var y = (e.clientY - rect.top) * (canvas.height / rect.height);
+  var hw = canvas.width / 2;
+  
+  // Only draw on left half
+  if (x > hw) return;
+  
+  var size = STATE.createTool === 'splash' ? 8 + Math.random() * 15 : 4 + Math.random() * 4;
+  var alpha = 0.6 + Math.random() * 0.4;
+  
+  STATE.createStrokes.push({ x: x, y: y, color: STATE.createColor, size: size, tool: STATE.createTool, t: Date.now() - (STATE.createStartTime || Date.now()) });
+  
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = STATE.createColor;
+  
+  if (STATE.createTool === 'splash') {
+    // Splash: multiple small circles
+    for (var i = 0; i < 5; i++) {
+      var sx = x + (Math.random() - 0.5) * size * 2;
+      var sy = y + (Math.random() - 0.5) * size * 2;
+      var sr = 1 + Math.random() * size * 0.4;
+      ctx.beginPath();
+      ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+      ctx.fill();
+      // Mirror
+      ctx.beginPath();
+      ctx.arc(canvas.width - sx, sy, sr, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else {
+    // Brush
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+    // Mirror
+    ctx.beginPath();
+    ctx.arc(canvas.width - x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function setTool(tool) {
+  STATE.createTool = tool;
+  document.querySelectorAll('.tool-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('tool-' + tool).classList.add('active');
+}
+
+function setColor(color) {
+  STATE.createColor = color;
+}
+
+function clearCreate() {
+  STATE.createStrokes = [];
+  var canvas = document.getElementById('create-canvas');
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#f5f0eb';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.moveTo(canvas.width / 2, 0);
+  ctx.lineTo(canvas.width / 2, canvas.height);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function finishCreate() {
+  var createTime = Date.now() - (STATE.createStartTime || Date.now());
+  
+  // Analyze creation
+  var colorsUsed = {};
+  var toolsUsed = {};
+  STATE.createStrokes.forEach(function(s) {
+    colorsUsed[s.color] = (colorsUsed[s.color] || 0) + 1;
+    toolsUsed[s.tool] = (toolsUsed[s.tool] || 0) + 1;
+  });
+  
+  var createMetrics = {
+    total_strokes: STATE.createStrokes.length,
+    duration_ms: createTime,
+    colors_used: Object.keys(colorsUsed).length,
+    color_distribution: colorsUsed,
+    tools_used: toolsUsed,
+    strokes_per_second: STATE.createStrokes.length / (createTime / 1000),
+    // Spatial analysis
+    coverage: analyzeCoverage(),
+    symmetry_awareness: true // Always true since engine mirrors automatically
+  };
+  
+  // Save to Supabase
+  var sb = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+  if (sb) {
+    var saveData = {
+      patient_dni: STATE.patientDni,
+      game_slug: 'inkblot-create',
+      metric_type: 'creation_session',
+      metric_data: createMetrics
+    };
+    if (typeof ZykosEvidence !== 'undefined' && ZykosEvidence.prepare) {
+      ZykosEvidence.prepare(saveData).then(function(hashed) {
+        sb.from('zykos_game_metrics').insert(hashed).then(function() { console.log('[inkblot-create] saved'); });
+      });
+    } else {
+      sb.from('zykos_game_metrics').insert(saveData).then(function() { console.log('[inkblot-create] saved'); });
+    }
+  }
+  
+  // Show completion
+  document.getElementById('screen-create').style.display = 'none';
+  document.getElementById('screen-results').style.display = 'block';
+  document.getElementById('screen-results').innerHTML = 
+    '<h2>Tu mancha fue guardada</h2>' +
+    '<p style="color:var(--dim);margin:12px 0">' + STATE.createStrokes.length + ' trazos · ' + Object.keys(colorsUsed).length + ' colores · ' + Math.round(createTime / 1000) + ' segundos</p>' +
+    '<div style="margin-top:24px;display:flex;gap:12px;justify-content:center">' +
+      '<button class="btn btn-primary" onclick="window.location.reload()">Jugar de nuevo</button>' +
+      '<button class="btn btn-ghost" onclick="window.location.href=\'/games/portal/\'">Volver al portal</button>' +
+    '</div>';
+  
+  if (typeof showPostGameColorModal === 'function') showPostGameColorModal();
+}
+
+function analyzeCoverage() {
+  if (STATE.createStrokes.length === 0) return 0;
+  var canvas = document.getElementById('create-canvas');
+  var hw = canvas.width / 2;
+  var grid = {};
+  var cellSize = 20;
+  STATE.createStrokes.forEach(function(s) {
+    var gx = Math.floor(s.x / cellSize);
+    var gy = Math.floor(s.y / cellSize);
+    grid[gx + ',' + gy] = true;
+  });
+  var totalCells = Math.floor(hw / cellSize) * Math.floor(canvas.height / cellSize);
+  return Math.round((Object.keys(grid).length / totalCells) * 100);
+}
+
+// Auto-save
+if (typeof registerAutoSave === 'function') {
+  registerAutoSave(function() {
+    var dni = null;
+    try { dni = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni'); } catch(e) {}
+    return {
+      patient_dni: dni,
+      game_slug: 'inkblot',
+      partial_data: {
+        phase: STATE.phase,
+        round: STATE.round,
+        correct: STATE.correct,
+        createStrokes: STATE.createStrokes ? STATE.createStrokes.length : 0
+      }
+    };
+  });
+}
+</script>
+</body>
+</html>
