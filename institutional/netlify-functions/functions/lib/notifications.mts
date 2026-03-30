@@ -46,7 +46,7 @@ export async function sendEmailNotification(to: string, subject: string, htmlBod
   }
   try {
     const info = await transporter.sendMail({
-      from: `"Clínica José Ingenieros" <${process.env.ZOHO_SMTP_USER}>`,
+      from: `"Clínica NOMBRE_INSTITUCION" <${process.env.ZOHO_SMTP_USER}>`,
       to,
       subject,
       html: htmlBody

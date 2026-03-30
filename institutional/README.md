@@ -124,5 +124,5 @@ Cada instancia es soberana: propio Supabase, propio Netlify, propios datos.
 ---
 
 *Propiedad intelectual de Gonzalo Pérez Cortizo*
-*Clínica Psiquiátrica Privada José Ingenieros SRL*
-*CUIT 30-61202984-5*
+*TIPO_INSTITUCION NOMBRE_INSTITUCION SRL*
+*CUIT_INSTITUCION*

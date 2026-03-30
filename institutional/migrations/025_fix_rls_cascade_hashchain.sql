@@ -1,7 +1,7 @@
 -- =============================================
 -- AUDIT REMEDIATION Phase 2: RLS, CASCADE, Hash Chain
 -- Date: 2026-03-11
--- Applied to Supabase project: buzblnkpfydeheingzgn
+-- Applied to Supabase project: INSTITUTION_SUPABASE_PROJECT_ID
 -- =============================================
 
 -- =============================================

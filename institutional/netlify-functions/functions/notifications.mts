@@ -25,7 +25,7 @@ async function notifyAdminOfNewCall(sql: any, callQueueId: number, patientName: 
 Paciente: ${patientName}
 Precio: ${priceStr} (${timeSlotStr})
 Sala: ${roomName}
-Acceder: https://clinicajoseingenieros.ar/#profesional`;
+Acceder: https://INSTITUTION_DOMAIN/#profesional`;
 
   const emailSubject = `PAGO CONFIRMADO — Videoconsulta ${patientName} — ${priceStr}`;
   const profUrlBlock = '';
@@ -43,7 +43,7 @@ Acceder: https://clinicajoseingenieros.ar/#profesional`;
         <p style="margin-top:16px;padding:12px;background:#dcfce7;border-radius:8px;border-left:4px solid #16a34a;color:#14532d">
           <strong>El paciente ya pagó.</strong> Tiene 1 hora para ser atendido; si no, se reembolsa automáticamente.
         </p>
-        <a href="https://clinicajoseingenieros.ar/hdd/admin/panel-profesional.html" style="display:inline-block;background:#1a5f2a;color:white;padding:14px 28px;text-decoration:none;border-radius:8px;margin-top:16px">Ver panel profesional</a>
+        <a href="https://INSTITUTION_DOMAIN/hdd/admin/panel-profesional.html" style="display:inline-block;background:#1a5f2a;color:white;padding:14px 28px;text-decoration:none;border-radius:8px;margin-top:16px">Ver panel profesional</a>
       </div>
     </div>`;
 
@@ -153,7 +153,7 @@ Tipo: ${consultationType || 'general'}
 De: ${name}
 Asunto: ${subject || 'Sin asunto'}
 Contacto: ${email || phone || 'No proporcionado'}
-Ver en: https://clinicajoseingenieros.ar/#profesional`;
+Ver en: https://INSTITUTION_DOMAIN/#profesional`;
 
         const emailSubject = `Nueva Consulta Web - ${subject || consultationType || 'General'}`;
         const emailHtml = `
@@ -170,7 +170,7 @@ Ver en: https://clinicajoseingenieros.ar/#profesional`;
               <p style="margin-top:20px;padding:15px;background:#e7f3ff;border-radius:8px;border-left:4px solid #2196F3;">
                 <strong>ID de consulta:</strong> #${consultationId}
               </p>
-              <a href="https://clinicajoseingenieros.ar/#profesional" style="display:inline-block;background:#1a5f2a;color:white;padding:15px 30px;text-decoration:none;border-radius:8px;margin-top:20px">Ver Consultas</a>
+              <a href="https://INSTITUTION_DOMAIN/#profesional" style="display:inline-block;background:#1a5f2a;color:white;padding:15px 30px;text-decoration:none;border-radius:8px;margin-top:20px">Ver Consultas</a>
             </div>
           </div>`;
 
@@ -207,7 +207,7 @@ Ver en: https://clinicajoseingenieros.ar/#profesional`;
           return new Response(JSON.stringify({ error: "Email y código requeridos" }), { status: 400, headers: corsHeaders });
         }
 
-        const subject = "Recuperación de Contraseña - Clínica José Ingenieros";
+        const subject = "Recuperación de Contraseña - Clínica NOMBRE_INSTITUCION";
         const htmlBody = `
           <div style="font-family:Arial;max-width:600px;margin:0 auto">
             <div style="background:#dc3545;padding:20px;text-align:center;border-radius:8px 8px 0 0">
@@ -215,7 +215,7 @@ Ver en: https://clinicajoseingenieros.ar/#profesional`;
             </div>
             <div style="padding:30px;background:#f5f5f5">
               <p>Hola ${fullName || 'Profesional'},</p>
-              <p>Recibimos una solicitud para restablecer tu contraseña en el sistema de telemedicina de la Clínica José Ingenieros.</p>
+              <p>Recibimos una solicitud para restablecer tu contraseña en el sistema de telemedicina de la Clínica NOMBRE_INSTITUCION.</p>
               <p>Tu código de recuperación es:</p>
               <div style="background:#fff;border:2px solid #dc3545;border-radius:8px;padding:20px;text-align:center;margin:20px 0">
                 <span style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#dc3545">${code}</span>
@@ -226,7 +226,7 @@ Ver en: https://clinicajoseingenieros.ar/#profesional`;
               </p>
             </div>
             <div style="padding:15px;background:#e8e8e8;text-align:center;border-radius:0 0 8px 8px">
-              <p style="margin:0;font-size:0.85em;color:#666">Clínica Psiquiátrica José Ingenieros - Necochea</p>
+              <p style="margin:0;font-size:0.85em;color:#666">Clínica Psiquiátrica NOMBRE_INSTITUCION - Necochea</p>
             </div>
           </div>`;
 
@@ -247,7 +247,7 @@ Ver en: https://clinicajoseingenieros.ar/#profesional`;
           return new Response(JSON.stringify({ error: "Email y código requeridos" }), { status: 400, headers: corsHeaders });
         }
 
-        const subject = "Verificación de Email - Clínica José Ingenieros";
+        const subject = "Verificación de Email - Clínica NOMBRE_INSTITUCION";
         const htmlBody = `
           <div style="font-family:Arial;max-width:600px;margin:0 auto">
             <div style="background:#1a5f2a;padding:20px;text-align:center;border-radius:8px 8px 0 0">
@@ -255,7 +255,7 @@ Ver en: https://clinicajoseingenieros.ar/#profesional`;
             </div>
             <div style="padding:30px;background:#f5f5f5">
               <p>Hola ${fullName || 'Profesional'},</p>
-              <p>Gracias por registrarte en el sistema de telemedicina de la Clínica José Ingenieros.</p>
+              <p>Gracias por registrarte en el sistema de telemedicina de la Clínica NOMBRE_INSTITUCION.</p>
               <p>Tu código de verificación es:</p>
               <div style="background:#fff;border:2px solid #1a5f2a;border-radius:8px;padding:20px;text-align:center;margin:20px 0">
                 <span style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#1a5f2a">${code}</span>
@@ -264,7 +264,7 @@ Ver en: https://clinicajoseingenieros.ar/#profesional`;
               <p>Si no solicitaste este registro, podés ignorar este mensaje.</p>
             </div>
             <div style="padding:15px;background:#e8e8e8;text-align:center;border-radius:0 0 8px 8px">
-              <p style="margin:0;font-size:0.85em;color:#666">Clínica Psiquiátrica José Ingenieros - Necochea</p>
+              <p style="margin:0;font-size:0.85em;color:#666">Clínica Psiquiátrica NOMBRE_INSTITUCION - Necochea</p>
             </div>
           </div>`;
 
@@ -291,7 +291,7 @@ Ver en: https://clinicajoseingenieros.ar/#profesional`;
           <div style="font-family:Arial;max-width:600px;margin:0 auto">
             <div style="background:#2563eb;padding:20px;text-align:center;border-radius:8px 8px 0 0">
               <h1 style="color:white;margin:0">Hospital de Día</h1>
-              <p style="color:#dbeafe;margin:5px 0 0 0;font-size:0.9em">Clínica José Ingenieros</p>
+              <p style="color:#dbeafe;margin:5px 0 0 0;font-size:0.9em">Clínica NOMBRE_INSTITUCION</p>
             </div>
             <div style="padding:30px;background:#f5f5f5">
               <p>Hola ${fullName || 'Participante'},</p>
@@ -304,7 +304,7 @@ Ver en: https://clinicajoseingenieros.ar/#profesional`;
               <p>Si no solicitaste este registro, podés ignorar este mensaje.</p>
             </div>
             <div style="padding:15px;background:#e8e8e8;text-align:center;border-radius:0 0 8px 8px">
-              <p style="margin:0;font-size:0.85em;color:#666">Clínica Psiquiátrica José Ingenieros - Necochea</p>
+              <p style="margin:0;font-size:0.85em;color:#666">Clínica Psiquiátrica NOMBRE_INSTITUCION - Necochea</p>
             </div>
           </div>`;
 
@@ -326,7 +326,7 @@ Ver en: https://clinicajoseingenieros.ar/#profesional`;
         }
 
         const priceStr = price ? `$${price.toLocaleString('es-AR')} ARS` : '';
-        const subject = "Confirmación de Videoconsulta - Clínica José Ingenieros";
+        const subject = "Confirmación de Videoconsulta - Clínica NOMBRE_INSTITUCION";
         const htmlBody = `
           <div style="font-family:Arial;max-width:600px;margin:0 auto">
             <div style="background:#1a5f2a;padding:20px;text-align:center;border-radius:8px 8px 0 0">
@@ -355,7 +355,7 @@ Ver en: https://clinicajoseingenieros.ar/#profesional`;
               <p style="margin-top:20px;font-size:0.85em;color:#666">Si tenés algún problema, contactanos a ${ADMIN_EMAIL}</p>
             </div>
             <div style="padding:15px;background:#e8e8e8;text-align:center;border-radius:0 0 8px 8px">
-              <p style="margin:0;font-size:0.85em;color:#666">Clínica Psiquiátrica José Ingenieros - Necochea</p>
+              <p style="margin:0;font-size:0.85em;color:#666">Clínica Psiquiátrica NOMBRE_INSTITUCION - Necochea</p>
             </div>
           </div>`;
 
@@ -379,7 +379,7 @@ Ver en: https://clinicajoseingenieros.ar/#profesional`;
           ? 'El reembolso requiere gestión manual. Nuestro equipo te contactará a la brevedad.'
           : 'El reembolso fue solicitado a MercadoPago y se acreditará en tu cuenta en los próximos días hábiles.';
 
-        const subject = "Consulta no atendida - Reembolso en proceso - Clínica José Ingenieros";
+        const subject = "Consulta no atendida - Reembolso en proceso - Clínica NOMBRE_INSTITUCION";
         const htmlBody = `
           <div style="font-family:Arial;max-width:600px;margin:0 auto">
             <div style="background:#7c3aed;padding:20px;text-align:center;border-radius:8px 8px 0 0">
@@ -393,11 +393,11 @@ Ver en: https://clinicajoseingenieros.ar/#profesional`;
                 <p style="color:#4c1d95;margin:0">${refundMsg}</p>
               </div>
               <p>Para reagendar tu consulta, ingresá nuevamente desde nuestra web.</p>
-              <a href="https://clinicajoseingenieros.ar/#telemedicina" style="display:inline-block;background:#7c3aed;color:white;padding:14px 28px;text-decoration:none;border-radius:8px">Solicitar nueva consulta</a>
+              <a href="https://INSTITUTION_DOMAIN/#telemedicina" style="display:inline-block;background:#7c3aed;color:white;padding:14px 28px;text-decoration:none;border-radius:8px">Solicitar nueva consulta</a>
               <p style="margin-top:20px;font-size:0.85em;color:#666">Dudas: ${ADMIN_EMAIL}</p>
             </div>
             <div style="padding:15px;background:#e8e8e8;text-align:center;border-radius:0 0 8px 8px">
-              <p style="margin:0;font-size:0.85em;color:#666">Clínica Psiquiátrica José Ingenieros - Necochea</p>
+              <p style="margin:0;font-size:0.85em;color:#666">Clínica Psiquiátrica NOMBRE_INSTITUCION - Necochea</p>
             </div>
           </div>`;
 
@@ -450,7 +450,7 @@ Ver en: https://clinicajoseingenieros.ar/#profesional`;
             <p style="background:#dcfce7;padding:12px;border-radius:6px;border-left:4px solid #16a34a;margin:0;color:#14532d">
               El paciente tiene <strong>1 hora</strong> para ser atendido. Si no se atiende, el reembolso es automático.
             </p>
-            <a href="https://clinicajoseingenieros.ar/hdd/admin/panel-profesional.html"
+            <a href="https://INSTITUTION_DOMAIN/hdd/admin/panel-profesional.html"
                style="display:inline-block;margin-top:16px;background:#16a34a;color:#fff;padding:12px 24px;text-decoration:none;border-radius:6px">
               Ir al panel profesional
             </a>

@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# Setup Daily.co Rooms - Clínica José Ingenieros (HDD)
+# Setup Daily.co Rooms - Clínica NOMBRE_INSTITUCION (HDD)
 # =============================================================================
 # Ejecutar: bash scripts/setup-daily-rooms.sh
 # Requiere: curl, jq (sudo apt install jq)
@@ -20,7 +20,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}  Daily.co Room Setup - Clínica José Ingenieros (HDD)${NC}"
+echo -e "${BLUE}  Daily.co Room Setup - Clínica NOMBRE_INSTITUCION (HDD)${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 

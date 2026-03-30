@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS establishment_config (
 );
 
 INSERT INTO establishment_config (key, value, category) VALUES
-  ('nombre_legal', 'Clínica Psiquiátrica Privada José Ingenieros SRL', 'identidad'),
-  ('nombre_corto', 'Clínica José Ingenieros', 'identidad'),
+  ('nombre_legal', 'TIPO_INSTITUCION NOMBRE_INSTITUCION SRL', 'identidad'),
+  ('nombre_corto', 'Clínica NOMBRE_INSTITUCION', 'identidad'),
   ('cuit', '', 'identidad'),
   ('director_medico', 'Dr. Gonzalo Pérez Cortizo', 'autoridades'),
   ('director_medico_mp', '', 'autoridades'),
@@ -27,7 +27,7 @@ INSERT INTO establishment_config (key, value, category) VALUES
   ('pais', 'Argentina', 'ubicacion'),
   ('telefono', '', 'contacto'),
   ('email', 'gonzaloperez.cortizo@gmail.com', 'contacto'),
-  ('web', 'https://clinicajoseingenieros.ar', 'contacto'),
+  ('web', 'https://INSTITUTION_DOMAIN', 'contacto'),
   ('camas_habilitadas', '40', 'capacidad'),
   ('camas_internacion', '40', 'capacidad'),
   ('camas_hospital_dia', '0', 'capacidad'),

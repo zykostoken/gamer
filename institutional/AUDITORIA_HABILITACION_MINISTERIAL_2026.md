@@ -3,7 +3,7 @@
 ## Plataforma Digital de Salud Mental - Hospital de Día
 **Fecha de auditoría:** 8 de marzo de 2026
 **Titular:** Dr. Gonzalo J. Perez Cortizo (MP 94955 / MN 129615)
-**Dominio:** clinicajoseingenieros.ar
+**Dominio:** INSTITUTION_DOMAIN
 **Estado deploy:** Producción activa (Netlify) — último deploy exitoso 8/3/2026
 
 ---
@@ -355,7 +355,7 @@ Múltiples foreign keys no tienen índice cobertor. **Impacto:** Bajo para el vo
 ### 4.4 CORS
 | Control | Estado | Detalle |
 |---------|--------|---------|
-| Whitelist de orígenes | IMPLEMENTADO | clinicajoseingenieros.ar, www, netlify.app |
+| Whitelist de orígenes | IMPLEMENTADO | INSTITUTION_DOMAIN, www, netlify.app |
 | Localhost en desarrollo | IMPLEMENTADO | Solo http://localhost:* |
 | Credentials | IMPLEMENTADO | Access-Control-Allow-Credentials: true |
 

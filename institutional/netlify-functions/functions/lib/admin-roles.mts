@@ -76,7 +76,7 @@ export async function isSuperAdminSession(sql: any, sessionToken: string): Promi
 
 // Professional email domain validation
 export const VALID_PROFESSIONAL_DOMAINS = [
-  'clinicajoseingenieros.ar',
+  'INSTITUTION_DOMAIN',
   'gmail.com',
   'hotmail.com',
   'outlook.com',

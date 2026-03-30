@@ -460,7 +460,7 @@ export default async (req: Request, context: Context) => {
               ${note ? `<p><strong>Nota del paciente:</strong> ${escapeHtml(note)}</p>` : ''}
               <p><strong>Fecha:</strong> ${new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })}</p>
               <hr>
-              <p style="color: #666;">Este es un mensaje automatico del sistema HDD. Ingrese al <a href="https://clinicajoseingenieros.ar/hdd/admin">Panel de Administracion</a> para revisar.</p>`
+              <p style="color: #666;">Este es un mensaje automatico del sistema HDD. Ingrese al <a href="https://INSTITUTION_DOMAIN/hdd/admin">Panel de Administracion</a> para revisar.</p>`
             );
           } catch (emailErr) {
             console.error('Failed to send crisis alert email:', emailErr);

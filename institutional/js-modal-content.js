@@ -1,4 +1,4 @@
-// modal-content.js — Contenido de modales para clinicajoseingenieros.ar
+// modal-content.js — Contenido de modales para INSTITUTION_DOMAIN
 // Cargado dinámicamente por core.js → ensureModalContent()
 
 window.modalContent = {
@@ -99,7 +99,7 @@ window.modalContent = {
   externos: `
     <h2 style="margin-bottom:1rem;font-family:'Playfair Display',serif;">Consultorios Externos</h2>
     <p>Atencion ambulatoria en Psiquiatria, Psicologia, Terapia Ocupacional y Estimulacion Neurocognitiva.</p>
-    <p style="margin-top:.75rem;font-size:.9rem;color:var(--text-secondary);">Turnos: <strong>2262-301515</strong> o por email a <strong>direccionmedica@clinicajoseingenieros.ar</strong></p>
+    <p style="margin-top:.75rem;font-size:.9rem;color:var(--text-secondary);">Turnos: <strong>2262-301515</strong> o por email a <strong>direccionmedica@INSTITUTION_DOMAIN</strong></p>
   `,
 
   hospitalnoche: `

@@ -102,7 +102,7 @@ export default async () => {
         }
 
         // 4. Notificar al paciente por mail
-        const siteUrl = process.env.URL || 'https://clinicajoseingenieros.ar';
+        const siteUrl = process.env.URL || 'https://INSTITUTION_DOMAIN';
         if (session.email) {
           fetch(`${siteUrl}/api/notifications`, {
             method: 'POST',

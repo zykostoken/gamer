@@ -75,7 +75,7 @@ export default async (req: Request, context: Context) => {
       const body = await req.json();
       const { action } = body;
 
-      // Register a new professional (requires @clinicajoseingenieros.ar email)
+      // Register a new professional (requires @INSTITUTION_DOMAIN email)
       if (action === "register") {
         const { email, password, fullName, specialty, licenseNumber, phone, whatsapp, dni } = body;
 
@@ -88,7 +88,7 @@ export default async (req: Request, context: Context) => {
         // Validate email domain - must be clinic staff
         if (!isValidProfessionalEmail(email)) {
           return new Response(JSON.stringify({
-            error: "Solo se permite el registro con emails institucionales (@clinicajoseingenieros.ar)"
+            error: "Solo se permite el registro con emails institucionales (@INSTITUTION_DOMAIN)"
           }), { status: 400, headers: corsHeaders });
         }
 

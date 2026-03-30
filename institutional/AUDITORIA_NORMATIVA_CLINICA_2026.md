@@ -2,8 +2,8 @@
 ## Cumplimiento Normativo, Seguridad y Habilitacion
 
 **Fecha:** 2026-03-08
-**Repositorio:** cautious-carnival
-**Dominio:** clinicajoseingenieros.ar / clinicajoseingenieros.netlify.app
+**Repositorio:** INSTITUTION_REPO_NAME
+**Dominio:** INSTITUTION_DOMAIN / INSTITUTION_NAME.netlify.app
 **Stack:** HTML/JS/CSS (frontend) + Netlify Functions (backend) + Supabase PostgreSQL (DB)
 **Auditor:** Claude Opus 4.6 - Auditoria automatizada
 
@@ -29,7 +29,7 @@ Se identificaron **71 hallazgos** clasificados por severidad:
 ### H-001: Contrasena SMTP expuesta en repositorio Git
 - **Archivo:** `VARIABLES_ENTORNO_NECESARIAS.md:12-15`
 - **Hallazgo:** Contrasena real del servidor SMTP commiteada en texto plano (ya redactada)
-- **Impacto:** Cualquier persona con acceso al repo puede enviar emails como `direccionmedica@clinicajoseingenieros.ar`
+- **Impacto:** Cualquier persona con acceso al repo puede enviar emails como `direccionmedica@INSTITUTION_DOMAIN`
 - **Normativa:** Ley 25.326 (Proteccion de Datos Personales) Art. 9 - medidas de seguridad
 - **Accion:** ROTAR CREDENCIAL INMEDIATAMENTE. Eliminar del historial Git con `git filter-branch` o BFG Repo Cleaner
 
@@ -111,7 +111,7 @@ Se identificaron **71 hallazgos** clasificados por severidad:
   - Ley 25.326 Art. 9: Medidas de seguridad para datos personales
   - Ley 26.529 Art. 2: Confidencialidad de datos de salud
   - Res. 1959/2024: Proteccion de datos en sistemas digitales de salud
-- **Correccion:** Restringir a `https://clinicajoseingenieros.ar` y `https://clinicajoseingenieros.netlify.app`
+- **Correccion:** Restringir a `https://INSTITUTION_DOMAIN` y `https://INSTITUTION_NAME.netlify.app`
 
 ### H-011: Sin headers de seguridad HTTP (ALTO)
 - **Archivo:** `netlify.toml`

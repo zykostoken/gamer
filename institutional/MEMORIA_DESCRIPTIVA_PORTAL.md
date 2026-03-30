@@ -149,7 +149,7 @@ Paso 1: Accede a /hdd/admin/
 
 Paso 2: Login con email + password
         POST /api/professionals → action: login
-        Dominio requerido: @clinicajoseingenieros.ar
+        Dominio requerido: @INSTITUTION_DOMAIN
         Rate limiting: 5 intentos / 15 min
         Codigo: netlify/functions/professionals.mts (linea 438-507)
 
@@ -240,7 +240,7 @@ Respuesta:
   "summary": [
     {
       "professional_name": "Dra. Martinez",
-      "email": "martinez@clinicajoseingenieros.ar",
+      "email": "martinez@INSTITUTION_DOMAIN",
       "total_actions": 145,
       "patients_viewed": 23,
       "video_sessions": 8,
@@ -418,7 +418,7 @@ WhatsApp: Notificacion a ADMIN_PHONE
 ```
 SUPER_ADMIN: Variable de entorno ADMIN_EMAILS
 LIMITED_ADMIN: Variable de entorno LIMITED_ADMIN_EMAILS
-PROFESSIONAL: Cualquier @clinicajoseingenieros.ar registrado
+PROFESSIONAL: Cualquier @INSTITUTION_DOMAIN registrado
 PACIENTE: DNI cargado en hdd_patients con status = 'active'
 ```
 
@@ -460,7 +460,7 @@ PACIENTE: DNI cargado en hdd_patients con status = 'active'
 ## 9. ESTRUCTURA DE ARCHIVOS DEL PROYECTO
 
 ```
-cautious-carnival/
+INSTITUTION_REPO_NAME/
 ├── index.html                          # Sitio publico principal
 ├── netlify.toml                        # Configuracion Netlify + headers seguridad
 ├── package.json                        # Dependencias Node.js

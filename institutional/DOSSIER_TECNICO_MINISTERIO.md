@@ -8,7 +8,7 @@
 **Matricula Nacional:** MN 129615
 **Plataforma:** Portal Digital de Salud Mental - Hospital de Dia
 **Estado:** En produccion - Operativo
-**Dominio:** clinicajoseingenieros.ar
+**Dominio:** INSTITUTION_DOMAIN
 
 ---
 
@@ -538,7 +538,7 @@ npm install && npm run setup-db
 
 **Titular:** Dr. Gonzalo J. Perez Cortizo
 **MP:** 94955 | **MN:** 129615
-**Plataforma:** clinicajoseingenieros.ar
+**Plataforma:** INSTITUTION_DOMAIN
 **Repositorio:** Privado (GitHub)
 
 ---

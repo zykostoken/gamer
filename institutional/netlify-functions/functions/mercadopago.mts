@@ -122,7 +122,7 @@ export default async (req: Request, context: Context) => {
         const externalRef = `TELE-${userId}-${planId}-${Date.now()}`;
 
         // Build site URL for callbacks
-        const siteUrl = process.env.URL || 'https://clinicajoseingenieros.ar';
+        const siteUrl = process.env.URL || 'https://INSTITUTION_DOMAIN';
 
         const preference: MPPreference = {
           items: [{
@@ -198,7 +198,7 @@ export default async (req: Request, context: Context) => {
             `;
 
             // Notificar SIEMPRE a dirección médica según resultado
-            const siteUrlNotif = process.env.URL || 'https://clinicajoseingenieros.ar';
+            const siteUrlNotif = process.env.URL || 'https://INSTITUTION_DOMAIN';
             if (paymentInfo.status === 'approved' || paymentInfo.status === 'rejected' || paymentInfo.status === 'cancelled') {
               // Get patient info for notification
               const refPartsN = (paymentInfo.external_reference || '').split('-');
@@ -328,7 +328,7 @@ export default async (req: Request, context: Context) => {
                     AND status = 'awaiting_payment'
                 `;
 
-                const siteUrl = process.env.URL || 'https://clinicajoseingenieros.ar';
+                const siteUrl = process.env.URL || 'https://INSTITUTION_DOMAIN';
                 const roomName = dailyRoomName || `cji-${session.session_token.substring(0, 12)}`;
 
                 fetch(`${siteUrl}/api/notifications`, {

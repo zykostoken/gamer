@@ -11,7 +11,7 @@ ALTER TABLE healthcare_professionals ALTER COLUMN password_hash DROP NOT NULL;
 
 -- Step 2: Insert healthcare professionals with pre-verified status
 -- password_hash is NULL - professionals will set their password when they first register/login
--- Using institutional email format: firstname.lastname@clinicajoseingenieros.ar or role-based
+-- Using institutional email format: firstname.lastname@INSTITUTION_DOMAIN or role-based
 INSERT INTO healthcare_professionals (
     email,
     full_name,
@@ -22,19 +22,19 @@ INSERT INTO healthcare_professionals (
 )
 VALUES
     -- Director Medico - Gonzalo Joaquin Perez Cortizo (DNI: 30542195)
-    ('direccionmedica@clinicajoseingenieros.ar', 'Gonzalo Joaquin Perez Cortizo', 'Psiquiatra - Director Medico', TRUE, TRUE, NOW()),
+    ('direccionmedica@INSTITUTION_DOMAIN', 'Gonzalo Joaquin Perez Cortizo', 'Psiquiatra - Director Medico', TRUE, TRUE, NOW()),
 
     -- Gerencia Administrativa - Andrea Roxana Martin (DNI: 25178661)
-    ('gerencia@clinicajoseingenieros.ar', 'Andrea Roxana Martin', 'Gerencia Administrativa', TRUE, TRUE, NOW()),
+    ('gerencia@INSTITUTION_DOMAIN', 'Andrea Roxana Martin', 'Gerencia Administrativa', TRUE, TRUE, NOW()),
 
     -- Psiquiatra - Carlos Daniel Rodriguez (DNI: 22610308)
-    ('carlos.rodriguez@clinicajoseingenieros.ar', 'Carlos Daniel Rodriguez', 'Psiquiatra', TRUE, TRUE, NOW()),
+    ('carlos.rodriguez@INSTITUTION_DOMAIN', 'Carlos Daniel Rodriguez', 'Psiquiatra', TRUE, TRUE, NOW()),
 
     -- Psicologa - Cardenau Maria Jose (DNI: 30519253)
-    ('maria.cardenau@clinicajoseingenieros.ar', 'Cardenau Maria Jose', 'Psicologa', TRUE, TRUE, NOW()),
+    ('maria.cardenau@INSTITUTION_DOMAIN', 'Cardenau Maria Jose', 'Psicologa', TRUE, TRUE, NOW()),
 
     -- Aquino Maria Daniela (DNI: 23111618)
-    ('daniela.aquino@clinicajoseingenieros.ar', 'Aquino Maria Daniela', 'Profesional de Salud', TRUE, TRUE, NOW())
+    ('daniela.aquino@INSTITUTION_DOMAIN', 'Aquino Maria Daniela', 'Profesional de Salud', TRUE, TRUE, NOW())
 
 ON CONFLICT (email) DO UPDATE SET
     full_name = EXCLUDED.full_name,

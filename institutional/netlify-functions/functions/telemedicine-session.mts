@@ -189,7 +189,7 @@ export default async (req: Request, context: Context) => {
 
         if (MP_ACCESS_TOKEN) {
           try {
-            const siteUrl = process.env.URL || 'https://clinicajoseingenieros.ar';
+            const siteUrl = process.env.URL || 'https://INSTITUTION_DOMAIN';
 
             const preference: MPPreference = {
               items: [{
@@ -263,7 +263,7 @@ export default async (req: Request, context: Context) => {
         `;
 
         // Notificar a dirección médica: solicitud recibida, esperando pago
-        const siteUrl0 = process.env.URL || 'https://clinicajoseingenieros.ar';
+        const siteUrl0 = process.env.URL || 'https://INSTITUTION_DOMAIN';
         fetch(`${siteUrl0}/api/notifications`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

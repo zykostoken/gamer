@@ -3,9 +3,9 @@ import bcrypt from 'bcryptjs';
 
 // Allowed origins for CORS (H-010)
 const ALLOWED_ORIGINS = [
-  'https://clinicajoseingenieros.ar',
-  'https://www.clinicajoseingenieros.ar',
-  'https://clinicajoseingenieros.netlify.app',
+  'https://INSTITUTION_DOMAIN',
+  'https://www.INSTITUTION_DOMAIN',
+  'https://INSTITUTION_NAME.netlify.app',
 ];
 
 function getAllowedOrigin(requestOrigin?: string | null): string {

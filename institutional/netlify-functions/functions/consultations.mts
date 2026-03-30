@@ -95,10 +95,10 @@ export default async (req: Request, context: Context) => {
               <p style="margin-top:15px;padding:10px;background:#e7f3ff;border-radius:8px;border-left:4px solid #2196F3;">
                 <strong>ID de consulta:</strong> #${consultation.id}
               </p>
-              <a href="https://clinicajoseingenieros.ar/#profesional" style="display:inline-block;background:#1a5f2a;color:white;padding:15px 30px;text-decoration:none;border-radius:8px;margin-top:20px">Ver en Panel</a>
+              <a href="https://INSTITUTION_DOMAIN/#profesional" style="display:inline-block;background:#1a5f2a;color:white;padding:15px 30px;text-decoration:none;border-radius:8px;margin-top:20px">Ver en Panel</a>
             </div>
             <div style="padding:15px;background:#e8e8e8;text-align:center;border-radius:0 0 8px 8px">
-              <p style="margin:0;font-size:0.85em;color:#666">Clínica Psiquiátrica José Ingenieros - Necochea</p>
+              <p style="margin:0;font-size:0.85em;color:#666">Clínica Psiquiátrica NOMBRE_INSTITUCION - Necochea</p>
             </div>
           </div>`;
 
