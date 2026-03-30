@@ -24,67 +24,858 @@
     "original_game": "cautious-carnival/games/play/super-market.html",
     "notes": "Este pack es la migración del juego original 'Desafío Milanesas' al formato de content pack. Mantiene la mecánica original de selección por receta con tiers (essential/advanced/neutral/error)."
   },
-
   "categories": [
-    { "id": "carnes", "label": "Carnicería", "emoji": "🥩", "color": "#ef4444" },
-    { "id": "almacen", "label": "Almacén", "emoji": "📦", "color": "#f59e0b" },
-    { "id": "verduras", "label": "Verdulería", "emoji": "🥬", "color": "#22c55e" },
-    { "id": "lacteos", "label": "Lácteos y Fiambrería", "emoji": "🧀", "color": "#3b82f6" },
-    { "id": "bebidas", "label": "Bebidas", "emoji": "🥤", "color": "#06b6d4" },
-    { "id": "bazar", "label": "Bazar y Limpieza", "emoji": "🧹", "color": "#8b5cf6" }
+    {
+      "id": "carnes",
+      "label": "Carnicería",
+      "emoji": "🥩",
+      "color": "#ef4444"
+    },
+    {
+      "id": "almacen",
+      "label": "Almacén",
+      "emoji": "📦",
+      "color": "#f59e0b"
+    },
+    {
+      "id": "verduras",
+      "label": "Verdulería",
+      "emoji": "🥬",
+      "color": "#22c55e"
+    },
+    {
+      "id": "lacteos",
+      "label": "Lácteos y Fiambrería",
+      "emoji": "🧀",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "bebidas",
+      "label": "Bebidas",
+      "emoji": "🥤",
+      "color": "#06b6d4"
+    },
+    {
+      "id": "bazar",
+      "label": "Bazar y Limpieza",
+      "emoji": "🧹",
+      "color": "#8b5cf6"
+    }
   ],
-
   "items": [
-    { "id": "bife", "name": "Bife de nalga", "emoji": "🥩", "category": "carnes", "tier": "essential", "alt_group": "carne", "difficulty": 1, "price_range": [2800, 4500], "hint": "Carne clásica para milanesas" },
-    { "id": "pollo", "name": "Suprema de pollo", "emoji": "🍗", "category": "carnes", "tier": "essential", "alt_group": "carne", "difficulty": 1, "price_range": [1800, 3200], "hint": "Alternativa válida — milanesa de pollo" },
-    { "id": "carne_picada", "name": "Carne picada", "emoji": "🥩", "category": "carnes", "tier": "neutral", "difficulty": 1, "price_range": [2200, 3800] },
-    { "id": "chorizo", "name": "Chorizo", "emoji": "🌭", "category": "carnes", "tier": "neutral", "difficulty": 1, "price_range": [1500, 2500] },
-    { "id": "pescado", "name": "Filet de merluza", "emoji": "🐟", "category": "carnes", "tier": "neutral", "difficulty": 1, "price_range": [2500, 4000] },
-    { "id": "pan_rallado", "name": "Pan rallado", "emoji": "🍞", "category": "almacen", "tier": "essential", "alt_group": "rebozado", "difficulty": 1, "price_range": [600, 1200], "hint": "Indispensable para el rebozado" },
-    { "id": "rebozador", "name": "Rebozador", "emoji": "📦", "category": "almacen", "tier": "essential", "alt_group": "rebozado", "difficulty": 1, "price_range": [700, 1400] },
-    { "id": "aceite", "name": "Aceite", "emoji": "🫒", "category": "almacen", "tier": "essential", "difficulty": 1, "price_range": [1200, 2500], "hint": "Sin aceite no hay fritura" },
-    { "id": "sal", "name": "Sal", "emoji": "🧂", "category": "almacen", "tier": "advanced", "difficulty": 2, "price_range": [300, 600] },
-    { "id": "pimienta", "name": "Pimienta", "emoji": "🌶️", "category": "almacen", "tier": "advanced", "difficulty": 2, "price_range": [400, 900] },
-    { "id": "ajo", "name": "Ajo", "emoji": "🧄", "category": "almacen", "tier": "advanced", "difficulty": 2, "price_range": [200, 500] },
-    { "id": "nuez_moscada", "name": "Nuez moscada", "emoji": "🫘", "category": "almacen", "tier": "advanced", "difficulty": 3, "price_range": [500, 1100] },
-    { "id": "arroz", "name": "Arroz", "emoji": "🍚", "category": "almacen", "tier": "neutral", "difficulty": 1, "price_range": [800, 1500] },
-    { "id": "fideos", "name": "Fideos", "emoji": "🍝", "category": "almacen", "tier": "neutral", "difficulty": 1, "price_range": [600, 1200] },
-    { "id": "azucar", "name": "Azúcar", "emoji": "🍬", "category": "almacen", "tier": "neutral", "difficulty": 1, "price_range": [500, 1000] },
-    { "id": "cafe", "name": "Café", "emoji": "☕", "category": "almacen", "tier": "neutral", "difficulty": 1, "price_range": [1500, 3000] },
-    { "id": "galletitas", "name": "Galletitas", "emoji": "🍪", "category": "almacen", "tier": "neutral", "difficulty": 1, "price_range": [700, 1300] },
-    { "id": "limon", "name": "Limón", "emoji": "🍋", "category": "verduras", "tier": "advanced", "difficulty": 2, "price_range": [200, 500] },
-    { "id": "lechuga", "name": "Lechuga", "emoji": "🥬", "category": "verduras", "tier": "neutral", "difficulty": 1, "price_range": [400, 800] },
-    { "id": "tomate", "name": "Tomate", "emoji": "🍅", "category": "verduras", "tier": "neutral", "difficulty": 1, "price_range": [500, 1000] },
-    { "id": "papa", "name": "Papas", "emoji": "🥔", "category": "verduras", "tier": "advanced", "difficulty": 2, "price_range": [600, 1200], "hint": "Guarnición estrella: papas fritas" },
-    { "id": "cebolla", "name": "Cebolla", "emoji": "🧅", "category": "verduras", "tier": "neutral", "difficulty": 1, "price_range": [300, 700] },
-    { "id": "banana", "name": "Banana", "emoji": "🍌", "category": "verduras", "tier": "neutral", "difficulty": 1, "price_range": [400, 800] },
-    { "id": "perejil", "name": "Perejil", "emoji": "🌿", "category": "verduras", "tier": "advanced", "difficulty": 2, "price_range": [150, 400] },
-    { "id": "huevos", "name": "Huevos (docena)", "emoji": "🥚", "category": "lacteos", "tier": "essential", "difficulty": 1, "price_range": [1200, 2200], "hint": "Fundamental para el batido" },
-    { "id": "leche", "name": "Leche", "emoji": "🥛", "category": "lacteos", "tier": "neutral", "difficulty": 1, "price_range": [700, 1300] },
-    { "id": "queso", "name": "Queso", "emoji": "🧀", "category": "lacteos", "tier": "advanced", "difficulty": 2, "price_range": [1500, 3000], "hint": "Para milanesas rellenas" },
-    { "id": "jamon", "name": "Jamón", "emoji": "🥓", "category": "lacteos", "tier": "advanced", "difficulty": 2, "price_range": [1200, 2500] },
-    { "id": "mayonesa", "name": "Mayonesa", "emoji": "🫙", "category": "lacteos", "tier": "advanced", "difficulty": 2, "price_range": [800, 1600] },
-    { "id": "yogur", "name": "Yogur", "emoji": "🥛", "category": "lacteos", "tier": "neutral", "difficulty": 1, "price_range": [600, 1200] },
-    { "id": "manteca", "name": "Manteca", "emoji": "🧈", "category": "lacteos", "tier": "neutral", "difficulty": 1, "price_range": [900, 1800] },
-    { "id": "gaseosa", "name": "Gaseosa", "emoji": "🥤", "category": "bebidas", "tier": "neutral", "difficulty": 1, "price_range": [800, 1800] },
-    { "id": "agua", "name": "Agua mineral", "emoji": "💧", "category": "bebidas", "tier": "neutral", "difficulty": 1, "price_range": [400, 800] },
-    { "id": "jugo", "name": "Jugo", "emoji": "🧃", "category": "bebidas", "tier": "neutral", "difficulty": 1, "price_range": [600, 1200] },
-    { "id": "vino", "name": "Vino", "emoji": "🍷", "category": "bebidas", "tier": "neutral", "difficulty": 1, "price_range": [1500, 4000] },
-    { "id": "cerveza", "name": "Cerveza", "emoji": "🍺", "category": "bebidas", "tier": "neutral", "difficulty": 1, "price_range": [800, 2000] },
-    { "id": "detergente", "name": "Detergente", "emoji": "🧴", "category": "bazar", "tier": "error", "difficulty": 1, "price_range": [800, 1500] },
-    { "id": "esponja", "name": "Esponja", "emoji": "🧽", "category": "bazar", "tier": "error", "difficulty": 1, "price_range": [300, 700] },
-    { "id": "cepillo_dientes", "name": "Cepillo dientes", "emoji": "🪥", "category": "bazar", "tier": "error", "difficulty": 1, "price_range": [500, 1200] },
-    { "id": "shampoo", "name": "Shampoo", "emoji": "🧴", "category": "bazar", "tier": "error", "difficulty": 1, "price_range": [1200, 2500] },
-    { "id": "velas", "name": "Velas", "emoji": "🕯️", "category": "bazar", "tier": "error", "difficulty": 1, "price_range": [400, 900] },
-    { "id": "papel_higienico", "name": "Papel higiénico", "emoji": "🧻", "category": "bazar", "tier": "error", "difficulty": 1, "price_range": [600, 1300] },
-    { "id": "servilletas", "name": "Servilletas", "emoji": "🧻", "category": "bazar", "tier": "error", "difficulty": 2, "price_range": [300, 700] },
-    { "id": "film", "name": "Film transparente", "emoji": "📦", "category": "bazar", "tier": "error", "difficulty": 2, "price_range": [500, 1100] }
+    {
+      "id": "bife",
+      "name": "Bife de nalga",
+      "emoji": "🥩",
+      "category": "carnes",
+      "tier": "essential",
+      "alt_group": "carne",
+      "difficulty": 1,
+      "price_range": [
+        2800,
+        4500
+      ],
+      "hint": "Carne clásica para milanesas"
+    },
+    {
+      "id": "pollo",
+      "name": "Suprema de pollo",
+      "emoji": "🍗",
+      "category": "carnes",
+      "tier": "essential",
+      "alt_group": "carne",
+      "difficulty": 1,
+      "price_range": [
+        1800,
+        3200
+      ],
+      "hint": "Alternativa válida — milanesa de pollo"
+    },
+    {
+      "id": "carne_picada",
+      "name": "Carne picada",
+      "emoji": "🥩",
+      "category": "carnes",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        2200,
+        3800
+      ]
+    },
+    {
+      "id": "chorizo",
+      "name": "Chorizo",
+      "emoji": "🌭",
+      "category": "carnes",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        1500,
+        2500
+      ]
+    },
+    {
+      "id": "pescado",
+      "name": "Filet de merluza",
+      "emoji": "🐟",
+      "category": "carnes",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        2500,
+        4000
+      ]
+    },
+    {
+      "id": "pan_rallado",
+      "name": "Pan rallado",
+      "emoji": "🍞",
+      "category": "almacen",
+      "tier": "essential",
+      "alt_group": "rebozado",
+      "difficulty": 1,
+      "price_range": [
+        600,
+        1200
+      ],
+      "hint": "Indispensable para el rebozado"
+    },
+    {
+      "id": "rebozador",
+      "name": "Rebozador",
+      "emoji": "📦",
+      "category": "almacen",
+      "tier": "essential",
+      "alt_group": "rebozado",
+      "difficulty": 1,
+      "price_range": [
+        700,
+        1400
+      ]
+    },
+    {
+      "id": "aceite",
+      "name": "Aceite",
+      "emoji": "🫒",
+      "category": "almacen",
+      "tier": "essential",
+      "difficulty": 1,
+      "price_range": [
+        1200,
+        2500
+      ],
+      "hint": "Sin aceite no hay fritura"
+    },
+    {
+      "id": "sal",
+      "name": "Sal",
+      "emoji": "🧂",
+      "category": "almacen",
+      "tier": "advanced",
+      "difficulty": 2,
+      "price_range": [
+        300,
+        600
+      ]
+    },
+    {
+      "id": "pimienta",
+      "name": "Pimienta",
+      "emoji": "🌶️",
+      "category": "almacen",
+      "tier": "advanced",
+      "difficulty": 2,
+      "price_range": [
+        400,
+        900
+      ]
+    },
+    {
+      "id": "ajo",
+      "name": "Ajo",
+      "emoji": "🧄",
+      "category": "almacen",
+      "tier": "advanced",
+      "difficulty": 2,
+      "price_range": [
+        200,
+        500
+      ]
+    },
+    {
+      "id": "nuez_moscada",
+      "name": "Nuez moscada",
+      "emoji": "🫘",
+      "category": "almacen",
+      "tier": "advanced",
+      "difficulty": 3,
+      "price_range": [
+        500,
+        1100
+      ]
+    },
+    {
+      "id": "arroz",
+      "name": "Arroz",
+      "emoji": "🍚",
+      "category": "almacen",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        800,
+        1500
+      ]
+    },
+    {
+      "id": "fideos",
+      "name": "Fideos",
+      "emoji": "🍝",
+      "category": "almacen",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        600,
+        1200
+      ]
+    },
+    {
+      "id": "azucar",
+      "name": "Azúcar",
+      "emoji": "🍬",
+      "category": "almacen",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        500,
+        1000
+      ]
+    },
+    {
+      "id": "cafe",
+      "name": "Café",
+      "emoji": "☕",
+      "category": "almacen",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        1500,
+        3000
+      ]
+    },
+    {
+      "id": "galletitas",
+      "name": "Galletitas",
+      "emoji": "🍪",
+      "category": "almacen",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        700,
+        1300
+      ]
+    },
+    {
+      "id": "limon",
+      "name": "Limón",
+      "emoji": "🍋",
+      "category": "verduras",
+      "tier": "advanced",
+      "difficulty": 2,
+      "price_range": [
+        200,
+        500
+      ]
+    },
+    {
+      "id": "lechuga",
+      "name": "Lechuga",
+      "emoji": "🥬",
+      "category": "verduras",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        400,
+        800
+      ]
+    },
+    {
+      "id": "tomate",
+      "name": "Tomate",
+      "emoji": "🍅",
+      "category": "verduras",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        500,
+        1000
+      ]
+    },
+    {
+      "id": "papa",
+      "name": "Papas",
+      "emoji": "🥔",
+      "category": "verduras",
+      "tier": "advanced",
+      "difficulty": 2,
+      "price_range": [
+        600,
+        1200
+      ],
+      "hint": "Guarnición estrella: papas fritas"
+    },
+    {
+      "id": "cebolla",
+      "name": "Cebolla",
+      "emoji": "🧅",
+      "category": "verduras",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        300,
+        700
+      ]
+    },
+    {
+      "id": "banana",
+      "name": "Banana",
+      "emoji": "🍌",
+      "category": "verduras",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        400,
+        800
+      ]
+    },
+    {
+      "id": "perejil",
+      "name": "Perejil",
+      "emoji": "🌿",
+      "category": "verduras",
+      "tier": "advanced",
+      "difficulty": 2,
+      "price_range": [
+        150,
+        400
+      ]
+    },
+    {
+      "id": "huevos",
+      "name": "Huevos (docena)",
+      "emoji": "🥚",
+      "category": "lacteos",
+      "tier": "essential",
+      "difficulty": 1,
+      "price_range": [
+        1200,
+        2200
+      ],
+      "hint": "Fundamental para el batido"
+    },
+    {
+      "id": "leche",
+      "name": "Leche",
+      "emoji": "🥛",
+      "category": "lacteos",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        700,
+        1300
+      ]
+    },
+    {
+      "id": "queso",
+      "name": "Queso",
+      "emoji": "🧀",
+      "category": "lacteos",
+      "tier": "advanced",
+      "difficulty": 2,
+      "price_range": [
+        1500,
+        3000
+      ],
+      "hint": "Para milanesas rellenas"
+    },
+    {
+      "id": "jamon",
+      "name": "Jamón",
+      "emoji": "🥓",
+      "category": "lacteos",
+      "tier": "advanced",
+      "difficulty": 2,
+      "price_range": [
+        1200,
+        2500
+      ]
+    },
+    {
+      "id": "mayonesa",
+      "name": "Mayonesa",
+      "emoji": "🫙",
+      "category": "lacteos",
+      "tier": "advanced",
+      "difficulty": 2,
+      "price_range": [
+        800,
+        1600
+      ]
+    },
+    {
+      "id": "yogur",
+      "name": "Yogur",
+      "emoji": "🥛",
+      "category": "lacteos",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        600,
+        1200
+      ]
+    },
+    {
+      "id": "manteca",
+      "name": "Manteca",
+      "emoji": "🧈",
+      "category": "lacteos",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        900,
+        1800
+      ]
+    },
+    {
+      "id": "gaseosa",
+      "name": "Gaseosa",
+      "emoji": "🥤",
+      "category": "bebidas",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        800,
+        1800
+      ]
+    },
+    {
+      "id": "agua",
+      "name": "Agua mineral",
+      "emoji": "💧",
+      "category": "bebidas",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        400,
+        800
+      ]
+    },
+    {
+      "id": "jugo",
+      "name": "Jugo",
+      "emoji": "🧃",
+      "category": "bebidas",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        600,
+        1200
+      ]
+    },
+    {
+      "id": "vino",
+      "name": "Vino",
+      "emoji": "🍷",
+      "category": "bebidas",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        1500,
+        4000
+      ]
+    },
+    {
+      "id": "cerveza",
+      "name": "Cerveza",
+      "emoji": "🍺",
+      "category": "bebidas",
+      "tier": "neutral",
+      "difficulty": 1,
+      "price_range": [
+        800,
+        2000
+      ]
+    },
+    {
+      "id": "detergente",
+      "name": "Detergente",
+      "emoji": "🧴",
+      "category": "bazar",
+      "tier": "error",
+      "difficulty": 1,
+      "price_range": [
+        800,
+        1500
+      ]
+    },
+    {
+      "id": "esponja",
+      "name": "Esponja",
+      "emoji": "🧽",
+      "category": "bazar",
+      "tier": "error",
+      "difficulty": 1,
+      "price_range": [
+        300,
+        700
+      ]
+    },
+    {
+      "id": "cepillo_dientes",
+      "name": "Cepillo dientes",
+      "emoji": "🪥",
+      "category": "bazar",
+      "tier": "error",
+      "difficulty": 1,
+      "price_range": [
+        500,
+        1200
+      ]
+    },
+    {
+      "id": "shampoo",
+      "name": "Shampoo",
+      "emoji": "🧴",
+      "category": "bazar",
+      "tier": "error",
+      "difficulty": 1,
+      "price_range": [
+        1200,
+        2500
+      ]
+    },
+    {
+      "id": "velas",
+      "name": "Velas",
+      "emoji": "🕯️",
+      "category": "bazar",
+      "tier": "error",
+      "difficulty": 1,
+      "price_range": [
+        400,
+        900
+      ]
+    },
+    {
+      "id": "papel_higienico",
+      "name": "Papel higiénico",
+      "emoji": "🧻",
+      "category": "bazar",
+      "tier": "error",
+      "difficulty": 1,
+      "price_range": [
+        600,
+        1300
+      ]
+    },
+    {
+      "id": "servilletas",
+      "name": "Servilletas",
+      "emoji": "🧻",
+      "category": "bazar",
+      "tier": "error",
+      "difficulty": 2,
+      "price_range": [
+        300,
+        700
+      ]
+    },
+    {
+      "id": "film",
+      "name": "Film transparente",
+      "emoji": "📦",
+      "category": "bazar",
+      "tier": "error",
+      "difficulty": 2,
+      "price_range": [
+        500,
+        1100
+      ]
+    }
   ],
-
   "difficulty_scaling": {
-    "level_1": { "items_per_round": 12, "categories_visible": 4, "time_limit": null, "budget": 15000 },
-    "level_2": { "items_per_round": 18, "categories_visible": 5, "time_limit": 300, "budget": 12000 },
-    "level_3": { "items_per_round": 24, "categories_visible": 6, "time_limit": 240, "budget": 10000 },
-    "level_4": { "items_per_round": 30, "categories_visible": 6, "time_limit": 180, "budget": 8000 }
-  }
+    "level_1": {
+      "items_per_round": 12,
+      "categories_visible": 4,
+      "time_limit": null,
+      "budget": 15000
+    },
+    "level_2": {
+      "items_per_round": 18,
+      "categories_visible": 5,
+      "time_limit": 300,
+      "budget": 12000
+    },
+    "level_3": {
+      "items_per_round": 24,
+      "categories_visible": 6,
+      "time_limit": 240,
+      "budget": 10000
+    },
+    "level_4": {
+      "items_per_round": 30,
+      "categories_visible": 6,
+      "time_limit": 180,
+      "budget": 8000
+    }
+  },
+  "missions": [
+    {
+      "id": "asado-domingo",
+      "name": "Asado del domingo",
+      "emoji": "🔥",
+      "description": "Compra todo para un asado familiar: carne, carbon, pan, bebidas y ensalada.",
+      "target_items": [
+        {
+          "item_id": "bife",
+          "required": true
+        },
+        {
+          "item_id": "pollo",
+          "required": true
+        },
+        {
+          "item_id": "carne_picada",
+          "required": true
+        },
+        {
+          "item_id": "limon",
+          "required": true
+        },
+        {
+          "item_id": "lechuga",
+          "required": true
+        },
+        {
+          "item_id": "gaseosa",
+          "required": true
+        },
+        {
+          "item_id": "agua",
+          "required": true
+        }
+      ],
+      "budget": 35000,
+      "time_limit_seconds": 120
+    },
+    {
+      "id": "merienda-ninos",
+      "name": "Merienda para los nenes",
+      "emoji": "🧃",
+      "description": "Preparas la merienda del colegio: leche, galletitas, fruta y jugo.",
+      "target_items": [
+        {
+          "item_id": "huevos",
+          "required": true
+        },
+        {
+          "item_id": "leche",
+          "required": true
+        },
+        {
+          "item_id": "pan_rallado",
+          "required": true
+        },
+        {
+          "item_id": "rebozador",
+          "required": true
+        },
+        {
+          "item_id": "gaseosa",
+          "required": true
+        }
+      ],
+      "budget": 12000,
+      "time_limit_seconds": 90
+    },
+    {
+      "id": "ensalada-verano",
+      "name": "Ensalada de verano",
+      "emoji": "🥗",
+      "description": "Compra todo para una ensalada fresca: verduras, queso y aderezo.",
+      "target_items": [
+        {
+          "item_id": "limon",
+          "required": true
+        },
+        {
+          "item_id": "lechuga",
+          "required": true
+        },
+        {
+          "item_id": "tomate",
+          "required": true
+        },
+        {
+          "item_id": "papa",
+          "required": true
+        },
+        {
+          "item_id": "huevos",
+          "required": true
+        }
+      ],
+      "budget": 15000,
+      "time_limit_seconds": 90
+    },
+    {
+      "id": "compra-semanal",
+      "name": "Compra semanal basica",
+      "emoji": "🛒",
+      "description": "Hace las compras de la semana: algo de cada seccion sin pasarte del presupuesto.",
+      "target_items": [
+        {
+          "item_id": "bife",
+          "required": true
+        },
+        {
+          "item_id": "pan_rallado",
+          "required": true
+        },
+        {
+          "item_id": "limon",
+          "required": true
+        },
+        {
+          "item_id": "huevos",
+          "required": true
+        },
+        {
+          "item_id": "gaseosa",
+          "required": true
+        }
+      ],
+      "budget": 50000,
+      "time_limit_seconds": 180
+    },
+    {
+      "id": "emergencia-feriado",
+      "name": "Compra de emergencia (feriado)",
+      "emoji": "⚡",
+      "description": "El super cierra en 5 minutos. Compra lo esencial rapido.",
+      "target_items": [
+        {
+          "item_id": "bife",
+          "required": true
+        },
+        {
+          "item_id": "pan_rallado",
+          "required": true
+        },
+        {
+          "item_id": "huevos",
+          "required": true
+        }
+      ],
+      "budget": 20000,
+      "time_limit_seconds": 60
+    },
+    {
+      "id": "dieta-saludable",
+      "name": "Semana saludable",
+      "emoji": "💪",
+      "description": "Solo productos saludables: verduras, proteinas magras, lacteos descremados.",
+      "target_items": [
+        {
+          "item_id": "limon",
+          "required": true
+        },
+        {
+          "item_id": "lechuga",
+          "required": true
+        },
+        {
+          "item_id": "tomate",
+          "required": true
+        },
+        {
+          "item_id": "bife",
+          "required": true
+        },
+        {
+          "item_id": "huevos",
+          "required": true
+        }
+      ],
+      "budget": 25000,
+      "time_limit_seconds": 120
+    },
+    {
+      "id": "cumple-sorpresa",
+      "name": "Cumple sorpresa",
+      "emoji": "🎂",
+      "description": "Organizas un cumple: gaseosas, galletitas, queso, fiambre y algo dulce.",
+      "target_items": [
+        {
+          "item_id": "gaseosa",
+          "required": true
+        },
+        {
+          "item_id": "agua",
+          "required": true
+        },
+        {
+          "item_id": "pan_rallado",
+          "required": true
+        },
+        {
+          "item_id": "rebozador",
+          "required": true
+        },
+        {
+          "item_id": "huevos",
+          "required": true
+        }
+      ],
+      "budget": 30000,
+      "time_limit_seconds": 120
+    }
+  ],
+  "events": [
+    {
+      "id": "oferta-relampago",
+      "text": "Oferta relampago! Todo en bebidas al 50%.",
+      "effect": "add_item",
+      "target": "bebidas",
+      "probability": 0.15
+    },
+    {
+      "id": "fila-caja",
+      "text": "La fila de la caja esta larga. Apurate.",
+      "effect": "time_pressure",
+      "target": "",
+      "probability": 0.1
+    },
+    {
+      "id": "gondola-vacia",
+      "text": "La gondola de lacteos esta casi vacia.",
+      "effect": "block_category",
+      "target": "lacteos",
+      "probability": 0.1
+    },
+    {
+      "id": "vecina-charla",
+      "text": "Te encontraste con una vecina que te para a charlar.",
+      "effect": "distraction",
+      "target": "",
+      "probability": 0.12
+    },
+    {
+      "id": "cambio-precio",
+      "text": "El precio de la carne subio. Recalcula tu presupuesto.",
+      "effect": "shuffle",
+      "target": "carnes",
+      "probability": 0.08
+    }
+  ]
 }
