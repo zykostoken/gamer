@@ -717,3 +717,93 @@ global.biomet = {
 };
 
 })(window);
+
+// ================================================================
+// FASE 2: PASSIVE BIOMETRICS — Portal interaction metrics
+// No permissions needed. Captured implicitly during gameplay.
+// Each metric has a clinical construct. No data storm.
+// ================================================================
+
+// --- Instruction screen time tracking ---
+// Construct: reading comprehension, processing speed
+// A patient who spends 2s on instructions vs 30s tells you something
+var _instructionMetrics = {
+  screens: [],       // { id, shownAt, dismissedAt, duration_ms, scrollbacks }
+  currentScreen: null,
+  scrollY: 0,
+  scrollbacks: 0
+};
+
+BM.trackInstructionScreen = function(screenId) {
+  _instructionMetrics.currentScreen = {
+    id: screenId,
+    shownAt: Date.now(),
+    scrollbacks: 0,
+    maxScrollY: 0
+  };
+  _instructionMetrics.scrollY = 0;
+  _instructionMetrics.scrollbacks = 0;
+};
+
+BM.dismissInstructionScreen = function() {
+  if (!_instructionMetrics.currentScreen) return null;
+  var s = _instructionMetrics.currentScreen;
+  s.dismissedAt = Date.now();
+  s.duration_ms = s.dismissedAt - s.shownAt;
+  s.scrollbacks = _instructionMetrics.scrollbacks;
+  _instructionMetrics.screens.push(s);
+  _instructionMetrics.currentScreen = null;
+  return s;
+};
+
+BM.getInstructionMetrics = function() {
+  return {
+    screens: _instructionMetrics.screens,
+    total_instruction_time_ms: _instructionMetrics.screens.reduce(function(a, s) { return a + s.duration_ms; }, 0),
+    avg_instruction_time_ms: _instructionMetrics.screens.length > 0 
+      ? Math.round(_instructionMetrics.screens.reduce(function(a, s) { return a + s.duration_ms; }, 0) / _instructionMetrics.screens.length) 
+      : 0,
+    total_scrollbacks: _instructionMetrics.screens.reduce(function(a, s) { return a + s.scrollbacks; }, 0)
+  };
+};
+
+// Track scrollback on instruction screens
+// Construct: difficulty of comprehension, need to re-read
+window.addEventListener('scroll', function() {
+  if (!_instructionMetrics.currentScreen) return;
+  var newY = window.scrollY || window.pageYOffset || 0;
+  if (newY < _instructionMetrics.scrollY - 20) {
+    // Scrolled up = re-reading
+    _instructionMetrics.scrollbacks++;
+  }
+  if (newY > _instructionMetrics.currentScreen.maxScrollY) {
+    _instructionMetrics.currentScreen.maxScrollY = newY;
+  }
+  _instructionMetrics.scrollY = newY;
+}, { passive: true });
+
+// --- First action latency ---
+// Construct: initiation speed, executive function
+// Time from game screen appearing to first meaningful input
+var _firstActionTime = null;
+var _gameScreenShownTime = null;
+
+BM.markGameScreenShown = function() {
+  _gameScreenShownTime = Date.now();
+  _firstActionTime = null;
+};
+
+BM.markFirstAction = function() {
+  if (_gameScreenShownTime && !_firstActionTime) {
+    _firstActionTime = Date.now();
+    return _firstActionTime - _gameScreenShownTime;
+  }
+  return null;
+};
+
+BM.getFirstActionLatency = function() {
+  if (_gameScreenShownTime && _firstActionTime) {
+    return _firstActionTime - _gameScreenShownTime;
+  }
+  return null;
+};
