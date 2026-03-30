@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital de Día - Clínica José Ingenieros</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="stylesheet" href="/css/hdd-portal.css">
+</head>
+<body>
+  <!-- Login View -->
+  <div id="login-view" class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="logo-icon" style="width: 60px; height: 60px; font-size: 1.75rem; margin: 0 auto 1rem;">HdD</div>
+        <h1>Hospital de Día</h1>
+        <p>Clínica Psiquiátrica José Ingenieros</p>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form">
+        <div class="form-group">
+          <label for="dni">DNI</label>
+          <input type="text" id="dni" name="dni" placeholder="Ingrese su DNI" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" name="password" placeholder="Ingrese su contraseña" required>
+          <p class="form-hint">Si es su primer inicio de sesión, esta será su nueva contraseña.</p>
+        </div>
+
+        <div id="login-error" class="form-error hidden"></div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 0.75rem;">
+          Iniciar Sesión
+        </button>
+      </form>
+
+      <div style="margin-top: 1.5rem; text-align: center; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">¿Primera vez aquí?</p>
+        <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="showRegisterForm()">
+          Registrarse
+        </button>
+      </div>
+
+      <div style="margin-top: 1.5rem; text-align: center;">
+        <a href="/hdd" class="back-link">← Volver a Hospital de Día</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Register View -->
+  <div id="register-view" class="login-container hidden">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="logo-icon" style="width: 60px; height: 60px; font-size: 1.75rem; margin: 0 auto 1rem;">HdD</div>
+        <h1>Registrarse</h1>
+        <p>Hospital de Día</p>
+      </div>
+
+      <div class="alert alert-info" style="background: #e0f2fe; color: #0369a1; margin-bottom: 1rem;">
+        Solo pueden registrarse pacientes autorizados por la clínica.
+      </div>
+
+      <form id="register-form">
+        <div class="form-group">
+          <label for="reg-dni">DNI *</label>
+          <input type="text" id="reg-dni" placeholder="Ej: 12345678" required>
+          <p class="form-hint">Ingresá tu DNI sin puntos</p>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-fullname">Nombre Completo *</label>
+          <input type="text" id="reg-fullname" placeholder="Nombre y apellido" required>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-email">Email *</label>
+          <input type="email" id="reg-email" placeholder="tu@email.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-password">Contraseña *</label>
+          <input type="password" id="reg-password" placeholder="Mínimo 12 caracteres" required minlength="12">
+        </div>
+
+        <div id="register-error" class="form-error hidden"></div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 0.75rem;">
+          Registrarse
+        </button>
+      </form>
+
+      <div style="margin-top: 1.5rem; text-align: center;">
+        <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="showLoginForm()">
+          ← Ya tengo cuenta
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App View -->
+  <div id="app-view" class="hidden">
+    <header class="header">
+      <div class="header-content">
+        <a href="/hdd/portal" class="logo">
+          <div class="logo-icon">HdD</div>
+          <div>
+            <div class="logo-text">Hospital de Día</div>
+            <div class="logo-subtitle">Comunidad</div>
+          </div>
+        </a>
+
+        <div class="user-menu">
+          <span class="user-name" id="user-name"></span>
+          <button class="btn btn-secondary" onclick="showProfileModal()">Perfil</button>
+          <button class="btn btn-secondary" onclick="logout()">Salir</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="feed" onclick="switchTab('feed')">Comunidad</button>
+        <button class="nav-tab" data-tab="games" onclick="switchTab('games')">Juegos</button>
+        <button class="nav-tab" data-tab="activities" onclick="switchTab('activities')">Actividades</button>
+        <button class="nav-tab" data-tab="salas" onclick="switchTab('salas')"> Salas de Video</button>
+        <button class="nav-tab" data-tab="my-posts" onclick="switchTab('my-posts')">Mis Publicaciones</button>
+        <button class="nav-tab" data-tab="metrics" onclick="switchTab('metrics')"> Métricas</button>
+      </div>
+
+      <!-- Feed Tab -->
+      <div id="tab-feed" class="feed-container">
+        <div class="create-post">
+          <textarea id="new-post-content" placeholder="¿Qué quieres compartir hoy?"></textarea>
+          <div class="create-post-actions">
+            <div class="post-options">
+              <button class="post-option" onclick="document.getElementById('image-upload').click()" title="Agregar imagen">
+                
+              </button>
+              <input type="file" id="image-upload" accept="image/*" style="display: none;" onchange="handleImageUpload(this)">
+            </div>
+            <button class="btn btn-primary" onclick="createPost()">Publicar</button>
+          </div>
+          <div id="image-preview" class="hidden" style="margin-top: 0.5rem;">
+            <img id="preview-img" style="max-height: 150px; border-radius: 8px;">
+            <button class="btn btn-secondary" onclick="clearImagePreview()" style="margin-left: 0.5rem;"></button>
+          </div>
+        </div>
+
+        <div id="feed-posts">
+          <div class="loading">Cargando publicaciones...</div>
+        </div>
+      </div>
+
+      <!-- Games Tab -->
+      <div id="tab-games" class="feed-container hidden">
+        <h2 style="margin-bottom: 1rem;">Juegos Terapéuticos</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Ejercicios lúdicos para trabajar habilidades cognitivas y motoras.</p>
+
+        <div style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+          <!-- Game 1: Lawn Mower -->
+          <div class="activity-card" style="cursor: pointer;" onclick="launchGame('lawn-mower')">
+            <div class="activity-icon" style="font-size: 2rem;"></div>
+            <div class="activity-info">
+              <div class="activity-name">Cortadora de Césped</div>
+              <div class="activity-schedule">Motricidad fina, planificación, atención</div>
+            </div>
+            <span style="color: var(--primary);">Jugar →</span>
+          </div>
+
+          <!-- Game 2: Memory Prescriptions -->
+          <div class="activity-card" style="cursor: pointer;" onclick="launchGame('medication-memory')">
+            <div class="activity-icon" style="font-size: 2rem;"></div>
+            <div class="activity-info">
+              <div class="activity-name">Memoria de Medicamentos</div>
+              <div class="activity-schedule">Memoria, atención, seguimiento de instrucciones</div>
+            </div>
+            <span style="color: var(--primary);">Jugar →</span>
+          </div>
+
+          <!-- Game 3: Pill Organizer -->
+          <div class="activity-card" style="cursor: pointer;" onclick="openGame('pill-organizer')">
+            <div class="activity-icon" style="font-size: 2rem;"></div>
+            <div class="activity-info">
+              <div class="activity-name">Organizador de Medicación</div>
+              <div class="activity-schedule">Motricidad fina, organización cognitiva</div>
+            </div>
+            <span style="color: var(--primary);">Jugar →</span>
+          </div>
+
+          <!-- Game 4: Neuro-Chef -->
+          <div class="activity-card" style="cursor: pointer;" onclick="openGame('neuro-chef/index')">
+            <div class="activity-icon" style="font-size: 2rem;">️</div>
+            <div class="activity-info">
+              <div class="activity-name">Neuro-Chef: La Mesa Puesta</div>
+              <div class="activity-schedule">Planificación motora, memoria procedimental</div>
+            </div>
+            <span style="color: var(--primary);">Jugar →</span>
+          </div>
+
+          <!-- Game 5: Heladera Inteligente - TEMPORALMENTE OCULTO (en mejora multi-nivel) -->
+          <!--
+          <div class="activity-card" style="cursor: pointer;" onclick="openGame('fridge-logic')">
+            <div class="activity-icon" style="font-size: 2rem;"></div>
+            <div class="activity-info">
+              <div class="activity-name">Heladera Inteligente</div>
+              <div class="activity-schedule">Memoria semántica, categorización, juicio (AVD)</div>
+            </div>
+            <span style="color: var(--primary);">Jugar →</span>
+          </div>
+          -->
+
+          <!-- Game 6: Desafío Milanesas (Supermercado) -->
+          <div class="activity-card" style="cursor: pointer;" onclick="openGame('super-market')">
+            <div class="activity-icon" style="font-size: 2rem;"></div>
+            <div class="activity-info">
+              <div class="activity-name">Desafío Milanesas</div>
+              <div class="activity-schedule">Planificación, memoria de trabajo, gestión presupuestaria</div>
+            </div>
+            <span style="color: var(--primary);">Jugar →</span>
+          </div>
+
+          <!-- Game 7: Mi Rutina Diaria - TEMPORALMENTE OCULTO (en reconstrucción) -->
+          <!--
+          <div class="activity-card" style="cursor: pointer;" onclick="openGame('daily-routine')">
+            <div class="activity-icon" style="font-size: 2rem;"></div>
+            <div class="activity-info">
+              <div class="activity-name">Mi Rutina Diaria</div>
+              <div class="activity-schedule">Planificación, secuenciación, juicio, AVD</div>
+            </div>
+            <span style="color: var(--primary);">Jugar →</span>
+          </div>
+          -->
+        </div>
+
+        <!-- Game Container (for inline games if needed) -->
+        <div id="game-container" class="hidden" style="margin-top: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 id="game-title"></h3>
+            <button class="btn btn-secondary" onclick="closeGame()">Cerrar juego</button>
+          </div>
+          <div id="game-area" style="background: var(--surface); border-radius: 12px; border: 1px solid var(--border); overflow: hidden;"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Activities Tab -->
+      <div id="tab-activities" class="feed-container hidden">
+        <h2 style="margin-bottom: 1rem;">Actividades Semanales</h2>
+        <div id="activities-list">
+          <div class="loading">Cargando actividades...</div>
+        </div>
+
+        <!-- Resources Section -->
+        <div style="margin-top: 2rem;">
+          <h3 style="margin-bottom: 1rem;">Recursos y Material de Apoyo</h3>
+          <div id="portal-resources-list">
+            <div class="loading">Cargando recursos...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- My Posts Tab -->
+      <div id="tab-my-posts" class="feed-container hidden">
+        <h2 style="margin-bottom: 1rem;">Mis Publicaciones</h2>
+        <div id="my-posts-list">
+          <div class="loading">Cargando...</div>
+        </div>
+      </div>
+    
+      <!-- Metrics Tab -->
+      <div id="tab-metrics" class="feed-container hidden">
+        <iframe src="/hdd/portal/metrics.html" style="width: 100%; height: 800px; border: none; border-radius: 12px;"></iframe>
+      </div>
+
+      <!-- Salas de Video Tab -->
+      <div id="tab-salas" class="feed-container hidden">
+        <h2 style="margin-bottom: 1rem;"> Salas de Videollamada Grupal</h2>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Accede a las salas de videollamada para sesiones grupales, talleres y actividades terapéuticas.</p>
+
+        <!-- Daily.co embedded video room (hidden by default) -->
+        <div id="daily-room-embed" style="display: none; margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <h3 id="daily-room-title" style="margin: 0;"></h3>
+            <button class="btn btn-danger" onclick="closeDailyRoom()" style="padding: 0.5rem 1rem;">Salir de la Sala</button>
+          </div>
+          <iframe id="daily-room-iframe" style="width: 100%; height: 600px; border: none; border-radius: 12px; background: #000;" allow="camera; microphone; fullscreen; display-capture; autoplay"></iframe>
+        </div>
+
+        <div style="display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+
+          <!-- Sala 1: Consulta Grupal -->
+          <div style="background: var(--surface); border: 2px solid var(--border); border-radius: 12px; padding: 1.5rem; transition: border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size: 3rem; text-align: center; margin-bottom: 1rem;"></div>
+            <h3 style="margin-bottom: 0.5rem; text-align: center;">Consulta Grupal</h3>
+            <p style="color: var(--text-muted); text-align: center; font-size: 0.9rem; margin-bottom: 1rem;">Sala principal para consultas grupales con pacientes del HDD.</p>
+            <p style="text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Capacidad: 20 participantes</p>
+            <button class="btn btn-primary" style="width: 100%;" onclick="openDailyRoom('consulta-grupal', 'Consulta Grupal')">Unirse a la Sala</button>
+          </div>
+
+          <!-- Sala 2: Aula Virtual -->
+          <div style="background: var(--surface); border: 2px solid var(--border); border-radius: 12px; padding: 1.5rem; transition: border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size: 3rem; text-align: center; margin-bottom: 1rem;"></div>
+            <h3 style="margin-bottom: 0.5rem; text-align: center;">Aula Virtual</h3>
+            <p style="color: var(--text-muted); text-align: center; font-size: 0.9rem; margin-bottom: 1rem;">Sala para clases, talleres educativos y presentaciones.</p>
+            <p style="text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Capacidad: 30 participantes</p>
+            <button class="btn btn-primary" style="width: 100%;" onclick="openDailyRoom('aula-virtual', 'Aula Virtual')">Unirse a la Sala</button>
+          </div>
+
+          <!-- Sala 3: Terapia Grupal -->
+          <div style="background: var(--surface); border: 2px solid var(--border); border-radius: 12px; padding: 1.5rem; transition: border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size: 3rem; text-align: center; margin-bottom: 1rem;"></div>
+            <h3 style="margin-bottom: 0.5rem; text-align: center;">Terapia Grupal</h3>
+            <p style="color: var(--text-muted); text-align: center; font-size: 0.9rem; margin-bottom: 1rem;">Sala para sesiones de terapia grupal y mindfulness.</p>
+            <p style="text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Capacidad: 15 participantes</p>
+            <button class="btn btn-primary" style="width: 100%;" onclick="openDailyRoom('terapia-grupal', 'Terapia Grupal')">Unirse a la Sala</button>
+          </div>
+
+          <!-- Sala 4: Sala Multimedia -->
+          <div style="background: var(--surface); border: 2px solid var(--border); border-radius: 12px; padding: 1.5rem; transition: border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size: 3rem; text-align: center; margin-bottom: 1rem;"></div>
+            <h3 style="margin-bottom: 0.5rem; text-align: center;">Sala Multimedia</h3>
+            <p style="color: var(--text-muted); text-align: center; font-size: 0.9rem; margin-bottom: 1rem;">Para compartir videos, películas y contenido multimedia.</p>
+            <p style="text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Capacidad: 25 participantes</p>
+            <button class="btn btn-primary" style="width: 100%;" onclick="openDailyRoom('sala-multimedia', 'Sala Multimedia')">Unirse a la Sala</button>
+          </div>
+
+        </div>
+
+        <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 1.5rem; margin-top: 2rem;">
+          <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0;">
+            <strong> Nota:</strong> Las salas utilizan Daily.co (2,000 min/mes gratis, sin limite de tiempo por sesion). Funciona directo desde el navegador, no requiere apps.
+          </p>
+        </div>
+
+        <script>
+          // Daily.co domain - CONFIGURE: replace with your Daily.co subdomain after creating account at https://dashboard.daily.co
+          const DAILY_DOMAIN = 'zykos';
+
+          function openDailyRoom(roomSlug, roomTitle) {
+            const iframe = document.getElementById('daily-room-iframe');
+            const embed = document.getElementById('daily-room-embed');
+            document.getElementById('daily-room-title').textContent = roomTitle;
+            iframe.src = 'https://' + DAILY_DOMAIN + '.daily.co/' + roomSlug;
+            embed.style.display = 'block';
+            embed.scrollIntoView({ behavior: 'smooth' });
+          }
+
+          function closeDailyRoom() {
+            const iframe = document.getElementById('daily-room-iframe');
+            iframe.src = '';
+            document.getElementById('daily-room-embed').style.display = 'none';
+          }
+        </script>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Profile Modal -->
+  <div id="profile-modal" class="modal-overlay hidden" onclick="closeModal(event, 'profile-modal')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Mi Perfil</h3>
+        <button class="modal-close" onclick="hideProfileModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="profile-form">
+          <div class="form-group">
+            <label>DNI</label>
+            <input type="text" id="profile-dni" disabled>
+          </div>
+          <div class="form-group">
+            <label for="profile-email">Email</label>
+            <input type="email" id="profile-email" placeholder="tu@email.com">
+          </div>
+          <div class="form-group">
+            <label for="profile-phone">Teléfono</label>
+            <input type="tel" id="profile-phone" placeholder="+54 11 1234-5678">
+          </div>
+        </form>
+
+        <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border);">
+
+        <h4 style="margin-bottom: 1rem;">Cambiar Contraseña</h4>
+        <form id="password-form">
+          <div class="form-group">
+            <label for="current-password">Contraseña Actual</label>
+            <input type="password" id="current-password">
+          </div>
+          <div class="form-group">
+            <label for="new-password">Nueva Contraseña</label>
+            <input type="password" id="new-password">
+          </div>
+          <button type="submit" class="btn btn-secondary" style="width: 100%;">Cambiar Contraseña</button>
+        </form>
+
+        <div id="profile-message" class="hidden" style="margin-top: 1rem;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideProfileModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveProfile()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comments Modal -->
+  <div id="comments-modal" class="modal-overlay hidden" onclick="closeModal(event, 'comments-modal')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Comentarios</h3>
+        <button class="modal-close" onclick="hideCommentsModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="comments-modal-content">
+        <div class="loading">Cargando comentarios...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Portal Check-in: Chat conversacional + Triaje + 12 colores proyectivos -->
+  <div id="portal-checkin-modal" class="modal-overlay hidden" onclick="event.stopPropagation()">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width: 480px; border-radius: 20px; overflow: hidden;">
+      <div style="background: linear-gradient(135deg, #1a5276 0%, #2e86c1 100%); padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.5rem;"></span>
+          <div>
+            <h3 style="margin: 0; color: #fff; font-size: 1.05rem; font-weight: 600;">Hospital de Día</h3>
+            <p style="margin: 0; color: rgba(255,255,255,0.7); font-size: 0.75rem;">Registro diario</p>
+          </div>
+        </div>
+        <button onclick="skipPortalCheckin()" style="background: none; border: none; color: rgba(255,255,255,0.6); font-size: 1.3rem; cursor: pointer; padding: 4px;">&times;</button>
+      </div>
+
+      <div style="padding: 1.25rem 1.5rem; max-height: 65vh; overflow-y: auto;">
+        <!-- Chat area -->
+        <div id="portal-chat-messages" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;"></div>
+
+        <!-- Input area (hidden until needed) -->
+        <div id="portal-chat-input-area" style="display: none;">
+          <textarea id="portal-chat-input" rows="2" placeholder="Escribí tu respuesta..."
+            style="width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 0.95rem; resize: none; font-family: inherit; outline: none; box-sizing: border-box;"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();portalChatSend()}"></textarea>
+          <button onclick="portalChatSend()" style="display: block; width: 100%; margin-top: 8px; padding: 10px; background: #2e86c1; color: #fff; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer;">Enviar</button>
+        </div>
+
+        <!-- Quick options (shown contextually) -->
+        <div id="portal-quick-options" style="display: none; flex-wrap: wrap; gap: 8px; margin-top: 8px;"></div>
+
+        <!-- Color palette (phase 2) -->
+        <div id="portal-color-phase" style="display: none;">
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; justify-items: center; padding: 8px 0;">
+            <!-- 12 colores proyectivos Lüscher -->
+          </div>
+        </div>
+
+        <!-- Urgency confirmation -->
+        <div id="portal-urgency-confirm" style="display: none; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 12px; padding: 1rem; margin-top: 12px;">
+          <p style="margin: 0 0 8px; font-weight: 600; color: #92400e;">️ Notificación enviada</p>
+          <p style="margin: 0; font-size: 0.9rem; color: #78350f;">Tu pedido fue registrado y se notificó al equipo. Te van a contactar a la brevedad.</p>
+          <button onclick="portalCheckinFinish()" style="margin-top: 12px; width: 100%; padding: 10px; background: #f59e0b; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Continuar al portal</button>
+        </div>
+      </div>
+
+      <!-- Skip link -->
+      <div style="padding: 0 1.5rem 1rem; text-align: center;">
+        <span id="portal-checkin-skip" onclick="skipPortalCheckin()" style="color: #9ca3af; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">Prefiero no responder</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <script src="/js/hdd-portal.js" defer></script>
+</body>
+</html>

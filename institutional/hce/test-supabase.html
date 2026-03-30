@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Supabase Connection</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase-config.js"></script>
+    <style>
+        body { 
+            font-family: monospace; 
+            padding: 20px; 
+            background: #0A0E27; 
+            color: #E2E8F0; 
+        }
+        .test { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #00D4FF; 
+            border-radius: 8px; 
+        }
+        .success { border-color: #39FF14; color: #39FF14; }
+        .error { border-color: #FF375F; color: #FF375F; }
+    </style>
+</head>
+<body>
+    <h1>Test de Conexión Supabase</h1>
+    <div id="results"></div>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        function addResult(title, status, message) {
+            const div = document.createElement('div');
+            div.className = `test ${status}`;
+            div.innerHTML = `<strong>${title}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+
+        async function runTests() {
+            // Test 1: Supabase SDK loaded
+            if (window.supabase && window.supabase.createClient) {
+                addResult('SDK Supabase', 'success', 'Cargado correctamente');
+            } else {
+                addResult('SDK Supabase', 'error', 'NO CARGADO');
+                return;
+            }
+
+            // Test 2: getSupabaseClient() function
+            if (typeof getSupabaseClient === 'function') {
+                addResult('Función getSupabaseClient()', 'success', 'Existe');
+            } else {
+                addResult('Función getSupabaseClient()', 'error', 'NO EXISTE');
+                return;
+            }
+
+            // Test 3: Initialize client
+            const client = getSupabaseClient();
+            if (client) {
+                addResult('Cliente Supabase', 'success', 'Inicializado');
+            } else {
+                addResult('Cliente Supabase', 'error', 'FALLO EN INICIALIZACIÓN');
+                return;
+            }
+
+            // Test 4: Query patients
+            try {
+                const { data, error } = await client
+                    .from('hdd_patients')
+                    .select('dni, full_name')
+                    .limit(5);
+                
+                if (error) throw error;
+                
+                addResult('Query hdd_patients', 'success', `${data.length} pacientes encontrados`);
+                
+                // Show patient names
+                if (data.length > 0) {
+                    const names = data.map(p => `${p.full_name} (${p.dni})`).join(', ');
+                    addResult('Pacientes', 'success', names);
+                }
+            } catch (err) {
+                addResult('Query hdd_patients', 'error', err.message);
+            }
+
+            // Test 5: Query game metrics
+            try {
+                const { data, error } = await client
+                    .from('hdd_game_metrics')
+                    .select('patient_dni, game_slug, created_at')
+                    .limit(5);
+                
+                if (error) throw error;
+                
+                addResult('Query hdd_game_metrics', 'success', `${data.length} métricas encontradas`);
+            } catch (err) {
+                addResult('Query hdd_game_metrics', 'error', err.message);
+            }
+        }
+
+        // Run tests on load
+        document.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>

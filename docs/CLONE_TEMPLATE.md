@@ -157,3 +157,64 @@ como sistema de gestión institucional completo.
 *ZYKOS GAMER es propiedad de Gonzalo Pérez Cortizo.*
 *Clínica Psiquiátrica Privada José Ingenieros SRL · CUIT 30-61202984-5*
 *Registro DNDA/INPI pendiente.*
+
+---
+
+## ESCENARIOS DE VENTA
+
+### Escenario A: "Solo el motor gamer"
+**Cliente**: Ya tiene sistema de gestión (HCE, turnos, archivo propio).
+**Producto**: ZYKOS GAMER (licencia IP o SaaS).
+**Incluye**: 12 juegos, 5 packs, calibración, evidence hash, dashboard.
+**NO incluye**: HCE, receta, telemedicina, turnos, gestión de internados.
+**Deploy**: Fork de zykostoken/gamer + Supabase propio. 2 horas.
+**Integración**: ZYKOS corre paralelo o se conecta vía API al sistema existente.
+
+### Escenario B: "Todo integrado"
+**Cliente**: No tiene sistema. Quiere todo de una.
+**Producto**: Sistema integral carnival + ZYKOS embebido.
+**Incluye TODO**:
+  - HCE (historia clínica electrónica con firma digital y hash chain)
+  - Receta electrónica
+  - Telemedicina (Daily.co)
+  - Gestión de turnos
+  - Portal de pacientes internos (Hospital de Día)
+  - Portal de pacientes externos
+  - Gaming cognitivo (ZYKOS completo)
+  - Dashboard clínico y de navegación
+  - MercadoPago (cobros online)
+  - Netlify functions (backend serverless)
+  - Compliance ministerial (ReNaPDiS, Ley 26.529)
+  - Zoho mail institucional
+**Deploy**: Fork de cautious-carnival + Supabase propio. 1-2 días.
+**Requiere**: Dominio propio, configuración de email, credenciales Daily.co y MercadoPago.
+
+### Escenario C: "Profesional autónomo" (efecto perdigón)
+**Cliente**: Psiquiatra/psicólogo individual con pocos pacientes.
+**Producto**: Membresía profesional en zykos.ar.
+**Incluye**: Panel propio dentro de zykos.ar, N pacientes bajo su cuenta, dashboard.
+**NO incluye**: Infraestructura propia, dominio, Supabase.
+**Deploy**: Cero. Se registra en zykos.ar y empieza a trabajar.
+**Cada profesional autónomo suma datos a la base normativa poblacional.**
+
+---
+
+## TABLA COMPARATIVA
+
+| | A: Solo Gamer | B: Integral | C: Perdigón |
+|---|---|---|---|
+| Juegos cognitivos | ✓ 12 | ✓ 12 | ✓ 12 |
+| Calibración hardware | ✓ | ✓ | ✓ |
+| Evidence hash | ✓ | ✓ | ✓ |
+| Dashboard métricas | ✓ | ✓ | ✓ (limitado) |
+| HCE | ✗ | ✓ | ✗ |
+| Receta electrónica | ✗ | ✓ | ✗ |
+| Telemedicina | ✗ | ✓ (Daily.co) | ✗ |
+| Turnos | ✗ | ✓ | ✗ |
+| MercadoPago | ✗ | ✓ | ✗ |
+| Firma digital | ✗ | ✓ | ✗ |
+| Compliance ministerial | Parcial | ✓ Completo | N/A |
+| Supabase propio | ✓ | ✓ | Compartido |
+| Dominio propio | ✓ | ✓ | ✗ (usa zykos.ar) |
+| Soberanía de datos | ✓ Total | ✓ Total | Parcial (RLS) |
+| Deploy time | 2 horas | 1-2 días | 0 (se registra) |

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Informe Clinico | Hospital de Dia CJI</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0f1e;--sf:#111827;--sf2:#1a2234;--bd:rgba(255,255,255,.08);--tx:#e2e8f0;--mt:rgba(255,255,255,.4);--ac:#60a5fa;--gn:#34d399;--yl:#fbbf24;--rd:#f87171;--pp:#a78bfa;--or:#fb923c}
+body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+.hd{background:var(--sf);border-bottom:1px solid var(--bd);padding:.8rem 1.5rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.hd h1{font-size:1rem;color:var(--tx);font-weight:600}
+.bk{color:var(--mt);text-decoration:none;font-size:.8rem;padding:.4rem .8rem;border:1px solid var(--bd);border-radius:6px}
+.mn{max-width:1300px;margin:0 auto;padding:1.25rem}
+select{background:var(--sf2);color:var(--tx);border:1px solid var(--bd);padding:.5rem .8rem;border-radius:6px;font-size:.85rem;min-width:260px}
+.empty{text-align:center;padding:2.5rem;color:var(--mt);font-size:.9rem}
+.composites{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem;margin-bottom:1.25rem}
+.comp{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:1rem;cursor:pointer;transition:border-color .2s}
+.comp:hover{border-color:rgba(255,255,255,.15)}
+.comp .domain{font-size:.65rem;color:var(--mt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem}
+.comp .tscore{font-size:1.8rem;font-weight:700;line-height:1}
+.comp .label{font-size:.7rem;margin-top:.3rem;font-weight:500}
+.comp .trend{font-size:.65rem;color:var(--mt);margin-top:.15rem}
+.comp .bar{height:4px;background:var(--sf2);border-radius:2px;margin-top:.4rem;overflow:hidden}
+.comp .bar-fill{height:100%;border-radius:2px}
+.sec{background:var(--sf);border:1px solid var(--bd);border-radius:10px;margin-bottom:.8rem;overflow:hidden}
+.sec-hd{padding:.8rem 1.2rem;display:flex;align-items:center;gap:.6rem;cursor:pointer;user-select:none}
+.sec-hd:hover{background:rgba(255,255,255,.015)}
+.sec-hd h2{font-size:.88rem;flex:1;font-weight:600}
+.sec-hd .arr{color:var(--mt);font-size:.6rem;transition:transform .2s}
+.sec.open .sec-hd .arr{transform:rotate(180deg)}
+.sec-bd{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.sec.open .sec-bd{max-height:20000px}
+.sub{padding:1rem 1.2rem;border-top:1px solid var(--bd)}
+.sub h3{font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.6rem}
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:.5rem}
+.mc{background:var(--sf2);border:1px solid var(--bd);border-radius:5px;padding:.6rem;position:relative}
+.mc .l{font-size:.58rem;color:var(--mt);text-transform:uppercase;letter-spacing:.3px;margin-bottom:.15rem}
+.mc .v{font-size:1.1rem;font-weight:700;color:#fff}
+.mc .s{font-size:.58rem;color:var(--mt);margin-top:.1rem}
+.mc .cor{font-size:.52rem;color:rgba(255,255,255,.55);margin-top:.25rem;line-height:1.35;border-top:1px solid rgba(255,255,255,.06);padding-top:.25rem;font-style:italic}
+.mc.key{border-left:3px solid var(--ac);background:rgba(96,165,250,.04)}
+.mc.key .l{color:var(--ac)}
+.mc.alert-red{border-left:3px solid var(--rd);background:rgba(248,113,113,.06)}
+.mc.alert-red .v{color:var(--rd)}
+.mc.alert-yellow{border-left:3px solid var(--yl);background:rgba(251,191,36,.05)}
+.mc.alert-yellow .v{color:var(--yl)}
+.mc.alert-green{border-left:3px solid var(--gn);background:rgba(52,211,153,.05)}
+.mc.alert-green .v{color:var(--gn)}
+.mc .tag{position:absolute;top:3px;right:5px;font-size:.42rem;text-transform:uppercase;letter-spacing:.5px;padding:1px 4px;border-radius:2px;font-weight:600}
+.mc .tag.clave{background:rgba(96,165,250,.15);color:var(--ac)}
+.mc .tag.bandera{background:rgba(248,113,113,.15);color:var(--rd)}
+.mc .tag.mejora{background:rgba(52,211,153,.15);color:var(--gn)}
+.ch{margin-top:.8rem;background:var(--sf2);border:1px solid var(--bd);border-radius:6px;padding:.6rem}
+.ch canvas{max-height:200px}
+.al{padding:.4rem .6rem;background:var(--sf2);border-radius:5px;margin-bottom:.3rem;font-size:.75rem;display:flex;gap:.5rem;border-left:3px solid var(--mt)}
+.al.high{border-left-color:var(--rd)}.al.positive{border-left-color:var(--gn)}.al.medium{border-left-color:var(--yl)}
+.bl-bar{background:var(--sf2);height:5px;border-radius:3px;overflow:hidden;display:inline-block;width:60px;vertical-align:middle}
+.bl-fill{height:100%;border-radius:3px}
+.spin{width:28px;height:28px;border:3px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:sp .8s linear infinite;margin:0 auto .4rem}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(max-width:768px){.composites{grid-template-columns:repeat(2,1fr)}.mg{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="hd"><h1>Informe Clinico Digital</h1><a href="/hdd/admin/index.html" class="bk">Volver al Panel</a></div>
+<div class="mn">
+  <div style="background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1.2rem;margin-bottom:1rem;display:flex;gap:.8rem;align-items:center;flex-wrap:wrap">
+    <label style="font-size:.8rem;color:var(--mt)">Paciente:</label>
+    <select id="ps" onchange="load()"><option value="">Cargando...</option></select>
+    <span id="bl" style="font-size:.72rem"></span>
+  </div>
+  <div id="ld" class="empty"><div class="spin"></div>Inicializando...</div>
+  <div id="em" class="empty" style="display:none">Seleccione un paciente</div>
+  <div id="composites" class="composites" style="display:none"></div>
+  <div id="alerts" style="display:none;margin-bottom:1rem"></div>
+  <div id="sections" style="display:none"></div>
+</div>
+<script>
+let sb,allM=[],allMood=[],charts={},baselineN=0;
+const BASELINE_MIN=5,BASELINE_FULL=10;
+const AACN=[{min:70,l:'Exceptionally High',c:'#818cf8'},{min:63,l:'Above Average',c:'#60a5fa'},{min:57,l:'High Average',c:'#34d399'},{min:43,l:'Average',c:'#e2e8f0'},{min:37,l:'Low Average',c:'#fbbf24'},{min:30,l:'Below Average',c:'#fb923c'},{min:0,l:'Exceptionally Low',c:'#f87171'}];
+function aacn(t){return AACN.find(a=>t>=a.min)||AACN[6]}
+function mean(a){return a.length?a.reduce((s,v)=>s+v,0)/a.length:null}
+function sd(a){const m=mean(a);return a.length>1?Math.sqrt(a.reduce((s,v)=>s+Math.pow(v-m,2),0)/(a.length-1)):0}
+function LS(m,slug,type){return m.find(x=>x.game_slug===slug&&x.metric_type===type)?.metric_data||null}
+function LLevel(m,slug){const t=[...new Set(m.filter(x=>x.game_slug===slug&&x.metric_type.startsWith('level_')).map(x=>x.metric_type))];return t.length?LS(m,slug,t[0]):null}
+function AS(m,slug,type){return m.filter(x=>x.game_slug===slug&&x.metric_type===type)}
+function toT(raw){if(raw==null)return null;var z=(raw-0.5)/0.2;return Math.round(Math.max(20,Math.min(80,50+10*z)))}
+// extractMetricHistory: extraer valores historicos de una metrica del paciente
+// Busca en allM (todas las sesiones) el valor que corresponde a este label
+function extractMetricHistory(label) {
+  // Mapear labels a paths en metric_data
+  var MAP = {
+    'Planificacion': ['planificacion_ratio'],
+    'Escaneo': ['escaneo_sistematico'],
+    'Accuracy': ['accuracy_pct','accuracy'],
+    'Eficacia': ['eficacia_objetivo'],
+    'Economia': ['economia_cognitiva'],
+    'Err Comision': ['errores_comision','commission_errors'],
+    'Impulsividad': ['impulsividad_compra'],
+    'Self Correction': ['self_correction_ratio'],
+    'Flexibilidad': ['flexibilidad_cognitiva'],
+    'Err Omision': ['errores_omision'],
+    'Mean RT': ['mean_rt_ms'],
+    'Reaction': ['reaction_time_ms'],
+    'Decision': ['mean_decision_time_ms'],
+    'Decision Var': ['decision_variability_sd'],
+    'RT CV': ['rt_cv'],
+    'Decaimiento': ['decaimiento_vigilancia'],
+    'Tremor Index': ['tremor_index'],
+    'Tremor Avg': ['tremor_avg'],
+    'Reposo': ['tremor_reposo'],
+    'Inicio': ['tremor_inicio'],
+    'Terminal': ['tremor_terminal'],
+    'Mov Eff': ['movement_efficiency'],
+    'Memory Span': ['memory_span'],
+    "d'": ['d_prime'],
+    'Mem Trabajo': ['memoria_trabajo_ratio'],
+    'MPR': ['simulated_mpr'],
+    'Drop Precision': ['drop_precision'],
+    'Drop Offset': ['drop_offset_mean_px'],
+    'Neatness': ['neatness_score'],
+    'Clumsiness': ['motor_clumsiness_score']
+  };
+  var keys = MAP[label];
+  if (!keys) return [];
+  var vals = [];
+  allM.forEach(function(m) {
+    if (!m.metric_data || m.metric_type === 'pill_placement' || m.metric_type === 'color_eleccion' || m.metric_type.indexOf('event_') === 0) return;
+    for (var i = 0; i < keys.length; i++) {
+      var v = m.metric_data[keys[i]];
+      if (v != null && typeof v === 'number' && isFinite(v)) { vals.push(v); return; }
+    }
+  });
+  return vals;
+}
+
+// RCI simplificado (Chelune 1993): |valor - media_baseline| / (SD * sqrt(2))
+// Retorna: { rci, direction, significant }
+function computeRCI(currentValue, history) {
+  if (!history || history.length < BASELINE_MIN) return null;
+  var m = mean(history);
+  var s = sd(history);
+  if (s === 0) s = 0.001; // evitar division por cero
+  var se_diff = s * Math.sqrt(2);
+  var rci = (currentValue - m) / se_diff;
+  return { rci: parseFloat(rci.toFixed(2)), mean: parseFloat(m.toFixed(2)), sd: parseFloat(s.toFixed(2)), direction: rci > 0 ? 'aumento' : 'disminucion', significant: Math.abs(rci) > 1.96 };
+}
+
+function mc(label,value,sub){if(value===undefined||value===null)return'';var d=typeof value==='number'?(Number.isInteger(value)?value:value.toFixed(2)):String(value);var k=CK[label];if(!k)return'<div class="mc"><div class="l">'+label+'</div><div class="v">'+d+'</div>'+(sub?'<div class="s">'+sub+'</div>':'')+'</div>';
+  var cls='mc key',tag='clave',num=typeof value==='number'?value:parseFloat(value);
+  var rciInfo=null,rciText='';
+  if(!isNaN(num)&&baselineN>=BASELINE_MIN){
+    var hist=extractMetricHistory(label);
+    if(hist.length>=BASELINE_MIN){
+      rciInfo=computeRCI(num,hist);
+      if(rciInfo&&rciInfo.significant){
+        // Determinar si el cambio es clinicamente malo segun la direccion de la metrica
+        var isBad=false;
+        if(k.dir==='gt'&&rciInfo.rci>1.96)isBad=true;  // metrica donde alto=malo y subio
+        else if(k.dir==='lt'&&rciInfo.rci<-1.96)isBad=true;  // metrica donde bajo=malo y bajo
+        else if(!k.dir)isBad=Math.abs(rciInfo.rci)>1.96; // sin direccion, cualquier cambio grande
+        if(isBad){cls='mc alert-red';tag='bandera'}
+        else{cls='mc alert-green';tag='mejora'}
+      }
+      rciText=' RCI='+rciInfo.rci+' (media='+rciInfo.mean+' SD='+rciInfo.sd+')';
+      if(rciInfo.significant)rciText+=' *cambio significativo*';
+    }
+  }
+  var blNote=baselineN<BASELINE_MIN?' (acumulando baseline — '+baselineN+'/'+BASELINE_MIN+')':'';
+  return'<div class="'+cls+'"><div class="tag '+tag+'">'+(tag==='bandera'?'Alerta':tag==='mejora'?'Mejora':'Clave')+'</div><div class="l">'+label+'</div><div class="v">'+d+'</div>'+(sub?'<div class="s">'+sub+blNote+'</div>':'')+(k.cor?'<div class="cor">'+k.cor+(rciText?' | '+rciText:'')+(baselineN<BASELINE_MIN?' | Sin baseline individual aun.':'')+'</div>':'')+'</div>'}
+
+var CK={
+'Planificacion':{dir:'lt',cor:'Ratio plan ideal vs ejecutado'},
+'Escaneo':{dir:'lt',cor:'Cobertura sistematica del entorno'},
+'Accuracy':{dir:'lt',cor:'Precision global de la tarea'},
+'Eficacia':{dir:'lt',cor:'Objetivos logrados vs totales'},
+'Economia':{dir:'lt',cor:'Acciones utiles / totales'},
+'Err Comision':{dir:'gt',cor:'Selecciones incorrectas — marcador de impulsividad (Miyake)'},
+'Impulsividad':{dir:'gt',cor:'Items no requeridos — desinhibicion frontal'},
+'Self Correction':{dir:'lt',cor:'Autocorreccion de errores — bajo sugiere anosognosia ejecutiva'},
+'Flexibilidad':{dir:'lt',cor:'Adaptacion ante cambios — baja = rigidez cognitiva (shifting, Miyake)'},
+'Err Omision':{dir:'gt',cor:'Items omitidos — inatenci\u00f3n o bradipsiquia'},
+'Err Pattern':{cor:'Patron ante error: se_frena / persevera / corrige_adapta / abandona'},
+'Com/Om Ratio':{dir:'gt',cor:'>2 predominio impulsivo, <0.5 predominio inatento, 0.5-2 mixto'},
+'Mean RT':{dir:'gt',cor:'Tiempo de reaccion — aumento sugiere enlentecimiento'},
+'Reaction':{dir:'gt',cor:'Latencia hasta accion'},
+'Decision':{dir:'gt',cor:'Tiempo de decision'},
+'Decision Var':{dir:'gt',cor:'SD de tiempos de decision — variabilidad intraindividual (IIV)'},
+'RT CV':{dir:'gt',cor:'Coeficiente de variacion RT — irregularidad atencional'},
+'Decaimiento':{dir:'gt',cor:'Ratio RT 2da/1ra mitad — fatiga de vigilancia'},
+'Fatiga LM':{dir:'gt',cor:'Indice de fatiga — agotamiento de recursos atencionales'},
+'Tremor Index':{dir:'gt',cor:'Jitter durante movimiento'},
+'Tremor Avg':{dir:'gt',cor:'Tremor promedio (px)'},
+'Reposo':{dir:'gt',cor:'Tremor en reposo — signo parkinsoniano'},
+'Inicio':{dir:'gt',cor:'Tremor al inicio del movimiento — intencional'},
+'Terminal':{dir:'gt',cor:'Tremor terminal — dismetria cerebelosa'},
+'Mov Eff':{dir:'lt',cor:'Eficiencia de trayectoria'},
+'Dysmetria':{dir:'gt',cor:'Ratio de dismetria'},
+'Clumsiness':{dir:'gt',cor:'Torpeza motora'},
+'Rigidez':{dir:'gt',cor:'1 - CV velocidad — baja variabilidad = patron rigido'},
+'Cogwheel':{dir:'gt',cor:'Oscilaciones tipo rueda dentada'},
+'Memory Span':{dir:'lt',cor:'Items retenidos en memoria de trabajo'},
+"d'":{dir:'lt',cor:'Sensibilidad discriminativa (SDT)'},
+'Mem Trabajo':{dir:'lt',cor:'Ratio de memoria de trabajo'},
+'MPR':{dir:'lt',cor:'Medication Possession Ratio simulado'},
+'Hesit Count':{dir:'gt',cor:'Pausas activas >1.5s — indecision o bloqueo'},
+'Comm Err':{dir:'gt',cor:'Errores de comision'},
+'Omis Err':{dir:'gt',cor:'Errores de omision'},
+'Coverage':{cor:'Patron espacial: lineas/espiral/caotico'},
+'Neatness':{dir:'lt',cor:'Prolijidad del recorrido'},
+'Meticulosidad':{dir:'lt',cor:'Exhaustividad vs velocidad'},
+'Planif LM':{dir:'lt',cor:'Eficiencia del plan en lawn-mower'},
+'Fatiga':{dir:'gt',cor:'Ratio enlentecimiento 2da/1ra mitad'},
+'Speed Var':{dir:'gt',cor:'Variabilidad de velocidad motora'},
+'Espasticidad':{dir:'gt',cor:'Indice clasp-knife — hipertonia piramidal'},
+'Abstraccion':{dir:'lt',cor:'Categorizacion abstracta'},
+'Budget Use':{dir:'gt',cor:'Uso de presupuesto %'},
+'Recall':{cor:'Recuerdo episodico de receta'},
+'Completion':{dir:'lt',cor:'% sesiones completadas'},
+'Abandonos':{dir:'gt',cor:'Cierres prematuros'},
+'Mov Mean':{dir:'gt',cor:'Tremor promedio inter-movimiento'},
+'Mov Max':{dir:'gt',cor:'Peor tremor registrado'},
+'Dir Changes':{dir:'gt',cor:'Cambios de direccion'},
+'Rapid Rev':{dir:'gt',cor:'Reversiones rapidas — vacilacion motora'},
+'Dur p90':{dir:'gt',cor:'Percentil 90 duracion — bradicinesia'},
+'Hit Rate':{dir:'lt',cor:'Tasa de aciertos'},
+'FA Rate':{dir:'gt',cor:'Tasa de falsas alarmas'},
+'Select Changes':{dir:'gt',cor:'Cambios de seleccion — vacilacion'},
+'Drop Precision':{dir:'lt',cor:'Precision del soltar (1=centro, 0=borde)'},
+'Drop Offset':{dir:'gt',cor:'Distancia al centro del casillero (px)'},
+'Drop Offset SD':{dir:'gt',cor:'Variabilidad del offset de drop'}
+}
+
+var DOMAINS={
+  ejecutiva:{name:'Funcion Ejecutiva',desc:'Planificacion, inhibicion, flexibilidad',
+    ex:function(m){var sm=LS(m,'super-market','session_summary'),po=LS(m,'pill-organizer','session_summary'),mm=LLevel(m,'medication-memory'),nc=LS(m,'neuro-chef-v2','biometric_level_1');
+      return[sm?sm.planificacion_ratio:null,sm&&sm.escaneo_sistematico!=null?sm.escaneo_sistematico/100:null,sm?sm.flexibilidad_cognitiva:null,sm?sm.self_correction_ratio:null,po&&po.accuracy_pct!=null?po.accuracy_pct/100:null,mm&&mm.accuracy!=null?mm.accuracy/100:null,nc&&nc.d_prime!=null?Math.min(1,Math.max(0,(nc.d_prime+1)/5)):null].filter(function(v){return v!=null})}},
+  atencion:{name:'Atencion y Velocidad',desc:'RT, latencias, vigilancia, fatiga',
+    ex:function(m){var rts=[LS(m,'super-market','session_summary'),LS(m,'pill-organizer','session_summary'),LS(m,'neuro-chef-v2','biometric_level_1'),LLevel(m,'medication-memory')].map(function(d){return d?d.mean_rt_ms||d.reaction_time_ms||d.mean_decision_time_ms:null}).filter(function(v){return v!=null});
+      return rts.map(function(rt){return Math.max(0,Math.min(1,1-(rt/15000)))})}},
+  praxis:{name:'Praxis y Coordinacion',desc:'Tremor, dismetria, eficiencia motora',
+    ex:function(m){var po=LS(m,'pill-organizer','session_summary'),nc=LS(m,'neuro-chef-v2','biometric_level_1'),mvs=m.filter(function(x){return x.metric_type==='pill_placement'});
+      var v=[];if(po&&po.movement_efficiency!=null)v.push(po.movement_efficiency);if(po&&po.tremor_index!=null)v.push(Math.max(0,1-((po.tremor_index-1)/5)));if(nc&&nc.tremor_avg!=null&&nc.tremor_avg>0)v.push(Math.max(0,1-(nc.tremor_avg/100)));
+      if(mvs.length>0){var ef=mvs.map(function(x){return x.metric_data?x.metric_data.pathEfficiency:null}).filter(function(x){return x!=null});if(ef.length)v.push(mean(ef))}return v}},
+  memoria:{name:'Memoria y Aprendizaje',desc:'Trabajo, recall, SDT, abstraccion',
+    ex:function(m){var mm=LLevel(m,'medication-memory'),sm=LS(m,'super-market','session_summary'),nc=LS(m,'neuro-chef-v2','biometric_level_1');
+      var v=[];if(mm&&mm.accuracy!=null)v.push(mm.accuracy/100);if(mm&&mm.memory_span!=null)v.push(Math.min(1,mm.memory_span/10));if(sm&&sm.memoria_trabajo_ratio!=null)v.push(sm.memoria_trabajo_ratio);if(sm&&sm.abstraccion_ratio!=null)v.push(sm.abstraccion_ratio);if(nc&&nc.d_prime!=null)v.push(Math.min(1,Math.max(0,(nc.d_prime+1)/5)));
+      if(sm&&sm.action_log&&Array.isArray(sm.action_log)){var r=sm.action_log.find(function(a){return a.type==='recipe_recall'});if(r)v.push(r.correct?1:0)}return v}},
+  emocional:{name:'Patron Emocional',desc:'Adherencia, engagement, animo-motor',
+    ex:function(m){var s=m.filter(function(x){return x.metric_type==='session_summary'||x.metric_type.indexOf('level_')===0||x.metric_type.indexOf('biometric_')===0});var c=s.filter(function(x){return x.metric_data&&x.metric_data.completed===true}).length;return s.length?[c/s.length]:[]}}
+};
+
+document.addEventListener('DOMContentLoaded',function(){
+  sb=getSupabaseClient();if(!sb){document.getElementById('ld').innerHTML='<p style="color:var(--rd)">Sin conexion</p>';return}
+  sb.from('hdd_patients').select('dni,full_name,status,is_test').order('full_name').then(function(res){
+    var sel=document.getElementById('ps');sel.innerHTML='<option value="">Seleccionar paciente...</option>';
+    (res.data||[]).forEach(function(p){var o=document.createElement('option');o.value=p.dni;o.textContent=p.full_name+(p.is_test?' (TEST)':'')+' — DNI: '+p.dni;sel.appendChild(o)});
+    document.getElementById('ld').style.display='none';document.getElementById('em').style.display='block';
+  });
+});
+
+function load(){
+  var dni=document.getElementById('ps').value;if(!dni)return;
+  ['em','composites','alerts','sections'].forEach(function(id){document.getElementById(id).style.display='none'});
+  document.getElementById('ld').style.display='block';document.getElementById('ld').innerHTML='<div class="spin"></div>Cargando biomarcadores...';
+  Promise.all([
+    sb.from('hdd_game_metrics').select('*').eq('patient_dni',dni).order('created_at',{ascending:false}),
+    sb.from('hdd_mood_entries').select('*').eq('patient_dni',dni).order('created_at',{ascending:false})
+  ]).then(function(results){
+    if(results[0].error)throw results[0].error;
+    allM=results[0].data||[];allMood=results[1].data||[];
+    if(!allM.length){document.getElementById('ld').style.display='none';document.getElementById('em').style.display='block';document.getElementById('em').textContent='Sin datos.';return}
+    Object.values(charts).forEach(function(c){c.destroy()});charts={};
+    renderBaseline();renderComposites();renderAlerts();renderSections();
+    document.getElementById('ld').style.display='none';
+  }).catch(function(e){document.getElementById('ld').innerHTML='<p style="color:var(--rd)">Error: '+e.message+'</p>'});
+}
+
+function renderComposites(){
+  var el=document.getElementById('composites'),html='';
+  Object.keys(DOMAINS).forEach(function(key){
+    var dom=DOMAINS[key],vals=dom.ex(allM),raw=vals.length?mean(vals):null,t=toT(raw);
+    var a=t?aacn(t):{l:'Sin datos',c:'var(--mt)'};var pct=t?Math.round(((t-20)/60)*100):0;
+    html+='<div class="comp" onclick="scrollSec(\''+key+'\')"><div class="domain">'+dom.name+'</div><div class="tscore" style="color:'+a.c+'">'+(t!=null?'T'+t:'--')+'</div><div class="label" style="color:'+a.c+'">'+a.l+'</div><div class="trend">'+dom.desc+'</div><div class="bar"><div class="bar-fill" style="width:'+pct+'%;background:'+a.c+'"></div></div></div>';
+  });
+  el.innerHTML=html;el.style.display='grid';
+}
+function scrollSec(k){var el=document.getElementById('sec-'+k);if(el){el.classList.add('open');el.scrollIntoView({behavior:'smooth',block:'start'})}}
+
+function renderAlerts(){
+  var flags=[];allM.forEach(function(m){if(m.metric_data&&m.metric_data.clinical_flags&&Array.isArray(m.metric_data.clinical_flags))m.metric_data.clinical_flags.forEach(function(f){flags.push({desc:f.desc||f.flag,sev:f.severity||'',g:m.game_slug,d:m.created_at})})});
+  if(!flags.length)return;var el=document.getElementById('alerts');
+  el.innerHTML='<div style="font-size:.62rem;color:var(--mt);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.3rem">Alertas clinicas</div>'+flags.map(function(f){return'<div class="al '+f.sev+'">'+f.desc+'<span style="color:var(--mt);margin-left:auto;white-space:nowrap;font-size:.65rem">'+f.g+' '+new Date(f.d).toLocaleDateString('es-AR',{day:'2-digit',month:'short'})+'</span></div>'}).join('');
+  el.style.display='block';
+}
+
+function renderBaseline(){
+  baselineN=allM.filter(function(m){return m.metric_type==='session_summary'||m.metric_type.indexOf('level_')===0||m.metric_type.indexOf('biometric_')===0}).length;
+  var n=baselineN;
+  var pct=Math.min(100,Math.round(n/BASELINE_FULL*100)),col=n>=BASELINE_FULL?'var(--gn)':n>=BASELINE_MIN?'var(--yl)':'var(--mt)';
+  var txt=n>=BASELINE_FULL?'Baseline establecido ('+n+' sesiones)':n>=BASELINE_MIN?'Baseline parcial ('+n+'/'+BASELINE_FULL+')':'Acumulando baseline ('+n+'/'+BASELINE_FULL+') — alertas desactivadas';
+  document.getElementById('bl').innerHTML='<span style="color:'+col+'">'+txt+'</span> <div class="bl-bar" style="margin-left:.3rem"><div class="bl-fill" style="width:'+pct+'%;background:'+col+'"></div></div>';
+}
+
+function renderSections(){
+  var el=document.getElementById('sections');
+  el.innerHTML=secConstructs()+secProfiles()+secEjecutiva()+secAtencion()+secPraxis()+secMemoria()+secEmocional();
+  el.style.display='block';setTimeout(renderCharts,100);
+}
+
+// ================================================================
+// PSYKOS/ZYKOS: computeConstructs()
+// Groups ALL metrics from ALL games into 14 clinical constructs
+// Metrics belong to CONSTRUCTS, not games.
+// ================================================================
+function computeConstructs(){
+  var sm=LS(allM,'super-market','session_summary'),po=LS(allM,'pill-organizer','session_summary');
+  var mm=LLevel(allM,'medication-memory'),nc=LS(allM,'neuro-chef-v2','biometric_level_1');
+  var lm=LS(allM,'lawn-mower','session_summary');
+  var bio=lm; // biomet.js data comes through LM or other games
+  var mvs=allM.filter(function(x){return x.metric_type==='pill_placement'});
+  var C={};
+  // --- MOTOR ---
+  C.M1_TREMOR={name:'Tremor / Estabilidad',domain:'Motor',vals:[]};
+  if(po&&po.tremor_index!=null) C.M1_TREMOR.vals.push({src:'PO',v:po.tremor_index});
+  if(nc&&nc.tremor_avg!=null) C.M1_TREMOR.vals.push({src:'NC',v:nc.tremor_avg});
+  if(lm&&lm.tremor_avg_jitter!=null) C.M1_TREMOR.vals.push({src:'LM',v:lm.tremor_avg_jitter});
+  if(bio&&bio.tremor_reposo_px!=null) C.M1_TREMOR.vals.push({src:'BIO-rep',v:bio.tremor_reposo_px});
+  if(bio&&bio.tremor_inicio_px!=null) C.M1_TREMOR.vals.push({src:'BIO-ini',v:bio.tremor_inicio_px});
+
+  C.M2_VELOCIDAD={name:'Velocidad / RT',domain:'Motor',vals:[]};
+  if(po&&po.mean_rt_ms!=null) C.M2_VELOCIDAD.vals.push({src:'PO',v:po.mean_rt_ms});
+  if(sm&&sm.mean_rt_ms!=null) C.M2_VELOCIDAD.vals.push({src:'SM',v:sm.mean_rt_ms});
+  if(nc&&nc.reaction_time_ms!=null) C.M2_VELOCIDAD.vals.push({src:'NC',v:nc.reaction_time_ms});
+  if(mm&&mm.mean_decision_time_ms!=null) C.M2_VELOCIDAD.vals.push({src:'MM',v:mm.mean_decision_time_ms});
+  if(lm&&lm.mean_reaction_time_ms!=null) C.M2_VELOCIDAD.vals.push({src:'LM',v:lm.mean_reaction_time_ms});
+
+  C.M3_PRECISION={name:'Precision / Coordinacion',domain:'Motor',vals:[]};
+  if(po&&po.movement_efficiency!=null) C.M3_PRECISION.vals.push({src:'PO',v:po.movement_efficiency});
+  if(sm&&sm.movement_efficiency!=null) C.M3_PRECISION.vals.push({src:'SM',v:sm.movement_efficiency});
+  if(lm&&lm.path_efficiency!=null) C.M3_PRECISION.vals.push({src:'LM',v:lm.path_efficiency});
+  if(bio&&bio.dismetria_mean_px!=null) C.M3_PRECISION.vals.push({src:'BIO',v:bio.dismetria_mean_px});
+
+  C.M4_EXTRAPIRAMIDAL={name:'Patron Extrapiramidal',domain:'Motor',vals:[]};
+  if(bio&&bio.rigidez_index!=null) C.M4_EXTRAPIRAMIDAL.vals.push({src:'BIO',v:bio.rigidez_index});
+  if(bio&&bio.cogwheel_index!=null) C.M4_EXTRAPIRAMIDAL.vals.push({src:'BIO',v:bio.cogwheel_index});
+  if(bio&&bio.vel_cv!=null) C.M4_EXTRAPIRAMIDAL.vals.push({src:'BIO',v:bio.vel_cv});
+
+  // --- ATENCION ---
+  C.A1_ATENCION={name:'Atencion Sostenida',domain:'Atencion',vals:[]};
+  if(bio&&bio.decaimiento_vigilancia!=null) C.A1_ATENCION.vals.push({src:'BIO',v:bio.decaimiento_vigilancia});
+  if(bio&&bio.rt_cv!=null) C.A1_ATENCION.vals.push({src:'BIO-cv',v:bio.rt_cv});
+  if(lm&&lm.rt_variability_sd!=null) C.A1_ATENCION.vals.push({src:'LM',v:lm.rt_variability_sd});
+
+  C.A2_FATIGA={name:'Fatiga Central',domain:'Atencion',vals:[]};
+  if(bio&&bio.hesitaciones_count!=null) C.A2_FATIGA.vals.push({src:'BIO',v:bio.hesitaciones_count});
+  if(lm&&lm.long_pauses_count!=null) C.A2_FATIGA.vals.push({src:'LM',v:lm.long_pauses_count});
+  if(lm&&lm.avg_pause_duration_ms!=null) C.A2_FATIGA.vals.push({src:'LM',v:lm.avg_pause_duration_ms});
+
+  // --- EJECUTIVO ---
+  C.E1_INHIBICION={name:'Control Inhibitorio',domain:'Ejecutivo',vals:[]};
+  if(sm&&sm.errores_comision!=null) C.E1_INHIBICION.vals.push({src:'SM',v:sm.errores_comision});
+  if(lm&&lm.commission_errors!=null) C.E1_INHIBICION.vals.push({src:'LM',v:lm.commission_errors});
+  if(nc&&nc.false_alarms!=null) C.E1_INHIBICION.vals.push({src:'NC',v:nc.false_alarms});
+  if(mm&&mm.commission_errors!=null) C.E1_INHIBICION.vals.push({src:'MM',v:mm.commission_errors});
+  if(bio&&bio.impulsividad_ratio!=null) C.E1_INHIBICION.vals.push({src:'BIO',v:bio.impulsividad_ratio});
+
+  C.E2_PLANIFICACION={name:'Planificacion / Estrategia',domain:'Ejecutivo',vals:[]};
+  if(sm&&sm.planificacion_ratio!=null) C.E2_PLANIFICACION.vals.push({src:'SM',v:sm.planificacion_ratio});
+  if(lm&&lm.plan_efficiency!=null) C.E2_PLANIFICACION.vals.push({src:'LM',v:lm.plan_efficiency});
+  if(po&&po.completeness_pct!=null) C.E2_PLANIFICACION.vals.push({src:'PO',v:po.completeness_pct/100});
+  if(bio&&bio.eficacia_objetivo!=null) C.E2_PLANIFICACION.vals.push({src:'BIO',v:bio.eficacia_objetivo});
+  if(bio&&bio.economia_cognitiva!=null) C.E2_PLANIFICACION.vals.push({src:'BIO',v:bio.economia_cognitiva});
+
+  C.E3_FLEXIBILIDAD={name:'Flexibilidad / Autocorreccion',domain:'Ejecutivo',vals:[]};
+  if(sm&&sm.self_correction_ratio!=null) C.E3_FLEXIBILIDAD.vals.push({src:'SM',v:sm.self_correction_ratio});
+  if(sm&&sm.autocorrecciones_count!=null) C.E3_FLEXIBILIDAD.vals.push({src:'SM-n',v:sm.autocorrecciones_count});
+  if(bio&&bio.perseveracion_count!=null) C.E3_FLEXIBILIDAD.vals.push({src:'BIO-persev',v:bio.perseveracion_count});
+  if(lm&&lm.resets!=null) C.E3_FLEXIBILIDAD.vals.push({src:'LM-reset',v:lm.resets});
+
+  // --- MEMORIA ---
+  C.MEM1_TRABAJO={name:'Memoria de Trabajo',domain:'Memoria',vals:[]};
+  if(mm&&mm.memory_span!=null) C.MEM1_TRABAJO.vals.push({src:'MM',v:mm.memory_span});
+  if(sm&&sm.memoria_trabajo_ratio!=null) C.MEM1_TRABAJO.vals.push({src:'SM',v:sm.memoria_trabajo_ratio});
+
+  C.MEM2_APRENDIZAJE={name:'Aprendizaje Procedimental',domain:'Memoria',vals:[]};
+  var smAll=AS(allM,'super-market','session_summary');
+  if(smAll.length>=2){var first=smAll[smAll.length-1],last=smAll[0];
+    if(first.metric_data&&last.metric_data&&first.metric_data.planificacion_ratio!=null&&last.metric_data.planificacion_ratio!=null){
+      C.MEM2_APRENDIZAJE.vals.push({src:'SM-trend',v:last.metric_data.planificacion_ratio-first.metric_data.planificacion_ratio});}}
+
+  // --- COMPRENSION ---
+  C.C1_COMPRENSION={name:'Comprension de Consigna',domain:'Comprension',vals:[]};
+  if(sm&&sm.essentials_got!=null){var parts=String(sm.essentials_got).split('/');if(parts.length===2){var r=parseInt(parts[0])/Math.max(1,parseInt(parts[1]));C.C1_COMPRENSION.vals.push({src:'SM',v:r});}}
+  if(lm&&lm.instruction_read_time_ms!=null) C.C1_COMPRENSION.vals.push({src:'LM-read',v:lm.instruction_read_time_ms});
+  if(sm&&sm.recipe_read_time_sec!=null) C.C1_COMPRENSION.vals.push({src:'SM-read',v:sm.recipe_read_time_sec});
+  if(sm&&sm.choice_pattern!=null) C.C1_COMPRENSION.vals.push({src:'SM-pattern',v:sm.choice_pattern});
+
+  // --- CALCULO ---
+  C.CAL1_ESTIMACION={name:'Estimacion Numerica',domain:'Calculo',vals:[]};
+  if(sm&&sm.error_estimacion_pct!=null) C.CAL1_ESTIMACION.vals.push({src:'SM',v:sm.error_estimacion_pct});
+  if(sm&&sm.estimacion_numerica_errores!=null) C.CAL1_ESTIMACION.vals.push({src:'SM-over',v:sm.estimacion_numerica_errores});
+
+  // --- AFECTIVO ---
+  C.AFEC1_FRUSTRACION={name:'Tolerancia a Frustracion',domain:'Afectivo',vals:[]};
+  if(lm&&lm.post_error_strategy!=null) C.AFEC1_FRUSTRACION.vals.push({src:'LM',v:lm.post_error_strategy});
+  if(lm&&lm.resets!=null) C.AFEC1_FRUSTRACION.vals.push({src:'LM-reset',v:lm.resets});
+  if(bio&&bio.error_response_pattern!=null) C.AFEC1_FRUSTRACION.vals.push({src:'BIO',v:bio.error_response_pattern});
+
+  C.AFEC2_SUBJETIVIDAD={name:'Subjetividad Proyectiva',domain:'Afectivo',vals:[]};
+  var colors=allMood.filter(function(m){return m.color_hex});
+  if(colors.length) C.AFEC2_SUBJETIVIDAD.vals.push({src:'COLORS',v:colors.length+' entries'});
+  if(sm&&sm.choice_pattern!=null) C.AFEC2_SUBJETIVIDAD.vals.push({src:'SM-choice',v:sm.choice_pattern});
+
+  return C;
+}
+
+// ================================================================
+// PSYKOS/ZYKOS: computeProfiles()
+// Crosses constructs to generate 15 composite profiles
+// ================================================================
+function computeProfiles(){
+  var C=computeConstructs();
+  var P=[];
+  // Helper: get mean numeric value from a construct
+  function cMean(key){
+    if(!C[key]||!C[key].vals.length) return null;
+    var nums=C[key].vals.filter(function(v){return typeof v.v==='number'}).map(function(v){return v.v});
+    return nums.length?mean(nums):null;
+  }
+  function cHas(key){return C[key]&&C[key].vals.length>0}
+
+  var rt=cMean('M2_VELOCIDAD'), prec=cMean('M3_PRECISION'), inhib=cMean('E1_INHIBICION');
+  var plan=cMean('E2_PLANIFICACION'), trem=cMean('M1_TREMOR'), rtcv=cMean('A1_ATENCION');
+  var fatiga=cMean('A2_FATIGA'), flex=cMean('E3_FLEXIBILIDAD');
+
+  // Fast + Precise + Low errors + Good plan = EFICIENCIA PLENA
+  if(rt!=null&&rt<2000&&prec!=null&&prec>0.7&&plan!=null&&plan>0.6)
+    P.push({id:'EFICIENCIA_PLENA',name:'Eficiencia Plena',desc:'Rapido, preciso, planifica bien',severity:'positive'});
+
+  // Fast + Imprecise + High commission + Low plan = ACELERAMIENTO DESINHIBIDO
+  if(rt!=null&&rt<1500&&inhib!=null&&inhib>=2&&plan!=null&&plan<0.4)
+    P.push({id:'ACELERAMIENTO',name:'Aceleramiento Desinhibido',desc:'Rapido pero impreciso, no planifica',severity:'high'});
+
+  // Slow + Precise = ENLENTECIMIENTO COMPENSADO
+  if(rt!=null&&rt>4000&&prec!=null&&prec>0.7)
+    P.push({id:'ENLENT_COMPENSADO',name:'Enlentecimiento Compensado',desc:'Lento pero no pierde precision',severity:'low'});
+
+  // Slow + Imprecise + High omission = ENLENTECIMIENTO DETERIORANTE
+  if(rt!=null&&rt>4000&&prec!=null&&prec<0.5&&plan!=null&&plan<0.4)
+    P.push({id:'ENLENT_DETERIORANTE',name:'Enlentecimiento Deteriorante',desc:'Lento, impreciso, omite - perfil preocupante',severity:'high'});
+
+  // High RT CV = VARIABILIDAD ATENCIONAL
+  if(rtcv!=null&&rtcv>0.4)
+    P.push({id:'VARIAB_ATENCIONAL',name:'Variabilidad Atencional',desc:'RT irregular - inconsistencia atencional',severity:'moderate'});
+
+  // High tremor + Good precision OR Low tremor + Bad precision = DISOCIACION MOTOR-COGNITIVO
+  if(trem!=null&&prec!=null){
+    if((trem>3&&prec>0.7)||(trem<1&&prec<0.4))
+      P.push({id:'DISOC_MOTOR_COG',name:'Disociacion Motor-Cognitivo',desc:'Motor y cognitivo disociados',severity:'moderate'});
+  }
+
+  // High fatigue indicators = FATIGA PROGRESIVA
+  if(fatiga!=null&&fatiga>5)
+    P.push({id:'FATIGA_PROGRESIVA',name:'Fatiga Progresiva',desc:'Degradacion en segunda mitad de sesion',severity:'moderate'});
+
+  // High perseveration, low flexibility = PERSEVERACION RIGIDA
+  var persev=C.E3_FLEXIBILIDAD?C.E3_FLEXIBILIDAD.vals.find(function(v){return v.src==='BIO-persev'}):null;
+  if(persev&&persev.v>3)
+    P.push({id:'PERSEVERACION',name:'Perseveracion Rigida',desc:'Repite error sin corregir',severity:'high'});
+
+  // Poor comprehension + irrelevant choices = CONFUSION PERCEPTUAL
+  var compMean=cMean('C1_COMPRENSION');
+  var choiceP=C.C1_COMPRENSION?C.C1_COMPRENSION.vals.find(function(v){return v.src==='SM-pattern'}):null;
+  if(choiceP&&(choiceP.v==='confusion_ruido_fondo'||choiceP.v==='confusion_con_error'))
+    P.push({id:'CONFUSION',name:'Confusion Perceptual',desc:'No proceso la consigna correctamente',severity:'high'});
+
+  // Learning trend positive = APRENDIZAJE ACTIVO
+  var learn=cMean('MEM2_APRENDIZAJE');
+  if(learn!=null&&learn>0.05)
+    P.push({id:'APRENDIZAJE_ACTIVO',name:'Aprendizaje Activo',desc:'Mejora entre sesiones - buen pronostico',severity:'positive'});
+  if(learn!=null&&learn<-0.02)
+    P.push({id:'AUSENCIA_APRENDIZAJE',name:'Ausencia de Aprendizaje',desc:'No mejora con repeticion - predictor de deterioro',severity:'high'});
+
+  // Color + performance congruence check
+  if(allMood.length>0&&allM.length>0){
+    // Simple: if latest session has low score but happy color = disociation
+    var lastSess=allM.find(function(m){return m.metric_type==='session_summary'});
+    var lastColor=allMood.find(function(m){return m.color_hex});
+    // Can't determine color valence automatically per design - just flag if data exists for manual review
+    if(lastSess&&lastColor) P.push({id:'CONGRUENCIA_CHECK',name:'Congruencia Subj-Obj',desc:'Datos disponibles para revision manual',severity:'info'});
+  }
+
+  if(P.length===0) P.push({id:'INSUFICIENTE',name:'Datos Insuficientes',desc:'Se necesitan mas sesiones para computar perfiles',severity:'info'});
+  return {constructs:C,profiles:P};
+}
+
+// ================================================================
+// RENDERING: Constructs + Profiles sections
+// ================================================================
+function secConstructs(){
+  var result=computeProfiles();
+  var C=result.constructs;
+  var domains={Motor:['M1_TREMOR','M2_VELOCIDAD','M3_PRECISION','M4_EXTRAPIRAMIDAL'],
+    Atencion:['A1_ATENCION','A2_FATIGA'],Ejecutivo:['E1_INHIBICION','E2_PLANIFICACION','E3_FLEXIBILIDAD'],
+    Memoria:['MEM1_TRABAJO','MEM2_APRENDIZAJE'],Comprension:['C1_COMPRENSION'],
+    Calculo:['CAL1_ESTIMACION'],Afectivo:['AFEC1_FRUSTRACION','AFEC2_SUBJETIVIDAD']};
+  var c='';
+  Object.keys(domains).forEach(function(dom){
+    var h='';
+    domains[dom].forEach(function(key){
+      var con=C[key];if(!con)return;
+      var n=con.vals.length;
+      var srcs=con.vals.map(function(v){
+        var val=typeof v.v==='number'?(Number.isInteger(v.v)?v.v:v.v.toFixed(2)):String(v.v);
+        return v.src+':'+val;
+      }).join(', ');
+      h+=mc(con.name,n>0?n+' fuentes':'--',srcs||'Sin datos');
+    });
+    c+='<div class="sub"><h3>'+dom+'</h3><div class="mg">'+h+'</div></div>';
+  });
+  return SW('constructs','Constructos Clinicos (14)',c);
+}
+
+function secProfiles(){
+  var C=computeConstructs();
+  var c='';
+  // Semiological descriptions per domain — what the data means clinically, NOT what diagnosis it suggests
+  var semiology = {
+    Motor: {
+      constructs: ['M1_TREMOR','M2_VELOCIDAD','M3_PRECISION','M4_EXTRAPIRAMIDAL'],
+      desc: 'Tremor discrimina reposo (parkinsoniano) vs intencional (cerebeloso) vs postural (ansiedad/farmacologico). RT mide velocidad de procesamiento global. Dismetria y eficiencia de trayectoria miden coordinacion visomotora. Perfil extrapiramidal (rigidez, cogwheel) requiere correlacion con examen neurologico.'
+    },
+    Atencion: {
+      constructs: ['A1_ATENCION','A2_FATIGA'],
+      desc: 'CV del RT discrimina bradipsiquia (RT alto uniforme) vs irregularidad atencional (RT variable). Decaimiento de vigilancia mide degradacion primera vs segunda mitad. Hesitaciones prolongadas indican fatiga central o bloqueo decisional.'
+    },
+    Ejecutivo: {
+      constructs: ['E1_INHIBICION','E2_PLANIFICACION','E3_FLEXIBILIDAD'],
+      desc: 'Comisiones = falla inhibitoria. Omisiones = falla atencional o comprensiva. Perseveracion = rigidez cognitiva (patron frontal). Autocorreccion = flexibilidad y monitoreo. Plan efficiency = anticipacion de consecuencias.'
+    },
+    Memoria: {
+      constructs: ['MEM1_TRABAJO','MEM2_APRENDIZAJE'],
+      desc: 'Memory span = capacidad de retencion simultanea. Tendencia inter-sesion = aprendizaje procedimental. Ausencia de mejora esperada = predictor de deterioro (Duff et al). Intrusiones = falla inhibitoria en memoria.'
+    },
+    Comprension: {
+      constructs: ['C1_COMPRENSION'],
+      desc: 'Tiempo de lectura de instrucciones + errores iniciales = procesamiento de consigna. Si aprieta "comenzar" antes de leer = impulsividad o buena comprension rapida (cruzar con errores posteriores para discriminar).'
+    },
+    Calculo: {
+      constructs: ['CAL1_ESTIMACION'],
+      desc: 'Error de estimacion presupuestaria = calculo mental. Sobrepresupuesto sistematico (>=3 intentos) = falla de estimacion, no impulsividad.'
+    },
+    Afectivo: {
+      constructs: ['AFEC1_FRUSTRACION','AFEC2_SUBJETIVIDAD'],
+      desc: 'Patron post-error: se_frena = inhibicion adaptativa, persevera = rigidez, corrige = flexibilidad, abandona = intolerancia. Color proyectivo: sin interpretacion automatica, dato para cruce longitudinal con rendimiento objetivo.'
+    }
+  };
+
+  Object.keys(semiology).forEach(function(dom){
+    var s = semiology[dom];
+    var h = '<p style="font-size:.65rem;color:var(--mt);line-height:1.5;margin-bottom:8px">' + s.desc + '</p>';
+    var dataCount = 0;
+    s.constructs.forEach(function(key){
+      var con = C[key]; if (!con) return;
+      var n = con.vals.length; dataCount += n;
+      var srcs = con.vals.map(function(v){
+        var val = typeof v.v === 'number' ? (Number.isInteger(v.v) ? v.v : v.v.toFixed(2)) : String(v.v);
+        return v.src + ':' + val;
+      }).join(', ');
+      h += mc(con.name, n > 0 ? n + ' fuentes' : 'Sin datos', srcs || '--');
+    });
+    c += '<div class="sub"><h3>' + dom + ' (' + dataCount + ' datos)</h3><div class="mg">' + h + '</div></div>';
+  });
+
+  c += '<p style="font-size:.6rem;color:var(--mt);margin-top:8px;padding:8px;border:1px solid rgba(255,255,255,0.06);border-radius:6px">';
+  c += 'Agrupacion semiologica de metricas. NO es diagnostico. Requiere minimo 5 sesiones para baseline individual (RCI/SRB). ';
+  c += 'Comparacion contra normas poblacionales disponible cuando N>100 en vault. ';
+  c += 'Un puntaje bajo aislado NO indica deterioro (42% de sanos tienen al menos un puntaje bajo, Brooks 2007).</p>';
+
+  return SW('profiles','Valor Semiologico por Dominio',c);
+}
+function SW(key,title,c){return'<section class="sec" id="sec-'+key+'"><div class="sec-hd" onclick="this.parentElement.classList.toggle(\'open\')"><h2>'+title+'</h2><span class="arr">&#9660;</span></div><div class="sec-bd">'+c+'</div></section>'}
+
+function secEjecutiva(){
+  var sm=LS(allM,'super-market','session_summary'),po=LS(allM,'pill-organizer','session_summary'),mm=LLevel(allM,'medication-memory'),nc=LS(allM,'neuro-chef-v2','biometric_level_1'),ca=LS(allM,'lawn-mower','session_summary')||LS(allM,'lawn-mower','clinical_analysis')||LS(allM,'super-market','clinical_analysis');
+  var c='',h='';
+  h+=mc('Planificacion',sm?sm.planificacion_ratio:null,'Plan vs ideal');h+=mc('Escaneo',sm?sm.escaneo_sistematico:null,'Recorrido %');h+=mc('Scan Score',sm?sm.scan_score:null,'Exhaustividad');h+=mc('Budget Use',sm?sm.budget_use_pct:null,'Presupuesto %');h+=mc('Gondolas',sm&&sm.gondola_visit_order?sm.gondola_visit_order.length:null,'Cobertura');h+=mc('Accuracy',po?po.accuracy_pct:null,'Precision %');h+=mc('Completeness',po?po.completeness_pct:null,'Completitud %');h+=mc('Eficacia',ca?ca.eficacia_objetivo:null,'Obj logrados');h+=mc('Economia',ca?ca.economia_cognitiva:null,'Acciones utiles');
+  c+='<div class="sub"><h3>Planificacion y Eficacia</h3><div class="mg">'+h+'</div></div>';
+  h='';h+=mc('Err Comision',sm?(sm.errores_comision!=null?sm.errores_comision:sm.commission_errors):null,'Incorrectas');h+=mc('Impulsividad',sm?sm.impulsividad_compra:null,'Items impulsivos');h+=mc('Self Correction',sm?sm.self_correction_ratio:null,'Autocorreccion');h+=mc('Autocorrecciones',sm?sm.autocorrecciones_count:null,'Correcciones');h+=mc('Select Changes',mm?mm.selection_changes:null,'Vacilaciones');h+=mc('Comm Errors',mm?mm.commission_errors:null,'Incorrectas');h+=mc('Reset',nc?nc.reset_count:null,'Reinicios');h+=mc('Undo',nc?nc.undo_count:null,'Deshacer');
+  c+='<div class="sub"><h3>Inhibicion y Control de Impulsos</h3><div class="mg">'+h+'</div></div>';
+  h='';h+=mc('Flexibilidad',sm?sm.flexibilidad_cognitiva:null,'Adaptacion');h+=mc('Err Omision',sm?sm.errores_omision:null,'No tomados');h+=mc('Essentials',sm?sm.essentials_got:null,'Esenciales');h+=mc('Flags',sm&&sm.clinical_flags?sm.clinical_flags.length:null,'Alertas');h+=mc('Err Pattern',ca?ca.error_response_pattern||ca.post_error_strategy:null,'Patron');h+=mc('PO Errors',po?po.errors:null,'Incorrectas');h+=mc('Com/Om Ratio',ca?ca.com_om_ratio:null,'>2=impulsivo');h+=mc('Coverage',ca?ca.coverage_strategy:null,'Patron espacial');h+=mc('Planif LM',ca?ca.planificacion_ratio:null,'Plan efficiency');h+=mc('Neatness',ca?ca.neatness_score:null,'Prolijidad');h+=mc('Meticulosidad',ca?ca.meticulousness_score:null,'LM 0-1');
+  c+='<div class="sub"><h3>Flexibilidad y Patron ante Errores</h3><div class="mg">'+h+'</div><div class="ch"><canvas id="ch-ej"></canvas></div></div>';
+  return SW('ejecutiva','Funcion Ejecutiva',c);
+}
+
+function secAtencion(){
+  var sm=LS(allM,'super-market','session_summary'),po=LS(allM,'pill-organizer','session_summary'),nc=LS(allM,'neuro-chef-v2','biometric_level_1'),mm=LLevel(allM,'medication-memory'),ca=LS(allM,'lawn-mower','session_summary')||LS(allM,'lawn-mower','clinical_analysis');
+  var mvs=allM.filter(function(x){return x.metric_type==='pill_placement'});
+  var c='',h='';
+  h+=mc('Mean RT',sm?sm.mean_rt_ms:null,'SM ms');h+=mc('Mean RT',po?po.mean_rt_ms:null,'PO ms');h+=mc('Reaction',nc?nc.reaction_time_ms:null,'NC ms');h+=mc('Decision',mm?mm.mean_decision_time_ms:null,'MM ms');h+=mc('Decision Var',mm?mm.decision_variability_sd:null,'SD');h+=mc('Avg Hesit',sm?sm.avg_hesitation_ms:null,'ms');h+=mc('Max Hesit',sm?sm.max_hesitation_ms:null,'ms');h+=mc('1st Click',sm?sm.first_click_latency_ms:null,'ms');h+=mc('Latencia',sm?sm.latencia_inicio_ms:null,'ms');h+=mc('RT CV',ca?ca.rt_cv:null,'Inconsistencia');
+  if(mvs.length>0){var hs=mvs.map(function(x){return x.metric_data?x.metric_data.hesitationMs:null}).filter(function(v){return v!=null});var du=mvs.map(function(x){return x.metric_data?x.metric_data.durationMs:null}).filter(function(v){return v!=null});if(hs.length)h+=mc('Hesit Mov',Math.round(mean(hs)),hs.length+' mov');if(du.length)h+=mc('Dur Mov',Math.round(mean(du)),'Media ms')}
+  c+='<div class="sub"><h3>Velocidad de Procesamiento y Latencias</h3><div class="mg">'+h+'</div><div class="ch"><canvas id="ch-rt"></canvas></div></div>';
+  h='';h+=mc('Hesit Count',nc?nc.hesitation_count:null,'Pausas');h+=mc('Hesit Total',nc?nc.hesitation_total_ms:null,'ms');h+=mc('Action Int',nc?nc.avg_action_interval_ms:null,'Ritmo ms');h+=mc('Interactions',nc?nc.total_interactions:null,'Total');h+=mc('Actions',sm?sm.total_actions:null,'Acciones');h+=mc('Abrupt',po?po.avg_abrupt_redirections:null,'Cambios');h+=mc('Decaimiento',ca?ca.decaimiento_vigilancia:null,'2da/1ra mitad');h+=mc('Fatiga LM',ca?ca.fatiga_index:null,'>1.0=enlentecimiento');h+=mc('RT 1ra Mitad',ca?ca.rt_1st_half_ms:null,'ms LM');h+=mc('RT 2da Mitad',ca?ca.rt_2nd_half_ms:null,'ms LM');h+=mc('RT CV LM',ca?ca.rt_cv:null,'Variabilidad atencion');
+  if(sm&&sm.action_log&&Array.isArray(sm.action_log)){var adds=sm.action_log.filter(function(a){return a.type==='add'});if(adds.length>=4){var hf=Math.floor(adds.length/2),d1=[],d2=[];for(var i=1;i<hf;i++)d1.push(adds[i].t-adds[i-1].t);for(var i=hf+1;i<adds.length;i++)d2.push(adds[i].t-adds[i-1].t);var m1=mean(d1),m2=mean(d2);if(m1&&m2)h+=mc('Fatiga',(m2/m1).toFixed(2),'>1.0 enlentecimiento')}}
+  c+='<div class="sub"><h3>Vigilancia, Atencion Sostenida, Fatiga</h3><div class="mg">'+h+'</div></div>';
+  return SW('atencion','Atencion y Velocidad de Procesamiento',c);
+}
+
+function secPraxis(){
+  var po=LS(allM,'pill-organizer','session_summary'),nc=LS(allM,'neuro-chef-v2','biometric_level_1'),ca=LS(allM,'lawn-mower','session_summary')||LS(allM,'lawn-mower','clinical_analysis')||LS(allM,'super-market','clinical_analysis'),lm=LS(allM,'lawn-mower','session_summary')||LS(allM,'lawn-mower','session_complete');
+  var mvs=allM.filter(function(x){return x.metric_type==='pill_placement'});
+  var c='',h='';
+  h+=mc('Tremor Index',po?po.tremor_index:null,'Sesion');h+=mc('Tremor Avg',nc?nc.tremor_avg:null,'Tarea');h+=mc('Speed Var',nc?nc.tremor_speed_var:null,'Variabilidad');h+=mc('Reposo',ca?ca.tremor_reposo:null,'Parkinsonismo px');h+=mc('Inicio',ca?ca.tremor_inicio:null,'Intencional px');h+=mc('Terminal',ca?ca.tremor_terminal:null,'Cerebeloso px');
+  if(mvs.length>0){var tv=mvs.map(function(x){return x.metric_data?x.metric_data.tremorIndex:null}).filter(function(v){return v!=null&&v>0});if(tv.length){h+=mc('Mov Mean',mean(tv),tv.length+' mov');h+=mc('Mov Max',Math.max.apply(null,tv),'Peor');h+=mc('Mov SD',sd(tv),'Inter-mov')}}
+  c+='<div class="sub"><h3>Tremor Diferenciado</h3><div class="mg">'+h+'</div><div class="ch"><canvas id="ch-tr"></canvas></div></div>';
+  h='';h+=mc('Mov Eff',po?po.movement_efficiency:null,'Eficiencia');h+=mc('Overshoot',lm?lm.overshoot_count||(lm.motor_markers?lm.motor_markers.overshoot_count:null):null,'');h+=mc('Dysmetria',lm?lm.dysmetria_ratio||(lm.motor_markers?lm.motor_markers.dysmetria_ratio:null):null,'Ratio');h+=mc('Abrupt',nc?nc.abrupt_direction_changes:null,'Cambios');h+=mc('Dismetria',ca?ca.dismetria_mean_px:null,'Error px');h+=mc('Dir Changes',lm?lm.direction_changes:null,'LM');h+=mc('Rapid Rev',lm?lm.rapid_reversals:null,'Indecision');h+=mc('Clumsiness',lm?lm.motor_clumsiness_score:null,'Torpeza');
+  if(mvs.length>0){var ef=mvs.map(function(x){return x.metric_data?x.metric_data.pathEfficiency:null}).filter(function(v){return v!=null});var sp=mvs.map(function(x){return x.metric_data?x.metric_data.avgSpeed:null}).filter(function(v){return v!=null});if(ef.length)h+=mc('PathEff',mean(ef),ef.length+' mov');if(sp.length)h+=mc('Speed',mean(sp),'px/ms')}
+  h+=mc('Drop Precision',po?po.drop_precision:null,'1=centro 0=borde');h+=mc('Drop Offset',po?po.drop_offset_mean_px:null,'Media px');h+=mc('Drop Offset SD',po?po.drop_offset_sd:null,'Variabilidad');
+  if(mvs.length>0){var dp=mvs.map(function(x){return x.metric_data?x.metric_data.dropPrecision:null}).filter(function(v){return v!=null});var doff=mvs.map(function(x){return x.metric_data?x.metric_data.dropOffsetPx:null}).filter(function(v){return v!=null});if(dp.length)h+=mc('Drop Precision',mean(dp).toFixed(3),dp.length+' mov');if(doff.length)h+=mc('Drop Offset',mean(doff).toFixed(1),doff.length+' mov')}
+  c+='<div class="sub"><h3>Dismetria y Precision</h3><div class="mg">'+h+'</div></div>';
+  h='';h+=mc('Rigidez',ca?ca.rigidez_index:null,'Baja var');h+=mc('Cogwheel',ca?ca.cogwheel_index:null,'Oscilaciones');h+=mc('Espasticidad',ca?ca.espasticidad_index:null,'Clasp-knife');
+  if(mvs.length>0){var du=mvs.map(function(x){return x.metric_data?x.metric_data.durationMs:null}).filter(function(v){return v!=null});if(du.length){h+=mc('Dur Mean',Math.round(mean(du)),'Media ms');h+=mc('Dur Max',Math.max.apply(null,du),'Lento ms');var s=du.slice().sort(function(a,b){return a-b});h+=mc('Dur p90',s[Math.floor(s.length*0.9)],'Bradicinesia ms')}}
+  c+='<div class="sub"><h3>Semiologia Extrapiramidal</h3><div class="mg">'+h+'</div></div>';
+  return SW('praxis','Praxis y Coordinacion Motora',c);
+}
+
+function secMemoria(){
+  var mm=LLevel(allM,'medication-memory'),sm=LS(allM,'super-market','session_summary'),nc=LS(allM,'neuro-chef-v2','biometric_level_1'),ncL=LS(allM,'neuro-chef-v2','level_1');
+  var c='',h='';
+  h+=mc('Memory Span',mm?mm.memory_span:null,'Items');h+=mc('Accuracy',mm?mm.accuracy:null,'%');h+=mc('Score',mm?mm.score:null,'de '+(mm?mm.max_score:'?'));h+=mc('Duration',mm?mm.duration_sec:null,'seg');h+=mc('Comm Err',mm?mm.commission_errors:null,'Incorrectas');h+=mc('Omis Err',mm?mm.omission_errors:null,'Omisiones');h+=mc('MPR',mm?mm.simulated_mpr:null,'Medication Possession');h+=mc('Decision',mm?mm.mean_decision_time_ms:null,'ms');h+=mc('Decision Var',mm?mm.decision_variability_sd:null,'SD');h+=mc('Mem Trabajo',sm?sm.memoria_trabajo_ratio:null,'Ratio');
+  if(sm&&sm.action_log&&Array.isArray(sm.action_log)){var r=sm.action_log.find(function(a){return a.type==='recipe_recall'});if(r)h+=mc('Recall',r.correct?'Correcto':'Incorrecto','Episodica: '+r.expected);var rd=sm.action_log.find(function(a){return a.type==='recipe_read_complete'});if(rd)h+=mc('Read Time',rd.readSeconds,'Lectura seg')}
+  h+=mc('Essentials',sm?sm.essentials_got:null,'Recordados');
+  c+='<div class="sub"><h3>Memoria de Trabajo y Span</h3><div class="mg">'+h+'</div></div>';
+  h='';h+=mc('Abstraccion',sm?sm.abstraccion_ratio:null,'Categorizacion');h+=mc('Budget',sm?sm.budget:null,'$');h+=mc('Spent',sm?sm.spent:null,'$');h+=mc('Remaining',sm?sm.remaining:null,'$');h+=mc('NC Correct',ncL?ncL.correct:null,'');h+=mc('NC Wrong',ncL?ncL.wrong:null,'');h+=mc('NC Missing',ncL?ncL.missing:null,'');
+  c+='<div class="sub"><h3>Abstraccion y Categorizacion</h3><div class="mg">'+h+'</div></div>';
+  h='';h+=mc("d'",nc?nc.d_prime:null,'Sensibilidad');h+=mc('Hits',nc?nc.hits:null,'TP');h+=mc('Misses',nc?nc.misses:null,'FN');h+=mc('FA',nc?nc.false_alarms:null,'FP');h+=mc('CR',nc?nc.correct_rejects:null,'TN');
+  if(nc&&nc.hits!=null&&nc.misses!=null&&nc.false_alarms!=null&&nc.correct_rejects!=null){var hr=nc.hits/Math.max(1,nc.hits+nc.misses),far=nc.false_alarms/Math.max(1,nc.false_alarms+nc.correct_rejects);h+=mc('Hit Rate',hr,'Aciertos');h+=mc('FA Rate',far,'Falsas alarmas');h+=mc('Bias',far>hr?'Liberal':'Conservador','Criterio')}
+  c+='<div class="sub"><h3>Discriminacion Perceptual (SDT)</h3><div class="mg">'+h+'</div></div>';
+  return SW('memoria','Memoria y Aprendizaje',c);
+}
+
+function secEmocional(){
+  var colorE=allMood.filter(function(m){return m.entry_type==='satisfaction_color'||m.color_hex}),colorM=allM.filter(function(m){return m.metric_type==='color_eleccion'});
+  var colors=colorE.map(function(e){return{c:e.color_hex,d:e.created_at,s:e.source_activity}}).concat(colorM.map(function(e){return{c:e.metric_data?e.metric_data.color_hex:null,d:e.created_at,s:e.metric_data?e.metric_data.source_activity:null}})).sort(function(a,b){return new Date(a.d)-new Date(b.d)});
+  var c='',h='<p style="font-size:.7rem;color:var(--mt);margin-bottom:.4rem">Sin interpretacion automatica</p>';
+  if(colors.length){h+='<div style="display:flex;gap:3px;flex-wrap:wrap">';colors.forEach(function(x){var d=new Date(x.d).toLocaleDateString('es-AR',{day:'2-digit',month:'short'});h+='<div title="'+(x.s||'')+'" style="display:flex;flex-direction:column;align-items:center;gap:1px"><div style="width:22px;height:22px;border-radius:4px;background:'+(x.c||'#444')+';border:1px solid rgba(255,255,255,.1)"></div><span style="font-size:.48rem;color:var(--mt)">'+d+'</span></div>'});h+='</div>'}
+  var moodPre=allMood.filter(function(m){return m.entry_type==='pre_game'});
+  if(moodPre.length){h+='<div style="margin-top:.5rem;font-size:.6rem;color:var(--mt);text-transform:uppercase;margin-bottom:.2rem">Pre-Game</div>';moodPre.slice(0,6).forEach(function(m){var d=new Date(m.created_at).toLocaleDateString('es-AR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});var r=m.responses?(Array.isArray(m.responses)?m.responses.map(function(x){return x.answer||x}).join(' / '):m.responses):'--';h+='<div style="font-size:.7rem;margin-bottom:.1rem">'+d+' — '+(m.source_activity||'')+': '+r+'</div>'})}
+  c+='<div class="sub"><h3>Colores Proyectivos y Mood</h3>'+h+'</div>';
+  var sess=allM.filter(function(m){return m.metric_type==='session_summary'||m.metric_type.indexOf('level_')===0||m.metric_type.indexOf('biometric_')===0});var comp=sess.filter(function(m){return m.metric_data&&m.metric_data.completed===true}).length;var games=[].concat(new Set(allM.filter(function(m){return m.metric_type.indexOf('event_')!==0}).map(function(m){return m.game_slug}).filter(Boolean)));
+  h='';h+=mc('Juegos',games.length,'Variedad');h+=mc('Sesiones',sess.length,'Clinicas');h+=mc('Completadas',comp,'de '+sess.length);h+=mc('Completion',sess.length?Math.round(comp/sess.length*100):0,'%');h+=mc('Moods',moodPre.length,'Pre-game');h+=mc('Colors',colors.length,'Post-actividad');h+=mc('Abandonos',allM.filter(function(m){return m.metric_type==='event_tab_close'}).length,'Cierres');
+  c+='<div class="sub"><h3>Adherencia y Engagement</h3><div class="mg">'+h+'</div></div>';
+  return SW('emocional','Patron Emocional y Engagement',c);
+}
+
+function renderCharts(){
+  var co={responsive:true,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},scales:{x:{ticks:{color:'#475569',font:{size:9}}},y:{ticks:{color:'#475569',font:{size:9}}}}};
+  var smAll=AS(allM,'super-market','session_summary');
+  if(smAll.length>=1){var ctx=document.getElementById('ch-ej');if(ctx){var lbl=smAll.map(function(m){return new Date(m.created_at).toLocaleDateString('es-AR',{day:'2-digit',month:'short'})}).reverse();charts.ej=new Chart(ctx,{type:'line',data:{labels:lbl,datasets:[{label:'Planificacion',data:smAll.map(function(m){return m.metric_data?m.metric_data.planificacion_ratio:null}).reverse(),borderColor:'#60a5fa',tension:.3,pointRadius:3},{label:'Comision',data:smAll.map(function(m){return m.metric_data?(m.metric_data.errores_comision||0):0}).reverse(),borderColor:'#f87171',tension:.3,pointRadius:3},{label:'Omision',data:smAll.map(function(m){return m.metric_data?(m.metric_data.errores_omision||0):0}).reverse(),borderColor:'#fbbf24',tension:.3,pointRadius:3}]},options:co})}}
+  var rtAll=allM.filter(function(m){return m.metric_type.indexOf('event_')!==0&&m.metric_type!=='color_eleccion'&&m.metric_type!=='pill_placement'&&m.metric_data&&(m.metric_data.mean_rt_ms||m.metric_data.reaction_time_ms||m.metric_data.mean_decision_time_ms)}).reverse();
+  if(rtAll.length>=2){var ctx=document.getElementById('ch-rt');if(ctx){charts.rt=new Chart(ctx,{type:'line',data:{labels:rtAll.map(function(m){return new Date(m.created_at).toLocaleDateString('es-AR',{day:'2-digit',month:'short'})}),datasets:[{label:'RT (ms)',data:rtAll.map(function(m){return m.metric_data.mean_rt_ms||m.metric_data.reaction_time_ms||m.metric_data.mean_decision_time_ms}),borderColor:'#60a5fa',tension:.3,fill:{target:'origin',above:'rgba(96,165,250,.04)'},pointRadius:3}]},options:co})}}
+  var poAll=AS(allM,'pill-organizer','session_summary');
+  if(poAll.length>=2){var ctx=document.getElementById('ch-tr');if(ctx){charts.tr=new Chart(ctx,{type:'line',data:{labels:poAll.map(function(m){return new Date(m.created_at).toLocaleDateString('es-AR',{day:'2-digit',month:'short'})}).reverse(),datasets:[{label:'Tremor',data:poAll.map(function(m){return m.metric_data?m.metric_data.tremor_index:null}).reverse(),borderColor:'#f87171',tension:.3,pointRadius:3,yAxisID:'y'},{label:'Efficiency',data:poAll.map(function(m){return m.metric_data?m.metric_data.movement_efficiency:null}).reverse(),borderColor:'#34d399',tension:.3,pointRadius:3,yAxisID:'y1'}]},options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},scales:{x:{ticks:{color:'#475569',font:{size:9}}},y:{type:'linear',position:'left',ticks:{color:'#f87171',font:{size:9}}},y1:{type:'linear',position:'right',ticks:{color:'#34d399',font:{size:9}},grid:{drawOnChartArea:false}}}}})}}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Receta Electronica | CJI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <script src="/js/sanitize.js"></script>
+  <style>
+    :root {
+      --bg: #fafafa; --surface: #fff; --surface2: #f5f5f5;
+      --border: #e5e7eb; --text: #1a1a1a; --muted: #6b7280;
+      --accent: #1d4ed8; --accent-light: #dbeafe;
+      --danger: #dc2626; --danger-light: #fee2e2;
+      --success: #16a34a; --success-light: #dcfce7;
+      --warn: #d97706; --warn-light: #fef3c7;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    .header { background:var(--surface); border-bottom:1px solid var(--border); padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; }
+    .header h1 { font-size:1.1rem; font-weight:700; color:var(--accent); }
+    .header-meta { font-size:.8rem; color:var(--muted); }
+    .back { color:var(--muted); text-decoration:none; font-size:.85rem; padding:.4rem .8rem; border:1px solid var(--border); border-radius:6px; }
+    .back:hover { background:var(--surface2); }
+    .main { max-width:900px; margin:0 auto; padding:1.5rem; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.5rem; margin-bottom:1rem; }
+    .card-title { font-size:.9rem; font-weight:700; margin-bottom:1rem; padding-bottom:.5rem; border-bottom:1px solid var(--border); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-bottom:.75rem; }
+    .form-row.full { grid-template-columns:1fr; }
+    .form-group { display:flex; flex-direction:column; gap:.25rem; }
+    .form-group label { font-size:.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+    .form-group input, .form-group select, .form-group textarea {
+      padding:.5rem .75rem; border:1px solid var(--border); border-radius:6px;
+      font-size:.85rem; font-family:inherit; background:var(--surface);
+      transition:border .2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(29,78,216,.1);
+    }
+    textarea { resize:vertical; min-height:60px; }
+    .med-list { margin-bottom:.75rem; }
+    .med-item { display:grid; grid-template-columns:2fr 1fr 1fr 1fr auto; gap:.5rem; align-items:end; padding:.5rem 0; border-bottom:1px solid var(--surface2); }
+    .med-item:last-child { border-bottom:none; }
+    .btn { padding:.5rem 1rem; border:none; border-radius:6px; font-size:.8rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .btn-primary { background:var(--accent); color:#fff; }
+    .btn-primary:hover { background:#1e40af; }
+    .btn-primary:disabled { background:#93c5fd; cursor:not-allowed; }
+    .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); }
+    .btn-outline:hover { background:var(--surface2); }
+    .btn-danger { background:var(--danger); color:#fff; }
+    .btn-danger:hover { background:#b91c1c; }
+    .btn-sm { padding:.3rem .6rem; font-size:.75rem; }
+    .btn-remove { background:none; border:none; color:var(--danger); cursor:pointer; font-size:1rem; padding:.2rem .5rem; }
+    .type-selector { display:flex; gap:.5rem; margin-bottom:1rem; }
+    .type-btn { padding:.5rem 1rem; border:1px solid var(--border); border-radius:6px; font-size:.8rem; cursor:pointer; background:var(--surface); transition:all .15s; font-family:inherit; }
+    .type-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .type-btn.archivada.active { background:var(--warn); border-color:var(--warn); }
+    .type-btn.restringida.active { background:var(--danger); border-color:var(--danger); }
+    .alert { padding:.75rem 1rem; border-radius:6px; font-size:.82rem; margin-bottom:1rem; }
+    .alert-info { background:var(--accent-light); color:var(--accent); border:1px solid rgba(29,78,216,.2); }
+    .alert-success { background:var(--success-light); color:var(--success); border:1px solid rgba(22,163,74,.2); }
+    .alert-danger { background:var(--danger-light); color:var(--danger); border:1px solid rgba(220,38,38,.2); }
+    .alert-warn { background:var(--warn-light); color:var(--warn); border:1px solid rgba(217,119,6,.2); }
+    .rx-preview { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:1.5rem; font-size:.82rem; }
+    .rx-preview h3 { font-size:.9rem; margin-bottom:.75rem; text-align:center; }
+    .rx-preview .rx-header { text-align:center; margin-bottom:1rem; border-bottom:1px solid var(--border); padding-bottom:.75rem; }
+    .rx-preview .rx-body { line-height:1.6; }
+    .rx-preview .rx-footer { margin-top:1rem; padding-top:.75rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; font-size:.75rem; color:var(--muted); }
+    .hash { font-family:'Courier New',monospace; font-size:.7rem; color:var(--muted); word-break:break-all; }
+    .history-item { padding:.75rem; border-bottom:1px solid var(--surface2); }
+    .history-item:last-child { border-bottom:none; }
+    .status-badge { display:inline-block; padding:.15rem .5rem; border-radius:4px; font-size:.7rem; font-weight:600; }
+    .status-active { background:var(--success-light); color:var(--success); }
+    .status-voided { background:var(--danger-light); color:var(--danger); }
+    .status-dispensed { background:var(--accent-light); color:var(--accent); }
+    #auth-gate { display:flex; align-items:center; justify-content:center; min-height:80vh; }
+    .hidden { display:none !important; }
+    @media (max-width:640px) {
+      .form-row { grid-template-columns:1fr; }
+      .med-item { grid-template-columns:1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Receta Electronica</h1>
+    <div class="header-meta" id="prof-info"></div>
+  </div>
+  <a href="/hdd/admin/" class="back">Volver al Panel</a>
+</div>
+
+<div id="auth-gate">
+  <div class="card" style="max-width:400px;text-align:center;">
+    <p style="color:var(--muted);font-size:.85rem;">Verificando sesion...</p>
+  </div>
+</div>
+
+<div id="app" class="main hidden">
+
+  <!-- Selector de paciente -->
+  <div class="card">
+    <div class="card-title">Paciente</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Seleccionar paciente</label>
+        <select id="patient-select" onchange="onPatientSelect()">
+          <option value="">Seleccionar...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>DNI / CUIL</label>
+        <input type="text" id="patient-id-display" readonly style="background:var(--surface2);">
+      </div>
+    </div>
+  </div>
+
+  <!-- Tipo de receta -->
+  <div class="card">
+    <div class="card-title">Tipo de Prescripcion</div>
+    <div class="type-selector">
+      <button class="type-btn active" data-type="general" onclick="setType('general',this)">General</button>
+      <button class="type-btn archivada" data-type="archivada" onclick="setType('archivada',this)">Archivada (Psicotropicos)</button>
+      <button class="type-btn restringida" data-type="restringida" onclick="setType('restringida',this)">Restringida (Estupefacientes)</button>
+    </div>
+    <div id="type-alert"></div>
+  </div>
+
+  <!-- Medicamentos -->
+  <div class="card">
+    <div class="card-title">Medicamentos <button class="btn btn-outline btn-sm" onclick="addMed()" style="float:right;">+ Agregar</button></div>
+    <div id="med-list" class="med-list"></div>
+  </div>
+
+  <!-- Diagnostico e indicaciones -->
+  <div class="card">
+    <div class="card-title">Diagnostico e Indicaciones</div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label>Diagnostico</label>
+        <textarea id="diagnosis" placeholder="Diagnostico clinico..."></textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Codigo SNOMED (opcional)</label>
+        <input type="text" id="snomed" placeholder="Ej: 35489007">
+      </div>
+      <div class="form-group">
+        <label>Vigencia hasta</label>
+        <input type="date" id="valid-until">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label>Indicaciones adicionales</label>
+        <textarea id="instructions" placeholder="Indicaciones para el paciente o la farmacia..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firmar y emitir -->
+  <div class="card">
+    <div class="card-title">Firma y Emision</div>
+    <div class="alert alert-info">
+      Al emitir, la receta queda firmada digitalmente con su matricula y no podra ser modificada. Solo podra ser anulada con motivo.
+    </div>
+    <div style="display:flex;gap:.75rem;align-items:center;">
+      <button class="btn btn-primary" id="btn-emit" onclick="emitPrescription()" disabled>Firmar y Emitir Receta</button>
+      <span id="emit-status" style="font-size:.82rem;color:var(--muted);"></span>
+    </div>
+  </div>
+
+  <!-- Resultado / Preview -->
+  <div id="rx-result" class="card hidden">
+    <div class="card-title">Receta Emitida</div>
+    <div id="rx-preview"></div>
+  </div>
+
+  <!-- Historial de recetas del paciente -->
+  <div class="card">
+    <div class="card-title">Historial de Recetas</div>
+    <div id="rx-history"><p style="font-size:.82rem;color:var(--muted);">Seleccione un paciente para ver su historial.</p></div>
+  </div>
+
+</div>
+
+<script>
+const API = '/api/prescriptions';
+let sessionToken = null;
+let profInfo = null;
+let selectedPatient = null;
+let rxType = 'general';
+let medications = [];
+
+// ── AUTH ──
+async function init() {
+  try {
+    sessionToken = localStorage.getItem('admin_session_token') ||
+                   localStorage.getItem('prof_session_token');
+  } catch(e) {}
+
+  if (!sessionToken) {
+    document.getElementById('auth-gate').innerHTML =
+      '<div class="card" style="max-width:400px;text-align:center;">' +
+      '<p style="color:var(--danger);font-size:.85rem;">Sesion no encontrada. Inicie sesion desde el panel.</p>' +
+      '<a href="/hdd/admin/" class="btn btn-primary" style="margin-top:1rem;display:inline-block;">Ir al Panel</a></div>';
+    return;
+  }
+
+  // Verificar sesion cargando pacientes
+  const sb = getSupabaseClient();
+  const { data: patients, error } = await sb
+    .from('hdd_patients')
+    .select('id, dni, cuil, full_name, status, is_test')
+    .neq('is_test', true)
+    .order('full_name');
+
+  if (error) {
+    document.getElementById('auth-gate').innerHTML =
+      '<div class="card" style="max-width:400px;text-align:center;">' +
+      '<p style="color:var(--danger);">Error de conexion. Intente mas tarde.</p></div>';
+    return;
+  }
+
+  // Cargar selector de pacientes
+  const sel = document.getElementById('patient-select');
+  const statusLabel = { active:'', inactive:' [Inactivo]', discharged:' [Alta]' };
+  sel.innerHTML = '<option value="">Seleccionar paciente...</option>' +
+    patients.map(p => '<option value="' + p.dni + '" data-cuil="' + (p.cuil||'') + '" data-name="' + p.full_name + '">' +
+      p.full_name + (statusLabel[p.status]||'') + ' (DNI: ' + p.dni + ')' +
+    '</option>').join('');
+
+  // Mostrar info profesional
+  document.getElementById('prof-info').textContent = 'Sesion autenticada';
+
+  // Mostrar app
+  document.getElementById('auth-gate').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+
+  // Agregar primera linea de medicamento
+  addMed();
+
+  // Default vigencia 30 dias
+  const d = new Date();
+  d.setDate(d.getDate() + 30);
+  document.getElementById('valid-until').value = d.toISOString().split('T')[0];
+}
+
+function onPatientSelect() {
+  const sel = document.getElementById('patient-select');
+  const opt = sel.selectedOptions[0];
+  if (!opt || !opt.value) {
+    selectedPatient = null;
+    document.getElementById('patient-id-display').value = '';
+    document.getElementById('btn-emit').disabled = true;
+    document.getElementById('rx-history').innerHTML = '<p style="font-size:.82rem;color:var(--muted);">Seleccione un paciente.</p>';
+    return;
+  }
+  selectedPatient = {
+    dni: opt.value,
+    cuil: opt.dataset.cuil || '',
+    name: opt.dataset.name || ''
+  };
+  document.getElementById('patient-id-display').value =
+    'DNI: ' + selectedPatient.dni + (selectedPatient.cuil ? ' | CUIL: ' + selectedPatient.cuil : '');
+  document.getElementById('btn-emit').disabled = false;
+  loadHistory(selectedPatient.dni);
+}
+
+function setType(type, btn) {
+  rxType = type;
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const alerts = {
+    general: '',
+    archivada: '<div class="alert alert-warn">Receta archivada: para psicotropicos. Retencion minima 3 anos (Res. 2214/2025).</div>',
+    restringida: '<div class="alert alert-danger">Receta restringida: para estupefacientes. Retencion minima 3 anos. Requiere doble control.</div>'
+  };
+  document.getElementById('type-alert').innerHTML = alerts[type] || '';
+}
+
+// ── MEDICAMENTOS ──
+function addMed() {
+  const id = 'med-' + Date.now();
+  medications.push(id);
+  const html = '<div class="med-item" id="' + id + '">' +
+    '<div class="form-group"><label>Droga (nombre generico)</label><input type="text" class="med-droga" placeholder="Ej: Risperidona" required></div>' +
+    '<div class="form-group"><label>Dosis</label><input type="text" class="med-dosis" placeholder="Ej: 2mg"></div>' +
+    '<div class="form-group"><label>Frecuencia</label><input type="text" class="med-freq" placeholder="Ej: c/12hs"></div>' +
+    '<div class="form-group"><label>Via</label><select class="med-via"><option value="oral">Oral</option><option value="im">IM</option><option value="iv">IV</option><option value="sl">SL</option><option value="topica">Topica</option><option value="otra">Otra</option></select></div>' +
+    '<button class="btn-remove" onclick="removeMed(\'' + id + '\')" title="Quitar">x</button>' +
+    '</div>';
+  document.getElementById('med-list').insertAdjacentHTML('beforeend', html);
+}
+
+function removeMed(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+  medications = medications.filter(m => m !== id);
+}
+
+function collectMedications() {
+  const items = [];
+  document.querySelectorAll('.med-item').forEach(row => {
+    const droga = row.querySelector('.med-droga')?.value?.trim();
+    const dosis = row.querySelector('.med-dosis')?.value?.trim();
+    const freq = row.querySelector('.med-freq')?.value?.trim();
+    const via = row.querySelector('.med-via')?.value;
+    if (droga && dosis && freq) {
+      items.push({ droga, dosis, frecuencia: freq, via: via || 'oral' });
+    }
+  });
+  return items;
+}
+
+// ── EMITIR RECETA ──
+async function emitPrescription() {
+  if (!selectedPatient) return;
+  const meds = collectMedications();
+  if (meds.length === 0) {
+    document.getElementById('emit-status').textContent = 'Agregue al menos un medicamento.';
+    document.getElementById('emit-status').style.color = 'var(--danger)';
+    return;
+  }
+
+  const btn = document.getElementById('btn-emit');
+  btn.disabled = true;
+  document.getElementById('emit-status').textContent = 'Firmando y emitiendo...';
+  document.getElementById('emit-status').style.color = 'var(--muted)';
+
+  try {
+    const resp = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'create_prescription',
+        sessionToken,
+        patientDni: selectedPatient.dni,
+        prescriptionType: rxType,
+        medications: meds,
+        diagnosisText: document.getElementById('diagnosis').value.trim(),
+        diagnosisSnomed: document.getElementById('snomed').value.trim() || null,
+        instructions: document.getElementById('instructions').value.trim() || null,
+        validUntil: document.getElementById('valid-until').value || null
+      })
+    });
+
+    const data = await resp.json();
+    if (!resp.ok || !data.success) {
+      throw new Error(data.error || 'Error al emitir receta');
+    }
+
+    document.getElementById('emit-status').textContent = 'Receta emitida correctamente.';
+    document.getElementById('emit-status').style.color = 'var(--success)';
+
+    // Mostrar preview
+    showRxPreview(data.prescription, meds);
+    loadHistory(selectedPatient.dni);
+
+  } catch(err) {
+    document.getElementById('emit-status').textContent = err.message;
+    document.getElementById('emit-status').style.color = 'var(--danger)';
+    btn.disabled = false;
+  }
+}
+
+function showRxPreview(rx, meds) {
+  const d = new Date(rx.createdAt);
+  const dateStr = d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR');
+  const typeLabels = { general:'General', archivada:'Archivada (Psicotropicos)', restringida:'Restringida (Estupefacientes)' };
+
+  document.getElementById('rx-preview').innerHTML =
+    '<div class="rx-preview">' +
+      '<div class="rx-header">' +
+        '<strong>Clinica Psiquiatrica Jose Ingenieros</strong><br>' +
+        '<span style="font-size:.75rem;">Calle 52 N 2950, Necochea, Buenos Aires | Tel: 2262-301515</span>' +
+      '</div>' +
+      '<div class="rx-body">' +
+        '<p><strong>CUIR:</strong> ' + rx.cuir + '</p>' +
+        '<p><strong>Tipo:</strong> ' + (typeLabels[rx.type] || rx.type) + '</p>' +
+        '<p><strong>Paciente:</strong> ' + selectedPatient.name + ' — DNI: ' + selectedPatient.dni + '</p>' +
+        '<p><strong>Fecha:</strong> ' + dateStr + '</p>' +
+        '<p><strong>Vigencia:</strong> ' + rx.validFrom + ' al ' + rx.validUntil + '</p>' +
+        '<hr style="margin:.75rem 0;border:0;border-top:1px solid var(--border);">' +
+        '<p><strong>Rp/</strong></p>' +
+        meds.map((m,i) => '<p>' + (i+1) + '. ' + m.droga + ' — ' + m.dosis + ' — ' + m.frecuencia + ' (via ' + m.via + ')</p>').join('') +
+        (document.getElementById('diagnosis').value ? '<hr style="margin:.75rem 0;border:0;border-top:1px solid var(--border);"><p><strong>Dx:</strong> ' + document.getElementById('diagnosis').value + '</p>' : '') +
+        (document.getElementById('instructions').value ? '<p><strong>Indicaciones:</strong> ' + document.getElementById('instructions').value + '</p>' : '') +
+      '</div>' +
+      '<div class="rx-footer">' +
+        '<span>Hash: <span class="hash">' + rx.integrityHash.substring(0,16) + '...</span></span>' +
+        '<span>Estado: <span class="status-badge status-active">ACTIVA</span></span>' +
+      '</div>' +
+    '</div>';
+
+  document.getElementById('rx-result').classList.remove('hidden');
+}
+
+// ── HISTORIAL ──
+async function loadHistory(dni) {
+  try {
+    const resp = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'list_prescriptions',
+        sessionToken,
+        patientDni: dni,
+        includeVoided: true
+      })
+    });
+    const data = await resp.json();
+    if (!data.success || !data.prescriptions?.length) {
+      document.getElementById('rx-history').innerHTML =
+        '<p style="font-size:.82rem;color:var(--muted);">Sin recetas registradas para este paciente.</p>';
+      return;
+    }
+
+    const typeLabels = { general:'General', archivada:'Archivada', restringida:'Restringida' };
+    document.getElementById('rx-history').innerHTML = data.prescriptions.map(rx => {
+      const d = new Date(rx.created_at);
+      const meds = typeof rx.medications === 'string' ? JSON.parse(rx.medications) : rx.medications;
+      const statusClass = rx.status === 'voided' ? 'status-voided' : rx.status === 'dispensed' ? 'status-dispensed' : 'status-active';
+      const statusText = rx.status === 'voided' ? 'ANULADA' : rx.status === 'dispensed' ? 'DISPENSADA' : 'ACTIVA';
+
+      return '<div class="history-item">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<strong>' + (rx.cuir_code || 'Sin CUIR') + '</strong>' +
+          '<span class="status-badge ' + statusClass + '">' + statusText + '</span>' +
+        '</div>' +
+        '<div style="font-size:.78rem;color:var(--muted);margin-top:.25rem;">' +
+          d.toLocaleDateString('es-AR') + ' | ' + (typeLabels[rx.prescription_type]||rx.prescription_type) +
+          ' | ' + (rx.professional_name || 'Profesional') +
+        '</div>' +
+        '<div style="font-size:.8rem;margin-top:.4rem;">' +
+          (Array.isArray(meds) ? meds.map(m => m.droga + ' ' + m.dosis + ' ' + m.frecuencia).join(', ') : 'Ver detalle') +
+        '</div>' +
+        (rx.status !== 'voided' ? '<button class="btn btn-outline btn-sm" style="margin-top:.5rem;" onclick="voidRx(' + rx.id + ')">Anular</button>' : '') +
+        (rx.void_reason ? '<div style="font-size:.75rem;color:var(--danger);margin-top:.3rem;">Motivo: ' + rx.void_reason + '</div>' : '') +
+      '</div>';
+    }).join('');
+  } catch(err) {
+    document.getElementById('rx-history').innerHTML =
+      '<p style="font-size:.82rem;color:var(--danger);">Error al cargar historial.</p>';
+  }
+}
+
+async function voidRx(id) {
+  const reason = prompt('Motivo de anulacion (minimo 10 caracteres):');
+  if (!reason || reason.trim().length < 10) {
+    alert('El motivo debe tener al menos 10 caracteres.');
+    return;
+  }
+  try {
+    const resp = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'void_prescription',
+        sessionToken,
+        prescriptionId: id,
+        reason: reason.trim()
+      })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      if (selectedPatient) loadHistory(selectedPatient.dni);
+    } else {
+      alert(data.error || 'Error al anular');
+    }
+  } catch(err) {
+    alert('Error de conexion');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
