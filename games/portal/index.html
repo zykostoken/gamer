@@ -140,6 +140,27 @@ var GAMES = [
 
 var sb, userData;
 
+// Feedback submission — saves to zykos_game_metrics as feedback type
+function submitFeedback(rating) {
+  var text = document.getElementById('feedback-text') ? document.getElementById('feedback-text').value.trim() : '';
+  var token = localStorage.getItem('zykos_token');
+  var user = JSON.parse(localStorage.getItem('zykos_user') || '{}');
+  if (sb) {
+    sb.from('zykos_game_metrics').insert({
+      user_id: user.id || 0,
+      game_slug: 'platform-feedback',
+      metric_type: 'user_feedback',
+      metric_data: { rating: rating, text: text, sessions_played: user.sessions_total || 0 },
+      completed: true
+    }).then(function() { console.log('[feedback] saved'); });
+  }
+  var overlay = document.querySelector('[data-fb-overlay]');
+  if (overlay) {
+    overlay.innerHTML = '<div style="background:var(--surface);border-radius:16px;padding:32px;text-align:center;"><h3 style="font-size:1.2rem;margin-bottom:8px;">Gracias!</h3><p style="color:var(--dim);font-size:0.85rem;">Tu feedback ayuda a mejorar ZYKOS</p></div>';
+    setTimeout(function() { overlay.remove(); }, 1500);
+  }
+}
+
 function doLogout() {
   var token = localStorage.getItem('zykos_token');
   if (sb && token) sb.rpc('zykos_logout', { p_token: token }).catch(function(){});
@@ -231,29 +252,63 @@ async function init() {
       updateBadge(data.sessions_remaining);
     }
 
-    // Metrics button: superadmin unlimited, free users 3 views
-    var canView = data.role === 'superadmin' || data.role === 'admin' || (data.metrics_view_count < 3 && data.sessions_total > 0);
+    // Dashboard visible at milestone sessions: 3, 5, 8, 12, 15
+    var milestones = [3, 5, 8, 12, 15];
+    var sessionsPlayed = data.sessions_total || 0;
+    var isMilestone = milestones.indexOf(sessionsPlayed) !== -1;
+    var isAdmin = data.role === 'superadmin' || data.role === 'admin';
+    var canView = isAdmin || isMilestone;
+    var nextMilestone = null;
+    for (var mi = 0; mi < milestones.length; mi++) {
+      if (milestones[mi] > sessionsPlayed) { nextMilestone = milestones[mi]; break; }
+    }
+
     if (canView) {
       var mb = document.createElement('a');
       mb.href = '/dashboard/?token=' + token;
       mb.className = 'cta-btn';
       mb.style.cssText = 'font-size:0.8rem;padding:8px 18px;margin-top:8px;display:inline-block;';
-      var viewsLeft = data.role === 'superadmin' || data.role === 'admin' ? 'ilimitado' : (3 - data.metrics_view_count) + ' vista(s) restante(s)';
-      mb.textContent = 'Ver Metricas (' + viewsLeft + ')';
+      mb.textContent = isAdmin ? 'Ver Metricas (admin)' : 'Tu progreso - sesion ' + sessionsPlayed;
       mb.onclick = function(e) {
-        if (data.role !== 'superadmin' && data.role !== 'admin') {
+        if (!isAdmin) {
           e.preventDefault();
-          sb.rpc('zykos_record_metrics_view', { p_token: token, p_context: 'portal_button' }).then(function(r) {
-            if (r.data && r.data.can_view_more) {
-              window.location.href = '/dashboard/?token=' + token;
-            } else {
-              alert('Llegaste al limite de vistas de metricas. Contacta a tu institucion para acceso completo.');
-            }
+          sb.rpc('zykos_record_metrics_view', { p_token: token, p_context: 'milestone_' + sessionsPlayed }).then(function(r) {
+            window.location.href = '/dashboard/?token=' + token;
           });
         }
       };
       document.querySelector('.welcome').appendChild(mb);
+    } else if (nextMilestone && !isAdmin) {
+      // Show teaser: next dashboard unlock at N sessions
+      var teaser = document.createElement('p');
+      teaser.style.cssText = 'font-size:0.75rem;color:var(--dim);margin-top:8px;';
+      teaser.textContent = 'Tu dashboard se desbloquea en la sesion ' + nextMilestone + ' (' + (nextMilestone - sessionsPlayed) + ' mas)';
+      document.querySelector('.welcome').appendChild(teaser);
     }
+
+    // Feedback prompt after every 3rd session
+    if (sessionsPlayed > 0 && sessionsPlayed % 3 === 0 && !sessionStorage.getItem('zykos_feedback_' + sessionsPlayed)) {
+      sessionStorage.setItem('zykos_feedback_' + sessionsPlayed, 'shown');
+      setTimeout(function() {
+        var fbOverlay = document.createElement('div');
+        fbOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);';
+        var fbCard = document.createElement('div');
+        fbCard.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:400px;width:90%;text-align:center;';
+        fbCard.innerHTML = '<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:12px;">Como va la experiencia?</h3>' +
+          '<p style="color:var(--dim);font-size:0.85rem;margin-bottom:16px;">Tu opinion nos ayuda a mejorar ZYKOS GAMER</p>' +
+          '<div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;">' +
+          ['😫','😕','😐','🙂','🤩'].map(function(em, i) {
+            return '<button onclick="submitFeedback(' + (i+1) + ')" style="font-size:2rem;padding:8px 12px;border:2px solid var(--border);border-radius:12px;background:transparent;cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor=\'var(--neon)\';this.style.transform=\'scale(1.2)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.transform=\'scale(1)\'">' + em + '</button>';
+          }).join('') +
+          '</div>' +
+          '<textarea id="feedback-text" placeholder="Algo que quieras contarnos? (opcional)" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-size:0.85rem;resize:vertical;min-height:60px;box-sizing:border-box;"></textarea>' +
+          '<button onclick="document.querySelector(\'[data-fb-overlay]\').remove()" style="margin-top:12px;padding:6px 16px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--dim);cursor:pointer;font-size:0.8rem;">Saltar</button>';
+        fbOverlay.setAttribute('data-fb-overlay', '');
+        fbOverlay.appendChild(fbCard);
+        document.body.appendChild(fbOverlay);
+      }, 1000);
+    }
+
 
     showZykosConsent(function() { renderGames(data.role === 'superadmin' ? 999 : data.sessions_remaining); });
   } catch(e) { document.getElementById('greeting').textContent = 'Error: ' + e.message; }
