@@ -24,7 +24,7 @@ La institución solo cambia: nombre, logo, Supabase, dominio.
 - [ ] Crear trigger `prevent_delete_evidence` en zykos_users y zykos_game_metrics
 
 ### 2. REPOSITORIO (15 min)
-- [ ] Fork privado de `zykostoken/gamer`
+- [ ] Fork privado de `Psykostoken/gamer`
 - [ ] Renombrar en `package.json`: name → nombre de la institución
 - [ ] Editar `js/supabase-config.js`: cambiar URL y ANON_KEY
 - [ ] Editar `shared/telemetry.js`: cambiar URL y ANON_KEY (líneas 21-22)
@@ -167,7 +167,7 @@ como sistema de gestión institucional completo.
 **Producto**: ZYKOS GAMER (licencia IP o SaaS).
 **Incluye**: 12 juegos, 5 packs, calibración, evidence hash, dashboard.
 **NO incluye**: HCE, receta, telemedicina, turnos, gestión de internados.
-**Deploy**: Fork de zykostoken/gamer + Supabase propio. 2 horas.
+**Deploy**: Fork de Psykostoken/gamer + Supabase propio. 2 horas.
 **Integración**: ZYKOS corre paralelo o se conecta vía API al sistema existente.
 
 ### Escenario B: "Todo integrado"
