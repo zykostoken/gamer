@@ -57,7 +57,7 @@
 
 ## PRUEBA DE AUTORÍA INMEDIATA (ya disponible)
 
-El historial Git del repositorio `zykostoken/gamer` sirve como prueba
+El historial Git del repositorio `Psykostoken/gamer` sirve como prueba
 de autoría con timestamps criptográficamente verificables:
 - Primer commit: fecha de creación original
 - Cada commit: fecha de cada modificación
