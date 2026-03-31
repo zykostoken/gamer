@@ -387,3 +387,89 @@ global.showMetricsModal = async function(resultData) {
 };
 
 })(window);
+
+// ================================================================
+// FEEDBACK COLLECTION — post-game rating
+// Shows after metrics modal. 1-5 stars + optional comment.
+// ================================================================
+
+function showFeedbackModal(gameSlug) {
+  if (document.getElementById('zykos-feedback-modal')) return;
+  
+  var dni = null;
+  try { dni = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni'); } catch(e) {}
+  
+  var overlay = document.createElement('div');
+  overlay.id = 'zykos-feedback-modal';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
+  
+  var card = document.createElement('div');
+  card.style.cssText = 'background:#111827;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:28px;max-width:360px;width:90%;text-align:center;color:#e2e8f0;font-family:DM Sans,system-ui,sans-serif;';
+  
+  card.innerHTML = 
+    '<p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:8px;">Tu opinion nos ayuda</p>' +
+    '<p style="font-size:1.1rem;font-weight:700;margin-bottom:16px;">Como fue la experiencia?</p>' +
+    '<div id="fb-stars" style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;font-size:2rem;cursor:pointer;">' +
+      '<span data-r="1" style="opacity:0.3">&#9733;</span>' +
+      '<span data-r="2" style="opacity:0.3">&#9733;</span>' +
+      '<span data-r="3" style="opacity:0.3">&#9733;</span>' +
+      '<span data-r="4" style="opacity:0.3">&#9733;</span>' +
+      '<span data-r="5" style="opacity:0.3">&#9733;</span>' +
+    '</div>' +
+    '<textarea id="fb-comment" placeholder="Algo que quieras contarnos? (opcional)" style="width:100%;height:60px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px;color:#e2e8f0;font-size:0.85rem;resize:none;margin-bottom:12px;"></textarea>' +
+    '<div style="display:flex;gap:8px;justify-content:center;">' +
+      '<button id="fb-send" style="padding:10px 24px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;">Enviar</button>' +
+      '<button id="fb-skip" style="padding:10px 24px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);border-radius:10px;cursor:pointer;">Saltar</button>' +
+    '</div>';
+  
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  
+  var selectedRating = 0;
+  var stars = card.querySelectorAll('#fb-stars span');
+  stars.forEach(function(s) {
+    s.onclick = function() {
+      selectedRating = parseInt(s.getAttribute('data-r'));
+      stars.forEach(function(st) {
+        st.style.opacity = parseInt(st.getAttribute('data-r')) <= selectedRating ? '1' : '0.3';
+        st.style.color = parseInt(st.getAttribute('data-r')) <= selectedRating ? '#fbbf24' : '#e2e8f0';
+      });
+    };
+  });
+  
+  document.getElementById('fb-send').onclick = function() {
+    if (selectedRating === 0) return;
+    var comment = document.getElementById('fb-comment').value.trim();
+    var sb = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+    if (sb) {
+      sb.from('zykos_feedback').insert({
+        patient_dni: dni,
+        game_slug: gameSlug || window._zykosCurrentGame || 'unknown',
+        rating: selectedRating,
+        comment: comment || null,
+        session_number: parseInt(localStorage.getItem('zykos_session_number') || '0')
+      }).then(function(){}).catch(function(){});
+    }
+    overlay.remove();
+  };
+  
+  document.getElementById('fb-skip').onclick = function() { overlay.remove(); };
+}
+
+// Auto-show feedback after post-game metrics close
+var _origShowMetrics = typeof showPostGameMetrics === 'function' ? showPostGameMetrics : null;
+if (_origShowMetrics) {
+  showPostGameMetrics = function() {
+    _origShowMetrics.apply(this, arguments);
+    // After metrics modal closes, show feedback
+    var _checkClosed = setInterval(function() {
+      if (!document.getElementById('zykos-metrics-overlay')) {
+        clearInterval(_checkClosed);
+        setTimeout(function() {
+          showFeedbackModal(window._zykosCurrentGame);
+        }, 500);
+      }
+    }, 300);
+    setTimeout(function() { clearInterval(_checkClosed); }, 30000);
+  };
+}

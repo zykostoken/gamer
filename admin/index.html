@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZYKOS GAMER — Admin Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/supabase-config.js"></script>
+<style>
+:root{--bg:#0a0e1e;--surface:#111827;--border:rgba(255,255,255,.08);--text:#e2e8f0;--dim:rgba(255,255,255,.4);--accent:#8b5cf6;--ok:#34d399;--err:#f87171;--warn:#fbbf24}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;padding:20px}
+h1{font-size:1.5rem;margin-bottom:20px;color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
+.card .num{font-size:2rem;font-weight:800;font-family:'Space Mono',monospace}
+.card .label{font-size:.75rem;color:var(--dim);margin-top:4px}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.85rem}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+th{color:var(--accent);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em}
+.section{margin-bottom:32px}
+.section h2{font-size:1rem;color:var(--dim);margin-bottom:12px}
+.stars{color:var(--warn)}
+.loading{text-align:center;padding:40px;color:var(--dim)}
+</style>
+</head>
+<body>
+<h1>ZYKOS GAMER — Metricas Comerciales</h1>
+<div id="content" class="loading">Cargando datos...</div>
+
+<script>
+(async function() {
+  var sb = getSupabaseClient();
+  if (!sb) { document.getElementById('content').textContent = 'Error: Supabase no disponible'; return; }
+
+  var html = '';
+
+  // 1. KPIs
+  var [regRes, viewRes, metricsRes, feedbackRes] = await Promise.all([
+    sb.from('zykos_registration_events').select('*', { count: 'exact', head: true }),
+    sb.from('zykos_page_views').select('*', { count: 'exact', head: true }),
+    sb.from('zykos_game_metrics').select('*', { count: 'exact', head: true }),
+    sb.from('zykos_feedback').select('*')
+  ]);
+
+  var totalRegs = regRes.count || 0;
+  var totalViews = viewRes.count || 0;
+  var totalSessions = metricsRes.count || 0;
+  var feedbacks = feedbackRes.data || [];
+  var avgRating = feedbacks.length > 0 ? (feedbacks.reduce(function(a,f){return a+f.rating;},0)/feedbacks.length).toFixed(1) : '-';
+
+  html += '<div class="grid">';
+  html += '<div class="card"><div class="num">' + totalViews + '</div><div class="label">Page Views</div></div>';
+  html += '<div class="card"><div class="num">' + totalRegs + '</div><div class="label">Registros</div></div>';
+  html += '<div class="card"><div class="num">' + totalSessions + '</div><div class="label">Sesiones de juego</div></div>';
+  html += '<div class="card"><div class="num stars">' + avgRating + '</div><div class="label">Rating promedio</div></div>';
+  html += '<div class="card"><div class="num">' + feedbacks.length + '</div><div class="label">Feedbacks</div></div>';
+  html += '</div>';
+
+  // 2. Recent registrations
+  var recentRegs = await sb.from('zykos_registration_events').select('*').order('registered_at', {ascending:false}).limit(10);
+  html += '<div class="section"><h2>Ultimos registros</h2>';
+  if (recentRegs.data && recentRegs.data.length > 0) {
+    html += '<table><tr><th>Email</th><th>Nombre</th><th>DNI</th><th>Fecha</th></tr>';
+    recentRegs.data.forEach(function(r) {
+      html += '<tr><td>' + (r.email||'-') + '</td><td>' + (r.display_name||'-') + '</td><td>' + (r.dni||'-') + '</td><td>' + new Date(r.registered_at).toLocaleString('es-AR') + '</td></tr>';
+    });
+    html += '</table>';
+  } else {
+    html += '<p style="color:var(--dim)">Sin registros aun</p>';
+  }
+  html += '</div>';
+
+  // 3. Game popularity
+  var gameMetrics = await sb.from('zykos_game_metrics').select('game_slug');
+  var gameCounts = {};
+  if (gameMetrics.data) {
+    gameMetrics.data.forEach(function(m) {
+      var slug = m.game_slug || 'unknown';
+      gameCounts[slug] = (gameCounts[slug] || 0) + 1;
+    });
+  }
+  var gameRanking = Object.entries(gameCounts).sort(function(a,b){return b[1]-a[1];});
+  html += '<div class="section"><h2>Popularidad de juegos</h2>';
+  if (gameRanking.length > 0) {
+    html += '<table><tr><th>Juego</th><th>Sesiones</th><th>%</th></tr>';
+    var totalG = gameRanking.reduce(function(a,g){return a+g[1];},0);
+    gameRanking.forEach(function(g) {
+      var pct = totalG > 0 ? Math.round(g[1]/totalG*100) : 0;
+      html += '<tr><td>' + g[0] + '</td><td>' + g[1] + '</td><td>' + pct + '%</td></tr>';
+    });
+    html += '</table>';
+  } else {
+    html += '<p style="color:var(--dim)">Sin datos aun</p>';
+  }
+  html += '</div>';
+
+  // 4. Page view breakdown
+  var pvData = await sb.from('zykos_page_views').select('page');
+  var pvCounts = {};
+  if (pvData.data) {
+    pvData.data.forEach(function(v) {
+      pvCounts[v.page] = (pvCounts[v.page] || 0) + 1;
+    });
+  }
+  var pvRanking = Object.entries(pvCounts).sort(function(a,b){return b[1]-a[1];});
+  html += '<div class="section"><h2>Paginas mas visitadas</h2>';
+  if (pvRanking.length > 0) {
+    html += '<table><tr><th>Pagina</th><th>Visitas</th></tr>';
+    pvRanking.forEach(function(p) { html += '<tr><td>' + p[0] + '</td><td>' + p[1] + '</td></tr>'; });
+    html += '</table>';
+  } else {
+    html += '<p style="color:var(--dim)">Sin datos aun</p>';
+  }
+  html += '</div>';
+
+  // 5. Feedback detail
+  html += '<div class="section"><h2>Feedback de jugadores</h2>';
+  if (feedbacks.length > 0) {
+    html += '<table><tr><th>Juego</th><th>Rating</th><th>Comentario</th><th>Fecha</th></tr>';
+    feedbacks.sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at);}).slice(0,20).forEach(function(f) {
+      var stars = '';
+      for (var i=0;i<5;i++) stars += i<f.rating ? '★' : '☆';
+      html += '<tr><td>' + (f.game_slug||'-') + '</td><td class="stars">' + stars + '</td><td>' + (f.comment||'-') + '</td><td>' + new Date(f.created_at).toLocaleString('es-AR') + '</td></tr>';
+    });
+    html += '</table>';
+  } else {
+    html += '<p style="color:var(--dim)">Sin feedback aun</p>';
+  }
+  html += '</div>';
+
+  // 6. Referrer sources
+  var refData = await sb.from('zykos_page_views').select('referrer').not('referrer', 'is', null);
+  var refCounts = {};
+  if (refData.data) {
+    refData.data.forEach(function(v) {
+      if (v.referrer) {
+        try { var host = new URL(v.referrer).hostname; refCounts[host] = (refCounts[host]||0)+1; } catch(e){}
+      }
+    });
+  }
+  var refRanking = Object.entries(refCounts).sort(function(a,b){return b[1]-a[1];});
+  if (refRanking.length > 0) {
+    html += '<div class="section"><h2>De donde vienen</h2>';
+    html += '<table><tr><th>Fuente</th><th>Visitas</th></tr>';
+    refRanking.forEach(function(r) { html += '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>'; });
+    html += '</table></div>';
+  }
+
+  document.getElementById('content').innerHTML = html;
+})();
+</script>
+</body>
+</html>
