@@ -5503,8 +5503,8 @@
           } catch(e) { return {}; }
         })())
       };
-      if (lmSupa) { navigator.sendBeacon && navigator.sendBeacon('https://' + SUPABASE_URL.replace('https://','') + '/rest/v1/zykos_game_metrics', ''); }
-      // Fallback: direct insert (may not complete)
+      if (lmSupa) { /* sendBeacon removed: cannot attach auth headers, always 401 */ }
+      // Direct insert (the only working save path)
       try { lmSaveToSupabase(false, score, calculateClinicalStats()); } catch(e) {}
     }
   });
