@@ -84,3 +84,4 @@ export default async (req: Request, context: Context) => {
 export const config: Config = {
   path: "/api/notify-registration"
 };
+// SMTP configured 20260331183310
