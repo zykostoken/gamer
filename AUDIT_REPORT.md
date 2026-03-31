@@ -1,5 +1,5 @@
 # ZYKOS GAMER — AUDITORÍA GLOBAL FINAL
-## Repo: zykostoken/gamer | Site: zykos.ar
+## Repo: Psykostoken/gamer | Site: zykos.ar
 ## Fecha: 2026-03-30 | 9 commits en esta sesión
 
 ---
@@ -41,7 +41,7 @@
 - evidence_hash + previous_hash: en zykos_game_metrics
 
 ### Netlify (zykos.ar)
-- Auto-deploy desde zykostoken/gamer (main)
+- Auto-deploy desde Psykostoken/gamer (main)
 - 7 redirects + security headers (HSTS, CSP, X-Frame-Options)
 - Site ID: 332b1ca6-d613-4b8e-9894-314b3e8d1e1c
 
