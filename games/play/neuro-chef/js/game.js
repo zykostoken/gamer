@@ -318,7 +318,7 @@ function loadLevel1_Supermercado() {
     
     gameArea.innerHTML = `
         <div class="gondola-container" id="gondola">
-            ${shuffled.map(food => `<div class="food-item" draggable="true" data-id="${food.id}"><img src="${food.imagen}" alt="${food.nombre}" loading="lazy"><div class="label">${food.nombre}</div></div>`).join('')}
+            ${shuffled.map(food => `<div class="food-item" draggable="true" data-id="${food.id}"><img src="${food.imagen}" alt="${food.nombre}" loading="lazy" onerror="this.style.display=\x27none\x27;this.nextElementSibling.style.padding=\x2718px 6px\x27;"><div class="label">${food.nombre}</div></div>`).join('')}
         </div>
         <div class="cart-container"><h3>Tu Carrito</h3>
             <div class="cart-grid" id="cart">${Array(10).fill(0).map((_,i)=>`<div class="cart-slot" data-slot="${i}"></div>`).join('')}</div>
