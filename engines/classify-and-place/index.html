@@ -132,7 +132,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 </div></header>
 <main class="game" id="game"><div class="loading"><div class="spinner"></div><p style="color:var(--dim);font-size:.85rem">Cargando pack...</p></div></main>
 <script>
-const PACK_MAP={'ferreteria':'../../packs/classify-and-place/ferreteria/pack.json','libreria-escolar':'../../packs/classify-and-place/libreria-escolar/pack.json','electrodomesticos':'../../packs/classify-and-place/electrodomesticos/pack.json','almacen-general':'../../packs/classify-and-place/almacen-general/pack.json','supermarket':'../../packs/classify-and-place/supermarket/pack.json'};
+const PACK_MAP={'almacen':'../../packs/classify-and-place/almacen-general/pack.json','libreria':'../../packs/classify-and-place/libreria-escolar/pack.json','ferreteria':'../../packs/classify-and-place/ferreteria/pack.json','libreria-escolar':'../../packs/classify-and-place/libreria-escolar/pack.json','electrodomesticos':'../../packs/classify-and-place/electrodomesticos/pack.json','almacen-general':'../../packs/classify-and-place/almacen-general/pack.json','supermarket':'../../packs/classify-and-place/supermarket/pack.json'};
 let PACK=null,STATE={phase:'intro',mode:'classify',level:1,score:0,correct:0,errors:0,totalItems:0,placedItems:0,startTime:0,timerInterval:null,currentItems:[],moves:[],mouseData:[],lastMoveTime:0,kitCart:{},kitMissionIdx:0,calcIdx:0,simIdx:0,kitBudget:0,kitSpent:0,kitScenario:null,
 // Kit telemetry
 kitLog:[],       // every add/remove action timestamped
