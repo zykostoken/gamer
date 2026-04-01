@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZYKOS GAMER</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/supabase-config.js"></script>
+<script src="/games/shared/require-auth.js"></script>
+<script src="/games/shared/evidence-hash.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#080c14;overflow:hidden;height:100vh;width:100vw}
+iframe{width:100%;height:100%;border:none}
+#capture-hud{position:fixed;bottom:8px;right:8px;z-index:99999;background:rgba(0,0,0,0.7);
+  color:#39ff14;font:10px 'IBM Plex Mono',monospace;padding:4px 8px;border-radius:6px;
+  pointer-events:none;opacity:0.6}
+</style>
+</head>
+<body>
+<iframe id="game-frame" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+<div id="capture-hud">REC ● <span id="hud-events">0</span> eventos</div>
+
+<script>
+// ================================================================
+// ZYKOS GAMER — UNIVERSAL CAPTURE WRAPPER v1.0
+// (c) 2025-2026 Gonzalo Perez Cortizo. Proprietary. See LICENSE.
+//
+// ARQUITECTURA:
+// - Los juegos son iframes tontos. No saben que los miden.
+// - Este wrapper captura TODOS los eventos del DOM del iframe.
+// - Registra un stream de eventos crudos (Capa 0 — RAW).
+// - Al cerrar sesión, computa métricas derivadas (Capa 2).
+// - Guarda todo en Supabase con evidence-hash (inmutable).
+//
+// MÉTRICAS CAPTURADAS (pasivas, desde eventos DOM):
+// ─── MOTOR ───
+// tremor_inicio: jitter de posición en los primeros 2s de quietud
+// tremor_reposo: jitter promedio durante pausas >500ms
+// tremor_terminal: jitter al aproximarse al target (últimos 100ms pre-click)
+// dismetria_px: distancia del click al centro del target más cercano
+// path_efficiency: distancia recorrida / distancia directa punto a punto
+// velocidad_cursor: px/ms promedio de movimiento
+// aceleracion_cambios: cambios abruptos de aceleración (cogwheel-like)
+// clasp_knife: ratio velocidad inicio/fin de un movimiento (espasticidad)
+//
+// ─── TEMPORAL ───
+// rt_ms: tiempo desde aparición de estímulo hasta respuesta
+// hesitacion_ms: pausas >300ms durante un movimiento dirigido
+// hesitacion_count: cantidad de hesitaciones por sesión
+// tiempo_decision_ms: tiempo desde fin de movimiento hasta click
+// time_to_first_action_ms: desde carga del juego hasta primera interacción
+// instruction_read_time_ms: tiempo en pantalla de instrucciones
+//
+// ─── ATENCIONAL ───
+// decaimiento_vigilancia: ratio RT 2da mitad / 1ra mitad
+// fatiga_index: ratio errores 2da mitad / 1ra mitad
+// scrollback_count: veces que el usuario vuelve a leer instrucciones
+// tab_switches: veces que cambió de pestaña durante el juego
+// inactividad_ms: tiempo total sin interacción
+//
+// ─── CONDUCTUAL (derivadas de patrones) ───
+// perseveraciones: misma acción repetida rápidamente (<150ms)
+// errores_comision: respuesta cuando no debía
+// errores_omision: no respondió cuando debía
+// self_corrections: movimiento corregido mid-path
+// impulsividad_ratio: comisiones / (comisiones + aciertos)
+// post_error_slowing_ms: aumento RT después de un error
+//
+// Los juegos PUEDEN emitir eventos propios via postMessage:
+//   parent.postMessage({zykos_event: 'stimulus_appeared', data: {...}}, '*')
+//   parent.postMessage({zykos_event: 'level_complete', data: {...}}, '*')
+//   parent.postMessage({zykos_event: 'game_end', data: {...}}, '*')
+// Pero NO es obligatorio. El wrapper captura todo igual.
+// ================================================================
+
+'use strict';
+
+// ======================== CONFIG ========================
+var SAMPLE_RATE_MS = 16;      // ~60fps for mouse tracking
+var HESITATION_THRESHOLD = 300; // ms of no movement = hesitation
+var TREMOR_WINDOW_MS = 2000;   // initial tremor measurement window
+var INACTIVITY_THRESHOLD = 5000;// ms without any event = inactivity
+var FLUSH_INTERVAL = 30000;    // auto-flush events every 30s
+
+// ======================== STATE ========================
+var W = {
+    sb: null,
+    dni: null,
+    userId: null,
+    gameSlug: null,
+    gameUrl: null,
+    sessionId: null,
+    sessionStart: null,
+    
+    // Event stream (Capa 0 — RAW)
+    events: [],
+    eventCount: 0,
+    
+    // Mouse/touch tracking
+    lastX: 0, lastY: 0, lastMoveTime: 0,
+    positions: [],           // rolling window for tremor calc
+    movements: [],           // [{t, x, y, dx, dy, speed, accel}]
+    
+    // Click tracking
+    clicks: [],              // [{t, x, y, targetTag, targetId, targetClass}]
+    
+    // Temporal
+    firstActionTime: null,
+    instructionStartTime: null,
+    tabSwitches: 0,
+    inactivityStart: null,
+    totalInactivityMs: 0,
+    
+    // Computed (rolling)
+    hesitations: [],
+    perseverations: 0,
+    lastClickTime: 0,
+    
+    // Game events (from postMessage)
+    gameEvents: [],
+    
+    // Flush management
+    flushTimer: null,
+    flushedCount: 0
+};
+
+// ======================== INIT ========================
+function init() {
+    W.sb = getSupabaseClient();
+    
+    // Parse URL params
+    var params = new URLSearchParams(location.search);
+    W.gameSlug = params.get('game') || 'unknown';
+    W.dni = params.get('dni') || window.ZYKOS_DNI || null;
+    
+    // Build game URL (pass through all params except 'game')
+    var gameParams = new URLSearchParams(params);
+    gameParams.delete('game');
+    var gameFile = resolveGameUrl(W.gameSlug);
+    W.gameUrl = gameFile + (gameParams.toString() ? '?' + gameParams.toString() : '');
+    
+    // Set page title
+    document.title = 'ZYKOS GAMER — ' + W.gameSlug;
+    
+    // Get user info
+    try {
+        var u = JSON.parse(localStorage.getItem('zykos_user') || '{}');
+        W.userId = u.user_id || null;
+    } catch(e) {}
+    
+    // Generate session ID
+    W.sessionId = crypto.randomUUID ? crypto.randomUUID() : 
+        'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random()*16|0; return (c=='x'?r:(r&0x3|0x8)).toString(16);
+        });
+    
+    W.sessionStart = performance.now();
+    
+    // Load game in iframe
+    var frame = document.getElementById('game-frame');
+    frame.src = W.gameUrl;
+    frame.onload = function() { attachCapture(frame); };
+    
+    // Listen for postMessage from game
+    window.addEventListener('message', handleGameMessage);
+    
+    // Visibility change (tab switches)
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            W.tabSwitches++;
+            recordEvent('tab_hidden', {});
+        } else {
+            recordEvent('tab_visible', {});
+        }
+    });
+    
+    // Before unload — save everything
+    window.addEventListener('beforeunload', function() {
+        flushEvents(true);
+        computeAndSave();
+    });
+    
+    // Page hide (mobile)
+    window.addEventListener('pagehide', function() {
+        flushEvents(true);
+        computeAndSave();
+    });
+    
+    // Auto-flush timer
+    W.flushTimer = setInterval(function() { flushEvents(false); }, FLUSH_INTERVAL);
+    
+    // Inactivity tracker
+    setInterval(checkInactivity, 1000);
+}
+
+// ======================== GAME URL RESOLVER ========================
+function resolveGameUrl(slug) {
+    var MAP = {
+        'lawn-mower':       '/games/play/lawn-mower.html',
+        'pill-organizer':   '/games/play/pill-organizer.html',
+        'super-market':     '/games/play/super-market.html',
+        'neuro-chef':       '/games/play/neuro-chef/index.html',
+        'medication-memory':'/games/play/medication-memory.html',
+        'fridge-logic':     '/games/play/fridge-logic.html',
+        'reflejos':         '/games/play/reflejos.html',
+        'ferreteria':       '/engines/classify-and-place/index.html?pack=ferreteria',
+        'almacen':          '/engines/classify-and-place/index.html?pack=almacen',
+        'electrodomesticos':'/engines/classify-and-place/index.html?pack=electrodomesticos',
+        'libreria':         '/engines/classify-and-place/index.html?pack=libreria',
+        'inkblot':          '/engines/inkblot/index.html'
+    };
+    return MAP[slug] || '/games/play/' + slug + '.html';
+}
+
+// ======================== ATTACH CAPTURE TO IFRAME ========================
+function attachCapture(frame) {
+    try {
+        var doc = frame.contentDocument || frame.contentWindow.document;
+        if (!doc) { console.warn('[wrapper] Cannot access iframe document'); return; }
+        
+        // === MOUSE/TOUCH TRACKING ===
+        var sampleTimer = null;
+        
+        doc.addEventListener('mousemove', function(e) {
+            var now = performance.now();
+            var dx = e.clientX - W.lastX;
+            var dy = e.clientY - W.lastY;
+            var dt = now - W.lastMoveTime;
+            
+            if (dt < SAMPLE_RATE_MS) return; // throttle
+            
+            var speed = dt > 0 ? Math.sqrt(dx*dx + dy*dy) / dt : 0;
+            
+            // Track position for tremor
+            W.positions.push({t: now, x: e.clientX, y: e.clientY});
+            if (W.positions.length > 200) W.positions.shift(); // rolling window
+            
+            // Track movement
+            var lastMove = W.movements.length > 0 ? W.movements[W.movements.length-1] : null;
+            var accel = lastMove && lastMove.speed > 0 ? (speed - lastMove.speed) / (dt/1000) : 0;
+            
+            W.movements.push({t: now, x: e.clientX, y: e.clientY, dx: dx, dy: dy, speed: speed, accel: accel, dt: dt});
+            if (W.movements.length > 2000) W.movements.shift();
+            
+            // Check hesitation (was moving, then stopped)
+            if (speed < 0.05 && lastMove && lastMove.speed > 0.1) {
+                // Movement stopped
+                W.inactivityStart = now;
+            }
+            
+            // First action
+            if (!W.firstActionTime) W.firstActionTime = now;
+            
+            W.lastX = e.clientX; W.lastY = e.clientY; W.lastMoveTime = now;
+        }, {passive: true});
+        
+        // Touch events
+        doc.addEventListener('touchmove', function(e) {
+            if (!e.touches[0]) return;
+            var t = e.touches[0];
+            var ev = {clientX: t.clientX, clientY: t.clientY};
+            // Reuse mousemove logic
+            var now = performance.now();
+            var dx = ev.clientX - W.lastX;
+            var dy = ev.clientY - W.lastY;
+            var dt = now - W.lastMoveTime;
+            if (dt < SAMPLE_RATE_MS) return;
+            var speed = dt > 0 ? Math.sqrt(dx*dx + dy*dy) / dt : 0;
+            W.positions.push({t: now, x: ev.clientX, y: ev.clientY});
+            if (W.positions.length > 200) W.positions.shift();
+            W.movements.push({t: now, x: ev.clientX, y: ev.clientY, dx: dx, dy: dy, speed: speed, accel: 0, dt: dt});
+            if (W.movements.length > 2000) W.movements.shift();
+            if (!W.firstActionTime) W.firstActionTime = now;
+            W.lastX = ev.clientX; W.lastY = ev.clientY; W.lastMoveTime = now;
+        }, {passive: true});
+        
+        // === CLICK TRACKING ===
+        doc.addEventListener('click', function(e) {
+            var now = performance.now();
+            var target = e.target || {};
+            
+            W.clicks.push({
+                t: now,
+                x: e.clientX, y: e.clientY,
+                tag: target.tagName || '',
+                id: target.id || '',
+                cls: (target.className || '').toString().slice(0, 50)
+            });
+            
+            // Perseveration check
+            if (now - W.lastClickTime < 150) W.perseverations++;
+            W.lastClickTime = now;
+            
+            if (!W.firstActionTime) W.firstActionTime = now;
+            
+            recordEvent('click', {x: e.clientX, y: e.clientY, tag: target.tagName, id: target.id});
+        }, {passive: true});
+        
+        doc.addEventListener('dblclick', function(e) {
+            recordEvent('dblclick', {x: e.clientX, y: e.clientY});
+        }, {passive: true});
+        
+        // === KEYBOARD ===
+        doc.addEventListener('keydown', function(e) {
+            recordEvent('keydown', {key: e.key, code: e.code});
+            if (!W.firstActionTime) W.firstActionTime = performance.now();
+        }, {passive: true});
+        
+        // === SCROLL ===
+        doc.addEventListener('scroll', function() {
+            recordEvent('scroll', {scrollY: doc.documentElement.scrollTop || doc.body.scrollTop});
+        }, {passive: true});
+        
+        // === DRAG EVENTS ===
+        doc.addEventListener('dragstart', function(e) {
+            recordEvent('dragstart', {x: e.clientX, y: e.clientY, tag: (e.target||{}).tagName});
+        }, {passive: true});
+        
+        doc.addEventListener('dragend', function(e) {
+            recordEvent('dragend', {x: e.clientX, y: e.clientY});
+        }, {passive: true});
+        
+        doc.addEventListener('drop', function(e) {
+            recordEvent('drop', {x: e.clientX, y: e.clientY});
+        }, {passive: true});
+        
+        console.log('[wrapper] Capture attached to game iframe: ' + W.gameSlug);
+        recordEvent('capture_attached', {game: W.gameSlug, url: W.gameUrl});
+        
+    } catch(e) {
+        console.error('[wrapper] Failed to attach capture:', e.message);
+        recordEvent('capture_error', {error: e.message});
+    }
+}
+
+// ======================== EVENT RECORDING ========================
+function recordEvent(type, data) {
+    W.events.push({
+        t: Math.round(performance.now() - (W.sessionStart || 0)),
+        type: type,
+        d: data
+    });
+    W.eventCount++;
+    
+    // Update HUD
+    var hud = document.getElementById('hud-events');
+    if (hud) hud.textContent = W.eventCount;
+}
+
+// ======================== GAME MESSAGE HANDLER ========================
+function handleGameMessage(e) {
+    if (!e.data || !e.data.zykos_event) return;
+    
+    var evt = e.data;
+    W.gameEvents.push({
+        t: Math.round(performance.now() - W.sessionStart),
+        type: evt.zykos_event,
+        d: evt.data || {}
+    });
+    
+    recordEvent('game_' + evt.zykos_event, evt.data || {});
+    
+    // If game signals end, compute and save
+    if (evt.zykos_event === 'game_end' || evt.zykos_event === 'session_complete') {
+        setTimeout(function() { computeAndSave(); }, 500);
+    }
+}
+
+// ======================== INACTIVITY CHECK ========================
+function checkInactivity() {
+    var now = performance.now();
+    var lastActivity = W.lastMoveTime || W.sessionStart;
+    var idle = now - lastActivity;
+    
+    if (idle > INACTIVITY_THRESHOLD) {
+        if (!W.inactivityStart) W.inactivityStart = lastActivity;
+    } else if (W.inactivityStart) {
+        W.totalInactivityMs += (now - W.inactivityStart);
+        W.inactivityStart = null;
+    }
+}
+
+// ======================== FLUSH EVENTS TO SUPABASE ========================
+async function flushEvents(isFinal) {
+    if (!W.sb || !W.dni || W.events.length === 0) return;
+    
+    var batch = W.events.splice(0); // take all events
+    var batchNum = W.flushedCount++;
+    
+    try {
+        var payload = {
+            patient_dni: W.dni,
+            user_id: W.userId,
+            game_slug: W.gameSlug,
+            metric_type: 'event_stream_batch_' + batchNum,
+            metric_data: {
+                session_id: W.sessionId,
+                batch: batchNum,
+                is_final: isFinal || false,
+                event_count: batch.length,
+                events: batch
+            },
+            session_id: W.sessionId
+        };
+        
+        if (typeof ZykosEvidence !== 'undefined') {
+            payload = await ZykosEvidence.prepare(payload);
+        }
+        
+        // Use sendBeacon for final flush (page unload)
+        if (isFinal && navigator.sendBeacon) {
+            navigator.sendBeacon('/api/beacon-save', JSON.stringify(payload));
+        } else {
+            await W.sb.from('zykos_game_metrics').insert(payload);
+        }
+    } catch(e) {
+        console.warn('[wrapper] Flush error:', e.message);
+        // Put events back
+        W.events = batch.concat(W.events);
+    }
+}
+
+// ======================== COMPUTE METRICS (Capa 2) ========================
+async function computeAndSave() {
+    if (!W.sb || !W.dni) return;
+    
+    var duration = (performance.now() - W.sessionStart) / 1000;
+    var mvs = W.movements;
+    var clks = W.clicks;
+    
+    // ─── TREMOR ───
+    // Initial tremor: jitter in first 2 seconds
+    var tremorInicio = computeTremor(W.positions.filter(function(p) { return p.t - W.sessionStart < TREMOR_WINDOW_MS; }));
+    // Resting tremor: jitter during low-speed periods
+    var restPositions = W.positions.filter(function(p) {
+        var mv = mvs.find(function(m) { return Math.abs(m.t - p.t) < 50; });
+        return mv && mv.speed < 0.1;
+    });
+    var tremorReposo = computeTremor(restPositions);
+    
+    // ─── DISMETRÍA ───
+    var clickDistances = clks.map(function(c) {
+        // Find nearest interactive element center (approximate from click coords)
+        // Since we can't introspect game DOM reliably, use click offset from last movement target
+        var lastMove = mvs.filter(function(m) { return m.t < c.t; }).pop();
+        if (!lastMove) return null;
+        return Math.sqrt(Math.pow(c.x - lastMove.x, 2) + Math.pow(c.y - lastMove.y, 2));
+    }).filter(function(d) { return d !== null; });
+    
+    var meanDismetria = clickDistances.length > 0 ? clickDistances.reduce(function(a,b){return a+b;},0) / clickDistances.length : 0;
+    
+    // ─── PATH EFFICIENCY ───
+    var pathSegments = [];
+    var segStart = 0;
+    for (var i = 1; i < mvs.length; i++) {
+        if (mvs[i].speed < 0.02 && mvs[i-1].speed > 0.05) {
+            // Movement ended
+            var actual = 0;
+            for (var j = segStart+1; j <= i; j++) {
+                actual += Math.sqrt(mvs[j].dx*mvs[j].dx + mvs[j].dy*mvs[j].dy);
+            }
+            var direct = Math.sqrt(Math.pow(mvs[i].x - mvs[segStart].x, 2) + Math.pow(mvs[i].y - mvs[segStart].y, 2));
+            if (direct > 10) pathSegments.push({actual: actual, direct: direct, eff: direct > 0 ? direct/actual : 1});
+            segStart = i;
+        }
+    }
+    var avgPathEff = pathSegments.length > 0 ? pathSegments.reduce(function(a,s){return a+s.eff;},0) / pathSegments.length : 1;
+    
+    // ─── SPEED ───
+    var speeds = mvs.filter(function(m) { return m.speed > 0.01; }).map(function(m) { return m.speed; });
+    var avgSpeed = speeds.length > 0 ? speeds.reduce(function(a,b){return a+b;},0) / speeds.length : 0;
+    
+    // ─── ACCELERATION CHANGES (cogwheel-like) ───
+    var accelChanges = 0;
+    for (var k = 1; k < mvs.length; k++) {
+        if (mvs[k].accel * mvs[k-1].accel < 0 && Math.abs(mvs[k].accel) > 0.5) accelChanges++;
+    }
+    
+    // ─── HESITATIONS ───
+    var hesitations = [];
+    var hesitStart = null;
+    for (var h = 1; h < mvs.length; h++) {
+        if (mvs[h].speed < 0.02 && mvs[h].dt > HESITATION_THRESHOLD) {
+            if (!hesitStart) hesitStart = mvs[h].t;
+        } else if (hesitStart) {
+            hesitations.push(mvs[h].t - hesitStart);
+            hesitStart = null;
+        }
+    }
+    
+    // ─── VIGILANCE DECREMENT ───
+    var halfTime = W.sessionStart + (duration * 1000 / 2);
+    var clicks1H = clks.filter(function(c) { return c.t < halfTime; });
+    var clicks2H = clks.filter(function(c) { return c.t >= halfTime; });
+    // Use inter-click intervals as proxy for RT
+    var ici1 = [], ici2 = [];
+    for (var c1 = 1; c1 < clicks1H.length; c1++) ici1.push(clicks1H[c1].t - clicks1H[c1-1].t);
+    for (var c2 = 1; c2 < clicks2H.length; c2++) ici2.push(clicks2H[c2].t - clicks2H[c2-1].t);
+    var avgICI1 = ici1.length > 0 ? ici1.reduce(function(a,b){return a+b;},0)/ici1.length : 0;
+    var avgICI2 = ici2.length > 0 ? ici2.reduce(function(a,b){return a+b;},0)/ici2.length : 0;
+    var vigilanceDecrement = avgICI1 > 0 ? avgICI2 / avgICI1 : 1;
+    
+    // ─── BUILD METRICS OBJECT ───
+    var metrics = {
+        // Session
+        session_id: W.sessionId,
+        game_slug: W.gameSlug,
+        duration_seconds: Math.round(duration),
+        total_events: W.eventCount,
+        total_clicks: clks.length,
+        total_movements: mvs.length,
+        
+        // Motor
+        tremor_inicio: Math.round(tremorInicio * 1000) / 1000,
+        tremor_reposo: Math.round(tremorReposo * 1000) / 1000,
+        dismetria_mean_px: Math.round(meanDismetria * 10) / 10,
+        path_efficiency: Math.round(avgPathEff * 1000) / 1000,
+        velocidad_cursor_px_ms: Math.round(avgSpeed * 1000) / 1000,
+        aceleracion_cambios: accelChanges,
+        
+        // Temporal
+        time_to_first_action_ms: W.firstActionTime ? Math.round(W.firstActionTime - W.sessionStart) : null,
+        hesitacion_count: hesitations.length,
+        hesitacion_mean_ms: hesitations.length > 0 ? Math.round(hesitations.reduce(function(a,b){return a+b;},0) / hesitations.length) : 0,
+        inactividad_total_ms: Math.round(W.totalInactivityMs),
+        
+        // Atencional
+        tab_switches: W.tabSwitches,
+        decaimiento_vigilancia: Math.round(vigilanceDecrement * 100) / 100,
+        
+        // Conductual
+        perseveraciones: W.perseverations,
+        
+        // Game events summary
+        game_events_count: W.gameEvents.length,
+        game_events_types: [...new Set(W.gameEvents.map(function(e) { return e.type; }))]
+    };
+    
+    // ─── SAVE TO SUPABASE ───
+    try {
+        var payload = {
+            patient_dni: W.dni,
+            user_id: W.userId,
+            game_slug: W.gameSlug,
+            metric_type: 'session_biomet',
+            metric_data: metrics,
+            session_id: W.sessionId,
+            duration_seconds: Math.round(duration),
+            completed: true
+        };
+        
+        if (typeof ZykosEvidence !== 'undefined') {
+            payload = await ZykosEvidence.prepare(payload);
+        }
+        
+        await W.sb.from('zykos_game_metrics').insert(payload);
+        console.log('[wrapper] Session metrics saved:', W.gameSlug, W.eventCount, 'events');
+    } catch(e) {
+        console.warn('[wrapper] Save error:', e.message);
+    }
+}
+
+// ======================== TREMOR COMPUTATION ========================
+function computeTremor(positions) {
+    if (positions.length < 5) return 0;
+    // Tremor = standard deviation of position deltas
+    var deltas = [];
+    for (var i = 1; i < positions.length; i++) {
+        var dx = positions[i].x - positions[i-1].x;
+        var dy = positions[i].y - positions[i-1].y;
+        deltas.push(Math.sqrt(dx*dx + dy*dy));
+    }
+    var mean = deltas.reduce(function(a,b){return a+b;},0) / deltas.length;
+    var variance = deltas.reduce(function(a,d){return a + Math.pow(d-mean,2);},0) / deltas.length;
+    return Math.sqrt(variance);
+}
+
+// ======================== BOOT ========================
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
