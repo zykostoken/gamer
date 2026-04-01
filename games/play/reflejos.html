@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reflejos ZYKOS - ZYKOS GAMER</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase-config.js"></script>
+<script src="/games/shared/require-auth.js"></script>
+<script src="/games/shared/evidence-hash.js"></script>
+    <script src="/games/shared/input-calibration.js"></script>
+    <script src="/games/shared/auto-save.js"></script>
+    <script src="/games/shared/show-metrics.js"></script>
+    <script>window.onerror=function(m,s,l,c,e){document.title='ERROR';var d=document.createElement('div');d.style.cssText='position:fixed;top:0;left:0;right:0;background:red;color:white;padding:16px;z-index:99999;font-size:14px';d.textContent='JS Error: '+m+' (line '+l+')';document.body.appendChild(d);console.error('[reflejos]',m,s,l,e);};</script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;600&display=swap');
+        :root {
+            --bg: #080c14; --surface: #0f1623; --card: #182032;
+            --accent: #f43f5e; --accent2: #6366f1; --accent3: #06b6d4;
+            --success: #22c55e; --danger: #ef4444; --warn: #f59e0b;
+            --neon: #00ff94; --neon2: #39ff14;
+            --dim: rgba(255,255,255,0.35);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:var(--bg); color:#e2e8f0; font-family:'DM Sans',system-ui,sans-serif; min-height:100vh; overflow:hidden; }
+        
+        /* === HEADER === */
+        .game-header { background:var(--surface); border-bottom:1px solid rgba(255,255,255,0.06); padding:12px 20px; display:flex; justify-content:space-between; align-items:center; }
+        .game-header .logo { font-family:'IBM Plex Mono',monospace; font-weight:800; font-size:0.85rem; color:var(--accent); letter-spacing:2px; text-decoration:none; }
+        .game-header .info { display:flex; gap:16px; align-items:center; font-size:0.8rem; }
+        .badge { padding:4px 12px; border-radius:20px; font-weight:700; font-size:0.75rem; }
+        .badge-level { background:rgba(99,102,241,0.15); color:#818cf8; border:1px solid rgba(99,102,241,0.3); }
+        .badge-score { background:rgba(34,197,94,0.1); color:var(--neon2); border:1px solid rgba(34,197,94,0.2); }
+        .badge-time { color:var(--dim); font-family:'IBM Plex Mono',monospace; }
+        
+        /* === ARENA === */
+        .arena { position:relative; width:100%; height:calc(100vh - 56px); overflow:hidden; background:radial-gradient(ellipse at center, #0f172a 0%, #080c14 70%); }
+        .arena-grid { position:absolute; inset:0; background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px); background-size:40px 40px; }
+        
+        /* === STIMULUS === */
+        .stimulus {
+            position:absolute; border-radius:50%; cursor:pointer; 
+            display:flex; align-items:center; justify-content:center;
+            transition: transform 0.08s; user-select:none; -webkit-tap-highlight-color:transparent;
+            box-shadow: 0 0 30px rgba(var(--stim-rgb), 0.4), 0 0 60px rgba(var(--stim-rgb), 0.15);
+            animation: stimPulse 0.6s ease-in-out infinite alternate;
+        }
+        .stimulus:active { transform:scale(0.9); }
+        .stimulus.circle { border-radius:50%; }
+        .stimulus.square { border-radius:16%; }
+        .stimulus.triangle { border-radius:0; clip-path:polygon(50% 0%, 0% 100%, 100% 100%); }
+        
+        @keyframes stimPulse { from { box-shadow: 0 0 20px rgba(var(--stim-rgb),0.3); } to { box-shadow: 0 0 40px rgba(var(--stim-rgb),0.6); } }
+        @keyframes stimAppear { from { transform:scale(0); opacity:0; } to { transform:scale(1); opacity:1; } }
+        @keyframes stimHit { 0% { transform:scale(1); } 50% { transform:scale(1.3); } 100% { transform:scale(0); opacity:0; } }
+        @keyframes stimMiss { 0% { opacity:1; } 100% { opacity:0; transform:translateY(20px); } }
+        
+        /* === FEEDBACK === */
+        .feedback { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); font-size:3rem; font-weight:900; pointer-events:none; z-index:100; animation:fbPop 0.5s ease-out forwards; }
+        @keyframes fbPop { from { transform:translate(-50%,-50%) scale(0.5); opacity:1; } to { transform:translate(-50%,-50%) scale(1.5); opacity:0; } }
+        
+        /* === START / RESULTS SCREENS === */
+        .overlay-screen { position:fixed; inset:0; background:rgba(8,12,20,0.95); backdrop-filter:blur(20px); z-index:200; display:flex; align-items:center; justify-content:center; }
+        .screen-card { background:var(--surface); border:1px solid rgba(255,255,255,0.08); border-radius:24px; padding:40px; max-width:520px; width:90%; text-align:center; }
+        .screen-card h1 { font-size:2rem; font-weight:900; margin-bottom:8px; background:linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .screen-card h2 { font-size:1.1rem; font-weight:600; color:var(--dim); margin-bottom:24px; }
+        .screen-card p { font-size:0.88rem; color:rgba(255,255,255,0.5); line-height:1.6; margin-bottom:16px; }
+        
+        .level-list { text-align:left; margin:20px 0; }
+        .level-item { padding:10px 16px; margin:6px 0; border-radius:12px; background:var(--card); border:1px solid rgba(255,255,255,0.05); font-size:0.82rem; display:flex; justify-content:space-between; align-items:center; }
+        .level-item .lname { font-weight:700; color:#e2e8f0; }
+        .level-item .ldesc { color:var(--dim); font-size:0.75rem; }
+        .level-item.locked { opacity:0.4; }
+        .level-item.current { border-color:var(--accent); background:rgba(244,63,94,0.08); }
+        
+        .btn { padding:14px 32px; border-radius:14px; border:none; cursor:pointer; font-weight:800; font-size:0.95rem; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+        .btn-primary { background:linear-gradient(135deg, var(--accent), var(--accent2)); color:white; }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(244,63,94,0.3); }
+        .btn-secondary { background:var(--card); color:#e2e8f0; border:1px solid rgba(255,255,255,0.1); }
+        .btn-sm { padding:10px 20px; font-size:0.82rem; border-radius:10px; }
+        
+        /* === RESULTS METRICS === */
+        .metrics-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:16px 0; }
+        .metric-card { background:var(--card); border-radius:12px; padding:12px; text-align:center; border:1px solid rgba(255,255,255,0.05); }
+        .metric-card .mv { font-size:1.4rem; font-weight:900; color:white; }
+        .metric-card .ml { font-size:0.65rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+        .metric-card.good .mv { color:var(--success); }
+        .metric-card.warn .mv { color:var(--warn); }
+        .metric-card.bad .mv { color:var(--danger); }
+
+        /* === SOUNDS (visual-only indicator) === */
+        .sound-flash { position:fixed; inset:0; pointer-events:none; z-index:50; animation:soundFlash 0.15s ease-out; }
+        @keyframes soundFlash { from { background:rgba(255,255,255,0.05); } to { background:transparent; } }
+
+        /* === THEMES === */
+        .theme-ocean .arena { background: radial-gradient(ellipse at 50% 80%, #0c2340 0%, #040d1a 70%); }
+        .theme-mountain .arena { background: radial-gradient(ellipse at 50% 100%, #1a1a2e 0%, #0a0a14 70%); }
+        .theme-neon .arena { background: radial-gradient(ellipse at center, #1a0025 0%, #080010 70%); }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="game-header">
+        <a href="/games/portal/" class="logo">← ZYKOS GAMER</a>
+        <div class="info">
+            <span class="badge badge-level" id="level-badge">Nivel 1</span>
+            <span class="badge badge-score" id="score-display">0</span>
+            <span class="badge-time" id="timer-display">00:00</span>
+        </div>
+    </div>
+
+    <!-- ARENA -->
+    <div class="arena" id="arena">
+        <div class="arena-grid"></div>
+    </div>
+
+    <!-- START SCREEN -->
+    <div class="overlay-screen" id="start-screen">
+        <div class="screen-card">
+            <h1>Reflejos ZYKOS</h1>
+            <h2>Test de Performance Continua</h2>
+            <p>Respondé a los estímulos visuales y sonoros lo más rápido y preciso posible. Cada nivel agrega una nueva demanda cognitiva.</p>
+            
+            <div class="level-list" id="level-list"></div>
+            
+            <button class="btn btn-primary" id="btn-start" onclick="beginGame()">Comenzar</button>
+        </div>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div class="overlay-screen" id="results-screen" style="display:none">
+        <div class="screen-card" id="results-card"></div>
+    </div>
+
+<!-- AUDIO (Web Audio API) -->
+<script>
+// ================================================================
+// Reflejos ZYKOS — Continuous Performance Test Gamificado
+// (c) 2025-2026 Gonzalo Perez Cortizo. Proprietary. See LICENSE.
+// ZYKOS GAMER · B2B Cognitive Assessment Platform
+//
+// Constructos clínicos medidos:
+// - Atención sostenida (hit rate, omission errors)
+// - Control inhibitorio (commission errors, false alarm rate)  
+// - Velocidad de procesamiento (RT mean, RT variability)
+// - Discriminabilidad (d-prime: signal detection theory)
+// - Sesgo de respuesta (criterion/beta)
+// - Lateralización (RT diferencial izq/der)
+// - Flexibilidad cognitiva (switching cost)
+// - Coordinación visuomotora (precision under speed)
+// - Decaimiento vigilancia (RT slope across blocks)
+// - Fatiga (performance degradation 2nd half vs 1st half)
+// ================================================================
+
+var sb = null;
+var GAME_SLUG = 'reflejos';
+
+// ======================== AUDIO ENGINE ========================
+var audioCtx = null;
+function initAudio() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+function playTone(freq, duration, type) {
+    if (!audioCtx) return;
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+}
+function playHit() { playTone(880, 0.1, 'sine'); }
+function playMiss() { playTone(220, 0.3, 'sawtooth'); }
+function playWrong() { playTone(150, 0.2, 'square'); }
+
+// ======================== LEVELS ========================
+var LEVELS = [
+    {
+        id: 1, name: 'Atención Simple',
+        desc: 'Tocá el círculo rojo cada vez que aparezca',
+        rules: { shapes:['circle'], colors:['red'], actions:{ red_circle:'tap' },
+                 stimDuration:2000, isi:1200, count:25, size:[70,70], speedDecay:false },
+        constructs: ['A1 Atencion','M3 Precision'],
+        theme: null
+    },
+    {
+        id: 2, name: 'Go / No-Go',
+        desc: 'Tocá ROJO, ignorá AZUL',
+        rules: { shapes:['circle'], colors:['red','blue'], actions:{ red_circle:'tap', blue_circle:'inhibit' },
+                 stimDuration:1800, isi:1000, count:35, size:[65,65], speedDecay:false,
+                 targetRatio: 0.65 },
+        constructs: ['E1 Inhibicion','A1 Atencion'],
+        theme: null
+    },
+    {
+        id: 3, name: 'Lateralización',
+        desc: 'ROJO → botón derecho · AZUL → botón izquierdo',
+        rules: { shapes:['circle'], colors:['red','blue'], actions:{ red_circle:'right', blue_circle:'left' },
+                 stimDuration:1600, isi:900, count:40, size:[60,60], speedDecay:false,
+                 targetRatio: 0.5, lateralized: true },
+        constructs: ['E1 Inhibicion','A1 Atencion','M3 Precision'],
+        theme: null
+    },
+    {
+        id: 4, name: 'Formas',
+        desc: 'Círculos → click · Cuadrados → doble click',
+        rules: { shapes:['circle','square'], colors:['red','blue'], 
+                 actions:{ red_circle:'tap', blue_circle:'tap', red_square:'double', blue_square:'double' },
+                 stimDuration:1500, isi:800, count:45, size:[55,65], speedDecay:true },
+        constructs: ['E3 Flexibilidad','E1 Inhibicion','A1 Atencion'],
+        theme: null
+    },
+    {
+        id: 5, name: 'Velocidad',
+        desc: 'Todo más rápido, estímulos más chicos',
+        rules: { shapes:['circle','square'], colors:['red','blue','green'],
+                 actions:{ red_circle:'tap', blue_circle:'left', green_circle:'inhibit',
+                           red_square:'double', blue_square:'left', green_square:'inhibit' },
+                 stimDuration:1200, isi:600, count:50, size:[40,55], speedDecay:true,
+                 targetRatio: 0.5 },
+        constructs: ['A1 Atencion','E1 Inhibicion','E3 Flexibilidad','M3 Precision'],
+        theme: 'neon'
+    },
+    {
+        id: 6, name: 'Multimodal',
+        desc: 'Sonido agudo = tocá · Sonido grave = no toques (aunque aparezca)',
+        rules: { shapes:['circle','square'], colors:['red','blue','green'],
+                 actions:{ red_circle:'tap', blue_circle:'left', green_circle:'inhibit',
+                           red_square:'double', blue_square:'left', green_square:'inhibit' },
+                 stimDuration:1100, isi:550, count:55, size:[38,52], speedDecay:true,
+                 audioConflict: true, targetRatio: 0.45 },
+        constructs: ['A1 Atencion','E1 Inhibicion','E3 Flexibilidad','M3 Precision','AFEC1 Frustracion'],
+        theme: 'neon'
+    }
+];
+
+// ======================== STATE ========================
+var STATE = {
+    level: 0,
+    phase: 'idle', // idle, countdown, playing, results
+    stimIndex: 0,
+    stimuli: [],
+    responses: [],
+    score: 0,
+    startTime: 0,
+    timerInterval: null,
+    currentStim: null,
+    stimTimeout: null,
+    nextTimeout: null,
+    sessionId: null,
+    halfwayIndex: 0
+};
+
+// ======================== COLOR MAP ========================
+var COLORS = {
+    red:    { hex:'#f43f5e', rgb:'244,63,94' },
+    blue:   { hex:'#3b82f6', rgb:'59,130,246' },
+    green:  { hex:'#22c55e', rgb:'34,197,94' },
+    yellow: { hex:'#eab308', rgb:'234,179,8' }
+};
+
+// ======================== INIT ========================
+function init() {
+    sb = getSupabaseClient();
+    renderLevelList();
+}
+
+function renderLevelList() {
+    var html = '';
+    LEVELS.forEach(function(lv, i) {
+        var cls = i === 0 ? 'current' : 'locked';
+        html += '<div class="level-item ' + cls + '">' +
+            '<div><span class="lname">Nivel ' + lv.id + ': ' + lv.name + '</span><br><span class="ldesc">' + lv.desc + '</span></div>' +
+            '</div>';
+    });
+    document.getElementById('level-list').innerHTML = html;
+}
+
+// ======================== GAME START ========================
+function beginGame() {
+    initAudio();
+    document.getElementById('start-screen').style.display = 'none';
+    STATE.level = 0;
+    STATE.score = 0;
+    startLevel();
+}
+
+function startLevel() {
+    var lv = LEVELS[STATE.level];
+    STATE.phase = 'countdown';
+    STATE.stimIndex = 0;
+    STATE.responses = [];
+    STATE.startTime = performance.now();
+    
+    // Apply theme
+    document.body.className = lv.theme ? 'theme-' + lv.theme : '';
+    document.getElementById('level-badge').textContent = 'Nivel ' + lv.id;
+    document.getElementById('score-display').textContent = STATE.score;
+    
+    // Generate stimulus sequence
+    STATE.stimuli = generateSequence(lv);
+    STATE.halfwayIndex = Math.floor(STATE.stimuli.length / 2);
+    
+    // Timer
+    if (STATE.timerInterval) clearInterval(STATE.timerInterval);
+    var startT = Date.now();
+    STATE.timerInterval = setInterval(function() {
+        var elapsed = Math.floor((Date.now() - startT) / 1000);
+        var m = String(Math.floor(elapsed/60)).padStart(2,'0');
+        var s = String(elapsed%60).padStart(2,'0');
+        document.getElementById('timer-display').textContent = m + ':' + s;
+    }, 1000);
+    
+    // Countdown 3-2-1
+    showCountdown(3, function() {
+        STATE.phase = 'playing';
+        presentNextStimulus();
+    });
+}
+
+// ======================== SEQUENCE GENERATOR ========================
+function generateSequence(lv) {
+    var seq = [];
+    var rules = lv.rules;
+    var count = rules.count;
+    var targetRatio = rules.targetRatio || 0.7;
+    
+    for (var i = 0; i < count; i++) {
+        var isTarget = Math.random() < targetRatio;
+        var color, shape, action;
+        
+        if (rules.colors.length === 1) {
+            color = rules.colors[0];
+            shape = rules.shapes[0];
+        } else if (isTarget) {
+            // Pick a "go" stimulus
+            color = 'red';
+            shape = rules.shapes[Math.floor(Math.random() * rules.shapes.length)];
+        } else {
+            // Pick a "no-go" or alternative stimulus
+            var noGoColors = rules.colors.filter(function(c) { return c !== 'red'; });
+            color = noGoColors[Math.floor(Math.random() * noGoColors.length)];
+            shape = rules.shapes[Math.floor(Math.random() * rules.shapes.length)];
+        }
+        
+        action = rules.actions[color + '_' + shape] || 'tap';
+        
+        // Vary size within range
+        var minS = rules.size[0], maxS = rules.size[1];
+        var size = minS + Math.floor(Math.random() * (maxS - minS + 1));
+        
+        // Speed decay: stimuli get faster in second half
+        var isi = rules.isi;
+        var dur = rules.stimDuration;
+        if (rules.speedDecay && i > count * 0.5) {
+            var decay = 1 - ((i - count*0.5) / (count*0.5)) * 0.3;
+            isi = Math.max(300, Math.floor(isi * decay));
+            dur = Math.max(600, Math.floor(dur * decay));
+        }
+        
+        // Random position (avoid edges)
+        var margin = size + 20;
+        var arenaW = window.innerWidth - margin * 2;
+        var arenaH = (window.innerHeight - 56) - margin * 2;
+        var x = margin + Math.floor(Math.random() * arenaW);
+        var y = margin + Math.floor(Math.random() * arenaH);
+        
+        // Audio conflict (level 6): sometimes play conflicting sound
+        var audioSignal = null;
+        if (rules.audioConflict) {
+            if (action === 'inhibit') {
+                // No-go stimulus, but play "go" sound sometimes (conflict)
+                audioSignal = Math.random() < 0.3 ? 'go' : 'nogo';
+            } else {
+                audioSignal = Math.random() < 0.2 ? 'nogo' : 'go';
+            }
+        }
+        
+        seq.push({
+            index: i, color: color, shape: shape, action: action,
+            size: size, x: x, y: y, isi: isi, duration: dur,
+            audioSignal: audioSignal,
+            isTarget: action !== 'inhibit',
+            appearedAt: null, respondedAt: null, response: null, correct: null
+        });
+    }
+    return seq;
+}
+
+// ======================== STIMULUS PRESENTATION ========================
+function presentNextStimulus() {
+    if (STATE.phase !== 'playing') return;
+    if (STATE.stimIndex >= STATE.stimuli.length) {
+        endLevel();
+        return;
+    }
+    
+    var stim = STATE.stimuli[STATE.stimIndex];
+    STATE.currentStim = stim;
+    
+    // Create DOM element
+    var el = document.createElement('div');
+    el.className = 'stimulus ' + stim.shape;
+    el.style.cssText = 'width:' + stim.size + 'px;height:' + stim.size + 'px;' +
+        'left:' + stim.x + 'px;top:' + stim.y + 'px;' +
+        'background:' + COLORS[stim.color].hex + ';' +
+        '--stim-rgb:' + COLORS[stim.color].rgb + ';' +
+        'animation:stimAppear 0.12s ease-out;';
+    el.id = 'stim-' + stim.index;
+    
+    // Click handler
+    el.addEventListener('click', function(e) { handleResponse('tap', e); });
+    el.addEventListener('dblclick', function(e) { handleResponse('double', e); });
+    
+    document.getElementById('arena').appendChild(el);
+    stim.appearedAt = performance.now();
+    
+    // Play audio if multimodal
+    if (stim.audioSignal === 'go') { playTone(1200, 0.08, 'sine'); }
+    else if (stim.audioSignal === 'nogo') { playTone(200, 0.15, 'sawtooth'); }
+    
+    // Stimulus timeout (missed)
+    STATE.stimTimeout = setTimeout(function() {
+        var el = document.getElementById('stim-' + stim.index);
+        if (el && !stim.respondedAt) {
+            stim.respondedAt = performance.now();
+            stim.response = 'none';
+            stim.correct = !stim.isTarget; // Correct to NOT respond to no-go
+            if (stim.isTarget) {
+                // Omission error
+                el.style.animation = 'stimMiss 0.3s ease-out forwards';
+                setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+            } else {
+                // Correct rejection
+                el.style.animation = 'stimMiss 0.2s ease-out forwards';
+                setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 200);
+                STATE.score += 5;
+            }
+        }
+        STATE.stimIndex++;
+        STATE.nextTimeout = setTimeout(presentNextStimulus, stim.isi * 0.3);
+    }, stim.duration);
+}
+
+// ======================== RESPONSE HANDLER ========================
+function handleResponse(type, e) {
+    if (STATE.phase !== 'playing' || !STATE.currentStim) return;
+    
+    var stim = STATE.currentStim;
+    if (stim.respondedAt) return; // Already responded
+    
+    stim.respondedAt = performance.now();
+    stim.response = type;
+    var rt = stim.respondedAt - stim.appearedAt;
+    
+    // Check lateralized responses
+    var lv = LEVELS[STATE.level];
+    if (lv.rules.lateralized) {
+        // In lateralized mode, check left/right via click position
+        var screenMid = window.innerWidth / 2;
+        var side = e.clientX < screenMid ? 'left' : 'right';
+        stim.response = side;
+        stim.correct = (stim.action === side);
+    } else if (stim.action === 'inhibit') {
+        // Should not have responded
+        stim.correct = false;
+    } else if (stim.action === 'double' && type !== 'double') {
+        stim.correct = false;
+    } else if (stim.action === 'tap' && type === 'tap') {
+        stim.correct = true;
+    } else if (stim.action === 'double' && type === 'double') {
+        stim.correct = true;
+    } else {
+        stim.correct = (stim.action === type);
+    }
+    
+    // Audio conflict override (level 6)
+    if (stim.audioSignal === 'nogo' && stim.isTarget) {
+        // Stimulus was go but sound said no-go — responding is still correct
+        // but we track the conflict in metrics
+        stim.audioConflict = true;
+    }
+    
+    // Visual feedback
+    var el = document.getElementById('stim-' + stim.index);
+    if (el) {
+        if (stim.correct) {
+            el.style.animation = 'stimHit 0.2s ease-out forwards';
+            STATE.score += Math.max(5, Math.round(50 - rt/20));
+            playHit();
+            showFeedback('+' + Math.max(5, Math.round(50 - rt/20)), '#22c55e');
+        } else {
+            el.style.borderColor = 'var(--danger)';
+            el.style.animation = 'stimMiss 0.3s ease-out forwards';
+            STATE.score = Math.max(0, STATE.score - 10);
+            stim.action === 'inhibit' ? playWrong() : playMiss();
+            showFeedback(stim.action === 'inhibit' ? 'No tocar' : 'Error', 'var(--danger)');
+        }
+        setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+    }
+    
+    clearTimeout(STATE.stimTimeout);
+    document.getElementById('score-display').textContent = STATE.score;
+    
+    STATE.stimIndex++;
+    STATE.nextTimeout = setTimeout(presentNextStimulus, stim.isi);
+}
+
+// ======================== LATERALIZATION BUTTONS ========================
+// For level 3+, show left/right buttons on mobile
+// On desktop, left half = left, right half = right click areas
+
+// ======================== HELPERS ========================
+function showCountdown(n, cb) {
+    if (n <= 0) { cb(); return; }
+    var fb = document.createElement('div');
+    fb.className = 'feedback';
+    fb.style.color = 'white';
+    fb.textContent = n;
+    document.body.appendChild(fb);
+    setTimeout(function() { if (fb.parentNode) fb.parentNode.removeChild(fb); }, 500);
+    setTimeout(function() { showCountdown(n-1, cb); }, 800);
+}
+
+function showFeedback(text, color) {
+    var fb = document.createElement('div');
+    fb.className = 'feedback';
+    fb.style.color = color;
+    fb.textContent = text;
+    document.body.appendChild(fb);
+    setTimeout(function() { if (fb.parentNode) fb.parentNode.removeChild(fb); }, 500);
+}
+
+// ======================== END LEVEL ========================
+function endLevel() {
+    STATE.phase = 'results';
+    clearInterval(STATE.timerInterval);
+    clearTimeout(STATE.stimTimeout);
+    clearTimeout(STATE.nextTimeout);
+    
+    var lv = LEVELS[STATE.level];
+    var stims = STATE.stimuli;
+    var duration = (performance.now() - STATE.startTime) / 1000;
+    
+    // === COMPUTE CLINICAL METRICS ===
+    var targets = stims.filter(function(s) { return s.isTarget; });
+    var nonTargets = stims.filter(function(s) { return !s.isTarget; });
+    
+    var hits = targets.filter(function(s) { return s.correct; });
+    var omissions = targets.filter(function(s) { return s.response === 'none'; });
+    var commissions = nonTargets.filter(function(s) { return s.response !== 'none' && !s.correct; });
+    var correctRejections = nonTargets.filter(function(s) { return s.correct; });
+    
+    var hitRate = targets.length > 0 ? hits.length / targets.length : 0;
+    var falseAlarmRate = nonTargets.length > 0 ? commissions.length / nonTargets.length : 0;
+    
+    // Reaction times (only hits)
+    var rts = hits.map(function(s) { return s.respondedAt - s.appearedAt; });
+    var rtMean = rts.length > 0 ? rts.reduce(function(a,b){return a+b;},0) / rts.length : 0;
+    var rtSD = 0;
+    if (rts.length > 1) {
+        var sqDiffs = rts.map(function(v) { return Math.pow(v - rtMean, 2); });
+        rtSD = Math.sqrt(sqDiffs.reduce(function(a,b){return a+b;},0) / (rts.length - 1));
+    }
+    var rtCV = rtMean > 0 ? rtSD / rtMean : 0;
+    
+    // d-prime (Signal Detection Theory)
+    var adjHR = Math.min(0.99, Math.max(0.01, hitRate));
+    var adjFAR = Math.min(0.99, Math.max(0.01, falseAlarmRate));
+    var zHR = normInv(adjHR);
+    var zFAR = normInv(adjFAR);
+    var dPrime = zHR - zFAR;
+    var criterion = -0.5 * (zHR + zFAR);
+    
+    // Vigilance decrement (1st half vs 2nd half RT)
+    var firstHalfRTs = [], secondHalfRTs = [];
+    hits.forEach(function(s) {
+        var rt = s.respondedAt - s.appearedAt;
+        if (s.index < STATE.halfwayIndex) firstHalfRTs.push(rt);
+        else secondHalfRTs.push(rt);
+    });
+    var rt1H = firstHalfRTs.length > 0 ? firstHalfRTs.reduce(function(a,b){return a+b;},0)/firstHalfRTs.length : 0;
+    var rt2H = secondHalfRTs.length > 0 ? secondHalfRTs.reduce(function(a,b){return a+b;},0)/secondHalfRTs.length : 0;
+    var vigilanceDecrement = rt1H > 0 ? rt2H / rt1H : 1;
+    
+    // Perseverations (same response repeated rapidly < 150ms)
+    var perseverations = 0;
+    for (var i = 1; i < stims.length; i++) {
+        if (stims[i].respondedAt && stims[i-1].respondedAt) {
+            if (stims[i].respondedAt - stims[i-1].respondedAt < 150) perseverations++;
+        }
+    }
+    
+    var metrics = {
+        level: lv.id, level_name: lv.name,
+        total_stimuli: stims.length, target_count: targets.length, nontarget_count: nonTargets.length,
+        hits: hits.length, omissions: omissions.length, commissions: commissions.length,
+        correct_rejections: correctRejections.length,
+        hit_rate: Math.round(hitRate * 1000) / 1000,
+        false_alarm_rate: Math.round(falseAlarmRate * 1000) / 1000,
+        d_prime: Math.round(dPrime * 100) / 100,
+        criterion: Math.round(criterion * 100) / 100,
+        rt_mean_ms: Math.round(rtMean),
+        rt_sd_ms: Math.round(rtSD),
+        rt_cv: Math.round(rtCV * 1000) / 1000,
+        rt_1st_half_ms: Math.round(rt1H),
+        rt_2nd_half_ms: Math.round(rt2H),
+        vigilance_decrement: Math.round(vigilanceDecrement * 100) / 100,
+        perseverations: perseverations,
+        score: STATE.score,
+        duration_seconds: Math.round(duration),
+        constructs: lv.constructs
+    };
+    
+    // Save to Supabase
+    saveMetrics(metrics);
+    
+    // Show results
+    showResults(metrics, lv);
+}
+
+// ======================== SAVE METRICS ========================
+async function saveMetrics(metrics) {
+    if (!sb) return;
+    try {
+        var dni = window.ZYKOS_DNI || new URLSearchParams(location.search).get('dni');
+        if (!dni) return;
+        
+        var userId = null;
+        try {
+            var u = JSON.parse(localStorage.getItem('zykos_user') || '{}');
+            userId = u.user_id || null;
+        } catch(e) {}
+        
+        var payload = {
+            patient_id: userId,
+            patient_dni: dni,
+            game_slug: GAME_SLUG,
+            metric_type: 'session_summary',
+            metric_data: metrics
+        };
+        
+        if (typeof ZykosEvidence !== 'undefined') {
+            payload = await ZykosEvidence.prepare(payload);
+        }
+        
+        await sb.from('zykos_game_metrics').insert(payload);
+        
+        // Save individual trial data for deep analysis
+        await sb.from('zykos_game_metrics').insert({
+            patient_id: userId,
+            patient_dni: dni,
+            game_slug: GAME_SLUG,
+            metric_type: 'trial_data_level_' + metrics.level,
+            metric_data: { trials: STATE.stimuli.map(function(s) {
+                return { i:s.index, c:s.color, sh:s.shape, act:s.action, rt:s.respondedAt?Math.round(s.respondedAt-s.appearedAt):null, resp:s.response, ok:s.correct, sz:s.size, audio:s.audioSignal };
+            })}
+        });
+    } catch(e) { console.warn('[reflejos] Save error:', e.message); }
+}
+
+// ======================== SHOW RESULTS ========================
+function showResults(m, lv) {
+    var passed = m.hit_rate >= 0.6 && m.commissions <= m.total_stimuli * 0.3;
+    var hasNext = STATE.level < LEVELS.length - 1;
+    
+    var rtClass = m.rt_mean_ms < 400 ? 'good' : m.rt_mean_ms < 600 ? 'warn' : 'bad';
+    var hrClass = m.hit_rate >= 0.8 ? 'good' : m.hit_rate >= 0.6 ? 'warn' : 'bad';
+    var dpClass = m.d_prime >= 2 ? 'good' : m.d_prime >= 1 ? 'warn' : 'bad';
+    var vigClass = m.vigilance_decrement <= 1.1 ? 'good' : m.vigilance_decrement <= 1.3 ? 'warn' : 'bad';
+    
+    var html = '<h1>' + (passed ? 'Nivel Completado' : 'Nivel Finalizado') + '</h1>' +
+        '<h2>' + lv.name + '</h2>' +
+        '<div class="metrics-grid">' +
+        '<div class="metric-card ' + hrClass + '"><div class="mv">' + Math.round(m.hit_rate*100) + '%</div><div class="ml">Aciertos</div></div>' +
+        '<div class="metric-card ' + rtClass + '"><div class="mv">' + m.rt_mean_ms + '</div><div class="ml">RT medio (ms)</div></div>' +
+        '<div class="metric-card ' + dpClass + '"><div class="mv">' + m.d_prime + '</div><div class="ml">d\' (discriminabilidad)</div></div>' +
+        '<div class="metric-card"><div class="mv">' + m.omissions + '</div><div class="ml">Omisiones</div></div>' +
+        '<div class="metric-card"><div class="mv">' + m.commissions + '</div><div class="ml">Comisiones</div></div>' +
+        '<div class="metric-card ' + vigClass + '"><div class="mv">' + m.vigilance_decrement + '</div><div class="ml">Decaimiento</div></div>' +
+        '<div class="metric-card"><div class="mv">' + m.rt_cv + '</div><div class="ml">Variabilidad RT</div></div>' +
+        '<div class="metric-card"><div class="mv">' + m.perseverations + '</div><div class="ml">Perseveraciones</div></div>' +
+        '<div class="metric-card"><div class="mv">' + m.score + '</div><div class="ml">Puntuación</div></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap">' +
+        '<button class="btn btn-secondary btn-sm" onclick="retryLevel()">Reintentar</button>';
+    
+    if (passed && hasNext) {
+        html += '<button class="btn btn-primary btn-sm" onclick="nextLevel()">Siguiente Nivel →</button>';
+    }
+    
+    html += '<button class="btn btn-secondary btn-sm" onclick="exitGame()">Salir</button></div>';
+    
+    document.getElementById('results-card').innerHTML = html;
+    document.getElementById('results-screen').style.display = 'flex';
+}
+
+function retryLevel() {
+    document.getElementById('results-screen').style.display = 'none';
+    // Clean arena
+    var arena = document.getElementById('arena');
+    var stims = arena.querySelectorAll('.stimulus');
+    stims.forEach(function(s) { s.remove(); });
+    startLevel();
+}
+
+function nextLevel() {
+    document.getElementById('results-screen').style.display = 'none';
+    var arena = document.getElementById('arena');
+    var stims = arena.querySelectorAll('.stimulus');
+    stims.forEach(function(s) { s.remove(); });
+    STATE.level++;
+    startLevel();
+}
+
+function exitGame() {
+    window.location.href = '/games/portal/';
+}
+
+// ======================== NORMAL INVERSE (z-score) ========================
+function normInv(p) {
+    // Rational approximation for normal inverse CDF
+    if (p <= 0) return -4; if (p >= 1) return 4;
+    if (p < 0.5) return -normInv(1 - p);
+    var t = Math.sqrt(-2 * Math.log(1 - p));
+    var c0 = 2.515517, c1 = 0.802853, c2 = 0.010328;
+    var d1 = 1.432788, d2 = 0.189269, d3 = 0.001308;
+    return t - (c0 + c1*t + c2*t*t) / (1 + d1*t + d2*t*t + d3*t*t*t);
+}
+
+// ======================== BOOT ========================
+document.addEventListener('DOMContentLoaded', init);
+</script>
+<script src="/games/shared/mood-modals.js"></script>
+<script>
+// Pre-game hook: show color picker before starting
+(function(){
+    var b = document.getElementById('btn-start');
+    if (!b) return;
+    var origClick = b.onclick;
+    b.onclick = function() {
+        if (typeof showPreGameChat === 'function' && !window._pgd) {
+            window._pgd = true;
+            showPreGameChat();
+            var w = setInterval(function() {
+                if (!document.getElementById('mood-pre-overlay') && !document.getElementById('input-calibration-overlay')) {
+                    clearInterval(w);
+                    beginGame();
+                }
+            }, 200);
+            setTimeout(function() { clearInterval(w); beginGame(); }, 15000);
+        } else {
+            beginGame();
+        }
+    };
+})();
+</script>
+</body>
+</html>
