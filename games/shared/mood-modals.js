@@ -122,8 +122,7 @@ function showPreGameChat() {
     card.style.cssText = 'position:relative;background:#1e293b;border-radius:20px;padding:28px 24px;max-width:400px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);text-align:center;color:#e2e8f0;font-family:system-ui,sans-serif';
 
     var questions = [
-        { q: 'Elegí un color', placeholder: null, input: false, colorPicker: true },
-        { q: '¡Genial! ¿Listo/a para empezar?', placeholder: null, input: false }
+        { q: 'Elegí un color', placeholder: null, input: false, colorPicker: true }
     ];
 
     function dismiss() {
@@ -164,8 +163,8 @@ function showPreGameChat() {
                     _moodState.preGameColor = c.name;
                     _moodState.preGameColorHex = c.hex;
                     _moodState.responses.push('color:' + c.name);
-                    _moodState.step++;
-                    renderStep();
+                    _moodSaveToSupabase('pre_game', { responses: _moodState.responses, color: c.hex, color_name: c.name });
+                    dismiss();
                 };
                 btn.onmouseenter = function() { btn.style.transform = 'scale(1.15)'; btn.style.borderColor = 'rgba(255,255,255,0.5)'; };
                 btn.onmouseleave = function() { btn.style.transform = 'scale(1)'; btn.style.borderColor = 'transparent'; };
@@ -176,7 +175,7 @@ function showPreGameChat() {
             var skipBtn = document.createElement('button');
             skipBtn.textContent = 'Saltar';
             skipBtn.style.cssText = 'padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.4);cursor:pointer;font-size:0.8rem;margin-top:8px';
-            skipBtn.onclick = function() { _moodState.responses.push('color:(saltado)'); _moodState.step++; renderStep(); };
+            skipBtn.onclick = function() { _moodState.responses.push('color:(saltado)'); _moodSaveToSupabase('pre_game', { responses: _moodState.responses, skipped: true }); dismiss(); };
             card.appendChild(skipBtn);
         } else if (s.input) {
             var inp = document.createElement('input');
