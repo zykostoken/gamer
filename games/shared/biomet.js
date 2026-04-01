@@ -1,7 +1,7 @@
 // (c) 2025-2026 Gonzalo Perez Cortizo. Proprietary. See LICENSE.
 // ================================================================
 // biomet.js — Captura biométrica psicomotora universal
-// Clínica Psiquiátrica José Ingenieros · HDD Digital
+// ZYKOS GAMER · Biometric Passive Capture Engine
 //
 // Referencia clínica:
 //   Betta (Psiquiatría): semiología psicomotriz, cuanti y cualitativa
