@@ -458,6 +458,16 @@ function handleResponse(type, e) {
     stim.response = type;
     var rt = stim.respondedAt - stim.appearedAt;
     
+    // Motor metrics: click precision (dismetria = distance from stimulus center)
+    var stimCenterX = stim.x + stim.size/2;
+    var stimCenterY = stim.y + stim.size/2 + 56; // +56 for header height
+    var clickOffsetX = e.clientX - stimCenterX;
+    var clickOffsetY = e.clientY - stimCenterY;
+    var clickDistance = Math.sqrt(clickOffsetX*clickOffsetX + clickOffsetY*clickOffsetY);
+    stim.clickDistance = Math.round(clickDistance * 10) / 10;
+    stim.clickOffsetX = Math.round(clickOffsetX);
+    stim.clickOffsetY = Math.round(clickOffsetY);
+    
     // Check lateralized responses
     var lv = LEVELS[STATE.level];
     if (lv.rules.lateralized) {
@@ -596,6 +606,27 @@ function endLevel() {
         }
     }
     
+    // Motor metrics: dismetria and tremor
+    var clickDistances = stims.filter(function(s) { return s.clickDistance !== undefined; }).map(function(s) { return s.clickDistance; });
+    var meanDismetria = clickDistances.length > 0 ? clickDistances.reduce(function(a,b){return a+b;},0) / clickDistances.length : 0;
+    var dismetriaSD = 0;
+    if (clickDistances.length > 1) {
+        var dSqDiffs = clickDistances.map(function(v) { return Math.pow(v - meanDismetria, 2); });
+        dismetriaSD = Math.sqrt(dSqDiffs.reduce(function(a,b){return a+b;},0) / (clickDistances.length - 1));
+    }
+    var tremorIndex = meanDismetria > 0 ? dismetriaSD / meanDismetria : 0; // CV of click precision
+    
+    // Path efficiency: for double-clicks, measure time between clicks
+    var doubleClickTimes = stims.filter(function(s) { return s.response === 'double' && s.correct; }).map(function(s) { return s.respondedAt - s.appearedAt; });
+    var avgDoubleClickTime = doubleClickTimes.length > 0 ? doubleClickTimes.reduce(function(a,b){return a+b;},0) / doubleClickTimes.length : 0;
+    
+    // Lateralization differential (for level 3+)
+    var leftRTs = stims.filter(function(s) { return s.response === 'left' && s.correct; }).map(function(s) { return s.respondedAt - s.appearedAt; });
+    var rightRTs = stims.filter(function(s) { return s.response === 'right' && s.correct; }).map(function(s) { return s.respondedAt - s.appearedAt; });
+    var rtLeft = leftRTs.length > 0 ? leftRTs.reduce(function(a,b){return a+b;},0)/leftRTs.length : 0;
+    var rtRight = rightRTs.length > 0 ? rightRTs.reduce(function(a,b){return a+b;},0)/rightRTs.length : 0;
+    var lateralDiff = rtLeft > 0 && rtRight > 0 ? Math.abs(rtLeft - rtRight) : 0;
+
     var metrics = {
         level: lv.id, level_name: lv.name,
         total_stimuli: stims.length, target_count: targets.length, nontarget_count: nonTargets.length,
@@ -614,6 +645,13 @@ function endLevel() {
         perseverations: perseverations,
         score: STATE.score,
         duration_seconds: Math.round(duration),
+        mean_dismetria_px: Math.round(meanDismetria * 10) / 10,
+        dismetria_sd_px: Math.round(dismetriaSD * 10) / 10,
+        tremor_index: Math.round(tremorIndex * 1000) / 1000,
+        avg_double_click_ms: Math.round(avgDoubleClickTime),
+        rt_left_ms: Math.round(rtLeft),
+        rt_right_ms: Math.round(rtRight),
+        lateral_differential_ms: Math.round(lateralDiff),
         constructs: lv.constructs
     };
     
@@ -658,7 +696,7 @@ async function saveMetrics(metrics) {
             game_slug: GAME_SLUG,
             metric_type: 'trial_data_level_' + metrics.level,
             metric_data: { trials: STATE.stimuli.map(function(s) {
-                return { i:s.index, c:s.color, sh:s.shape, act:s.action, rt:s.respondedAt?Math.round(s.respondedAt-s.appearedAt):null, resp:s.response, ok:s.correct, sz:s.size, audio:s.audioSignal };
+                return { i:s.index, c:s.color, sh:s.shape, act:s.action, rt:s.respondedAt?Math.round(s.respondedAt-s.appearedAt):null, resp:s.response, ok:s.correct, sz:s.size, audio:s.audioSignal, dist:s.clickDistance||null, offX:s.clickOffsetX||0, offY:s.clickOffsetY||0 };
             })}
         });
     } catch(e) { console.warn('[reflejos] Save error:', e.message); }
@@ -686,6 +724,9 @@ function showResults(m, lv) {
         '<div class="metric-card"><div class="mv">' + m.rt_cv + '</div><div class="ml">Variabilidad RT</div></div>' +
         '<div class="metric-card"><div class="mv">' + m.perseverations + '</div><div class="ml">Perseveraciones</div></div>' +
         '<div class="metric-card"><div class="mv">' + m.score + '</div><div class="ml">Puntuación</div></div>' +
+        '<div class="metric-card"><div class="mv">' + m.mean_dismetria_px + '</div><div class="ml">Dismetría (px)</div></div>' +
+        '<div class="metric-card"><div class="mv">' + m.tremor_index + '</div><div class="ml">Índice Tremor</div></div>' +
+        (m.lateral_differential_ms > 0 ? '<div class="metric-card"><div class="mv">' + m.lateral_differential_ms + '</div><div class="ml">Dif. Lateral (ms)</div></div>' : '') +
         '</div>' +
         '<div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap">' +
         '<button class="btn btn-secondary btn-sm" onclick="retryLevel()">Reintentar</button>';
