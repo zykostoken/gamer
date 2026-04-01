@@ -226,11 +226,13 @@
             <div class="bg-teal-50 border-2 border-teal-200 rounded-2xl p-5 mb-6 text-left">
                 <h3 class="font-bold text-teal-800 mb-3 text-sm">[L] CONSIGNA GENERAL</h3>
                 <p class="text-gray-700 text-sm mb-3">Organizá la medicación semanal arrastrando cada pastilla al casillero correcto (día y horario).</p>
-                <p class="text-gray-700 text-sm mb-2"><strong>3 niveles de dificultad:</strong></p>
+                <p class="text-gray-700 text-sm mb-2"><strong>5 niveles de dificultad:</strong></p>
                 <ul class="text-sm text-gray-600 space-y-1 ml-4 list-disc">
                     <li><strong>Nivel 1:</strong> 2 medicamentos, esquema simple</li>
                     <li><strong>Nivel 2:</strong> 3 medicamentos, uno solo días hábiles</li>
                     <li><strong>Nivel 3:</strong> 4 medicamentos, algunos solo ciertos días</li>
+                    <li><strong>Nivel 4:</strong> 5 medicamentos, horarios alternados</li>
+                    <li><strong>Nivel 5:</strong> 6 medicamentos, esquema complejo</li>
                 </ul>
             </div>
 
@@ -335,6 +337,20 @@
                             style="display:none;padding:12px 32px;border-radius:16px;border:none;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 4px 16px rgba(34,197,94,0.4);animation:pulse 1s infinite;">
                          COMPLETADO
                     </button>
+                </div>
+
+                <!-- INDICADOR DE PROGRESO DE LA INDICACIÓN -->
+                <div id="completion-indicator" style="display:none;" class="mb-4 p-3 bg-white/70 rounded-2xl border-2 border-teal-200">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <span class="text-sm font-semibold text-gray-700">✓ Indicación completada:</span>
+                        <span id="completion-count" class="text-sm font-extrabold text-teal-600">0/0</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full overflow-hidden" style="height:10px;">
+                        <div id="completion-bar-fill" style="height:10px;border-radius:999px;width:0%;transition:width 0.5s,background 0.5s;background:linear-gradient(90deg,#f59e0b,#22c55e);"></div>
+                    </div>
+                    <div id="completion-message" style="display:none;" class="text-center mt-2 text-xs font-semibold text-green-700">
+                        ¡Indicación completa! Presioná COMPLETADO cuando estés listo/a.
+                    </div>
                 </div>
 
                 <!-- Headers de días -->
@@ -766,6 +782,20 @@
             document.getElementById('redirections-display').textContent = '--';
             document.getElementById('perseveration-display').textContent = '0';
             document.getElementById('clinical-hint').style.display = 'none';
+
+            // Show finish button (player decides when done)
+            document.getElementById('finish-btn').style.display = 'block';
+
+            // Init completion indicator
+            var expectedCount = getExpectedPlacements();
+            var ci = document.getElementById('completion-indicator');
+            if (ci) ci.style.display = 'block';
+            var ccEl = document.getElementById('completion-count');
+            if (ccEl) ccEl.textContent = '0/' + expectedCount;
+            var cbEl = document.getElementById('completion-bar-fill');
+            if (cbEl) { cbEl.style.width = '0%'; cbEl.style.background = 'linear-gradient(90deg,#f59e0b,#22c55e)'; }
+            var cmEl = document.getElementById('completion-message');
+            if (cmEl) cmEl.style.display = 'none';
         }
 
         // ===========================================
@@ -1273,6 +1303,23 @@
             const hint = generateClinicalHint(avgTremor, omissions, sessionState.totalErrors, avgHesitation, avgEff, persevs);
             if (hint) { hintEl.textContent = hint; hintEl.style.display = 'block'; }
 
+            // Update completion indicator
+            var completionPct = expected > 0 ? Math.min(100, Math.round((sessionState.correctPlacements / expected) * 100)) : 0;
+            var completionCountEl = document.getElementById('completion-count');
+            if (completionCountEl) {
+                completionCountEl.textContent = sessionState.correctPlacements + '/' + expected;
+                completionCountEl.style.color = completionPct >= 100 ? '#16a34a' : '#0d9488';
+            }
+            var completionBarEl = document.getElementById('completion-bar-fill');
+            if (completionBarEl) {
+                completionBarEl.style.width = completionPct + '%';
+                completionBarEl.style.background = completionPct >= 100 ? 'linear-gradient(90deg,#22c55e,#16a34a)' :
+                                          completionPct >= 50  ? 'linear-gradient(90deg,#f59e0b,#22c55e)' :
+                                                                  'linear-gradient(90deg,#f87171,#f59e0b)';
+            }
+            var completionMsgEl = document.getElementById('completion-message');
+            if (completionMsgEl) completionMsgEl.style.display = completionPct >= 100 ? 'block' : 'none';
+
             // NO auto-complete: el paciente decide cuando termino
         }
 
@@ -1635,14 +1682,20 @@
 
         function goNextLevel() {
             document.getElementById('results-overlay').style.display = 'none';
-            sessionState.gameActive = true;
+            if (sessionState.timerInterval) { clearInterval(sessionState.timerInterval); sessionState.timerInterval = null; }
+            sessionState.gameActive = false;
+            sessionState.sessionId = null;
             loadLevel(sessionState.currentLevelIndex + 1);
+            startGameSession();
         }
 
         function retryLevel() {
             document.getElementById('results-overlay').style.display = 'none';
-            sessionState.gameActive = true;
+            if (sessionState.timerInterval) { clearInterval(sessionState.timerInterval); sessionState.timerInterval = null; }
+            sessionState.gameActive = false;
+            sessionState.sessionId = null;
             loadLevel(sessionState.currentLevelIndex);
+            startGameSession();
         }
 
         function goToPortal() {

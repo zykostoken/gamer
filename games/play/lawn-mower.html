@@ -4794,16 +4794,20 @@
       // Pre-game mood color prompt (projective, no labels shown to player)
       if (typeof showPreGameChat === 'function') {
         showPreGameChat();
-        // showPreGameChat is non-blocking, starts level after color selection
-        // Wait for modal to close then start
+        // Guard so startLevel is called exactly once (interval OR fallback, never both)
+        var _levelStarted = false;
+        // Wait for mood modal to close, then start level
         var _checkMood = setInterval(function() {
           if (!document.getElementById('mood-pre-overlay')) {
             clearInterval(_checkMood);
-            startLevel(level);
+            if (!_levelStarted) { _levelStarted = true; startLevel(level); }
           }
         }, 200);
-        // Fallback: if modal doesn't appear in 3s, start anyway
-        setTimeout(function() { clearInterval(_checkMood); startLevel(level); }, 3000);
+        // Fallback: if modal doesn't appear / disappear in 3s, start anyway
+        setTimeout(function() {
+          clearInterval(_checkMood);
+          if (!_levelStarted) { _levelStarted = true; startLevel(level); }
+        }, 3000);
       } else {
         startLevel(level);
       }
