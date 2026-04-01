@@ -123,13 +123,11 @@ function showPreGameChat() {
 
     var questions = [
         { q: 'Elegí un color', placeholder: null, input: false, colorPicker: true },
-        { q: '¿Cómo estás hoy?', placeholder: 'Bien, más o menos, cansado/a...', input: true },
-        { q: '¿Descansaste bien anoche?', placeholder: 'Sí, no mucho, regular...', input: true },
         { q: '¡Genial! ¿Listo/a para empezar?', placeholder: null, input: false }
     ];
 
     function dismiss() {
-        _moodStorageSet('mood_pregame_done_' + today, 'done');
+        var _today = new Date().toISOString().slice(0,10); _moodStorageSet('mood_pregame_done_' + _today, 'done');
         overlay.style.animation = 'mfadeOut .25s ease forwards';
         setTimeout(function() { overlay.remove(); }, 300);
     }
