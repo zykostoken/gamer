@@ -245,22 +245,14 @@ async function init() {
     }
 
     // Dashboard visible at milestone sessions: 3, 5, 8, 12, 15
-    var milestones = [3, 5, 8, 12, 15  { slug:'reflejos', name:'Reflejos ZYKOS', icon:'&#9889;', color:'#f43f5e',
-    desc:'Test de performance continua. Atencion sostenida, inhibicion, lateralizacion, discriminabilidad (d-prime). 6 niveles progresivos.',
-    domains:['A1 Atencion','E1 Inhibicion','M3 Precision','E3 Flexibilidad'],
-    url:'/games/play/reflejos.html' }
-];
+    var milestones = [3, 5, 8, 12, 15];
     var sessionsPlayed = data.sessions_total || 0;
     var isMilestone = milestones.indexOf(sessionsPlayed) !== -1;
     var isAdmin = data.role === 'superadmin' || data.role === 'admin';
     var canView = isAdmin || isMilestone;
     var nextMilestone = null;
     for (var mi = 0; mi < milestones.length; mi++) {
-      if (milestones[mi] > sessionsPlayed) { nextMilestone = milestones[mi  { slug:'reflejos', name:'Reflejos ZYKOS', icon:'&#9889;', color:'#f43f5e',
-    desc:'Test de performance continua. Atencion sostenida, inhibicion, lateralizacion, discriminabilidad (d-prime). 6 niveles progresivos.',
-    domains:['A1 Atencion','E1 Inhibicion','M3 Precision','E3 Flexibilidad'],
-    url:'/games/play/reflejos.html' }
-]; break; }
+      if (milestones[mi] > sessionsPlayed) { nextMilestone = milestones[mi]; break; }
     }
 
     if (canView) {
