@@ -442,13 +442,18 @@ function showFeedbackModal(gameSlug) {
     var comment = document.getElementById('fb-comment').value.trim();
     var sb = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
     if (sb) {
-      sb.from('zykos_feedback').insert({
-        patient_dni: dni,
-        game_slug: gameSlug || window._zykosCurrentGame || 'unknown',
-        rating: selectedRating,
-        comment: comment || null,
-        session_number: parseInt(localStorage.getItem('zykos_session_number') || '0')
-      }).then(function(){}).catch(function(){});
+      (async function() {
+        try {
+          var r = await sb.from('zykos_feedback').insert({
+            patient_dni: dni,
+            game_slug: gameSlug || window._zykosCurrentGame || 'unknown',
+            rating: selectedRating,
+            comment: comment || null,
+            session_number: parseInt(localStorage.getItem('zykos_session_number') || '0')
+          });
+          if (r.error) console.warn('[feedback] save:', r.error.message);
+        } catch(e) { console.warn('[feedback]', e); }
+      })();
     }
     overlay.remove();
   };

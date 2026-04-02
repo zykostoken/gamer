@@ -75,27 +75,25 @@ function _moodSaveToSupabase(type, data, context) {
             entry_type: type,
             created_at: now
         };
-        client.from('zykos_mood_entries').insert(entryRow).then(function(){}).catch(function(e){ console.warn('mood_entry save:', e); });
+        (async function(){ try { var r = await client.from('zykos_mood_entries').insert(entryRow); if(r.error) console.warn('mood_entry:', r.error.message); } catch(e){ console.warn('mood_entry:', e); } })();
 
         // Guardar en zykos_game_metrics para serie longitudinal
         // Se guarda el color tal cual — sin ningún mapeo numérico a priori.
         // La secuencia de colores en el tiempo es el dato; la interpretación es clínica.
         if (data && data.color && !data.skipped) {
-            client.from('zykos_game_metrics').insert({
-                patient_id: null,
+            (async function(){ try { var r = await client.from('zykos_game_metrics').insert({
                 patient_dni: pDni,
                 game_slug: ctx === 'game' ? (gameSlug + '_color') : (ctx + '_color'),
                 metric_type: 'color_eleccion',
-                metric_value: null,   // sin valor numérico — no interpretamos
+                metric_value: null,
                 metric_data: {
                     color_hex: data.color,
-                    color_id: data.color_name,   // identificador interno (no mostrar al paciente)
+                    color_id: data.color_name,
                     context_type: ctx,
                     source_activity: gameSlug,
                     session_ordinal: data.session_ordinal || null
-                },
-                created_at: now
-            }).then(function(){}).catch(function(e){ console.warn('metric color save:', e); });
+                }
+            }); if(r.error) console.warn('metric color:', r.error.message); } catch(e){ console.warn('metric color:', e); } })();
         }
     } catch(e) {}
 }
@@ -333,19 +331,11 @@ function initMoodModals() {
 }
 
 // ====================================================================
-// AUTO-CALIBRATION HOOK
-// If InputCalibration is available and needs calibration,
-// run it before the pre-game mood flow
+// AUTO-CALIBRATION HOOK — DISABLED in V3
+// Calibration was overlapping with game start causing red screen freeze.
+// Calibration should run BEFORE game load (portal or auth), not during.
+// The original mood flow runs directly without calibration gate.
 // ====================================================================
-var _originalShowPreGameChat = showPreGameChat;
-showPreGameChat = function() {
-    if (typeof InputCalibration !== 'undefined' && InputCalibration.needsCalibration()) {
-        var dni = null;
-        try { dni = localStorage.getItem('zykos_patient_dni'); } catch(e) {}
-        InputCalibration.run({ patientDni: dni }).then(function() {
-            _originalShowPreGameChat();
-        });
-    } else {
-        _originalShowPreGameChat();
-    }
-};
+// var _originalShowPreGameChat = showPreGameChat;
+// showPreGameChat = function() { ... calibration ... };
+// V3: no-op wrapper removed. showPreGameChat() runs directly.

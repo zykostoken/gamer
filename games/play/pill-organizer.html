@@ -986,18 +986,21 @@
                 renderPillInSlot(slot, medType, isCorrect, dropOffsetX, dropOffsetY);
                 updateRealTimeMetrics();
 
-                // Fire-and-forget a Supabase (con .then() para que .catch() funcione en v2)
+                // V3 fix: proper await, game_session_id -> session_id
                 if (sb && sessionState.patientDni && sessionState.patientDni !== null) {
-                    sb.from('zykos_game_metrics').insert({
-                        patient_dni: sessionState.patientDni,
-                        game_session_id: sessionState.sessionId,
-                        game_slug: 'pill-organizer',
-                        metric_type: 'pill_placement',
-                        metric_value: tremorIndex,
-                        metric_data: movement
-                    }).then(function(res) {
-                        if (res.error) console.warn('Metric save error:', res.error.message);
-                    }).catch(function(e) { console.warn('Metric save:', e.message); });
+                    (async function() {
+                        try {
+                            var r = await sb.from('zykos_game_metrics').insert({
+                                patient_dni: sessionState.patientDni,
+                                session_id: sessionState.sessionId,
+                                game_slug: 'pill-organizer',
+                                metric_type: 'pill_placement',
+                                metric_value: tremorIndex,
+                                metric_data: movement
+                            });
+                            if (r.error) console.warn('[pill] placement:', r.error.message);
+                        } catch(e) { console.warn('[pill] placement:', e.message); }
+                    })();
                 }
             }
 

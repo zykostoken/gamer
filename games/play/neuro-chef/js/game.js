@@ -235,15 +235,15 @@ async function startGame() {
     Biometrics.resetCount = 0;
     
     if (sb) {
-        try { const { data: g } = await sb.from('zykos_games').select('id').eq('slug', 'neuro-chef-v2').single(); gameState.gameId = g?.id; } catch(e) {}
+        try { const { data: g } = await sb.from('zykos_games').select('id').eq('slug', 'neuro-chef-v2').single(); gameState.gameId = g?.id; } catch(e) { console.error("[neuro-chef] save error:", e.message || e); }
         try {
-            const { data: s } = await sb.from('zykos_game_sessions').insert({ patient_id: gameState.patientId, game_id: gameState.gameId, level: 1, started_at: new Date().toISOString() }).select('id').single();
+            const { data: s } = await sb.from('zykos_game_sessions').insert({  game_id: gameState.gameId, level: 1, started_at: new Date().toISOString() }).select('id').single();
             gameState.sessionId = s?.id;
         } catch(e) { console.warn('[Neuro-Chef] Session fail:', e); }
     }
     
     if (gameState.preMood && !gameState.preMood.skipped && sb) {
-        try { await sb.from('zykos_mood_checkins').insert({ patient_id: gameState.patientId, context: 'pre_game_neuro_chef', mood_level: null, notes: JSON.stringify(gameState.preMood) }); } catch(e) {}
+        try { await sb.from('zykos_mood_checkins').insert({  context: 'pre_game_neuro_chef', mood_level: null, notes: JSON.stringify(gameState.preMood) }); } catch(e) { console.error("[neuro-chef] save error:", e.message || e); }
     }
     
     document.getElementById('game-container').classList.remove('hidden');
@@ -965,7 +965,7 @@ function showColorSelectorDirect(btnContinue) {
 }
 
 async function savePostMoodAndFinish() {
-    if (sb) { try { await sb.from('zykos_mood_checkins').insert({ patient_id:gameState.patientId, context:'post_game_neuro_chef', mood_level:null, color_intensity:null, color_selected:gameState.postMood.color, skipped:gameState.postMood.skipped||false }); } catch(e) {} }
+    if (sb) { try { await sb.from('zykos_mood_checkins').insert({  context:'post_game_neuro_chef', mood_level:null, color_intensity:null, color_selected:gameState.postMood.color, skipped:gameState.postMood.skipped||false }); } catch(e) { console.error("[neuro-chef] save error:", e.message || e); } }
     document.getElementById('post-game-modal').classList.add('hidden'); finishGame();
 }
 
@@ -994,11 +994,11 @@ async function finishGame() {
         }
     };
     if (sb) {
-        try { await sb.from('zykos_game_sessions').update({ completed_at:new Date().toISOString(), final_score:gameState.totalCorrect-gameState.totalErrors, metadata:summary }).eq('id',gameState.sessionId); } catch(e) {}
+        try { await sb.from('zykos_game_sessions').update({ completed_at:new Date().toISOString(), final_score:gameState.totalCorrect-gameState.totalErrors, metadata:summary }).eq('id',gameState.sessionId); } catch(e) { console.error("[neuro-chef] save error:", e.message || e); }
         try { await sb.from('zykos_game_metrics').insert({
-            patient_id: gameState.patientId,
+            
             patient_dni: (gameState.patientDni && gameState.patientDni!== null) ? gameState.patientDni : null,
-            game_session_id: gameState.sessionId,
+            session_id: gameState.sessionId,
             game_slug: 'neuro-chef-v2',
             metric_type: 'session_complete',
             metric_value: gameState.totalCorrect - gameState.totalErrors,
@@ -1026,7 +1026,7 @@ async function finishGame() {
                 // SDT
                 avg_d_prime: summary.biometric_summary.avg_d_prime
             }
-        }); } catch(e) {}
+        }); } catch(e) { console.error("[neuro-chef] save error:", e.message || e); }
     }
 
     // Save full session biometric summary to Supabase Storage bucket 'biometricas'
@@ -1077,14 +1077,14 @@ function showResultsScreen(summary) {
 async function saveLevelMetrics(metric) {
     if (!sb) return;
     const clean={...metric};if(clean.biometrics){clean.biometrics={...clean.biometrics};delete clean.biometrics.action_log;delete clean.biometrics.tremor_details;delete clean.biometrics.hesitation_details}
-    try { await sb.from('zykos_game_metrics').insert({ patient_id:gameState.patientId, patient_dni:gameState.patientDni || null, game_session_id:gameState.sessionId, game_slug:'neuro-chef-v2', metric_type:`level_${metric.level}`, metric_value:metric.score, metric_data:clean }); } catch(e) { console.warn('Metric save fail:',e); }
+    try { await sb.from('zykos_game_metrics').insert({  patient_dni:gameState.patientDni || null, session_id:gameState.sessionId, game_slug:'neuro-chef-v2', metric_type:`level_${metric.level}`, metric_value:metric.score, metric_data:clean }); } catch(e) { console.warn('Metric save fail:',e); }
 }
 
 async function saveBiometrics(bio) {
     if (!sb) return;
     // Save summary to DB (without heavy raw data)
     try { await sb.from('zykos_game_metrics').insert({
-        patient_id:gameState.patientId, patient_dni:gameState.patientDni || null, game_session_id:gameState.sessionId, game_slug:'neuro-chef-v2',
+         patient_dni:gameState.patientDni || null, session_id:gameState.sessionId, game_slug:'neuro-chef-v2',
         metric_type:`biometric_level_${bio.level}`, metric_value:bio.d_prime||0,
         metric_data:{ reaction_time_ms:bio.reaction_time_ms, total_time_ms:bio.total_time_ms, hits:bio.hits, misses:bio.misses, false_alarms:bio.false_alarms, correct_rejects:bio.correct_rejects, d_prime:bio.d_prime, tremor_avg:bio.tremor_avg, tremor_speed_var:bio.tremor_speed_var, tremor_samples:bio.tremor_samples, hesitation_count:bio.hesitation_count, hesitation_total_ms:bio.hesitation_total_ms, undo_count:bio.undo_count, reset_count:bio.reset_count, total_interactions:bio.total_interactions, abrupt_direction_changes:bio.abrupt_direction_changes, avg_action_interval_ms:bio.avg_action_interval_ms }
     }); } catch(e) { console.warn('Bio save fail:',e); }
@@ -1099,7 +1099,7 @@ async function saveBiometricsToBucket(bio) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            patient_id: gameState.patientId,
+            
             session_id: gameState.sessionId,
             game_slug: 'neuro-chef-v2',
             level: bio.level,
