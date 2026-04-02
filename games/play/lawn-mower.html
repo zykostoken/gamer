@@ -4791,26 +4791,11 @@
     btn.addEventListener('click', function() {
       const level = parseInt(this.getAttribute('data-level'));
       levelSelectScreen.classList.add('hidden');
-      // Pre-game mood color prompt (projective, no labels shown to player)
+      // Mood modal runs in background — NEVER blocks game start
       if (typeof showPreGameChat === 'function') {
-        showPreGameChat();
-        // Guard so startLevel is called exactly once (interval OR fallback, never both)
-        var _levelStarted = false;
-        // Wait for mood modal to close, then start level
-        var _checkMood = setInterval(function() {
-          if (!document.getElementById('mood-pre-overlay')) {
-            clearInterval(_checkMood);
-            if (!_levelStarted) { _levelStarted = true; startLevel(level); }
-          }
-        }, 200);
-        // Fallback: if modal doesn't appear / disappear in 3s, start anyway
-        setTimeout(function() {
-          clearInterval(_checkMood);
-          if (!_levelStarted) { _levelStarted = true; startLevel(level); }
-        }, 3000);
-      } else {
-        startLevel(level);
+        try { showPreGameChat(); } catch(e) { console.warn('[LM] mood modal error:', e); }
       }
+      startLevel(level);
     });
   });
 

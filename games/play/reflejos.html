@@ -779,25 +779,16 @@ document.addEventListener('DOMContentLoaded', init);
 </script>
 <script src="/games/shared/mood-modals.js"></script>
 <script>
-// Pre-game hook: show color picker before starting
+// Pre-game hook: show color picker — NEVER blocks game start
 (function(){
     var b = document.getElementById('btn-start');
     if (!b) return;
-    var origClick = b.onclick;
     b.onclick = function() {
         if (typeof showPreGameChat === 'function' && !window._pgd) {
             window._pgd = true;
-            showPreGameChat();
-            var w = setInterval(function() {
-                if (!document.getElementById('mood-pre-overlay') && !document.getElementById('input-calibration-overlay')) {
-                    clearInterval(w);
-                    beginGame();
-                }
-            }, 200);
-            setTimeout(function() { clearInterval(w); beginGame(); }, 15000);
-        } else {
-            beginGame();
+            try { showPreGameChat(); } catch(e) { console.warn('[REF] mood modal error:', e); }
         }
+        beginGame();
     };
 })();
 </script>

@@ -80,51 +80,51 @@ header { background:var(--surface); border-bottom:1px solid var(--border); paddi
 <script src="/js/consent-modal.js"></script>
 <script>
 var GAMES = [
-  { slug:'lawn-mower', name:'Cortadora de Cesped', icon:'&#127793;', color:'#22c55e',
+  { slug:'lawn-mower', name:'Cortadora de Cesped', icon:'[M]', color:'#22c55e',
     desc:'Planifica el recorrido para cortar todo el cesped. Planificacion, praxis motora, manejo de recursos, patron ante errores.',
     domains:['E2 Planificacion','M3 Precision','AFEC1 Frustracion','A1 Atencion'],
     url:'/games/play/lawn-mower.html' },
-  { slug:'pill-organizer', name:'Organizador de Medicacion', icon:'&#128138;', color:'#3b82f6',
+  { slug:'pill-organizer', name:'Organizador de Medicacion', icon:'[+]', color:'#3b82f6',
     desc:'Coloca cada medicamento en el dia y horario correcto. Tremor, dismetria, memoria de trabajo, secuenciacion.',
     domains:['M1 Tremor','M3 Precision','MEM1 Trabajo','E2 Planificacion'],
     url:'/games/play/pill-organizer.html' },
-  { slug:'super-market', name:'Desafio Milanesas', icon:'&#128722;', color:'#f59e0b',
+  { slug:'super-market', name:'Desafio Milanesas', icon:'[R]', color:'#f59e0b',
     desc:'Lee la receta, recorda los ingredientes y compra con presupuesto. Comprension, memoria, estimacion numerica.',
     domains:['C1 Comprension','MEM1 Trabajo','CAL1 Estimacion','E1 Inhibicion'],
     url:'/games/play/super-market.html' },
-  { slug:'neuro-chef', name:'Cocinero Neuronal', icon:'&#127859;', color:'#ef4444',
+  { slug:'neuro-chef', name:'Cocinero Neuronal', icon:'[C]', color:'#ef4444',
     desc:'Selecciona ingredientes correctos. Signal Detection: discriminar signal de ruido.',
     domains:['MEM1 Trabajo','E1 Inhibicion','M1 Tremor'],
     url:'/games/play/neuro-chef/index.html' },
-  { slug:'medication-memory', name:'Memoria de Medicacion', icon:'&#128218;', color:'#8b5cf6',
+  { slug:'medication-memory', name:'Memoria de Medicacion', icon:'[Rx]', color:'#8b5cf6',
     desc:'Recorda que medicamentos tomar en cada horario. Memory span, decision time, adherencia.',
     domains:['MEM1 Trabajo','E2 Planificacion','A1 Atencion'],
     url:'/games/play/medication-memory.html' },
-  { slug:'fridge-logic', name:'Heladera Inteligente', icon:'&#10052;', color:'#10b981',
+  { slug:'fridge-logic', name:'Heladera Inteligente', icon:'[F]', color:'#10b981',
     desc:'Organiza alimentos en la heladera. Categorizacion, abstraccion, organizacion espacial.',
     domains:['E2 Planificacion','MEM1 Trabajo','E3 Flexibilidad'],
     url:'/games/play/fridge-logic.html' },
-  { slug:'ferreteria', name:'La Ferreteria de Berugo', icon:'&#128295;', color:'#d97706',
+  { slug:'ferreteria', name:'La Ferreteria de Berugo', icon:'[Fe]', color:'#d97706',
     desc:'Clasifica 90 productos de ferreteria en 9 categorias. Seriacion, calculo, razonamiento inferencial.',
     domains:['E3 Flexibilidad','CAL1 Estimacion','MEM1 Trabajo','E2 Planificacion'],
     url:'/engines/classify-and-place/index.html?pack=ferreteria' },
-  { slug:'almacen', name:'El Almacen de Don Tito', icon:'&#127978;', color:'#0ea5e9',
+  { slug:'almacen', name:'El Almacen de Don Tito', icon:'[Al]', color:'#0ea5e9',
     desc:'Ordena 79 productos del almacen de barrio. Categorizacion multidominio, peso, volumen, vencimiento.',
     domains:['E3 Flexibilidad','MEM1 Trabajo','CAL1 Estimacion','C1 Comprension'],
     url:'/engines/classify-and-place/index.html?pack=almacen-general' },
-  { slug:'electrodomesticos', name:'Electrodomesticos El Rayo', icon:'&#9889;', color:'#6366f1',
+  { slug:'electrodomesticos', name:'Electrodomesticos El Rayo', icon:'[E]', color:'#6366f1',
     desc:'Clasifica 61 electrodomesticos por funcion y especificacion tecnica. Watts, BTU, litros, cuotas.',
     domains:['CAL1 Estimacion','E3 Flexibilidad','MEM1 Trabajo','E2 Planificacion'],
     url:'/engines/classify-and-place/index.html?pack=electrodomesticos' },
-  { slug:'libreria', name:'La Libreria de la Seno Marta', icon:'&#128218;', color:'#ec4899',
+  { slug:'libreria', name:'La Libreria de la Seno Marta', icon:'[Li]', color:'#ec4899',
     desc:'Arma pedidos escolares sin equivocarte. 72 utiles, 8 categorias, seriacion y calculo proporcional.',
     domains:['E2 Planificacion','CAL1 Estimacion','MEM1 Trabajo','E1 Inhibicion'],
     url:'/engines/classify-and-place/index.html?pack=libreria-escolar' },
-  { slug:'inkblot', name:'Manchas ZYKOS', icon:'&#128065;', color:'#8b5cf6',
+  { slug:'inkblot', name:'Manchas ZYKOS', icon:'[Mk]', color:'#8b5cf6',
     desc:'Manchas simetricas algoritmicas. Identifica locales de Necochea por sus colores. Despues crea tu propia mancha.',
     domains:['E3 Flexibilidad','MEM1 Trabajo','AFEC1 Creatividad','A1 Atencion'],
     url:'/engines/inkblot/index.html' },
-  { slug:'reflejos', name:'Reflejos ZYKOS', icon:'&#9889;', color:'#f43f5e',
+  { slug:'reflejos', name:'Reflejos ZYKOS', icon:'[CPT]', color:'#f43f5e',
     desc:'Test de performance continua. Atencion sostenida, inhibicion, lateralizacion, discriminabilidad (d-prime). 6 niveles progresivos.',
     domains:['A1 Atencion','E1 Inhibicion','M3 Precision','E3 Flexibilidad'],
     url:'/games/play/reflejos.html' }
@@ -288,9 +288,9 @@ async function init() {
         fbCard.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;max-width:400px;width:90%;text-align:center;';
         fbCard.innerHTML = '<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:12px;">Como va la experiencia?</h3>' +
           '<p style="color:var(--dim);font-size:0.85rem;margin-bottom:16px;">Tu opinion nos ayuda a mejorar ZYKOS GAMER</p>' +
-          '<div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;">' +
-          ['😫','😕','😐','🙂','🤩'].map(function(em, i) {
-            return '<button onclick="submitFeedback(' + (i+1) + ')" style="font-size:2rem;padding:8px 12px;border:2px solid var(--border);border-radius:12px;background:transparent;cursor:pointer;transition:all .15s;" onmouseover="this.style.borderColor=\'var(--neon)\';this.style.transform=\'scale(1.2)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.transform=\'scale(1)\'">' + em + '</button>';
+          '<div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px;">' +
+          [{c:'#ef4444',l:'1'},{c:'#f97316',l:'2'},{c:'#eab308',l:'3'},{c:'#22c55e',l:'4'},{c:'#3b82f6',l:'5'}].map(function(o, i) {
+            return '<button onclick="submitFeedback(' + (i+1) + ')" style="width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,255,255,0.15);background:' + o.c + ';cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.8rem;" onmouseover="this.style.borderColor=\'#fff\';this.style.transform=\'scale(1.2)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,0.15)\';this.style.transform=\'scale(1)\'">' + o.l + '</button>';
           }).join('') +
           '</div>' +
           '<textarea id="feedback-text" placeholder="Algo que quieras contarnos? (opcional)" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-size:0.85rem;resize:vertical;min-height:60px;box-sizing:border-box;"></textarea>' +
