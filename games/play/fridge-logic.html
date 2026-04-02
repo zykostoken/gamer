@@ -700,12 +700,10 @@ async function saveResults(metrics) {
             game = newGame;
         }
         
-        // Save to zykos_game_metrics with numeric patient_id (FK) and patient_dni
+        // Save to zykos_game_metrics — V3 fix: removed patient_id (invalid column), proper await
         const patientDni = (gameState.patientId && gameState.patientId !== null) ? gameState.patientId : null;
-        const numericPid = parseInt((function(){try{return localStorage.getItem('zykos_patient_dni')}catch(e){return null}})()) || null;
-        if (numericPid) {
-            await sb.from('zykos_game_metrics').insert({
-                patient_id: numericPid,
+        if (patientDni) {
+            var saveResult = await sb.from('zykos_game_metrics').insert({
                 patient_dni: patientDni,
                 game_slug: 'fridge-logic',
                 metric_type: 'session_summary',
@@ -717,7 +715,9 @@ async function saveResults(metrics) {
                     duration_ms: Date.now() - gameState.startTime,
                     session_date: new Date().toISOString()
                 }
-            }).catch(e => console.warn('[fridge-logic] save error:', e.message));
+            });
+            if (saveResult.error) console.error('[fridge-logic] save FAILED:', saveResult.error.message);
+            else console.log('[fridge-logic] saved OK');
 
             // Save full biometric data to Supabase Storage bucket 'biometricas'
             fetch('/api/biometricas', {

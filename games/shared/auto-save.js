@@ -68,9 +68,12 @@
     try {
       var client = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
       if (client) {
-        client.from('zykos_game_metrics').insert(payload)
-          .then(function() { /* saved */ })
-          .catch(function(e) { console.warn('[auto-save] ' + eventType + ':', e.message); });
+        (async function() {
+          try {
+            var result = await client.from('zykos_game_metrics').insert(payload);
+            if (result.error) console.warn('[auto-save] ' + eventType + ':', result.error.message);
+          } catch(e) { console.warn('[auto-save] ' + eventType + ' exception:', e.message); }
+        })();
       }
     } catch(e) {}
   }

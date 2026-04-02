@@ -408,10 +408,10 @@ function endClassify() {
     };
     if (typeof ZykosEvidence !== 'undefined' && ZykosEvidence.prepare) {
       ZykosEvidence.prepare(saveData).then(function(hashed) {
-        sb.from('zykos_game_metrics').insert(hashed).then(function() { console.log('[inkblot] saved'); });
+        (async function(){ try { var r = await sb.from('zykos_game_metrics').insert(hashed); if(r.error) console.warn('[inkblot] save:', r.error.message); else console.log('[inkblot] saved'); } catch(e){ console.warn('[inkblot]', e); } })();
       });
     } else {
-      sb.from('zykos_game_metrics').insert(saveData).then(function() { console.log('[inkblot] saved'); });
+      (async function(){ try { var r = await sb.from('zykos_game_metrics').insert(saveData); if(r.error) console.warn('[inkblot] save:', r.error.message); else console.log('[inkblot] saved'); } catch(e){ console.warn('[inkblot]', e); } })();
     }
   }
   
@@ -585,10 +585,10 @@ function finishCreate() {
     };
     if (typeof ZykosEvidence !== 'undefined' && ZykosEvidence.prepare) {
       ZykosEvidence.prepare(saveData).then(function(hashed) {
-        sb.from('zykos_game_metrics').insert(hashed).then(function() { console.log('[inkblot-create] saved'); });
+        (async function(){ try { var r = await sb.from('zykos_game_metrics').insert(hashed); if(r.error) console.warn('[inkblot-create] save:', r.error.message); else console.log('[inkblot-create] saved'); } catch(e){ console.warn('[inkblot-create]', e); } })();
       });
     } else {
-      sb.from('zykos_game_metrics').insert(saveData).then(function() { console.log('[inkblot-create] saved'); });
+      (async function(){ try { var r = await sb.from('zykos_game_metrics').insert(saveData); if(r.error) console.warn('[inkblot-create] save:', r.error.message); else console.log('[inkblot-create] saved'); } catch(e){ console.warn('[inkblot-create]', e); } })();
     }
   }
   

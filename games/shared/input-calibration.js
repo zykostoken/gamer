@@ -388,15 +388,18 @@ function finishCalibration() {
     var client = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
     var dni = profile._patientDni || null;
     if (client && dni) {
-        client.from('zykos_game_metrics').insert({
-            patient_dni: dni,
-            game_slug: 'calibration',
-            metric_type: 'hardware_profile',
-            metric_value: profile.idle_jitter_px,
-            metric_data: profile
-        }).then(function(res) {
-            if (res.error) console.warn('[calibration] save error:', res.error.message);
-        }).catch(function(e) { console.warn('[calibration] save:', e.message); });
+        (async function() {
+            try {
+                var r = await client.from('zykos_game_metrics').insert({
+                    patient_dni: dni,
+                    game_slug: 'calibration',
+                    metric_type: 'hardware_profile',
+                    metric_value: profile.idle_jitter_px,
+                    metric_data: profile
+                });
+                if (r.error) console.warn('[calibration] save:', r.error.message);
+            } catch(e) { console.warn('[calibration] save:', e.message); }
+        })();
     }
 
     // Auto-dismiss after 2 seconds

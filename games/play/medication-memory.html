@@ -1852,16 +1852,20 @@
         var dni = new URLSearchParams(window.location.search).get('dni') || null;
         if (!dni) try { dni = localStorage.getItem('zykos_patient_dni'); } catch(e2){}
         if (dni && !isNaN(dni) && parseInt(dni) > 0) {
-          client.from('zykos_game_metrics').insert({
-            patient_dni: dni,
-            game_slug: 'medication-memory',
-            metric_type: 'level_' + levelId,
-            metric_value: entry.score,
-            metric_data: entry,
-            session_date: new Date().toISOString().slice(0, 10),
-            created_at: new Date().toISOString()
-          }).then(function(){ console.log('[med-memory] Metrics saved to Supabase'); })
-            .catch(function(e3){ console.warn('[med-memory] Supabase save error:', e3); });
+          (async function() {
+            try {
+              var result = await client.from('zykos_game_metrics').insert({
+                patient_dni: dni,
+                game_slug: 'medication-memory',
+                metric_type: 'level_' + levelId,
+                metric_value: entry.score,
+                metric_data: entry,
+                session_date: new Date().toISOString().slice(0, 10)
+              });
+              if (result.error) console.error('[med-memory] save FAILED:', result.error.message);
+              else console.log('[med-memory] saved OK');
+            } catch(e3) { console.error('[med-memory] save exception:', e3); }
+          })();
         }
       }
     } catch(e) { console.warn('[med-memory] Supabase fallback error:', e); }
