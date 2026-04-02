@@ -1383,7 +1383,7 @@
         decaimiento_vigilancia = m1 > 0 ? Math.round(m2/m1*100)/100 : null;
       }
 
-      var _lmMetricRecord = {
+      var _lmMetricResult = await lmSupa.from('zykos_game_metrics').insert({
         patient_dni: lmPatientDni,
         game_slug: 'lawn-mower',
         metric_type: 'session_summary',
@@ -1483,6 +1483,8 @@
           cognitive_load_level: isPart3 ? (childActive ? 'triple' : 'dual') : 'single'
         }
       });
+      if (_lmMetricResult.error) console.error('[lawn-mower] session_summary FAILED:', _lmMetricResult.error.message);
+      else console.log('[lawn-mower] session_summary saved OK');
 
       // ============================================================
       // 2. GRANULAR: Save individual inter-objective RTs
@@ -4791,11 +4793,14 @@
     btn.addEventListener('click', function() {
       const level = parseInt(this.getAttribute('data-level'));
       levelSelectScreen.classList.add('hidden');
-      // Mood modal runs in background — NEVER blocks game start
-      if (typeof showPreGameChat === 'function') {
-        try { showPreGameChat(); } catch(e) { console.warn('[LM] mood modal error:', e); }
-      }
+      // V3: game starts FIRST, mood modal fires AFTER in background
       startLevel(level);
+      // Mood modal is non-blocking — runs behind game instruction overlay
+      setTimeout(function() {
+        if (typeof showPreGameChat === 'function') {
+          try { showPreGameChat(); } catch(e) { console.warn('[LM] mood modal error:', e); }
+        }
+      }, 500);
     });
   });
 
