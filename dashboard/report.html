@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded',function(){
   sb=getSupabaseClient();if(!sb){document.getElementById('ld').innerHTML='<p style="color:var(--rd)">Sin conexion</p>';return}
   sb.from('zykos_patients').select('dni,full_name,status,is_test').order('full_name').then(function(res){
     var sel=document.getElementById('ps');sel.innerHTML='<option value="">Seleccionar paciente...</option>';
-    (res.data||[]).forEach(function(p){var o=document.createElement('option');o.value=p.dni;o.textContent=p.full_name+(p.is_test?' (TEST)':'')+' — DNI: '+p.dni;sel.appendChild(o)});
+    (res.data||[]).forEach(function(p){var o=document.createElement('option');o.value=p.dni;o.textContent='DNI: '+p.dni;sel.appendChild(o)});
     document.getElementById('ld').style.display='none';document.getElementById('em').style.display='block';
   });
 });
@@ -343,13 +343,10 @@ function secPraxis(){
   var po=LS(allM,'pill-organizer','session_summary'),nc=LS(allM,'neuro-chef-v2','biometric_level_1'),ca=LS(allM,'lawn-mower','session_summary')||LS(allM,'lawn-mower','clinical_analysis')||LS(allM,'super-market','clinical_analysis'),lm=LS(allM,'lawn-mower','session_summary')||LS(allM,'lawn-mower','session_complete');
   var mvs=allM.filter(function(x){return x.metric_type==='pill_placement'});
   var c='',h='';
-  h+=mc('Tremor Index',po?po.tremor_index:null,'Sesion');h+=mc('Tremor Avg',nc?nc.tremor_avg:null,'Tarea');h+=mc('Speed Var',nc?nc.tremor_speed_var:null,'Variabilidad');h+=mc('Reposo',ca?ca.tremor_reposo:null,'Parkinsonismo px');h+=mc('Inicio',ca?ca.tremor_inicio:null,'Intencional px');h+=mc('Terminal',ca?ca.tremor_terminal:null,'Cerebeloso px');
-  if(mvs.length>0){var tv=mvs.map(function(x){return x.metric_data?x.metric_data.tremorIndex:null}).filter(function(v){return v!=null&&v>0});if(tv.length){h+=mc('Mov Mean',mean(tv),tv.length+' mov');h+=mc('Mov Max',Math.max.apply(null,tv),'Peor');h+=mc('Mov SD',sd(tv),'Inter-mov')}}
+  h+=mc('Tremor Index',po?po.tremor_index:null,'Sesion (intencion)');h+=mc('Reposo',ca?ca.tremor_reposo:null,'Parkinsonismo px');h+=mc('Inicio',ca?ca.tremor_inicio:null,'Intencional px');h+=mc('Terminal',ca?ca.tremor_terminal:null,'Cerebeloso px');
+  if(mvs.length>0&&!po){var tv=mvs.map(function(x){return x.metric_data?x.metric_data.tremorIndex:null}).filter(function(v){return v!=null&&v>0});if(tv.length){h+=mc('Tremor Index',mean(tv),tv.length+' mov (sin resumen)')}}
   c+='<div class="sub"><h3>Tremor Diferenciado</h3><div class="mg">'+h+'</div><div class="ch"><canvas id="ch-tr"></canvas></div></div>';
-  h='';h+=mc('Mov Eff',po?po.movement_efficiency:null,'Eficiencia');h+=mc('Overshoot',lm?lm.overshoot_count||(lm.motor_markers?lm.motor_markers.overshoot_count:null):null,'');h+=mc('Dysmetria',lm?lm.dysmetria_ratio||(lm.motor_markers?lm.motor_markers.dysmetria_ratio:null):null,'Ratio');h+=mc('Abrupt',nc?nc.abrupt_direction_changes:null,'Cambios');h+=mc('Dismetria',ca?ca.dismetria_mean_px:null,'Error px');h+=mc('Dir Changes',lm?lm.direction_changes:null,'LM');h+=mc('Rapid Rev',lm?lm.rapid_reversals:null,'Indecision');h+=mc('Clumsiness',lm?lm.motor_clumsiness_score:null,'Torpeza');
-  if(mvs.length>0){var ef=mvs.map(function(x){return x.metric_data?x.metric_data.pathEfficiency:null}).filter(function(v){return v!=null});var sp=mvs.map(function(x){return x.metric_data?x.metric_data.avgSpeed:null}).filter(function(v){return v!=null});if(ef.length)h+=mc('PathEff',mean(ef),ef.length+' mov');if(sp.length)h+=mc('Speed',mean(sp),'px/ms')}
-  h+=mc('Drop Precision',po?po.drop_precision:null,'1=centro 0=borde');h+=mc('Drop Offset',po?po.drop_offset_mean_px:null,'Media px');h+=mc('Drop Offset SD',po?po.drop_offset_sd:null,'Variabilidad');
-  if(mvs.length>0){var dp=mvs.map(function(x){return x.metric_data?x.metric_data.dropPrecision:null}).filter(function(v){return v!=null});var doff=mvs.map(function(x){return x.metric_data?x.metric_data.dropOffsetPx:null}).filter(function(v){return v!=null});if(dp.length)h+=mc('Drop Precision',mean(dp).toFixed(3),dp.length+' mov');if(doff.length)h+=mc('Drop Offset',mean(doff).toFixed(1),doff.length+' mov')}
+  h='';h+=mc('Eficiencia Trayectoria',po?po.movement_efficiency:null,'Path recto/real');h+=mc('Redirecciones',po?po.avg_abrupt_redirections:null,'Cambios bruscos');h+=mc('Dismetria',ca?ca.dismetria_mean_px:null,'Error px');h+=mc('Drop Precision',po?po.drop_precision:null,'1=centro 0=borde');h+=mc('Drop Offset',po?po.drop_offset_mean_px:null,'Media px');h+=mc('Drop Offset SD',po?po.drop_offset_sd:null,'Variabilidad');
   c+='<div class="sub"><h3>Dismetria y Precision</h3><div class="mg">'+h+'</div></div>';
   h='';h+=mc('Rigidez',ca?ca.rigidez_index:null,'Baja var');h+=mc('Cogwheel',ca?ca.cogwheel_index:null,'Oscilaciones');h+=mc('Espasticidad',ca?ca.espasticidad_index:null,'Clasp-knife');
   if(mvs.length>0){var du=mvs.map(function(x){return x.metric_data?x.metric_data.durationMs:null}).filter(function(v){return v!=null});if(du.length){h+=mc('Dur Mean',Math.round(mean(du)),'Media ms');h+=mc('Dur Max',Math.max.apply(null,du),'Lento ms');var s=du.slice().sort(function(a,b){return a-b});h+=mc('Dur p90',s[Math.floor(s.length*0.9)],'Bradicinesia ms')}}
