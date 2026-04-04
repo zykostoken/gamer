@@ -217,21 +217,41 @@ var METRIC_DICTIONARY = {
     cam_face_freeze_episodes:     { domain:'MEDIA', unit:'count',  range:[0,50],     desc:'Cara presente + landmarks inmóviles >3s. Proxy de rigidez/ausencia.' },
     cam_face_freeze_max_ms:       { domain:'MEDIA', unit:'ms',     range:[0,300000], desc:'Freeze más largo. >10s + sin mic = candidato a ausencia epiléptica.' },
 
-    // ACTION UNITS — contracciones musculares faciales observables (Ekman FACS)
-    cam_AU4_episodes:             { domain:'MEDIA', unit:'count',  range:[0,500],    desc:'AU4: corrugador superciliar activo (ceño fruncido).' },
-    cam_AU4_duration_ms:          { domain:'MEDIA', unit:'ms',     range:[0,3600000],desc:'Tiempo total con AU4 activo en la sesión.' },
-    cam_AU9_episodes:             { domain:'MEDIA', unit:'count',  range:[0,200],    desc:'AU9: elevación ala nariz + arruga nasal.' },
-    cam_AU23_AU24_episodes:       { domain:'MEDIA', unit:'count',  range:[0,200],    desc:'AU23+AU24: orbicular labios contraído — boca cerrada apretada.' },
-    cam_AU23_sustained_ms:        { domain:'MEDIA', unit:'ms',     range:[0,60000],  desc:'Duración máxima de tensión labial sostenida.' },
+    // EXPRESIÓN FACIAL — fenómenos observables con validación empírica FACS
+    // Referencias: Ekman & Friesen (1978), Duchenne (1862), Gross (2002),
+    // Nijenhuis (2004), literatura de neuroftalmología y psicofisiología.
+    // Los nombres describen el fenómeno observable, no un diagnóstico.
+    // Las asociaciones clínicas son de la literatura publicada.
 
-    // PARPADEO
-    cam_blink_rate_mean:          { domain:'MEDIA', unit:'n/min',  range:[0,60],     desc:'Parpadeos por minuto. Normal 15-20. Bajo=hiperfoco/disociacion. Alto=fatiga.' },
-    cam_blink_rate_cv:            { domain:'MEDIA', unit:'ratio',  range:[0,3],      desc:'Variabilidad del parpadeo. Alto=irregular.' },
-    cam_blink_burst_count:        { domain:'MEDIA', unit:'count',  range:[0,100],    desc:'Ráfagas >3 parpadeos en <2s. Proxy de tic ocular o stress agudo.' },
+    // Ceño y tensión facial superior
+    cam_brow_furrow_episodes:     { domain:'MEDIA', unit:'count',  range:[0,500],
+        desc:'AU4 corrugador superciliar activo. Lit: esfuerzo cognitivo, frustración, dolor (Ekman 1978).' },
+    cam_brow_furrow_ms:           { domain:'MEDIA', unit:'ms',     range:[0,3600000],
+        desc:'Tiempo total con ceño fruncido. Indicador de carga emocional o cognitiva acumulada.' },
 
-    // SONRISA — Duchenne vs social
-    cam_duchenne_smile_pct:       { domain:'MEDIA', unit:'ratio',  range:[0,1],      desc:'AU6+AU12 simultáneos — sonrisa genuina (Duchenne).' },
-    cam_social_smile_pct:         { domain:'MEDIA', unit:'ratio',  range:[0,1],      desc:'AU12 sin AU6 — sonrisa voluntaria sin elevación de mejillas.' },
+    // Tensión nasal
+    cam_nose_wrinkle_episodes:    { domain:'MEDIA', unit:'count',  range:[0,200],
+        desc:'AU9 elevador ala nariz + arruga nasal. Lit: expresión aversiva (Ekman 1978).' },
+
+    // Compresión labial
+    cam_lip_compression_episodes: { domain:'MEDIA', unit:'count',  range:[0,200],
+        desc:'AU23+AU24 orbicular labios. Lit: supresión emocional, control inhibitorio (Gross 2002).' },
+    cam_lip_compression_max_ms:   { domain:'MEDIA', unit:'ms',     range:[0,60000],
+        desc:'Tensión labial máxima sostenida en un episodio.' },
+
+    // Parpadeo — ampliamente validado en neuroftalmología
+    cam_blink_rate_mean:          { domain:'MEDIA', unit:'n/min',  range:[0,60],
+        desc:'Parpadeos/min. Norma: 15-20. Bajo: hiperfoco, Parkinson. Alto: fatiga, stress (lit. neuroftalmología).' },
+    cam_blink_rate_cv:            { domain:'MEDIA', unit:'ratio',  range:[0,3],
+        desc:'Variabilidad del parpadeo. Alto CV indica parpadeo irregular.' },
+    cam_blink_burst_count:        { domain:'MEDIA', unit:'count',  range:[0,100],
+        desc:'Ráfagas >3 parpadeos en <2s. Lit: tic ocular, stress agudo.' },
+
+    // Sonrisa — Duchenne (1862) validado fisiológicamente
+    cam_genuine_smile_pct:        { domain:'MEDIA', unit:'ratio',  range:[0,1],
+        desc:'AU6+AU12 simultáneos — sonrisa de Duchenne. Lit: afecto positivo genuino, correlato parasimpático.' },
+    cam_social_smile_pct:         { domain:'MEDIA', unit:'ratio',  range:[0,1],
+        desc:'AU12 sin AU6 — sonrisa voluntaria. Lit: regulación social, diferente correlato fisiológico.' },
 
     // MICRÓFONO — ambiente sonoro (sin grabar, solo nivel)
     mic_ambient_db_mean:          { domain:'MEDIA', unit:'dB',     range:[0,120],    desc:'Nivel sonoro ambiental medio. Informa sobre contexto de la sesión.' },

@@ -12,25 +12,38 @@
 //   face-api.js corre detección de landmarks sobre canvas offscreen.
 //   AudioContext procesa el mic en tiempo real sin guardar audio.
 //
-// MÉTRICAS — Action Units observables, sin etiquetas diagnósticas:
-//   cam_AU4_episodes          corrugador superciliar (ceño fruncido)
-//   cam_AU4_duration_ms       tiempo con AU4 activo
-//   cam_AU9_episodes          elevación ala nariz
-//   cam_AU23_AU24_episodes    orbicular labios (boca cerrada apretada)
-//   cam_AU23_sustained_ms     tensión labial máxima sostenida
-//   cam_blink_rate_mean       parpadeos por minuto
-//   cam_blink_rate_cv         variabilidad del parpadeo
-//   cam_blink_burst_count     ráfagas de parpadeo (>3 en <2s)
-//   cam_duchenne_smile_pct    AU6+AU12 simultáneos (sonrisa Duchenne)
-//   cam_social_smile_pct      AU12 sin AU6
-//   cam_face_present_pct      fracción del tiempo con cara detectada
-//   cam_face_absent_episodes  salidas del frame
-//   cam_face_freeze_episodes  cara presente + landmarks inmóviles >3s
-//   cam_face_freeze_max_ms    freeze más largo (proxy ausencia/rigidez)
-//   mic_ambient_db_mean       nivel sonoro ambiental medio
-//   mic_ambient_db_cv         variabilidad sonora
-//   mic_speech_episodes       episodios de vocalización
-//   mic_external_noise_count  picos de ruido externo (>umbral)
+// MÉTRICAS — fenómenos observables con validación empírica (FACS/literatura):
+//
+// Los nombres describen lo que se mide, no un diagnóstico.
+// Las asociaciones clínicas son de la literatura publicada (Ekman 1978+,
+// Duchenne 1862, Nijenhuis 2004, neuroftalmología, psicofisiología).
+//
+//   cam_brow_furrow_episodes     AU4 corrugador activo — ceño fruncido
+//                                lit: frustración, esfuerzo cognitivo, dolor (Ekman)
+//   cam_brow_furrow_ms           tiempo total con ceño fruncido en sesión
+//   cam_nose_wrinkle_episodes    AU9 elevador ala nariz — arruga nasal
+//                                lit: expresión aversiva (Ekman)
+//   cam_lip_compression_episodes AU23+AU24 orbicular — boca apretada
+//                                lit: supresión emocional, control inhibitorio (Gross)
+//   cam_lip_compression_max_ms   tensión labial máxima sostenida
+//   cam_blink_rate_mean          parpadeos/minuto (norma: 15-20)
+//                                lit: bajo=hiperfoco/Parkinson; alto=fatiga/stress
+//   cam_blink_rate_cv            variabilidad del parpadeo
+//   cam_blink_burst_count        ráfagas >3 en <2s
+//                                lit: tic ocular, stress agudo
+//   cam_genuine_smile_pct        AU6+AU12 — sonrisa de Duchenne (1862)
+//                                lit: afecto positivo genuino, correlato parasimpático
+//   cam_social_smile_pct         AU12 sin AU6 — sonrisa voluntaria
+//                                lit: regulación social, diferente correlato fisiológico
+//   cam_face_present_pct         fracción del tiempo con cara en frame
+//   cam_face_absent_episodes     salidas del encuadre
+//   cam_face_freeze_episodes     cara presente + landmarks inmóviles >3s
+//                                lit: disociación (Nijenhuis), catatonía, ausencia epiléptica
+//   cam_face_freeze_max_ms       freeze más largo
+//   mic_ambient_db_mean          nivel sonoro ambiental (contexto de sesión)
+//   mic_ambient_db_cv            variabilidad sonora
+//   mic_speech_episodes          episodios de vocalización
+//   mic_external_noise_count     picos de ruido externo >70dB
 // ================================================================
 
 (function() {
@@ -451,17 +464,17 @@ var agent = {
             cam_face_freeze_max_ms:     freezeMax,
 
             // CÁMARA — Action Units observables (sin etiquetas diagnósticas)
-            cam_AU4_episodes:           state.AU4_episodes,        // corrugador (ceño)
-            cam_AU4_duration_ms:        state.AU4_duration_ms,     // tiempo con ceño
-            cam_AU9_episodes:           state.AU9_episodes,        // elevación ala nariz
-            cam_AU23_AU24_episodes:     state.AU23_episodes,       // boca apretada
-            cam_AU23_sustained_ms:      state.AU23_max_ms,         // tensión labial máxima
+            cam_brow_furrow_episodes:    state.AU4_episodes,        // corrugador (ceño)
+            cam_brow_furrow_ms:          state.AU4_duration_ms,     // tiempo con ceño
+            cam_nose_wrinkle_episodes:   state.AU9_episodes,        // elevación ala nariz
+            cam_lip_compression_episodes: state.AU23_episodes,       // boca apretada
+            cam_lip_compression_max_ms:  state.AU23_max_ms,         // tensión labial máxima
             cam_blink_rate_mean:        blinkRate,
             cam_blink_rate_cv:          blinkCV,
             cam_blink_burst_count:      state.blink_bursts,
-            cam_duchenne_smile_pct:     state.frames_total > 0
+            cam_genuine_smile_pct:       state.frames_total > 0
                 ? +(state.duchenne_frames / state.frames_total).toFixed(3) : null,
-            cam_social_smile_pct:       state.frames_total > 0
+            cam_social_smile_pct:        state.frames_total > 0
                 ? +(state.social_smile_frames / state.frames_total).toFixed(3) : null,
 
             // MICRÓFONO
