@@ -1409,7 +1409,7 @@
           planificacion_ratio: pm.plan_efficiency,
           movement_efficiency: cm.movement_efficiency,
           path_efficiency: cm.path_efficiency,
-          neatness_score: pm.neatness?.score,
+          ratio_completados: pm.neatness?.score,
           neatness_pattern: pm.neatness?.pattern_type,
           coverage_strategy: coverage_strategy,
           ideal_path_length: pm.ideal_path_length,
@@ -1426,14 +1426,14 @@
           resets: resetEvents.length,
           // --- Motor (feeds dominio Coordinacion) ---
           tremor_event_count: mm.tremor_event_count,
-          tremor_avg_jitter: mm.tremor_avg_jitter,
+          jitter_reposo_px: mm.jitter_reposo_px,
           tremor_max_jitter: mm.tremor_max_jitter,
           overshoot_count: mm.overshoot_count,
           dysmetria_ratio: mm.dysmetria_ratio,
           direction_changes: mm.direction_changes,
           rapid_reversals: mm.rapid_reversals,
-          motor_clumsiness_score: mm.motor_clumsiness_score,
-          meticulousness_score: mm.meticulousness_score,
+          vel_oscilacion_index: mm.vel_oscilacion_index,
+          ratio_acciones_util: mm.ratio_acciones_util,
           // --- Planning (feeds dominio Ejecutiva) ---
           avg_inter_objective_delay_ms: pm.avg_inter_objective_delay_ms,
           max_inter_objective_delay_ms: pm.max_inter_objective_delay_ms,
@@ -1551,7 +1551,7 @@
     if (postErr === 'perseverates') flags.push({flag:'PERSEVERATION',severity:'high',desc:'Persevera en error — rigidez cognitiva'});
     if (postErr === 'adapts') flags.push({flag:'ADAPTIVE_ERROR_RESPONSE',severity:'positive',desc:'Adapta conducta post-error — flexibilidad'});
     // Motor
-    if (mm.tremor_avg_jitter > 0.5) flags.push({flag:'ELEVATED_TREMOR',severity:'medium',desc:'Tremor jitter elevado — evaluar medicacion/ansiedad'});
+    if (mm.jitter_reposo_px > 0.5) flags.push({flag:'ELEVATED_TREMOR',severity:'medium',desc:'Tremor jitter elevado — evaluar medicacion/ansiedad'});
     if (mm.dysmetria_ratio > 0.2) flags.push({flag:'DYSMETRIA',severity:'medium',desc:'Dismetria >20% movimientos — precision motora alterada'});
     if (mm.rapid_reversals > 10) flags.push({flag:'MOTOR_INDECISION',severity:'medium',desc:'Reversals rapidos frecuentes — indecision motora'});
     // Planning
@@ -1642,15 +1642,15 @@
       reset_timing: resetEvents.map(r => r.timeSinceStart),
       // Motor / Fine Motor
       tremor_events: stats.motor_markers?.tremor_event_count || 0,
-      tremor_avg_jitter: stats.motor_markers?.tremor_avg_jitter || 0,
+      jitter_reposo_px: stats.motor_markers?.jitter_reposo_px || 0,
       dysmetria_overshoots: stats.motor_markers?.overshoot_count || 0,
       direction_changes: stats.motor_markers?.direction_changes || 0,
       rapid_reversals: stats.motor_markers?.rapid_reversals || 0,
-      motor_clumsiness: stats.motor_markers?.motor_clumsiness_score || 0,
-      meticulousness: stats.motor_markers?.meticulousness_score || 0,
+      motor_clumsiness: stats.motor_markers?.vel_oscilacion_index || 0,
+      meticulousness: stats.motor_markers?.ratio_acciones_util || 0,
       // Planning
       plan_efficiency: stats.planning_markers?.plan_efficiency || 0,
-      neatness_score: stats.planning_markers?.neatness?.score || 0,
+      ratio_completados: stats.planning_markers?.neatness?.score || 0,
       neatness_pattern: stats.planning_markers?.neatness?.pattern_type || 'N/A',
       avg_inter_obj_delay: stats.planning_markers?.avg_inter_objective_delay_ms || 0
     };
@@ -1894,7 +1894,7 @@
       motor_markers: {
         // Tremor detection
         tremor_event_count: clinicalMetrics.tremorEvents.length,
-        tremor_avg_jitter: 0,
+        jitter_reposo_px: 0,
         tremor_max_jitter: 0,
         tremor_avg_speed_var: 0,
 
@@ -1911,11 +1911,11 @@
 
         // Motor clumsiness composite (torpeza motora)
         // High = clumsy: many errors, overshoots, invalid moves, tremor
-        motor_clumsiness_score: 0,
+        vel_oscilacion_index: 0,
 
         // Meticulousness composite (minuciosidad / prolijidad)
         // High = meticulous: systematic pattern, few errors, high efficiency
-        meticulousness_score: 0
+        ratio_acciones_util: 0
       },
 
       // === NEW: Planning / Executive Function ===
@@ -1978,7 +1978,7 @@
     // === Tremor statistics ===
     if (clinicalMetrics.tremorEvents.length > 0) {
       const tremors = clinicalMetrics.tremorEvents;
-      stats.motor_markers.tremor_avg_jitter =
+      stats.motor_markers.jitter_reposo_px =
         Math.round(tremors.reduce((a, t) => a + t.jitter, 0) / tremors.length * 100) / 100;
       stats.motor_markers.tremor_max_jitter =
         Math.round(Math.max(...tremors.map(t => t.jitter)) * 100) / 100;
@@ -2010,7 +2010,7 @@
       Math.min(1, clinicalMetrics.tremorEvents.length / 20),             // tremor frequency
       Math.min(1, stats.clinical_markers.cable_stucks / 5)               // cable stucks
     ];
-    stats.motor_markers.motor_clumsiness_score =
+    stats.motor_markers.vel_oscilacion_index =
       Math.round(clumsyFactors.reduce((a, b) => a + b, 0) / clumsyFactors.length * 100) / 100;
 
     // === Meticulousness composite (0-1, higher = more meticulous) ===
@@ -2021,7 +2021,7 @@
       1 - Math.min(1, clinicalMetrics.rapidReversals / Math.max(1, clinicalMetrics.totalMoves) * 5), // low indecision
       stats.session_summary.accuracy_percentage / 100                    // high completion
     ];
-    stats.motor_markers.meticulousness_score =
+    stats.motor_markers.ratio_acciones_util =
       Math.round(meticulousFactors.reduce((a, b) => a + b, 0) / meticulousFactors.length * 100) / 100;
 
     return stats;
@@ -3609,11 +3609,11 @@
       + '<h3 style="font-size:0.9rem; color:#7c3aed; margin:0.8rem 0 0.4rem;">Motricidad Fina / Motor</h3>'
       + '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:0.4rem; font-size:0.82rem;">'
       + metricItem('Temblor', (mm.tremor_event_count || 0) + ' eventos')
-      + metricItem('Jitter Prom', (mm.tremor_avg_jitter || 0).toFixed(2) + ' px')
+      + metricItem('Jitter Prom', (mm.jitter_reposo_px || 0).toFixed(2) + ' px')
       + metricItem('Dismetria', (mm.overshoot_count || 0) + ' overshoots')
       + metricItem('Cambios Rumbo', mm.direction_changes || 0)
-      + metricItem('Torpeza', ((mm.motor_clumsiness_score || 0) * 100).toFixed(0) + '/100')
-      + metricItem('Minuciosidad', ((mm.meticulousness_score || 0) * 100).toFixed(0) + '/100')
+      + metricItem('Torpeza', ((mm.vel_oscilacion_index || 0) * 100).toFixed(0) + '/100')
+      + metricItem('Minuciosidad', ((mm.ratio_acciones_util || 0) * 100).toFixed(0) + '/100')
       + '</div>'
       + '<h3 style="font-size:0.9rem; color:#0891b2; margin:0.8rem 0 0.4rem;">Planificacion</h3>'
       + '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:0.4rem; font-size:0.82rem;">'
@@ -5222,15 +5222,15 @@
       + '<h3 style="font-size:0.9rem; color:#7c3aed; margin:1rem 0 0.5rem;">Motricidad Fina / Perfil Motor</h3>'
       + '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:0.4rem; font-size:0.82rem;">'
       + metricItem('Temblor (eventos)', mm.tremor_event_count || 0)
-      + metricItem('Temblor Jitter Prom', (mm.tremor_avg_jitter || 0).toFixed(2) + ' px')
+      + metricItem('Temblor Jitter Prom', (mm.jitter_reposo_px || 0).toFixed(2) + ' px')
       + metricItem('Temblor Max', (mm.tremor_max_jitter || 0).toFixed(2) + ' px')
       + metricItem('Dismetria (overshoots)', mm.overshoot_count || 0)
       + metricItem('Ratio Dismetria', ((mm.dysmetria_ratio || 0) * 100).toFixed(1) + '%')
       + metricItem('Cambios Rumbo', mm.direction_changes || 0)
       + metricItem('Reversiones Rapidas', mm.rapid_reversals || 0)
       + metricItem('Indecision', ((mm.indecision_ratio || 0) * 100).toFixed(1) + '%')
-      + metricItem('Torpeza Motora', ((mm.motor_clumsiness_score || 0) * 100).toFixed(0) + '/100')
-      + metricItem('Minuciosidad', ((mm.meticulousness_score || 0) * 100).toFixed(0) + '/100')
+      + metricItem('Torpeza Motora', ((mm.vel_oscilacion_index || 0) * 100).toFixed(0) + '/100')
+      + metricItem('Minuciosidad', ((mm.ratio_acciones_util || 0) * 100).toFixed(0) + '/100')
       + '</div>'
       // Section 3: Planning / Executive
       + '<h3 style="font-size:0.9rem; color:#0891b2; margin:1rem 0 0.5rem;">Planificacion y Eficiencia</h3>'
