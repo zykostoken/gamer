@@ -12,6 +12,11 @@
     Content-Security-Policy = "default-src 'self' https://*.supabase.co https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.resend.com; media-src 'self' blob:"
 
 [[redirects]]
+  from = "/demo"
+  to = "/demo/"
+  status = 301
+
+[[redirects]]
   from = "/login"
   to = "/auth/"
   status = 301

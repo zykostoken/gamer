@@ -2167,5 +2167,28 @@ window._toggleConsigna = function() {
   };
 })();
 </script>
+
+<script>
+// DEMO MODE — max_level=2, banner de retorno al terminar
+(function(){
+  var p = new URLSearchParams(location.search);
+  if (!p.get('demo')) return;
+  var maxLv = parseInt(p.get('max_level') || '2');
+  var ret   = p.get('demo_return') || '/demo/';
+  window._DEMO_MODE     = true;
+  window._DEMO_MAX_LEVEL= maxLv;
+  window._DEMO_RETURN   = ret;
+  // Banner fijo en la parte superior
+  var bar = document.createElement('div');
+  bar.id  = 'demo-bar';
+  bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,212,255,.12);border-bottom:1px solid rgba(0,212,255,.3);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;font-family:system-ui,sans-serif;font-size:.78rem;backdrop-filter:blur(8px)';
+  bar.innerHTML = '<span style="color:#00d4ff;font-weight:600">DEMO — Niveles 1 y 2</span>'
+    + '<a href="' + ret + '" style="color:rgba(255,255,255,.6);text-decoration:none;padding:3px 12px;border:1px solid rgba(255,255,255,.2);border-radius:20px">Volver a la demo</a>';
+  document.body.insertBefore(bar, document.body.firstChild);
+  // Padding top para no tapar el juego
+  document.body.style.paddingTop = '36px';
+})();
+</script>
+
 </body>
 </html>
