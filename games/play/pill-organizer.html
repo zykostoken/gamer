@@ -92,6 +92,15 @@
             background: rgba(16, 185, 129, 0.15);
         }
         .slot.error-slot {
+            background: rgba(239,68,68,0.15) !important;
+        }
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            20%      { transform: translateX(-5px); }
+            40%      { transform: translateX(5px); }
+            60%      { transform: translateX(-4px); }
+            80%      { transform: translateX(4px); }
+        }
             border-color: #f59e0b;
             background: rgba(245, 158, 11, 0.15);
         }
@@ -238,6 +247,11 @@
                 <div id="level-badge" class="text-xs font-bold bg-white/20 rounded-full px-3 py-1 mb-1 inline-block" style="display:none;">Nivel 1</div>
                 <div id="timer-display" class="text-3xl font-mono font-bold">00:00</div>
                 <div id="tremor-badge" class="text-xs opacity-75 mt-1">Precisión: --</div>
+                <button id="btn-ver-consigna"
+                    onclick="window._toggleConsigna()"
+                    style="display:none;margin-top:6px;padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.1);color:white;font-size:0.75rem;cursor:pointer;">
+                    Ver indicacion
+                </button>
             </div>
         </div>
     </header>
@@ -362,8 +376,8 @@
                         <span></span> Organizador Semanal
                     </h3>
                     <button id="finish-btn"
-                            style="display:none;padding:12px 32px;border-radius:16px;border:none;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 4px 16px rgba(34,197,94,0.4);animation:pulse 1s infinite;">
-                         COMPLETADO
+                            style="display:inline-block;padding:10px 24px;border-radius:16px;border:2px solid rgba(34,197,94,0.5);background:rgba(34,197,94,0.15);color:#22c55e;font-weight:700;font-size:0.9rem;cursor:pointer;transition:all 0.3s;">
+                        Indicacion completada
                     </button>
                 </div>
 
@@ -791,6 +805,7 @@
             levelStartTime: null,
             endTime: null,
             timerInterval: null,
+            instruction_reconsultas: 0,  // veces que el jugador pidio ver la consigna
 
             // Biomarcadores mood
             moodPre: null,
@@ -909,18 +924,18 @@
                 <h4>[L] ${level.name} — ${level.consigna}</h4>
                 <div style="margin-top:6px;">${medsHtml}</div>
             `;
-            // Mostrar consigna, luego ocultar despues de 5s (ejercicio de memoria)
+            // Mostrar consigna — se oculta al primer movimiento real
             consignaEl.style.display = 'block';
             consignaEl.style.opacity = '1';
-            consignaEl.style.maxHeight = '200px';
+            consignaEl.style.maxHeight = '300px';
             consignaEl.style.overflow = 'hidden';
-            consignaEl.style.transition = 'opacity 0.6s ease, max-height 0.6s ease';
-            clearTimeout(window._consignaTimer);
-            window._consignaTimer = setTimeout(function() {
-                consignaEl.style.opacity = '0';
-                consignaEl.style.maxHeight = '0';
-                setTimeout(function() { consignaEl.style.display = 'none'; }, 650);
-            }, 5000);
+            consignaEl.style.transition = 'opacity 0.5s ease, max-height 0.5s ease';
+            window._consignaVisible = true;
+            // Reset flag para este nivel
+            window._firstMoveDone = false;
+            // Ocultar botón Ver indicacion — la consigna ya está visible
+            var _btnConsigna = document.getElementById('btn-ver-consigna');
+            if (_btnConsigna) { _btnConsigna.style.display = 'none'; _btnConsigna.textContent = 'Ver indicacion'; }
 
             // Render dispensador
             const dispEl = document.getElementById('dispensador-meds');
@@ -966,8 +981,7 @@
             document.getElementById('perseveration-display').textContent = '0';
             document.getElementById('clinical-hint').style.display = 'none';
 
-            // Show finish button (player decides when done)
-            document.getElementById('finish-btn').style.display = 'block';
+            // finish-btn siempre visible — el jugador decide cuando
 
             // Init completion indicator
             var expectedCount = getExpectedPlacements();
@@ -1267,6 +1281,11 @@
             document.addEventListener('mousemove', function(e) {
                 if (!sessionState.currentDrag.active) return;
                 dragStarted = true;
+                // Ocultar consigna al primer movimiento real
+                if (!window._firstMoveDone) {
+                    window._firstMoveDone = true;
+                    window._hideConsigna();
+                }
                 onDragMove(e.clientX, e.clientY);
             });
 
@@ -1322,6 +1341,11 @@
                 if (!sessionState.currentDrag.active) return;
                 e.preventDefault();
                 touchMoved = true;
+                // Ocultar consigna al primer movimiento real
+                if (!window._firstMoveDone) {
+                    window._firstMoveDone = true;
+                    window._hideConsigna();
+                }
                 var t = e.touches[0];
                 onDragMove(t.clientX, t.clientY);
             }, { passive: false });
@@ -1389,20 +1413,35 @@
         }
 
         function renderPillInSlot(slot, medType, isCorrect, dropOffsetX, dropOffsetY) {
+            if (!isCorrect) {
+                // Error: flash rojo en el slot, shake, pill queda disponible para redragear
+                slot.style.transition = 'background 0.15s';
+                slot.style.background = 'rgba(239,68,68,0.35)';
+                slot.classList.add('error-slot');
+                // Shake animation
+                slot.style.animation = 'none';
+                slot.offsetHeight; // reflow
+                slot.style.animation = 'shake 0.35s ease';
+                setTimeout(function() {
+                    slot.style.background = '';
+                    slot.classList.remove('error-slot');
+                    slot.style.animation = '';
+                }, 600);
+                // La pill-source vuelve a opacidad normal — disponible para redragear
+                var src = document.querySelector('.pill-source[data-med="' + medType + '"]');
+                if (src) { src.style.opacity = '1'; src.style.pointerEvents = 'auto'; }
+                return; // NO renderizar pill en el slot
+            }
+            // Solo renderizar si es correcto
             const level = LEVELS[sessionState.currentLevelIndex];
             const med = level.medications.find(m => m.id === medType);
             const pill = document.createElement('div');
-
             const colorClass = med
                 ? `bg-gradient-to-br ${med.colorFrom} ${med.colorTo}`
                 : 'bg-gray-400';
-
-            const errorClass = isCorrect ? '' : 'ring-4 ring-yellow-400 animate-pulse';
-
-            pill.className = `w-9 h-9 rounded-full ${colorClass} shadow-lg border-2 border-white/80 ${errorClass}`;
+            pill.className = `w-9 h-9 rounded-full ${colorClass} shadow-lg border-2 border-white/80`;
             pill.title = med ? med.name : medType;
             pill.style.position = 'absolute';
-            // Clamp offset so pill stays within slot bounds
             var maxOff = 12;
             var ox = dropOffsetX != null ? Math.max(-maxOff, Math.min(maxOff, dropOffsetX)) : 0;
             var oy = dropOffsetY != null ? Math.max(-maxOff, Math.min(maxOff, dropOffsetY)) : 0;
@@ -1410,7 +1449,7 @@
             pill.style.top = 'calc(50% + ' + Math.round(oy) + 'px - 18px)';
             slot.style.position = 'relative';
             slot.appendChild(pill);
-            slot.classList.add(isCorrect ? 'filled' : 'error-slot');
+            slot.classList.add('filled');
         }
 
         function updateRealTimeMetrics() {
@@ -1496,6 +1535,20 @@
             var completionMsgEl = document.getElementById('completion-message');
             if (completionMsgEl) completionMsgEl.style.display = completionPct >= 100 ? 'block' : 'none';
 
+            // Registrar timestamp de primer completion al 100%
+            if (completionPct >= 100 && !sessionState.completionTimestamp) {
+                sessionState.completionTimestamp = Date.now();
+                sessionState.movesAtCompletion = sessionState.totalMoves;
+                // Resaltar boton COMPLETADO
+                var fb = document.getElementById('finish-btn');
+                if (fb) {
+                    // Resaltar boton al completar
+                    fb.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+                    fb.style.color = '#fff';
+                    fb.style.border = 'none';
+                    fb.style.boxShadow = '0 4px 16px rgba(34,197,94,0.4)';
+                }
+            }
             // NO auto-complete: el paciente decide cuando termino
         }
 
@@ -1978,6 +2031,59 @@
 <script>
 // Auto-save partial progress on exit
 if (typeof registerAutoSave === 'function') {
+// ================================================================
+// CONSIGNA — ocultar al primer movimiento, botón de reconsulta
+// ================================================================
+window._firstMoveDone = false;
+window._consignaVisible = false;
+
+window._hideConsigna = function() {
+    var el = document.getElementById('level-consigna');
+    var btn = document.getElementById('btn-ver-consigna');
+    if (!el) return;
+    el.style.transition = 'opacity 0.5s ease, max-height 0.5s ease';
+    el.style.opacity = '0';
+    el.style.maxHeight = '0';
+    setTimeout(function() {
+        el.style.display = 'none';
+        window._consignaVisible = false;
+    }, 550);
+    // Mostrar botón de reconsulta
+    if (btn) btn.style.display = 'inline-block';
+};
+
+window._toggleConsigna = function() {
+    var el = document.getElementById('level-consigna');
+    var btn = document.getElementById('btn-ver-consigna');
+    if (!el) return;
+    if (window._consignaVisible) {
+        // Ocultar
+        el.style.transition = 'opacity 0.4s ease, max-height 0.4s ease';
+        el.style.opacity = '0';
+        el.style.maxHeight = '0';
+        setTimeout(function() { el.style.display = 'none'; }, 450);
+        window._consignaVisible = false;
+        if (btn) btn.textContent = 'Ver indicacion';
+    } else {
+        // Mostrar — registrar reconsulta como métrica
+        el.style.display = 'block';
+        el.style.maxHeight = '300px';
+        setTimeout(function() { el.style.opacity = '1'; }, 10);
+        window._consignaVisible = true;
+        if (btn) btn.textContent = 'Ocultar indicacion';
+        // Registrar reconsulta
+        if (typeof sessionState !== 'undefined') {
+            sessionState.instruction_reconsultas = (sessionState.instruction_reconsultas || 0) + 1;
+            if (typeof ZYKOS !== 'undefined' && ZYKOS._pushRaw) {
+                ZYKOS._pushRaw('instruction_reconsulta', {
+                    n: sessionState.instruction_reconsultas,
+                    level: sessionState.currentLevelIndex
+                });
+            }
+        }
+    }
+};
+
   registerAutoSave(function() {
     var dni = null;
     try { dni = new URLSearchParams(window.location.search).get('dni') || localStorage.getItem('zykos_patient_dni'); } catch(e) {}
@@ -1995,6 +2101,35 @@ if (typeof registerAutoSave === 'function') {
 }
 </script>
 <script src="/games/shared/show-metrics.js"></script>
-<script>/*Pre-game hook*/(function(){var b=document.getElementById("btn-start");if(!b)return;b.onclick=function(){if(typeof showPreGameChat==="function"&&!window._pgd){window._pgd=true;showPreGameChat();var w=setInterval(function(){if(!document.getElementById("mood-pre-overlay")&&!document.getElementById("input-calibration-overlay")){clearInterval(w);startGame();}},200);setTimeout(function(){clearInterval(w);startGame();},15000);}else{startGame();}}})();</script>
+<script>/*Pre-game hook — calibracion HW primero, luego mood, luego juego*/
+(function(){
+  var b=document.getElementById("btn-start");
+  if(!b)return;
+  b.onclick=function(){
+    if(window._pgd)return;
+    window._pgd=true;
+    var dni=localStorage.getItem('zykos_patient_dni')||null;
+    // 1. Calibracion de hardware
+    var doCalib=typeof InputCalibration!=='undefined'&&InputCalibration.isNeeded
+      ?InputCalibration.isNeeded()
+      :true;
+    function afterCalib(){
+      // 2. Mood pre-game
+      if(typeof showPreGameChat==='function'){
+        showPreGameChat();
+        var w=setInterval(function(){
+          if(!document.getElementById('mood-pre-overlay')){
+            clearInterval(w);startGame();
+          }
+        },200);
+        setTimeout(function(){clearInterval(w);startGame();},12000);
+      }else{startGame();}
+    }
+    if(doCalib&&typeof InputCalibration!=='undefined'){
+      InputCalibration.run({patientDni:dni}).then(afterCalib).catch(afterCalib);
+    }else{afterCalib();}
+  };
+})();
+</script>
 </body>
 </html>
