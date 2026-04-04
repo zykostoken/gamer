@@ -189,50 +189,67 @@ const Biometrics = {
         const falseAlarms = results.commissions || 0;  // incorrect selections (false positives)
         const correctRejects = results.correct_rejects || 0;
 
-        // d-prime approximation (sensitivity)
-        const hitRate = Math.min(Math.max(hits / ((hits + misses) || 1), 0.01), 0.99);
-        const faRate = Math.min(Math.max(falseAlarms / ((falseAlarms + correctRejects) || 1), 0.01), 0.99);
-        
-        // Z-score approximation
-        const zHit = this._probit(hitRate);
-        const zFa = this._probit(faRate);
+        // d-prime — corrección loglineal de Hautus (1995)
+        // Evita colapso matemático cuando hitRate=1.0 o FAR=0.0
+        // Formula: (hits + 0.5) / (totalTargets + 1)
+        //          (FA   + 0.5) / (totalNonTargets + 1)
+        const totalTargets    = hits + misses;
+        const totalNonTargets = falseAlarms + correctRejects;
+        const adjHR  = totalTargets    > 0 ? (hits + 0.5)        / (totalTargets    + 1) : 0.5;
+        const adjFAR = totalNonTargets > 0 ? (falseAlarms + 0.5) / (totalNonTargets + 1) : 0.5;
+        const zHit = this._probit(adjHR);
+        const zFa  = this._probit(adjFAR);
         const dPrime = Math.round((zHit - zFa) * 100) / 100;
+        const criterion = Math.round(-0.5 * (zHit + zFa) * 100) / 100;
+
+        // Tercios temporales para fatigabilidad
+        const sessionMs = totalTime || 1;
+        const t1end = sessionMs / 3, t2end = sessionMs * 2 / 3;
+        const actT1 = this.actionLog.filter(function(a){ return a.t < t1end; }).length;
+        const actT2 = this.actionLog.filter(function(a){ return a.t >= t1end && a.t < t2end; }).length;
+        const actT3 = this.actionLog.filter(function(a){ return a.t >= t2end; }).length;
+        const maxAct = Math.max(actT1, actT2, actT3) || 1;
 
         return {
             level: levelNum,
             timestamp: new Date().toISOString(),
 
-            // Timing
-            total_time_ms: totalTime,
-            reaction_time_ms: reactionTime,
-            avg_action_interval_ms: this.interactionCount > 1 
-                ? Math.round(totalTime / this.interactionCount) 
-                : totalTime,
+            // Timing — nombres canónicos del METRIC_DICTIONARY
+            session_duration_ms:    totalTime,
+            rt_mean_ms:             reactionTime,
+            intervalo_acciones_cv:  this.interactionCount > 1
+                ? Math.round(totalTime / this.interactionCount) : totalTime,
 
-            // SDT metrics
-            hits,
-            misses,           // omisiones (false negatives)
-            false_alarms: falseAlarms,  // comisiones (false positives)
-            correct_rejects: correctRejects,
-            d_prime: dPrime,
+            // SDT — Hautus 1995, nombres canónicos
+            hit_rate:               adjHR,
+            false_alarm_rate:       adjFAR,
+            d_prime:                dPrime,
+            criterion_c:            criterion,
+            errores_omision:        misses,
+            errores_comision:       falseAlarms,
 
-            // Motor
-            tremor_avg: Math.round(avgTremor * 100) / 100,
-            tremor_speed_var: Math.round(avgSpeedVar * 1000) / 1000,
-            tremor_samples: this.tremors.length,
+            // Motor — nombres canónicos
+            jitter_reposo_px:       Math.round(avgTremor * 100) / 100,
+            vel_cv:                 Math.round(avgSpeedVar * 1000) / 1000,
+            rectificaciones_count:  this.abruptDirectionChanges,
+            _raw_tremor_samples:    this.tremors.length,
 
-            // Behavioral
-            hesitation_count: this.hesitations.length,
-            hesitation_total_ms: this.hesitations.reduce((a, h) => a + h.gap_ms, 0),
-            undo_count: this.undoCount,
-            reset_count: this.resetCount,
-            total_interactions: this.interactionCount,
-            abrupt_direction_changes: this.abruptDirectionChanges,
+            // Atención y ejecutivo — nombres canónicos
+            hesitaciones_count:     this.hesitations.length,
+            hesitation_total_ms:    this.hesitations.reduce(function(a, h){ return a + h.gap_ms; }, 0),
+            perseveracion_count:    this.undoCount,
+            total_clicks:           this.interactionCount,
 
-            // Raw data (for deep analysis)
-            action_log: this.actionLog,
-            tremor_details: this.tremors,
-            hesitation_details: this.hesitations
+            // Fatigabilidad — eficacia por tercios
+            eficacia_tercio_1:      +(actT1 / maxAct).toFixed(3),
+            eficacia_tercio_2:      +(actT2 / maxAct).toFixed(3),
+            eficacia_tercio_3:      +(actT3 / maxAct).toFixed(3),
+            decaimiento_mitades:    actT1 > 0 ? +(actT3 / actT1).toFixed(3) : null,
+
+            // Raw para análisis diferido
+            _raw_action_log:        this.actionLog,
+            _raw_tremor_details:    this.tremors,
+            _raw_hesitations:       this.hesitations
         };
     },
 

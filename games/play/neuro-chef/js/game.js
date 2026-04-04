@@ -978,19 +978,19 @@ async function finishGame() {
         total_time_ms:totalTime, total_correct:gameState.totalCorrect, total_errors:gameState.totalErrors,
         levels_completed:gameState.levelMetrics.length, reset_count:Biometrics.resetCount,
         biometric_summary:{
-            avg_reaction_time:avg(gameState.biometricData.map(b=>b.reaction_time_ms)),
-            avg_tremor:avg(gameState.biometricData.map(b=>b.tremor_avg)),
-            avg_tremor_speed_var:avg(gameState.biometricData.map(b=>b.tremor_speed_var)),
+            avg_reaction_time:avg(gameState.biometricData.map(b=>b.rt_mean_ms)),
+            avg_tremor:avg(gameState.biometricData.map(b=>b.jitter_reposo_px)),
+            avg_tremor_speed_var:avg(gameState.biometricData.map(b=>b.vel_cv)),
             avg_d_prime:avg(gameState.biometricData.map(b=>b.d_prime)),
-            total_hesitations:sum(gameState.biometricData.map(b=>b.hesitation_count)),
+            total_hesitations:sum(gameState.biometricData.map(b=>b.hesitaciones_count)),
             total_hesitation_ms:sum(gameState.biometricData.map(b=>b.hesitation_total_ms)),
-            total_undos:sum(gameState.biometricData.map(b=>b.undo_count)),
+            total_undos:sum(gameState.biometricData.map(b=>b.perseveracion_count)),
             total_resets:sum(gameState.biometricData.map(b=>b.reset_count)),
-            total_omissions:sum(gameState.biometricData.map(b=>b.misses)),
-            total_commissions:sum(gameState.biometricData.map(b=>b.false_alarms)),
-            total_direction_changes:sum(gameState.biometricData.map(b=>b.abrupt_direction_changes)),
-            total_interactions:sum(gameState.biometricData.map(b=>b.total_interactions)),
-            avg_action_interval:avg(gameState.biometricData.map(b=>b.avg_action_interval_ms))
+            total_omissions:sum(gameState.biometricData.map(b=>b.errores_omision)),
+            total_commissions:sum(gameState.biometricData.map(b=>b.errores_comision)),
+            total_direction_changes:sum(gameState.biometricData.map(b=>b.rectificaciones_count)),
+            total_interactions:sum(gameState.biometricData.map(b=>b.total_clicks)),
+            avg_action_interval:avg(gameState.biometricData.map(b=>b.intervalo_acciones_cv))
         }
     };
     if (sb) {
@@ -1009,19 +1009,19 @@ async function finishGame() {
                 levels_completed: summary.levels_completed,
                 duration_sec: Math.round(summary.total_time_ms / 1000),
                 total_time_ms: summary.total_time_ms,
-                mean_rt_ms: gameState.biometricData.length ? Math.round(gameState.biometricData.reduce((s,b)=>s+(b.reaction_time_ms||0),0)/gameState.biometricData.length) : null,
-                commission_errors: summary.biometric_summary.total_commissions,
-                omission_errors: summary.biometric_summary.total_omissions,
+                rt_mean_ms: gameState.biometricData.length ? Math.round(gameState.biometricData.reduce((s,b)=>s+(b.rt_mean_ms||0),0)/gameState.biometricData.length) : null,
+                errores_comision: summary.biometric_summary.total_commissions,
+                errores_omision: summary.biometric_summary.total_omissions,
                 completed: true,
                 // Motor / Tremor
-                tremor_avg: summary.biometric_summary.avg_tremor,
-                tremor_speed_var: summary.biometric_summary.avg_tremor_speed_var,
+                jitter_reposo_px: summary.biometric_summary.avg_tremor,
+                vel_cv: summary.biometric_summary.avg_tremor_speed_var,
                 // Behavioral
-                total_hesitations: summary.biometric_summary.total_hesitations,
+                hesitaciones_count: summary.biometric_summary.total_hesitations,
                 total_hesitation_ms: summary.biometric_summary.total_hesitation_ms,
-                total_undos: summary.biometric_summary.total_undos,
+                perseveracion_count: summary.biometric_summary.total_undos,
                 total_resets: summary.biometric_summary.total_resets,
-                direction_changes: summary.biometric_summary.total_direction_changes,
+                rectificaciones_count: summary.biometric_summary.total_direction_changes,
                 avg_action_interval_ms: summary.biometric_summary.avg_action_interval,
                 // SDT
                 avg_d_prime: summary.biometric_summary.avg_d_prime
@@ -1029,13 +1029,7 @@ async function finishGame() {
         }); } catch(e) { console.error("[neuro-chef] save error:", e.message || e); }
     }
 
-    // Save full session biometric summary to Supabase Storage bucket 'biometricas'
-    saveBiometricsToBucket({
-        level: 'session_summary',
-        summary,
-        all_levels: gameState.biometricData,
-        level_metrics: gameState.levelMetrics
-    }).catch(()=>{});
+    // Raw data en raw_stream via engine canonical — bucket eliminado
 
     showResultsScreen(summary);
 }
@@ -1082,31 +1076,50 @@ async function saveLevelMetrics(metric) {
 
 async function saveBiometrics(bio) {
     if (!sb) return;
-    // Save summary to DB (without heavy raw data)
-    try { await sb.from('zykos_game_metrics').insert({
-         patient_dni:gameState.patientDni || null, session_id:gameState.sessionId, game_slug:'neuro-chef-v2',
-        metric_type:`biometric_level_${bio.level}`, metric_value:bio.d_prime||0,
-        metric_data:{ reaction_time_ms:bio.reaction_time_ms, total_time_ms:bio.total_time_ms, hits:bio.hits, misses:bio.misses, false_alarms:bio.false_alarms, correct_rejects:bio.correct_rejects, d_prime:bio.d_prime, tremor_avg:bio.tremor_avg, tremor_speed_var:bio.tremor_speed_var, tremor_samples:bio.tremor_samples, hesitation_count:bio.hesitation_count, hesitation_total_ms:bio.hesitation_total_ms, undo_count:bio.undo_count, reset_count:bio.reset_count, total_interactions:bio.total_interactions, abrupt_direction_changes:bio.abrupt_direction_changes, avg_action_interval_ms:bio.avg_action_interval_ms }
-    }); } catch(e) { console.warn('Bio save fail:',e); }
-
-    // Save full biometric data (including raw action_log, tremor_details, hesitation_details) to Supabase Storage bucket 'biometricas'
-    saveBiometricsToBucket(bio).catch(e=>console.warn('Bucket bio save fail:',e));
+    // Métricas canónicas del METRIC_DICTIONARY — mismos nombres que el resto del sistema
+    var payload = {
+        patient_dni:    gameState.patientDni || null,
+        session_id:     gameState.sessionId,
+        game_slug:      'neuro-chef-v2',
+        metric_type:    'biometric_level_' + bio.level,
+        metric_value:   bio.d_prime || 0,
+        metric_data: {
+            // SDT — Hautus 1995
+            hit_rate:               bio.hit_rate,
+            false_alarm_rate:       bio.false_alarm_rate,
+            d_prime:                bio.d_prime,
+            criterion_c:            bio.criterion_c,
+            errores_omision:        bio.errores_omision,
+            errores_comision:       bio.errores_comision,
+            // Motor — nombres canónicos
+            jitter_reposo_px:       bio.jitter_reposo_px,
+            vel_cv:                 bio.vel_cv,
+            rectificaciones_count:  bio.rectificaciones_count,
+            // Atención y ejecutivo
+            hesitaciones_count:     bio.hesitaciones_count,
+            perseveracion_count:    bio.perseveracion_count,
+            total_clicks:           bio.total_clicks,
+            rt_mean_ms:             bio.rt_mean_ms,
+            session_duration_ms:    bio.session_duration_ms,
+            // Fatigabilidad
+            eficacia_tercio_1:      bio.eficacia_tercio_1,
+            eficacia_tercio_2:      bio.eficacia_tercio_2,
+            eficacia_tercio_3:      bio.eficacia_tercio_3,
+            decaimiento_mitades:    bio.decaimiento_mitades
+        }
+    };
+    try {
+        // Evidence hash chain — mismo mecanismo que el resto del sistema
+        if (typeof ZykosEvidence !== 'undefined') {
+            payload = await ZykosEvidence.prepare(payload);
+        }
+        await sb.from('zykos_game_metrics').insert(payload);
+    } catch(e) { console.warn('[neuro-chef] Bio save fail:', e); }
+    // Nota: saveBiometricsToBucket eliminado — endpoint /api/biometricas no existe en el stack
 }
 
-async function saveBiometricsToBucket(bio) {
-    if (!gameState.patientId || !gameState.sessionId) return;
-    await fetch('/api/biometricas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            
-            session_id: gameState.sessionId,
-            game_slug: 'neuro-chef-v2',
-            level: bio.level,
-            biometric_data: bio
-        })
-    });
-}
+// saveBiometricsToBucket eliminado — endpoint /api/biometricas no existe en el stack
+// Los datos raw van via _raw_ prefijos en metric_data hacia zykos_raw_stream
 
 // ========== UTILITIES ==========
 function shuffleArray(a){const arr=[...a];for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}return arr}

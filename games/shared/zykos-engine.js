@@ -253,6 +253,19 @@ var METRIC_DICTIONARY = {
     cam_social_smile_pct:         { domain:'MEDIA', unit:'ratio',  range:[0,1],
         desc:'AU12 sin AU6 — sonrisa voluntaria. Lit: regulación social, diferente correlato fisiológico.' },
 
+    // CORRELACIÓN AFECTO-RENDIMIENTO — cruce humor facial × eficacia del juego
+    // Requiere tanto agent-media como que los juegos reporten aciertos/errores
+    // via ZykosMediaAgent.reportGameEvent('hit'|'error')
+    // Lit: Russell (1980) modelo circumplejo, Cohn & Ekman (2005) AU temporal dynamics
+    affect_smile_during_hits_pct:  { domain:'MEDIA', unit:'ratio', range:[0,1],
+        desc:'Fraccion de aciertos con sonrisa genuina activa. Alto=afecto positivo reactivo al exito.' },
+    affect_brow_during_errors_pct: { domain:'MEDIA', unit:'ratio', range:[0,1],
+        desc:'Fraccion de errores con ceño fruncido activo. Alto=esfuerzo/frustración reactiva al error.' },
+    affect_lip_during_errors_pct:  { domain:'MEDIA', unit:'ratio', range:[0,1],
+        desc:'Fraccion de errores con boca apretada. Alto=supresion emocional post-error (Gross 2002).' },
+    affect_reactivity:             { domain:'MEDIA', unit:'ratio', range:[-1,1],
+        desc:'>0.3=afecto reactivo al rendimiento. ~0=afecto plano/disociado. <-0.1=patron atipico.' },
+
     // MICRÓFONO — ambiente sonoro (sin grabar, solo nivel)
     mic_ambient_db_mean:          { domain:'MEDIA', unit:'dB',     range:[0,120],    desc:'Nivel sonoro ambiental medio. Informa sobre contexto de la sesión.' },
     mic_ambient_db_cv:            { domain:'MEDIA', unit:'ratio',  range:[0,3],      desc:'Variabilidad sonora. Alto=entorno ruidoso o variable.' },
@@ -494,14 +507,29 @@ var ZYKOS = {
                 console.warn('[zykos-engine] Persist error:', error.message);
             } else {
                 console.log('[zykos-engine] Metrics persisted: ' + Object.keys(metrics).length + ' fields');
-                // Detección de patrones conductuales — diferida, en background
-                // No bloquea. Corre sobre los datos recién guardados.
-                // Produce zykos_session_patterns con nomenclatura clínica descriptiva.
+                // Post-persist diferido — no bloquea, no afecta la UX
                 if (payload.session_id) {
+                    // 1. Detección de patrones conductuales
                     sb.rpc('zykos_detect_patterns', { p_session_id: payload.session_id })
-                      .then(function(r) {
+                      .then(function(r){
                           if (r.error) console.warn('[patterns]', r.error.message);
                       }).catch(function(){});
+
+                    // 2. Timeline de humor facial (solo si agent-media estuvo activo)
+                    var humTL  = metrics['_raw_humor_timeline'];
+                    var humPE  = metrics['_raw_performance_events'];
+                    if (humTL && humTL.length > 0) {
+                        sb.rpc('zykos_insert_affect_timeline', {
+                            p_session_id:  payload.session_id,
+                            p_patient_dni: metrics.patient_dni,
+                            p_game_slug:   metrics.game_slug,
+                            p_timeline:    humTL,
+                            p_perf_events: humPE || []
+                        }).then(function(r){
+                            if (r.error) console.warn('[affect-timeline]', r.error.message);
+                            else console.log('[affect-timeline] ' + humTL.length + ' eventos guardados');
+                        }).catch(function(){});
+                    }
                 }
             }
 

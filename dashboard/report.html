@@ -5,23 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Datos de sesion — ZYKOS GAMER</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="/js/supabase-config.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0f1e;--sf:#111827;--bd:rgba(255,255,255,.08);--tx:#e2e8f0;--mt:rgba(255,255,255,.4);--ac:#00d4ff}
+:root{--bg:#0a0f1e;--sf:#111827;--card:#1a2234;--bd:rgba(255,255,255,.08);--tx:#e2e8f0;--mt:rgba(255,255,255,.4);--ac:#00d4ff;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444}
 body{background:var(--bg);color:var(--tx);font-family:system-ui,sans-serif;min-height:100vh}
 .hd{background:var(--sf);border-bottom:1px solid var(--bd);padding:.8rem 1.5rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
 .hd h1{font-size:1rem;font-weight:500}
 .bk{color:var(--mt);text-decoration:none;font-size:.8rem;padding:.4rem .8rem;border:1px solid var(--bd);border-radius:6px}
-.mn{max-width:900px;margin:0 auto;padding:2rem 1.5rem}
-.notice{background:#111827;border:1px solid rgba(0,212,255,.15);border-radius:10px;padding:1.5rem;margin-bottom:1.5rem}
-.notice p{color:var(--mt);font-size:.85rem;line-height:1.7;margin-top:.5rem}
-.metric-row{display:flex;justify-content:space-between;align-items:center;padding:.6rem 0;border-bottom:1px solid var(--bd);font-size:.82rem}
-.metric-key{color:var(--mt);font-family:ui-monospace,monospace;font-size:.78rem}
-.metric-val{color:var(--tx);font-weight:500}
+.mn{max-width:1100px;margin:0 auto;padding:2rem 1.5rem}
+.notice{background:#111827;border:1px solid rgba(0,212,255,.15);border-radius:10px;padding:1.25rem;margin-bottom:1.5rem}
+.notice p{color:var(--mt);font-size:.82rem;line-height:1.7;margin-top:.4rem}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem}
+select{background:#111827;color:var(--tx);border:1px solid var(--bd);padding:.45rem .8rem;border-radius:6px;font-size:.82rem}
 .section-title{font-size:.7rem;font-weight:600;color:var(--ac);text-transform:uppercase;letter-spacing:.1em;margin:1.5rem 0 .8rem}
-select{background:#111827;color:var(--tx);border:1px solid var(--bd);padding:.5rem .8rem;border-radius:6px;font-size:.85rem;min-width:260px}
-.empty{text-align:center;padding:3rem;color:var(--mt);font-size:.9rem}
+.chart-card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:1.25rem;margin-bottom:1rem;position:relative}
+.chart-card h3{font-size:.82rem;font-weight:500;color:var(--mt);margin-bottom:1rem}
+.chart-wrap{height:260px;position:relative}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:.75rem}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--mt)}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.affect-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:.6rem;padding:.6rem;background:rgba(255,255,255,.03);border-radius:6px}
+.al{display:flex;align-items:center;gap:4px;font-size:.7rem;color:var(--mt)}
+.al-icon{font-size:11px}
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:1rem}
+.metric-box{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:.75rem 1rem}
+.metric-box .val{font-family:ui-monospace,monospace;font-size:1.1rem;font-weight:600;color:var(--ac);margin-bottom:2px}
+.metric-box .lbl{font-size:.68rem;color:var(--mt)}
+.empty{text-align:center;padding:3rem;color:var(--mt);font-size:.85rem}
+.affect-badge{display:inline-block;font-size:.65rem;padding:2px 7px;border-radius:10px;margin-left:6px}
+.badge-responsive{background:rgba(34,197,94,.15);color:var(--ok)}
+.badge-flat{background:rgba(245,158,11,.15);color:var(--warn)}
+.badge-freeze{background:rgba(239,68,68,.15);color:var(--err)}
 </style>
 </head>
 <body>
@@ -31,75 +47,346 @@ select{background:#111827;color:var(--tx);border:1px solid var(--bd);padding:.5r
 </div>
 <div class="mn">
   <div class="notice">
-    <strong style="color:var(--ac);font-size:.85rem">Datos observacionales — sin interpretacion clinica</strong>
-    <p>Este panel muestra las mediciones registradas durante las sesiones de juego. Los valores son datos crudos. El profesional de salud a cargo interpreta su significado clinico en el contexto del paciente. ZYKOS GAMER no produce diagnosticos, no genera informes clinicos y no reemplaza la evaluacion profesional.</p>
+    <strong style="color:var(--ac);font-size:.82rem">Datos observacionales — sin interpretacion clinica</strong>
+    <p>Mediciones registradas durante las sesiones. Los valores son datos crudos.
+    El profesional de salud interpreta su significado en el contexto del paciente.
+    ZYKOS GAMER no produce diagnosticos ni reemplaza la evaluacion profesional.</p>
   </div>
-  <div id="patient-sel">
-    <label style="font-size:.8rem;color:var(--mt);display:block;margin-bottom:.5rem">Paciente (DNI)</label>
-    <select id="sel-patient" onchange="loadData(this.value)">
-      <option value="">Seleccionar...</option>
+
+  <div class="controls">
+    <select id="sel-patient" onchange="loadData(this.value)"><option value="">Paciente...</option></select>
+    <select id="sel-game" onchange="loadData(document.getElementById('sel-patient').value)">
+      <option value="">Todos los juegos</option>
+    </select>
+    <select id="sel-days" onchange="loadData(document.getElementById('sel-patient').value)">
+      <option value="30">Ultimos 30 dias</option>
+      <option value="60">Ultimos 60 dias</option>
+      <option value="90">Ultimos 90 dias</option>
+      <option value="365">Ultimo año</option>
     </select>
   </div>
-  <div id="content" style="margin-top:1.5rem"></div>
+
+  <div id="content"><div class="empty">Selecciona un paciente para ver los datos.</div></div>
 </div>
+
 <script>
 var sb = getSupabaseClient();
+
 async function init() {
   var token = localStorage.getItem('zykos_token');
   if (!token) { window.location.href = '/auth/'; return; }
-  var res = await sb.rpc('zykos_validate_session', { p_token: token });
-  if (!res.data || !res.data.ok) { window.location.href = '/auth/'; return; }
-  var user = res.data;
+  var r = await sb.rpc('zykos_validate_session', {p_token: token});
+  if (!r.data || !r.data.ok) { window.location.href = '/auth/'; return; }
+  var user = r.data;
   if (user.role === 'superadmin') {
-    var r = await sb.from('zykos_users').select('dni, display_name').neq('dni', null);
-    var patients = r.data || [];
+    var {data: patients} = await sb.from('zykos_users').select('dni,display_name').neq('dni', null).order('display_name');
     var sel = document.getElementById('sel-patient');
-    patients.forEach(function(p) {
+    (patients||[]).forEach(function(p){
       var o = document.createElement('option');
-      o.value = p.dni;
-      o.textContent = (p.display_name || p.dni) + ' (' + p.dni + ')';
+      o.value = p.dni; o.textContent = (p.display_name||p.dni) + ' (' + p.dni + ')';
       sel.appendChild(o);
     });
   } else {
     var dni = localStorage.getItem('zykos_patient_dni');
-    if (dni) { loadData(dni); document.getElementById('patient-sel').style.display='none'; }
-    else { window.location.href='/games/portal/'; }
+    if (dni) { loadData(dni); document.querySelector('.controls').style.display='none'; }
+    else window.location.href = '/games/portal/';
   }
 }
+
+// Cache de charts para destruirlos antes de recrear
+var _charts = {};
+
 async function loadData(dni) {
   if (!dni) return;
+  var game  = document.getElementById('sel-game').value || null;
+  var days  = parseInt(document.getElementById('sel-days').value) || 30;
   var content = document.getElementById('content');
   content.innerHTML = '<div class="empty">Cargando...</div>';
-  var r = await sb.from('zykos_game_metrics')
-    .select('game_slug,metric_type,metric_value,metric_data,created_at')
+
+  // Cargar juegos disponibles para el selector
+  var {data: slugs} = await sb.from('zykos_game_metrics')
+    .select('game_slug').eq('patient_dni', dni);
+  var uniqueSlugs = [...new Set((slugs||[]).map(function(r){return r.game_slug;}))];
+  var selGame = document.getElementById('sel-game');
+  if (selGame.options.length <= 1) {
+    uniqueSlugs.forEach(function(s){
+      var o = document.createElement('option'); o.value=s; o.textContent=s; selGame.appendChild(o);
+    });
+  }
+
+  // Datos longitudinales afecto+rendimiento
+  var {data: longData, error: longErr} = await sb.rpc('zykos_get_affect_performance_longitudinal', {
+    p_patient_dni: dni,
+    p_game_slug:   game,
+    p_days_back:   days
+  });
+
+  // Datos crudos de sesiones
+  var {data: rawMetrics} = await sb.from('zykos_game_metrics')
+    .select('game_slug,metric_type,metric_value,metric_data,created_at,session_id')
     .eq('patient_dni', dni)
     .order('created_at', {ascending: false})
-    .limit(100);
-  var metrics = r.data || [];
-  if (!metrics.length) { content.innerHTML='<div class="empty">Sin sesiones registradas.</div>'; return; }
-  var byGame = {};
-  metrics.forEach(function(m){ if(!byGame[m.game_slug])byGame[m.game_slug]=[]; byGame[m.game_slug].push(m); });
+    .limit(50);
+
+  content.innerHTML = '';
+
+  if (!longData || longData.length === 0) {
+    content.innerHTML = '<div class="empty">Sin sesiones con datos suficientes en este periodo.</div>';
+  } else {
+    renderLongitudinal(content, longData);
+  }
+
+  if (rawMetrics && rawMetrics.length > 0) {
+    renderRawMetrics(content, rawMetrics);
+  }
+}
+
+function renderLongitudinal(container, data) {
+  // Preparar datasets
+  var labels  = data.map(function(d){ return (d.session_date||'').slice(5); }); // MM-DD
+  var ef1     = data.map(function(d){ return d.eficacia_tercio_1 != null ? +parseFloat(d.eficacia_tercio_1).toFixed(2) : null; });
+  var ef2     = data.map(function(d){ return d.eficacia_tercio_2 != null ? +parseFloat(d.eficacia_tercio_2).toFixed(2) : null; });
+  var ef3     = data.map(function(d){ return d.eficacia_tercio_3 != null ? +parseFloat(d.eficacia_tercio_3).toFixed(2) : null; });
+  var smiles  = data.map(function(d){ return d.genuine_smile_count || 0; });
+  var brows   = data.map(function(d){ return d.brow_furrow_count || 0; });
+  var hasCam  = data.some(function(d){ return d.genuine_smile_count > 0 || d.brow_furrow_count > 0; });
+
+  // Resumen de afecto
+  var affectSummary = '';
+  data.forEach(function(d, i) {
+    if (d.affect_responsive) affectSummary += '<span class="affect-badge badge-responsive">sesion ' + (i+1) + ': afecto reactivo</span>';
+    if (d.affect_flat)       affectSummary += '<span class="affect-badge badge-flat">sesion ' + (i+1) + ': afecto plano</span>';
+    if (d.has_freeze_candidate) affectSummary += '<span class="affect-badge badge-freeze">sesion ' + (i+1) + ': freeze</span>';
+  });
+
+  // Sección título
+  var secEl = document.createElement('div');
+  secEl.className = 'section-title';
+  secEl.textContent = 'evolucion longitudinal (' + data.length + ' sesiones)';
+  container.appendChild(secEl);
+
+  if (affectSummary) {
+    var badgeEl = document.createElement('div');
+    badgeEl.style.marginBottom = '.8rem';
+    badgeEl.innerHTML = affectSummary;
+    container.appendChild(badgeEl);
+  }
+
+  // Chart 1: Eficacia por tercios
+  var card1 = document.createElement('div');
+  card1.className = 'chart-card';
+  card1.innerHTML = '<h3>eficacia por tercio temporal de sesion</h3><div class="chart-wrap"><canvas id="ch-eficacia"></canvas></div>' +
+    '<div class="legend">' +
+    '<span class="legend-item"><span class="legend-dot" style="background:#00d4ff"></span>primer tercio</span>' +
+    '<span class="legend-item"><span class="legend-dot" style="background:#a78bfa"></span>segundo tercio</span>' +
+    '<span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>tercer tercio</span>' +
+    '</div>';
+  container.appendChild(card1);
+
+  setTimeout(function(){
+    var ctx1 = document.getElementById('ch-eficacia');
+    if (!ctx1) return;
+    if (_charts['eficacia']) _charts['eficacia'].destroy();
+    _charts['eficacia'] = new Chart(ctx1.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          { label:'Tercio 1', data:ef1, borderColor:'#00d4ff', backgroundColor:'rgba(0,212,255,.08)', tension:.4, spanGaps:true },
+          { label:'Tercio 2', data:ef2, borderColor:'#a78bfa', backgroundColor:'rgba(167,139,250,.08)', tension:.4, spanGaps:true },
+          { label:'Tercio 3', data:ef3, borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,.08)', tension:.4, spanGaps:true }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false} },
+        scales:{
+          y:{ grid:{color:'rgba(255,255,255,.06)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} },
+          x:{ grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} }
+        }
+      }
+    });
+  }, 50);
+
+  // Chart 2: Humor facial superpuesto (solo si hay datos de cámara)
+  if (hasCam) {
+    var card2 = document.createElement('div');
+    card2.className = 'chart-card';
+    card2.innerHTML = '<h3>humor facial durante las sesiones <span style="font-size:.65rem;color:var(--mt)">(marcadores superpuestos sobre eficacia)</span></h3>' +
+      '<div class="chart-wrap"><canvas id="ch-humor"></canvas></div>' +
+      '<div class="affect-legend">' +
+      '<span class="al"><span class="al-icon" style="color:#22c55e">●</span>sonrisa genuina (Duchenne)</span>' +
+      '<span class="al"><span class="al-icon" style="color:#f59e0b">●</span>ceño fruncido (AU4)</span>' +
+      '<span class="al"><span class="al-icon" style="color:#ef4444">▲</span>freeze facial</span>' +
+      '</div>';
+    container.appendChild(card2);
+
+    setTimeout(function(){
+      var ctx2 = document.getElementById('ch-humor');
+      if (!ctx2) return;
+      if (_charts['humor']) _charts['humor'].destroy();
+
+      // Puntos de freeze como anotaciones
+      var freezePoints = data.map(function(d){
+        return d.has_freeze_candidate ? (d.eficacia_tercio_2 || 0) : null;
+      });
+
+      _charts['humor'] = new Chart(ctx2.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label:'Eficacia (T2)', data:ef2,
+              borderColor:'rgba(0,212,255,.4)', borderDash:[4,4],
+              backgroundColor:'transparent', tension:.4, spanGaps:true,
+              pointRadius:0
+            },
+            {
+              label:'Sonrisas genuinas', data:smiles,
+              borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.1)',
+              tension:.4, yAxisID:'y2', fill:true
+            },
+            {
+              label:'Ceño fruncido', data:brows,
+              borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,.08)',
+              tension:.4, yAxisID:'y2', fill:false
+            },
+            {
+              label:'Freeze', data:freezePoints,
+              borderColor:'transparent', backgroundColor:'rgba(239,68,68,.7)',
+              pointStyle:'triangle', pointRadius:8, type:'scatter', yAxisID:'y'
+            }
+          ]
+        },
+        options: {
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false} },
+          scales:{
+            y:{  grid:{color:'rgba(255,255,255,.06)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} },
+            y2:{ position:'right', grid:{color:'rgba(255,255,255,.03)'}, ticks:{color:'rgba(255,255,255,.3)',font:{size:10}} },
+            x:{  grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} }
+          }
+        }
+      });
+    }, 80);
+
+    // Chart 3: Correlacion afecto-rendimiento
+    var hasAffectData = data.some(function(d){ return d.affect_reactivity != null; });
+    if (hasAffectData) {
+      var reactivity = data.map(function(d){
+        return d.affect_reactivity != null ? +parseFloat(d.affect_reactivity).toFixed(3) : null;
+      });
+      var smileHits = data.map(function(d){
+        return d.affect_smile_hits_pct != null ? +parseFloat(d.affect_smile_hits_pct).toFixed(3) : null;
+      });
+      var browErrors = data.map(function(d){
+        return d.affect_brow_errors_pct != null ? +parseFloat(d.affect_brow_errors_pct).toFixed(3) : null;
+      });
+
+      var card3 = document.createElement('div');
+      card3.className = 'chart-card';
+      card3.innerHTML = '<h3>correlacion afecto–rendimiento <span style="font-size:.62rem;color:var(--mt)">(Russell 1980, Cohn & Ekman 2005)</span></h3>' +
+        '<div class="chart-wrap"><canvas id="ch-affect-corr"></canvas></div>' +
+        '<div class="affect-legend">' +
+        '<span class="al"><span class="al-icon" style="color:#22c55e">●</span>sonrisa durante aciertos</span>' +
+        '<span class="al"><span class="al-icon" style="color:#f59e0b">●</span>ceño durante errores</span>' +
+        '<span class="al"><span class="al-icon" style="color:#00d4ff">●</span>reactividad afectiva (>0.3=reactivo, ~0=plano)</span>' +
+        '</div>';
+      container.appendChild(card3);
+
+      setTimeout(function(){
+        var ctx3 = document.getElementById('ch-affect-corr');
+        if (!ctx3) return;
+        if (_charts['affect-corr']) _charts['affect-corr'].destroy();
+        _charts['affect-corr'] = new Chart(ctx3.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              { label:'Sonrisa en aciertos', data:smileHits, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.1)', tension:.4, spanGaps:true, fill:true },
+              { label:'Ceño en errores',     data:browErrors, borderColor:'#f59e0b', backgroundColor:'transparent', tension:.4, spanGaps:true },
+              {
+                label:'Reactividad afectiva', data:reactivity,
+                borderColor:'#00d4ff', backgroundColor:'transparent',
+                borderWidth:2, tension:.4, spanGaps:true,
+                // Línea de referencia en 0.3 (umbral de reactividad sana)
+                borderDash:[]
+              }
+            ]
+          },
+          options: {
+            responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{display:false},
+              annotation:{
+                annotations:{
+                  threshold:{
+                    type:'line', yMin:0.3, yMax:0.3,
+                    borderColor:'rgba(0,212,255,.3)', borderDash:[4,4], borderWidth:1
+                  }
+                }
+              }
+            },
+            scales:{
+              y:{ min:-0.2, max:1.1, grid:{color:'rgba(255,255,255,.06)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} },
+              x:{ grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} }
+            }
+          }
+        });
+      }, 110);
+    }
+  }
+}
+
+function renderRawMetrics(container, metrics) {
+  var sec = document.createElement('div');
+  sec.className = 'section-title';
+  sec.textContent = 'metricas por sesion (ultimas ' + Math.min(metrics.length, 5) + ')';
+  container.appendChild(sec);
+
   var CANONICAS = ['rt_mean_ms','rt_cv','jitter_reposo_px','vel_cv','vel_oscilacion_index',
     'precision_deposito_px','hesitaciones_count','errores_comision','errores_omision',
-    'perseveracion_count','eficiencia_trayectoria','decaimiento_mitades','d_prime','hit_rate'];
-  var html = '';
-  Object.keys(byGame).forEach(function(slug) {
-    html += '<div class="section-title">'+slug+'</div>';
-    byGame[slug].slice(0,3).forEach(function(m) {
+    'perseveracion_count','eficiencia_trayectoria','decaimiento_mitades','d_prime',
+    'focus_interruptions_count','inactivity_episodes_count',
+    'affect_reactivity','cam_genuine_smile_pct','cam_brow_furrow_ms'];
+
+  var bySession = {};
+  metrics.forEach(function(m){
+    var k = (m.session_id||'') + '_' + m.game_slug;
+    if (!bySession[k]) bySession[k] = { slug: m.game_slug, date: m.created_at, metrics: [] };
+    bySession[k].metrics.push(m);
+  });
+
+  Object.keys(bySession).slice(0,5).forEach(function(k) {
+    var s = bySession[k];
+    var card = document.createElement('div');
+    card.className = 'chart-card';
+    var dateStr = s.date ? s.date.slice(0,16).replace('T',' ') : '';
+    card.innerHTML = '<h3>' + s.slug + ' <span style="color:var(--mt);font-weight:400">' + dateStr + '</span></h3>';
+
+    var grid = document.createElement('div');
+    grid.className = 'metric-grid';
+
+    s.metrics.slice(0,1).forEach(function(m) {
       var d = m.metric_data || {};
-      html += '<div class="metric-row"><span class="metric-key">'+m.metric_type+'</span>';
-      html += '<span style="color:var(--mt);font-size:.75rem">'+String(m.created_at||'').slice(0,16).replace('T',' ')+'</span>';
-      html += '<span class="metric-val">'+(m.metric_value!==null?Number(m.metric_value).toFixed(2):'—')+'</span></div>';
-      CANONICAS.forEach(function(k) {
-        if (d[k]!==undefined&&d[k]!==null) {
-          html += '<div class="metric-row" style="padding-left:1.2rem"><span class="metric-key" style="color:rgba(0,212,255,.6)">'+k+'</span>';
-          html += '<span class="metric-val" style="font-family:ui-monospace,monospace">'+Number(d[k]).toFixed(3)+'</span></div>';
+      CANONICAS.forEach(function(key) {
+        if (d[key] !== undefined && d[key] !== null) {
+          var box = document.createElement('div');
+          box.className = 'metric-box';
+          box.innerHTML = '<div class="val">' + Number(d[key]).toFixed(2) + '</div>' +
+                          '<div class="lbl">' + key + '</div>';
+          grid.appendChild(box);
         }
       });
     });
+
+    if (grid.children.length > 0) {
+      card.appendChild(grid);
+      container.appendChild(card);
+    }
   });
-  content.innerHTML = html;
 }
+
 init();
 </script>
 </body>
