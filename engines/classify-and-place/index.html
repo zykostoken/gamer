@@ -172,7 +172,7 @@ g.innerHTML=`<div class="game-intro"><span class="big-em">${PACK.meta.emoji}</sp
 const ds=document.getElementById('diff-sel');for(let i=1;i<=ml;i++){const b=document.createElement('button');b.className='diff-btn'+(i===1?' active':'');b.textContent='Nivel '+i;b.onclick=()=>{STATE.level=i;ds.querySelectorAll('.diff-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('h-level').textContent='Nivel '+i};ds.appendChild(b)}}
 
 function pickMode(btn,m){STATE.mode=m;document.querySelectorAll('#mode-sel .diff-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
-function startMode(){if(typeof showPreGameChat==='function'&&!window._pgd){window._pgd=true;showPreGameChat();var _w=setInterval(function(){if(!document.getElementById('mood-pre-overlay')&&!document.getElementById('input-calibration-overlay')){clearInterval(_w);_startModeReal();}},200);setTimeout(function(){clearInterval(_w);_startModeReal();},15000);return;}_startModeReal();}function _startModeReal(){STATE.score=0;STATE.correct=0;STATE.errors=0;STATE.placedItems=0;STATE.moves=[];STATE.mouseData=[];STATE.scrollData=[];STATE.startTime=performance.now();STATE.lastMoveTime=0;document.getElementById('h-score').textContent='0';clearInterval(STATE.timerInterval);let el=0;STATE.timerInterval=setInterval(()=>{el++;document.getElementById('h-timer').textContent=String(Math.floor(el/60)).padStart(2,'0')+':'+String(el%60).padStart(2,'0')},1000);
+function startMode(){if(typeof showPreGameChat==='function'&&!window._pgd){window._pgd=true;showPreGameChat();var _w=setInterval(function(){if(!document.getElementById('mood-pre-overlay')&&!document.getElementById('input-calibration-overlay')){clearInterval(_w);_startModeReal();}},200);setTimeout(function(){clearInterval(_w);_startModeReal();},15000);return;}_startModeReal();}function _startModeReal(){if(STATE._levelTimer){clearInterval(STATE._levelTimer);STATE._levelTimer=null;}STATE.score=0;STATE.correct=0;STATE.errors=0;STATE.placedItems=0;STATE.moves=[];STATE.mouseData=[];STATE.scrollData=[];STATE.startTime=performance.now();STATE.lastMoveTime=0;document.getElementById('h-score').textContent='0';clearInterval(STATE.timerInterval);let el=0;STATE.timerInterval=setInterval(()=>{el++;document.getElementById('h-timer').textContent=String(Math.floor(el/60)).padStart(2,'0')+':'+String(el%60).padStart(2,'0')},1000);
 // Telemetria de mouse manejada por agent-motor.js via ZYKOS engine
 // Telemetry: start game session
 // sesion iniciada por ZYKOS.startSession() en loadPack()
@@ -219,7 +219,8 @@ if(_diff.time_limit){
     if(tLeft<=0){clearInterval(STATE._levelTimer);toast('Tiempo!','err');setTimeout(showResults,800);}
   },1000);
 }
-document.getElementById('game').innerHTML=`<div class="mostrador"><div class="mostrador-title"> Mostrador — todo mezclado — <span class="count"><span id="remaining">${items.length}</span> por ubicar</span></div><div class="items-row">${allItems}</div></div><div class="estantes" id="estantes"></div>`;
+const _timerBar=getDiff().time_limit?'<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:12px"><div id="level-timer-bar" style="height:100%;width:100%;background:var(--ok);transition:width 1s linear"></div></div>':'';
+document.getElementById('game').innerHTML=_timerBar+`<div class="mostrador"><div class="mostrador-title"> Mostrador — todo mezclado — <span class="count"><span id="remaining">${items.length}</span> por ubicar</span></div><div class="items-row">${allItems}</div></div><div class="estantes" id="estantes"></div>`;
 const ed=document.getElementById('estantes');shuffle([...cats]).forEach(cat=>{const el=document.createElement('div');el.className='estante';el.dataset.cat=cat.id;el.innerHTML=`<div class="estante-hdr"><span class="estante-em">${cat.emoji}</span><span class="estante-nm">${cat.label}</span><span class="estante-count" id="cnt-${cat.id}">0</span></div><div class="estante-items" id="placed-${cat.id}"></div>`;el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag-over')});el.addEventListener('dragleave',()=>el.classList.remove('drag-over'));el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('drag-over');handleDrop(e.dataTransfer.getData('text/plain'),cat.id,document.querySelector('.item[data-id="'+e.dataTransfer.getData('text/plain')+'"]'))});ed.appendChild(el)});
 document.querySelectorAll('.item[draggable]').forEach(el=>{el.addEventListener('dragstart',e=>{el.classList.add('dragging');e.dataTransfer.setData('text/plain',el.dataset.id)});el.addEventListener('dragend',()=>el.classList.remove('dragging'));let tc=null;el.addEventListener('touchstart',e=>{el.classList.add('dragging');tc=el.cloneNode(true);tc.style.cssText='position:fixed;z-index:10000;pointer-events:none;opacity:.8;transform:scale(1.1)';tc.style.left=(e.touches[0].clientX-50)+'px';tc.style.top=(e.touches[0].clientY-50)+'px';document.body.appendChild(tc)},{passive:true});el.addEventListener('touchmove',e=>{e.preventDefault();if(tc){tc.style.left=(e.touches[0].clientX-50)+'px';tc.style.top=(e.touches[0].clientY-50)+'px'}document.querySelectorAll('.estante').forEach(s=>{const r=s.getBoundingClientRect();s.classList.toggle('drag-over',e.touches[0].clientX>=r.left&&e.touches[0].clientX<=r.right&&e.touches[0].clientY>=r.top&&e.touches[0].clientY<=r.bottom)})},{passive:false});el.addEventListener('touchend',e=>{el.classList.remove('dragging');if(tc){tc.remove();tc=null}const t=e.changedTouches[0];document.querySelectorAll('.estante').forEach(s=>{s.classList.remove('drag-over');const r=s.getBoundingClientRect();if(t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom)handleDrop(el.dataset.id,s.dataset.cat,el)})})});
 }
@@ -347,7 +348,7 @@ document.getElementById('game').innerHTML=`<div style="text-align:center;margin-
 /* ===== SERIATION — ordenar items en secuencia ===== */
 function startSeriation(){
   STATE.phase='playing';
-  const missions=PACK.missions?.seriation;
+  const missions=(PACK.missions?.seriation||[]).filter(function(m){return !m.min_difficulty||m.min_difficulty<=STATE.level;});
   if(!missions||!missions.length){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--dim)">Sin misiones de orden en este pack</p></div>';return;}
   if(!STATE.seriationIdx)STATE.seriationIdx=0;
   const mission=missions[STATE.seriationIdx%missions.length];
@@ -431,7 +432,7 @@ function checkSeriation(){
 /* ===== GROUPING — armar kit funcional ===== */
 function startGrouping(){
   STATE.phase='playing';
-  const missions=PACK.missions?.grouping;
+  const missions=(PACK.missions?.grouping||[]).filter(function(m){return !m.min_difficulty||m.min_difficulty<=STATE.level;});
   if(!missions||!missions.length){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--dim)">Sin misiones de agrupamiento en este pack</p></div>';return;}
   if(!STATE.groupIdx)STATE.groupIdx=0;
   const mission=missions[STATE.groupIdx%missions.length];
@@ -529,7 +530,7 @@ function checkGrouping(){
 /* ===== REASONING — inferencia: el cliente describe un problema ===== */
 function startReasoning(){
   STATE.phase='playing';
-  const missions=PACK.missions?.reasoning;
+  const missions=(PACK.missions?.reasoning||[]).filter(function(m){return !m.min_difficulty||m.min_difficulty<=STATE.level;});
   if(!missions||!missions.length){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--dim)">Sin misiones de razonamiento en este pack</p></div>';return;}
   if(!STATE.reasonIdx)STATE.reasonIdx=0;
   const mission=missions[STATE.reasonIdx%missions.length];
@@ -625,7 +626,7 @@ function checkReasoning(){
     </div>`;
 }
 
-function showResults(){STATE.phase='results';const el=((performance.now()-STATE.startTime)/1000).toFixed(1),acc=STATE.correct+STATE.errors>0?Math.round(STATE.correct/(STATE.correct+STATE.errors)*100):0,avgRT=STATE.moves.length?Math.round(STATE.moves.reduce((a,m)=>a+m.rt,0)/STATE.moves.length):0;let pers=0;for(let i=1;i<STATE.moves.length;i++)if(!STATE.moves[i].correct&&!STATE.moves[i-1].correct&&STATE.moves[i].targetCat===STATE.moves[i-1].targetCat)pers++;
+function showResults(){STATE.phase='results';if(STATE._levelTimer){clearInterval(STATE._levelTimer);STATE._levelTimer=null;}const el=((performance.now()-STATE.startTime)/1000).toFixed(1),acc=STATE.correct+STATE.errors>0?Math.round(STATE.correct/(STATE.correct+STATE.errors)*100):0,avgRT=STATE.moves.length?Math.round(STATE.moves.reduce((a,m)=>a+m.rt,0)/STATE.moves.length):0;let pers=0;for(let i=1;i<STATE.moves.length;i++)if(!STATE.moves[i].correct&&!STATE.moves[i-1].correct&&STATE.moves[i].targetCat===STATE.moves[i-1].targetCat)pers++;
 // ENGINE CANONICO
 if(typeof ZYKOS!=='undefined'&&ZYKOS.isActive()){
 ZYKOS.endSession({
