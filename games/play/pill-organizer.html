@@ -1734,13 +1734,59 @@
                                 var mvs = sessionState.movements.filter(function(m){ return !m.isCorrect; });
                                 var temporal = 0, schema = 0;
                                 mvs.forEach(function(m){
-                                    // Wrong day/time = temporal confusion
-                                    // Wrong med entirely = schema confusion
-                                    if (m.isCorrect === false) {
-                                        temporal++;
-                                    }
+                                    if (m.isCorrect === false) { temporal++; }
                                 });
                                 return { total: mvs.length, temporal_errors: temporal };
+                            })(),
+                            // --- SIGNAL: Distribucion de errores por tercio (MEM1 + A1) ---
+                            errors_by_third: (function(){
+                                var mvs = sessionState.movements;
+                                if (mvs.length < 3) return null;
+                                var t0 = sessionState.levelStartTime || sessionState.startTime;
+                                var tEnd = sessionState.endTime || Date.now();
+                                var dur = tEnd - t0;
+                                var t1 = t0 + dur/3;
+                                var t2 = t0 + 2*dur/3;
+                                var thirds = [0,0,0];
+                                var correct_thirds = [0,0,0];
+                                mvs.forEach(function(m){
+                                    var ts = new Date(m.timestamp).getTime();
+                                    var idx = ts < t1 ? 0 : ts < t2 ? 1 : 2;
+                                    if (!m.isCorrect) thirds[idx]++;
+                                    else correct_thirds[idx]++;
+                                });
+                                return {
+                                    errors: thirds,
+                                    correct: correct_thirds,
+                                    pattern: thirds[0]>thirds[2]?'inicio':thirds[2]>thirds[0]?'final':'uniforme'
+                                };
+                            })(),
+                            // --- SIGNAL: Completado prematuro (automonitoreo) ---
+                            completado_prematuro: (function(){
+                                if (!sessionState.completionTimestamp) return false;
+                                var movesAfter = sessionState.movements.filter(function(m){
+                                    return new Date(m.timestamp).getTime() > sessionState.completionTimestamp;
+                                }).length;
+                                var completionPct = expected > 0
+                                    ? Math.round(sessionState.movesAtCompletion / expected * 100)
+                                    : 100;
+                                return {
+                                    apretado_con_pct: completionPct,
+                                    movimientos_post_completado: movesAfter,
+                                    prematuro: completionPct < 90
+                                };
+                            })(),
+                            // --- SIGNAL: Correcciones activas (coloca y recoge) ---
+                            correcciones_activas: (function(){
+                                var mvs = sessionState.movements;
+                                // Un error seguido de un correcto del mismo med = correccion activa
+                                var count = 0;
+                                for (var i = 1; i < mvs.length; i++) {
+                                    if (!mvs[i-1].isCorrect && mvs[i].isCorrect && mvs[i].med === mvs[i-1].med) {
+                                        count++;
+                                    }
+                                }
+                                return count;
                             })()
                         }
                     });
