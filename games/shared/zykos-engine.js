@@ -185,6 +185,13 @@ var METRIC_DICTIONARY = {
     focus_away_pct:               { domain:'ATENCION', unit:'ratio', range:[0,1],   desc:'Fraccion del tiempo total de sesion fuera de foco.' },
     tab_switches_count:           { domain:'ATENCION', unit:'count', range:[0,50],  desc:'Cambios de pestana/ventana. Alias de focus_interruptions_count.' },
 
+    // Contexto de sesión — imprescindible para interpretar cualquier métrica conductual.
+    // Sesión 1 de un paciente nuevo ≠ sesión 15 de un paciente establecido.
+    // La expansividad (salirse, explorar) en sesión 1 puede ser un indicador
+    // de estilo conductual, no de déficit.
+    session_number:               { domain:'META', unit:'count', range:[1,9999], desc:'Numero ordinal de esta sesion para este paciente en este juego. 1 = primera vez.' },
+    is_first_session:             { domain:'META', unit:'bool',  range:[0,1],   desc:'1 si es la primera sesion del paciente en este juego.' },
+
 };
 
 // Count
@@ -355,16 +362,39 @@ var ZYKOS = {
         try {
             var sb = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
             if (!sb) { console.warn('[zykos-engine] No Supabase client'); return; }
-            
+
+            // Calcular número ordinal de sesión antes de persistir.
+            // Es crítico para interpretar métricas conductuales:
+            // un paciente nuevo que se va 3 veces ≠ un paciente establecido.
+            // Sesión 1 = primera vez que juega este juego.
+            var sessionNumber = 1;
+            var isFirstSession = true;
+            try {
+                var snRes = await sb.rpc('zykos_get_session_number', {
+                    p_dni: metrics.patient_dni,
+                    p_game_slug: metrics.game_slug
+                });
+                if (snRes.data) {
+                    sessionNumber = snRes.data.session_number || 1;
+                    isFirstSession = snRes.data.is_first_session !== false;
+                }
+            } catch(e) { /* no bloquear si falla */ }
+
             // Evidence hash chain
             var payload = {
                 patient_dni: metrics.patient_dni,
                 user_id: metrics.patient_id,
                 game_slug: metrics.game_slug,
                 metric_type: 'session_biomet',
-                metric_data: metrics,
+                metric_data: {
+                    ...metrics,
+                    // Contexto de sesión — fundamental para análisis longitudinal
+                    session_number: sessionNumber,
+                    is_first_session: isFirstSession
+                },
                 session_id: metrics.session_id,
-                session_date: new Date().toISOString().slice(0, 10)
+                session_date: new Date().toISOString().slice(0, 10),
+                session_number: sessionNumber
             };
 
             if (typeof ZykosEvidence !== 'undefined') {
