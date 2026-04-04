@@ -165,3 +165,9 @@ if (typeof ZYKOS !== 'undefined') {
 }
 
 })();
+
+// Señal al engine: este agente está listo
+if (typeof document !== 'undefined') {
+    document.dispatchEvent(new CustomEvent('zykos:agents-ready'));
+}
+

@@ -59,7 +59,7 @@ function _moodSaveToSupabase(type, data, context) {
         var now = new Date().toISOString();
         // DNI is the universal identifier
         var pDni = _moodState.patientDni || _moodState.patientId || null;
-        if (!pDni || pDni ) { try { pDni = localStorage.getItem('zykos_patient_dni'); } catch(e){} }
+        if (!pDni) { try { pDni = localStorage.getItem('zykos_patient_dni'); } catch(e){} }
 
         // Guardar en zykos_mood_entries — registro clínico puro
         var entryRow = {

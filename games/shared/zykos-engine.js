@@ -389,10 +389,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if (path.includes('inkblot')) slug = 'inkblot';
 
     if (dni) {
-        // Small delay to let agents register
-        setTimeout(function() {
+        // Esperar agentes via evento 'zykos:agents-ready' o fallback 300ms
+        // Evita race condition donde un agente lento no queda en la sesion
+        var started = false;
+        function tryStart() {
+            if (started) return;
+            started = true;
             ZYKOS.startSession(slug, dni, userId);
-        }, 100);
+        }
+        document.addEventListener('zykos:agents-ready', tryStart, { once: true });
+        setTimeout(tryStart, 300);
     }
 });
 
