@@ -6,13 +6,11 @@
 // No le pide nada al juego. Solo observa cómo se mueve el dedo/mouse.
 //
 // Métricas que produce (nombres canónicos del METRIC_DICTIONARY):
-// - tremor_reposo_px
-// - tremor_inicio_px
-// - tremor_terminal_px
-// - dismetria_mean_px
+// - jitter_reposo_px, jitter_inicio_px, jitter_terminal_px
+// - precision_deposito_px
 // - vel_peak_mean, vel_peak_sd, vel_cv
-// - rigidez_index, cogwheel_index
-// - clasp_knife_ratio, espasticidad_index
+// - vel_uniformidad_index, vel_oscilacion_index
+// - vel_caida_brusca_ratio, vel_perfil_abrupto
 // ================================================================
 
 (function() {
@@ -234,17 +232,17 @@ var agent = {
         
         // Return ONLY canonical metric names
         return {
-            tremor_reposo_px:       +(mean(state.reposo_jitters).toFixed(2)),
-            tremor_inicio_px:       +(mean(state.inicio_jitters).toFixed(2)),
-            tremor_terminal_px:     +(mean(state.terminal_jitters).toFixed(2)),
-            dismetria_mean_px:      +(mean(state.click_distances).toFixed(2)),
+            jitter_reposo_px:       +(mean(state.reposo_jitters).toFixed(2)),
+            jitter_inicio_px:       +(mean(state.inicio_jitters).toFixed(2)),
+            jitter_terminal_px:     +(mean(state.terminal_jitters).toFixed(2)),
+            precision_deposito_px:      +(mean(state.click_distances).toFixed(2)),
             vel_peak_mean:          +(velMean.toFixed(4)),
             vel_peak_sd:            +(velSd.toFixed(4)),
             vel_cv:                 +(velCv.toFixed(3)),
-            rigidez_index:          +(Math.max(0, 1 - velCv).toFixed(3)),
-            cogwheel_index:         +(cogwheel.toFixed(3)),
-            clasp_knife_ratio:      +(claspKnife.toFixed(3)),
-            espasticidad_index:     +(Math.min(1, Math.max(0, (claspKnife - 1) / 4)).toFixed(3)),
+            vel_uniformidad_index:          +(Math.max(0, 1 - velCv).toFixed(3)),
+            vel_oscilacion_index:         +(cogwheel.toFixed(3)),
+            vel_caida_brusca_ratio:      +(claspKnife.toFixed(3)),
+            vel_perfil_abrupto:     +(Math.min(1, Math.max(0, (claspKnife - 1) / 4)).toFixed(3)),
             
             // Raw sub-data for deep analysis
             _raw_tremor_samples: {

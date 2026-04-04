@@ -519,11 +519,11 @@ function compute() {
     var n_clicks = clicks.length;
 
     // ---- TREMOR ----
-    var tremor_reposo      = mean(m.tremor_reposo_samples);
-    var tremor_inicio      = mean(m.tremor_inicio_samples);
-    var tremor_terminal    = mean(m.tremor_terminal_samples);
-    var dismetria_mean_px  = n_clicks > 0
-        ? mean(clicks.filter(function(c){ return c.dismettia_px != null; }).map(function(c){ return c.dismettia_px; }))
+    var jitter_reposo      = mean(m.tremor_reposo_samples);
+    var jitter_inicio      = mean(m.tremor_inicio_samples);
+    var jitter_terminal    = mean(m.tremor_terminal_samples);
+    var precision_deposito_local  = n_clicks > 0
+        ? mean(clicks.filter(function(c){ return c.precision_deposito_px != null; }).map(function(c){ return c.precision_deposito_px; }))
         : 0;
 
     // ---- TRAYECTORIA ----
@@ -586,11 +586,11 @@ function compute() {
     var vel_peak_sd   = sd(m.move_velocities);
     var vel_cv = vel_peak_mean > 0 ? vel_peak_sd / vel_peak_mean : 0;
     // Oscilación (rueda dentada): media de tasa de cambios de signo en aceleración
-    var cogwheel_index = mean(m.velocity_oscillations);
+    var vel_oscilacion = mean(m.velocity_oscillations);
 
     // ---- ESPASTICIDAD ----
     // Clasp-knife: ratio alto = pico brusco seguido de caída = espástico
-    var clasp_knife_ratio = mean(m.acceleration_drops);
+    var vel_caida_brusca = mean(m.acceleration_drops);
 
     return {
         // Meta
@@ -601,10 +601,10 @@ function compute() {
         n_actions:      m.actions_total,
 
         // Tremor
-        tremor_reposo_px:     +tremor_reposo.toFixed(2),
-        tremor_inicio_px:     +tremor_inicio.toFixed(2),
-        tremor_terminal_px:   +tremor_terminal.toFixed(2),
-        dismetria_mean_px:    +dismetria_mean_px.toFixed(2),
+        jitter_reposo_px:     +jitter_reposo.toFixed(2),
+        jitter_inicio_px:     +jitter_inicio.toFixed(2),
+        jitter_terminal_px:   +jitter_terminal.toFixed(2),
+        precision_deposito_px:    +precision_deposito_local.toFixed(2),
 
         // Trayectoria / Praxis
         rectificaciones_count:    m.rectificaciones,
@@ -624,7 +624,7 @@ function compute() {
         rt_mean_ms:               rt_list.length ? +rt_mean.toFixed(1) : null,
         rt_sd_ms:                 rt_list.length ? +rt_sd.toFixed(1) : null,
         rt_cv:                    rt_list.length ? +rt_cv.toFixed(3) : null,
-        decaimiento_vigilancia:   +decaimiento_ratio.toFixed(3),
+        decaimiento_mitades:   +decaimiento_ratio.toFixed(3),
         hesitaciones_count:       hesitaciones_count,
         hesitacion_duracion_mean_ms: hesitacion_duracion_mean_ms ? +hesitacion_duracion_mean_ms.toFixed(0) : null,
 
@@ -637,10 +637,10 @@ function compute() {
         vel_peak_mean_px_ms:      m.move_velocities.length ? +vel_peak_mean.toFixed(4) : null,
         vel_peak_sd_px_ms:        m.move_velocities.length ? +vel_peak_sd.toFixed(4) : null,
         vel_cv:                   m.move_velocities.length ? +vel_cv.toFixed(3) : null,
-        rigidez_index:            m.move_velocities.length ? +(1 - Math.min(1, vel_cv)).toFixed(3) : null,
-        cogwheel_index:           m.velocity_oscillations.length ? +cogwheel_index.toFixed(3) : null,
-        clasp_knife_ratio:        m.acceleration_drops.length ? +clasp_knife_ratio.toFixed(3) : null,
-        espasticidad_index:       m.acceleration_drops.length ? +Math.min(1, Math.max(0, (clasp_knife_ratio - 1) / 4)).toFixed(3) : null,
+        vel_uniformidad_index:            m.move_velocities.length ? +(1 - Math.min(1, vel_cv)).toFixed(3) : null,
+        vel_oscilacion_index:           m.velocity_oscillations.length ? +vel_oscilacion.toFixed(3) : null,
+        vel_caida_brusca_ratio:        m.acceleration_drops.length ? +vel_caida_brusca.toFixed(3) : null,
+        vel_perfil_abrupto:       m.acceleration_drops.length ? +Math.min(1, Math.max(0, (vel_caida_brusca - 1) / 4)).toFixed(3) : null,
 
         // Hardware-adjusted metrics (if calibration profile exists)
         hw_adjusted: (function() {
@@ -656,7 +656,7 @@ function compute() {
                 tremor_reposo:     IC.adjust('tremor_reposo', tremor_reposo, hw),
                 tremor_inicio:     IC.adjust('tremor_inicio', tremor_inicio, hw),
                 tremor_terminal:   IC.adjust('tremor_terminal', tremor_terminal, hw),
-                dismetria:         IC.adjust('dismetria', dismetria_mean_px, hw),
+                dismetria:         IC.adjust('dismetria', precision_deposito_px, hw),
                 rt_mean:           IC.adjust('rt_ms', rt_mean, hw),
                 path_efficiency:   IC.adjust('efficiency', eficiencia_trayectoria, hw),
                 approach_jitter_baseline: hw.approach_jitter_mean
