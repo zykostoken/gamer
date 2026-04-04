@@ -176,11 +176,14 @@ var METRIC_DICTIONARY = {
     zona_ignorada:                { domain:'ESPACIAL', unit:'bool',  range:[0,1],   desc:'1 si hay una region del tablero que nunca fue visitada.' },
 
     // === FOCO Y ATENCION AMBIENTAL ===
-    focus_interruptions_count:    { domain:'ATENCION', unit:'count', range:[0,50],  desc:'Veces que el usuario salio de la ventana/pestaña.' },
-    focus_time_away_ms:           { domain:'ATENCION', unit:'ms',    range:[0,3600000], desc:'Tiempo total fuera de foco durante la sesion.' },
-    focus_time_away_max_ms:       { domain:'ATENCION', unit:'ms',    range:[0,3600000], desc:'Duracion de la interrupcion mas larga.' },
-    focus_away_pct:               { domain:'ATENCION', unit:'ratio', range:[0,1],   desc:'Porcentaje del tiempo de sesion fuera de foco.' },
-    tab_switches_count:           { domain:'META',     unit:'count', range:[0,50],  desc:'Cambios de pestana durante la sesion.' },
+    // Métricas de interrupción — el multitasking es conducta atencional real.
+    // Un paciente que se va 3 veces es diferente al que no se mueve.
+    // Cuándo se fue, por cuánto tiempo, si volvió enseguida: todo es señal.
+    focus_interruptions_count:    { domain:'ATENCION', unit:'count', range:[0,50],  desc:'Cantidad de veces que salio del juego. Cada salida es conducta real.' },
+    focus_time_away_ms:           { domain:'ATENCION', unit:'ms',    range:[0,3600000], desc:'Tiempo total acumulado fuera del juego durante la sesion.' },
+    focus_time_away_max_ms:       { domain:'ATENCION', unit:'ms',    range:[0,3600000], desc:'Duracion de la interrupcion mas larga — cuanto se fue en el peor caso.' },
+    focus_away_pct:               { domain:'ATENCION', unit:'ratio', range:[0,1],   desc:'Fraccion del tiempo total de sesion fuera de foco.' },
+    tab_switches_count:           { domain:'ATENCION', unit:'count', range:[0,50],  desc:'Cambios de pestana/ventana. Alias de focus_interruptions_count.' },
 
 };
 

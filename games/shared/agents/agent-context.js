@@ -21,7 +21,9 @@
 var state = {
     active: false,
     tabSwitches: 0,
-    focusEvents: [],     // {t, type: 'blur'|'focus'}
+    focusEvents: [],     // {t, type: 'hidden'|'visible'|'blur'|'focus'}
+    gaps: [],            // {start_ms, end_ms, duration_ms} — cada interrupcion
+    sessionStart: 0,     // para calcular first_gap_session_pct
     instructionStart: null,
     instructionTime: 0,
     scrollbacks: 0,
@@ -34,13 +36,26 @@ var state = {
 
 function onVisibility() {
     if (!state.active) return;
+    var now = performance.now();
     if (document.hidden) {
         state.tabSwitches++;
-        state.focusEvents.push({ t: performance.now(), type: 'hidden' });
+        state.focusEvents.push({ t: now, type: 'hidden' });
+        // Registrar inicio del gap para calcular duracion al volver
+        state._currentGapStart = now;
+        state._currentGapSessionMs = Math.round(now - state.sessionStart);
     } else {
-        state.focusEvents.push({ t: performance.now(), type: 'visible' });
+        state.focusEvents.push({ t: now, type: 'visible' });
+        // Cerrar el gap con su duracion y posicion en la sesion
+        if (state._currentGapStart) {
+            var gapDuration = Math.round(now - state._currentGapStart);
+            state.gaps.push({
+                start_session_ms: state._currentGapSessionMs,
+                duration_ms: gapDuration,
+                start_session_pct: state._currentGapSessionMs / Math.max(1, now - state.sessionStart)
+            });
+            state._currentGapStart = null;
+        }
     }
-    if (typeof ZYKOS !== 'undefined') ZYKOS._pushRaw(document.hidden ? 'tab_hidden' : 'tab_visible', {});
 }
 
 function onFocus() {
@@ -81,7 +96,9 @@ var agent = {
         state.active = true;
         state.tabSwitches = 0;
         state.focusEvents = [];
-        state.instructionStart = performance.now(); // Assume instructions shown at start
+        state.gaps = [];
+        state.sessionStart = performance.now();
+        state.instructionStart = performance.now();
         state.instructionTime = 0;
         state.scrollbacks = 0;
         state.lastScrollY = 0;
@@ -114,18 +131,38 @@ var agent = {
             if (e.type === 'visible' && lastHide) { hiddenTime += e.t - lastHide; lastHide = null; }
         });
         
+        // Métricas de navegación — el multitasking es conducta atencional real
+        var gapDurations = state.gaps.map(function(g){ return g.duration_ms; });
+        var gapMean = gapDurations.length > 0
+            ? Math.round(gapDurations.reduce(function(a,b){return a+b;},0) / gapDurations.length)
+            : 0;
+        var gapMax = gapDurations.length > 0 ? Math.max.apply(null, gapDurations) : 0;
+        var firstGapPct = state.gaps.length > 0 ? +(state.gaps[0].start_session_pct.toFixed(3)) : null;
+        var sessionNow = performance.now() - state.sessionStart;
+        var focusAwayPct = sessionNow > 0 ? +(hiddenTime / sessionNow).toFixed(3) : 0;
+
         return {
+            // Métricas canónicas del METRIC_DICTIONARY
             instruction_time_ms:      state.instructionTime ? Math.round(state.instructionTime) : null,
             instruction_scrollbacks:  state.scrollbacks,
             total_clicks:             state.totalClicks,
-            
-            _raw_context: {
-                tab_switches: state.tabSwitches,
-                hidden_time_ms: Math.round(hiddenTime),
-                connection_lost: state.connectionLost,
+
+            // Dominio ATENCION — interrupciones como métrica conductual
+            focus_interruptions_count: state.tabSwitches,
+            focus_time_away_ms:        Math.round(hiddenTime),
+            focus_time_away_max_ms:    gapMax,
+            focus_away_pct:            focusAwayPct,
+
+            // Sub-métricas de navegación (raw para análisis diferido)
+            _raw_navigation: {
+                tab_switches:       state.tabSwitches,
+                gaps:               state.gaps,           // cada interrupcion individual
+                gap_mean_ms:        gapMean,
+                gap_max_ms:         gapMax,
+                first_gap_pct:      firstGapPct,          // cuando ocurrio la primera salida
+                connection_lost:    state.connectionLost,
                 orientation_changes: state.orientationChanges,
-                errors: state.errors.length,
-                focus_events: state.focusEvents.length
+                errors:             state.errors.length
             }
         };
     },
