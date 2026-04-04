@@ -49,6 +49,39 @@
         .stimulus.circle { border-radius:50%; }
         .stimulus.square { border-radius:16%; }
         .stimulus.triangle { border-radius:0; clip-path:polygon(50% 0%, 0% 100%, 100% 100%); }
+        .stimulus.star { border-radius:0; clip-path:polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+        .stimulus.car { border-radius:6px; overflow:visible; cursor:pointer; }
+
+        /* Nivel 7 — lluvia de autos */
+        .car-rain-item {
+            position:absolute;
+            cursor:pointer;
+            transition:transform 0.08s;
+            user-select:none;
+        }
+        .car-rain-item:active { transform:scale(0.88); }
+        .car-rain-item.scored { animation:carScore 0.3s ease-out forwards; }
+        .car-rain-item.wrong  { animation:carWrong 0.3s ease-out forwards; }
+        @keyframes carScore { 0%{opacity:1;transform:scale(1.2)} 100%{opacity:0;transform:scale(0.5)} }
+        @keyframes carWrong { 0%{opacity:1} 50%{opacity:0.3} 100%{opacity:0} }
+
+        /* Regla activa — badge que muestra el color elegido */
+        #rule-badge {
+            position:fixed; top:58px; left:50%; transform:translateX(-50%);
+            padding:6px 18px; border-radius:20px; font-size:0.8rem; font-weight:700;
+            z-index:200; transition:all .3s; display:none;
+            border:2px solid; letter-spacing:.05em;
+        }
+        #rule-badge.visible { display:block; }
+
+        /* Instruccion inicial nivel 7/8 */
+        #first-click-hint {
+            position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+            background:rgba(0,0,0,0.85); border:1px solid rgba(255,255,255,0.15);
+            border-radius:12px; padding:12px 22px; font-size:0.85rem; color:#e2e8f0;
+            z-index:200; text-align:center; max-width:320px; line-height:1.6;
+            transition:opacity .4s;
+        }
         
         @keyframes stimPulse { from { box-shadow: 0 0 20px rgba(var(--stim-rgb),0.3); } to { box-shadow: 0 0 40px rgba(var(--stim-rgb),0.6); } }
         @keyframes stimAppear { from { transform:scale(0); opacity:0; } to { transform:scale(1); opacity:1; } }
@@ -236,6 +269,36 @@ var LEVELS = [
                  audioConflict: true, targetRatio: 0.45 },
         constructs: ['A1 Atencion','E1 Inhibicion','E3 Flexibilidad','M3 Precision','AFEC1 Frustracion'],
         theme: 'neon'
+    },
+    {
+        id: 7, name: 'Lluvia de autos',
+        desc: 'Tu primer click define el color. Solo esos autos suman.',
+        rules: {
+            mode: 'car_rain',
+            colors: MOOD_COLORS,
+            carCount: 18,         // autos en pantalla simultáneos
+            spawnInterval: 700,   // ms entre spawns
+            duration: 60000,      // 60 segundos
+            speed: { min:1.8, max:4.2 },  // px/frame
+            size: 52
+        },
+        constructs: ['A1 Atencion','E1 Inhibicion','E2 Planificacion','AFEC2 Proyectivo'],
+        theme: null
+    },
+    {
+        id: 8, name: 'Elige tu blanco',
+        desc: 'Tu primer click define el elemento y el color. Regla tuya.',
+        rules: {
+            mode: 'choose_target',
+            colors: MOOD_COLORS,
+            shapes: ['circle','square','triangle','star'],
+            spawnInterval: 900,
+            duration: 60000,
+            speed: { min:1.5, max:3.5 },
+            size: { min:40, max:68 }
+        },
+        constructs: ['A1 Atencion','E1 Inhibicion','E3 Flexibilidad','AFEC2 Proyectivo','MEM1 Trabajo'],
+        theme: null
     }
 ];
 
@@ -258,11 +321,23 @@ var STATE = {
 
 // ======================== COLOR MAP ========================
 var COLORS = {
-    red:    { hex:'#f43f5e', rgb:'244,63,94' },
-    blue:   { hex:'#3b82f6', rgb:'59,130,246' },
-    green:  { hex:'#22c55e', rgb:'34,197,94' },
-    yellow: { hex:'#eab308', rgb:'234,179,8' }
+    red:    { hex:'#f43f5e', rgb:'244,63,94',   label:'Rojo' },
+    blue:   { hex:'#3b82f6', rgb:'59,130,246',  label:'Azul' },
+    green:  { hex:'#22c55e', rgb:'34,197,94',   label:'Verde' },
+    yellow: { hex:'#eab308', rgb:'234,179,8',   label:'Amarillo' },
+    // Paleta mood modal — 12 colores proyectivos
+    violet: { hex:'#8b5cf6', rgb:'139,92,246',  label:'Violeta' },
+    orange: { hex:'#f97316', rgb:'249,115,22',  label:'Naranja' },
+    pink:   { hex:'#ec4899', rgb:'236,72,153',  label:'Rosa' },
+    cyan:   { hex:'#06b6d4', rgb:'6,182,212',   label:'Cyan' },
+    lime:   { hex:'#84cc16', rgb:'132,204,22',  label:'Lima' },
+    amber:  { hex:'#f59e0b', rgb:'245,158,11',  label:'Ambar' },
+    rose:   { hex:'#fb7185', rgb:'251,113,133', label:'Rosa suave' },
+    indigo: { hex:'#6366f1', rgb:'99,102,241',  label:'Indigo' }
 };
+
+// Colores usados en niveles 7 y 8 — subset de la paleta mood
+var MOOD_COLORS = ['red','blue','green','yellow','violet','orange','pink','cyan','lime','amber','rose','indigo'];
 
 // ======================== INIT ========================
 function init() {
@@ -296,16 +371,12 @@ function startLevel() {
     STATE.stimIndex = 0;
     STATE.responses = [];
     STATE.startTime = performance.now();
-    
-    // Apply theme
+    STATE.score = 0;
+
     document.body.className = lv.theme ? 'theme-' + lv.theme : '';
     document.getElementById('level-badge').textContent = 'Nivel ' + lv.id;
     document.getElementById('score-display').textContent = STATE.score;
-    
-    // Generate stimulus sequence
-    STATE.stimuli = generateSequence(lv);
-    STATE.halfwayIndex = Math.floor(STATE.stimuli.length / 2);
-    
+
     // Timer
     if (STATE.timerInterval) clearInterval(STATE.timerInterval);
     var startT = Date.now();
@@ -315,8 +386,27 @@ function startLevel() {
         var s = String(elapsed%60).padStart(2,'0');
         document.getElementById('timer-display').textContent = m + ':' + s;
     }, 1000);
-    
-    // Countdown 3-2-1
+
+    // Niveles con modo propio (7 y 8) — saltan generateSequence y CPT
+    var mode = lv.rules && lv.rules.mode;
+    if (mode === 'car_rain') {
+        showCountdown(3, function() {
+            STATE.phase = 'playing';
+            startCarRain(lv);
+        });
+        return;
+    }
+    if (mode === 'choose_target') {
+        showCountdown(3, function() {
+            STATE.phase = 'playing';
+            startChooseTarget(lv);
+        });
+        return;
+    }
+
+    // Modo CPT estándar (niveles 1-6)
+    STATE.stimuli = generateSequence(lv);
+    STATE.halfwayIndex = Math.floor(STATE.stimuli.length / 2);
     showCountdown(3, function() {
         STATE.phase = 'playing';
         presentNextStimulus();
@@ -546,18 +636,520 @@ function showFeedback(text, color) {
     setTimeout(function() { if (fb.parentNode) fb.parentNode.removeChild(fb); }, 500);
 }
 
+// ======================== MOTOR NIVEL 7 — LLUVIA DE AUTOS ========================
+// Los autos bajan por la pantalla. El primer click define el color objetivo.
+// Desde ese momento: click en ese color = punto + se va. Otro color = penalidad.
+// Métrica clave: ¿qué color eligió? ¿cuánto tardó en establecer la regla?
+// Correlato con AFEC2 Proyectivo: el color elegido es el primer objeto afectivo.
+
+var CAR_RAIN = {
+    active: false,
+    rule_color: null,         // null hasta el primer click
+    rule_set_at: null,        // ms desde inicio cuando eligió el color
+    cars: [],
+    spawned: 0,
+    hits: 0,
+    misses: 0,
+    wrong_clicks: 0,
+    score: 0,
+    raf: null,
+    spawn_iv: null,
+    end_to: null,
+    start_ts: null
+};
+
+// SVG de auto top-view — geométrico, sin marca
+function carSVG(color, size) {
+    var h = COLORS[color] ? COLORS[color].hex : '#888';
+    var s = size;
+    return '<svg width="' + s + '" height="' + Math.round(s*1.7) + '" viewBox="0 0 40 68" xmlns="http://www.w3.org/2000/svg">' +
+        // Carrocería
+        '<rect x="4" y="10" width="32" height="48" rx="8" fill="' + h + '" opacity="0.95"/>' +
+        // Techo
+        '<rect x="9" y="16" width="22" height="20" rx="5" fill="' + h + '" opacity="0.7"/>' +
+        // Parabrisas
+        '<rect x="10" y="17" width="20" height="8" rx="3" fill="rgba(180,220,255,0.5)"/>' +
+        // Faros delanteros
+        '<rect x="6" y="10" width="8" height="5" rx="2" fill="#fff" opacity="0.9"/>' +
+        '<rect x="26" y="10" width="8" height="5" rx="2" fill="#fff" opacity="0.9"/>' +
+        // Luces traseras
+        '<rect x="6" y="53" width="8" height="5" rx="2" fill="#ff3333" opacity="0.85"/>' +
+        '<rect x="26" y="53" width="8" height="5" rx="2" fill="#ff3333" opacity="0.85"/>' +
+        // Ruedas
+        '<rect x="0" y="14" width="7" height="12" rx="3" fill="#222"/>' +
+        '<rect x="33" y="14" width="7" height="12" rx="3" fill="#222"/>' +
+        '<rect x="0" y="42" width="7" height="12" rx="3" fill="#222"/>' +
+        '<rect x="33" y="42" width="7" height="12" rx="3" fill="#222"/>' +
+    '</svg>';
+}
+
+function startCarRain(lv) {
+    var arena = document.getElementById('arena');
+    arena.innerHTML = '';
+    CAR_RAIN.active = true;
+    CAR_RAIN.rule_color = null;
+    CAR_RAIN.rule_set_at = null;
+    CAR_RAIN.cars = [];
+    CAR_RAIN.spawned = 0;
+    CAR_RAIN.hits = 0;
+    CAR_RAIN.misses = 0;
+    CAR_RAIN.wrong_clicks = 0;
+    CAR_RAIN.score = 0;
+    CAR_RAIN.start_ts = performance.now();
+
+    // Hint de primer click
+    showFirstClickHint('Tu primer click sobre un auto define el color.<br>Solo esos autos sumarán puntos.');
+
+    // Badge de regla (oculto hasta que elija)
+    var badge = document.getElementById('rule-badge');
+    if (!badge) {
+        badge = document.createElement('div');
+        badge.id = 'rule-badge';
+        document.body.appendChild(badge);
+    }
+    badge.className = 'rule-badge';
+    badge.style.display = 'none';
+
+    // Spawn de autos
+    var rules = lv.rules;
+    CAR_RAIN.spawn_iv = setInterval(function() {
+        if (!CAR_RAIN.active) return;
+        spawnCar(rules);
+    }, rules.spawnInterval);
+
+    // Loop de animación
+    function loop() {
+        if (!CAR_RAIN.active) return;
+        moveCars();
+        CAR_RAIN.raf = requestAnimationFrame(loop);
+    }
+    CAR_RAIN.raf = requestAnimationFrame(loop);
+
+    // Tiempo límite
+    CAR_RAIN.end_to = setTimeout(function() {
+        endCarRain(lv);
+    }, rules.duration);
+}
+
+function spawnCar(rules) {
+    var color = rules.colors[Math.floor(Math.random() * rules.colors.length)];
+    var size  = rules.size;
+    var arenaW = window.innerWidth;
+    var x = 20 + Math.floor(Math.random() * (arenaW - size - 40));
+    var speed = rules.speed.min + Math.random() * (rules.speed.max - rules.speed.min);
+
+    var el = document.createElement('div');
+    el.className = 'car-rain-item';
+    el.style.cssText = 'left:' + x + 'px;top:-80px;width:' + size + 'px;';
+    el.innerHTML = carSVG(color, size);
+    el.dataset.color = color;
+    el.dataset.y = -80;
+    el.dataset.speed = speed.toFixed(2);
+    el.dataset.id = CAR_RAIN.spawned++;
+
+    el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        handleCarClick(el, color);
+    });
+    el.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleCarClick(el, color);
+    }, { passive: false });
+
+    document.getElementById('arena').appendChild(el);
+    CAR_RAIN.cars.push(el);
+}
+
+function moveCars() {
+    var toRemove = [];
+    var screenH = window.innerHeight;
+    CAR_RAIN.cars.forEach(function(el) {
+        if (!el.parentNode) { toRemove.push(el); return; }
+        var y = parseFloat(el.dataset.y) + parseFloat(el.dataset.speed);
+        el.dataset.y = y;
+        el.style.top = y + 'px';
+        if (y > screenH + 80) {
+            // Auto que pasó sin ser clickeado
+            if (CAR_RAIN.rule_color && el.dataset.color === CAR_RAIN.rule_color) {
+                CAR_RAIN.misses++;
+            }
+            el.remove();
+            toRemove.push(el);
+        }
+    });
+    CAR_RAIN.cars = CAR_RAIN.cars.filter(function(el) {
+        return toRemove.indexOf(el) === -1;
+    });
+}
+
+function handleCarClick(el, color) {
+    if (!CAR_RAIN.active) return;
+    var sessionMs = Math.round(performance.now() - CAR_RAIN.start_ts);
+
+    if (CAR_RAIN.rule_color === null) {
+        // PRIMER CLICK — establece la regla
+        CAR_RAIN.rule_color = color;
+        CAR_RAIN.rule_set_at = sessionMs;
+        hideFirstClickHint();
+        showRuleBadge(color, 'Marcá todos los ' + COLORS[color].label);
+        playTone(880, 0.12, 'sine');
+        // Feedback visual
+        el.classList.add('scored');
+        CAR_RAIN.hits++;
+        CAR_RAIN.score++;
+        updateScore(CAR_RAIN.score);
+        setTimeout(function() { if (el.parentNode) el.remove(); }, 300);
+        CAR_RAIN.cars = CAR_RAIN.cars.filter(function(c){ return c !== el; });
+        // Reportar hit al agente media
+        if (typeof window.ZykosMediaAgent !== 'undefined') window.ZykosMediaAgent.reportGameEvent('hit');
+    } else if (color === CAR_RAIN.rule_color) {
+        // HIT — color correcto
+        el.classList.add('scored');
+        CAR_RAIN.hits++;
+        CAR_RAIN.score++;
+        updateScore(CAR_RAIN.score);
+        playTone(1100, 0.08, 'sine');
+        setTimeout(function() { if (el.parentNode) el.remove(); }, 280);
+        CAR_RAIN.cars = CAR_RAIN.cars.filter(function(c){ return c !== el; });
+        if (typeof window.ZykosMediaAgent !== 'undefined') window.ZykosMediaAgent.reportGameEvent('hit');
+    } else {
+        // ERROR — color incorrecto
+        el.classList.add('wrong');
+        CAR_RAIN.wrong_clicks++;
+        CAR_RAIN.score = Math.max(0, CAR_RAIN.score - 1);
+        updateScore(CAR_RAIN.score);
+        playTone(220, 0.12, 'sawtooth');
+        setTimeout(function() { if (el.parentNode) el.remove(); }, 300);
+        CAR_RAIN.cars = CAR_RAIN.cars.filter(function(c){ return c !== el; });
+        if (typeof window.ZykosMediaAgent !== 'undefined') window.ZykosMediaAgent.reportGameEvent('error');
+    }
+}
+
+function endCarRain(lv) {
+    CAR_RAIN.active = false;
+    if (CAR_RAIN.raf) cancelAnimationFrame(CAR_RAIN.raf);
+    if (CAR_RAIN.spawn_iv) clearInterval(CAR_RAIN.spawn_iv);
+    if (CAR_RAIN.end_to) clearTimeout(CAR_RAIN.end_to);
+    var badge = document.getElementById('rule-badge');
+    if (badge) badge.style.display = 'none';
+    // Limpiar autos en pantalla
+    document.getElementById('arena').innerHTML = '';
+    // Métricas específicas del nivel
+    STATE.carRainMetrics = {
+        chosen_color:     CAR_RAIN.rule_color,
+        rule_set_at_ms:   CAR_RAIN.rule_set_at,
+        hits:             CAR_RAIN.hits,
+        misses:           CAR_RAIN.misses,
+        wrong_clicks:     CAR_RAIN.wrong_clicks,
+        score:            CAR_RAIN.score,
+        target_ratio:     CAR_RAIN.hits > 0
+            ? +(CAR_RAIN.hits / (CAR_RAIN.hits + CAR_RAIN.misses + CAR_RAIN.wrong_clicks)).toFixed(3)
+            : 0
+    };
+    endLevel();
+}
+
+// ======================== MOTOR NIVEL 8 — ELIGE TU BLANCO ========================
+// Dispersión de objetos de distintos tipos y colores.
+// El primer click define la dupla (elemento + color).
+// El paciente NO recibe la paleta de antemano — elige libremente.
+// Métrica: qué eligió, cuánto tardó, cuántos acertó manteniendo la regla.
+
+var CHOOSE_TARGET = {
+    active: false,
+    rule_shape: null,
+    rule_color: null,
+    rule_set_at: null,
+    objects: [],
+    spawned: 0,
+    hits: 0,
+    misses: 0,
+    wrong_clicks: 0,
+    score: 0,
+    raf: null,
+    spawn_iv: null,
+    end_to: null,
+    start_ts: null,
+    directions: []  // cada objeto tiene dirección aleatoria
+};
+
+function startChooseTarget(lv) {
+    var arena = document.getElementById('arena');
+    arena.innerHTML = '';
+    CHOOSE_TARGET.active = true;
+    CHOOSE_TARGET.rule_shape = null;
+    CHOOSE_TARGET.rule_color = null;
+    CHOOSE_TARGET.rule_set_at = null;
+    CHOOSE_TARGET.objects = [];
+    CHOOSE_TARGET.spawned = 0;
+    CHOOSE_TARGET.hits = 0;
+    CHOOSE_TARGET.misses = 0;
+    CHOOSE_TARGET.wrong_clicks = 0;
+    CHOOSE_TARGET.score = 0;
+    CHOOSE_TARGET.start_ts = performance.now();
+
+    showFirstClickHint('Tu primer click define la regla.<br>El elemento y el color que elijas son los únicos que suman.');
+
+    var badge = document.getElementById('rule-badge');
+    if (!badge) {
+        badge = document.createElement('div');
+        badge.id = 'rule-badge';
+        document.body.appendChild(badge);
+    }
+    badge.style.display = 'none';
+
+    var rules = lv.rules;
+    CHOOSE_TARGET.spawn_iv = setInterval(function() {
+        if (!CHOOSE_TARGET.active) return;
+        spawnObject(rules);
+    }, rules.spawnInterval);
+
+    function loop() {
+        if (!CHOOSE_TARGET.active) return;
+        moveObjects();
+        CHOOSE_TARGET.raf = requestAnimationFrame(loop);
+    }
+    CHOOSE_TARGET.raf = requestAnimationFrame(loop);
+
+    CHOOSE_TARGET.end_to = setTimeout(function() {
+        endChooseTarget(lv);
+    }, rules.duration);
+}
+
+function spawnObject(rules) {
+    var color = rules.colors[Math.floor(Math.random() * rules.colors.length)];
+    var shape = rules.shapes[Math.floor(Math.random() * rules.shapes.length)];
+    var size  = rules.size.min + Math.floor(Math.random() * (rules.size.max - rules.size.min));
+    var arenaW = window.innerWidth;
+    var arenaH = window.innerHeight;
+    // Posición inicial en el borde
+    var side = Math.floor(Math.random() * 4);
+    var x, y, dx, dy;
+    var speed = rules.speed.min + Math.random() * (rules.speed.max - rules.speed.min);
+    if (side === 0) { x = Math.random()*arenaW; y = -size; dx = (Math.random()-0.5)*1.5; dy = speed; }
+    else if (side === 1) { x = arenaW+size; y = Math.random()*arenaH; dx = -speed; dy = (Math.random()-0.5)*1.5; }
+    else if (side === 2) { x = Math.random()*arenaW; y = arenaH+size; dx = (Math.random()-0.5)*1.5; dy = -speed; }
+    else { x = -size; y = Math.random()*arenaH; dx = speed; dy = (Math.random()-0.5)*1.5; }
+
+    var el = document.createElement('div');
+    el.className = 'stimulus ' + shape;
+    el.style.cssText = 'position:absolute;width:' + size + 'px;height:' + size + 'px;' +
+        'left:' + x + 'px;top:' + y + 'px;' +
+        'background:' + COLORS[color].hex + ';' +
+        'cursor:pointer;transition:transform 0.06s;';
+    el.dataset.color = color;
+    el.dataset.shape = shape;
+    el.dataset.x = x;
+    el.dataset.y = y;
+    el.dataset.dx = dx.toFixed(3);
+    el.dataset.dy = dy.toFixed(3);
+    el.dataset.id = CHOOSE_TARGET.spawned++;
+
+    el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        handleObjectClick(el, color, shape);
+    });
+    el.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleObjectClick(el, color, shape);
+    }, { passive: false });
+
+    document.getElementById('arena').appendChild(el);
+    CHOOSE_TARGET.objects.push(el);
+}
+
+function moveObjects() {
+    var arenaW = window.innerWidth;
+    var arenaH = window.innerHeight;
+    var toRemove = [];
+    CHOOSE_TARGET.objects.forEach(function(el) {
+        if (!el.parentNode) { toRemove.push(el); return; }
+        var x = parseFloat(el.dataset.x) + parseFloat(el.dataset.dx);
+        var y = parseFloat(el.dataset.y) + parseFloat(el.dataset.dy);
+        el.dataset.x = x;
+        el.dataset.y = y;
+        el.style.left = x + 'px';
+        el.style.top  = y + 'px';
+        var size = parseFloat(el.style.width);
+        if (x < -size*2 || x > arenaW+size*2 || y < -size*2 || y > arenaH+size*2) {
+            if (CHOOSE_TARGET.rule_color && CHOOSE_TARGET.rule_shape &&
+                el.dataset.color === CHOOSE_TARGET.rule_color &&
+                el.dataset.shape === CHOOSE_TARGET.rule_shape) {
+                CHOOSE_TARGET.misses++;
+            }
+            el.remove();
+            toRemove.push(el);
+        }
+    });
+    CHOOSE_TARGET.objects = CHOOSE_TARGET.objects.filter(function(el) {
+        return toRemove.indexOf(el) === -1;
+    });
+}
+
+function handleObjectClick(el, color, shape) {
+    if (!CHOOSE_TARGET.active) return;
+    var sessionMs = Math.round(performance.now() - CHOOSE_TARGET.start_ts);
+
+    if (CHOOSE_TARGET.rule_color === null) {
+        // PRIMER CLICK — establece color + elemento
+        CHOOSE_TARGET.rule_color = color;
+        CHOOSE_TARGET.rule_shape = shape;
+        CHOOSE_TARGET.rule_set_at = sessionMs;
+        hideFirstClickHint();
+        showRuleBadge(color,
+            COLORS[color].label + ' · ' + shape.charAt(0).toUpperCase() + shape.slice(1));
+        playTone(880, 0.12, 'sine');
+        el.style.transform = 'scale(1.3)';
+        CHOOSE_TARGET.hits++;
+        CHOOSE_TARGET.score++;
+        updateScore(CHOOSE_TARGET.score);
+        setTimeout(function() { if (el.parentNode) el.remove(); }, 250);
+        CHOOSE_TARGET.objects = CHOOSE_TARGET.objects.filter(function(o){ return o !== el; });
+        if (typeof window.ZykosMediaAgent !== 'undefined') window.ZykosMediaAgent.reportGameEvent('hit');
+    } else if (color === CHOOSE_TARGET.rule_color && shape === CHOOSE_TARGET.rule_shape) {
+        // HIT exacto
+        CHOOSE_TARGET.hits++;
+        CHOOSE_TARGET.score++;
+        updateScore(CHOOSE_TARGET.score);
+        playTone(1100, 0.08, 'sine');
+        el.style.transform = 'scale(1.25)';
+        setTimeout(function() { if (el.parentNode) el.remove(); }, 250);
+        CHOOSE_TARGET.objects = CHOOSE_TARGET.objects.filter(function(o){ return o !== el; });
+        if (typeof window.ZykosMediaAgent !== 'undefined') window.ZykosMediaAgent.reportGameEvent('hit');
+    } else if (color === CHOOSE_TARGET.rule_color || shape === CHOOSE_TARGET.rule_shape) {
+        // PARCIAL — mismo color o misma forma pero no ambos
+        CHOOSE_TARGET.wrong_clicks++;
+        CHOOSE_TARGET.score = Math.max(0, CHOOSE_TARGET.score - 1);
+        updateScore(CHOOSE_TARGET.score);
+        playTone(380, 0.1, 'triangle');
+        el.style.opacity = '0.3';
+        setTimeout(function() { if (el.parentNode) el.remove(); }, 350);
+        CHOOSE_TARGET.objects = CHOOSE_TARGET.objects.filter(function(o){ return o !== el; });
+        if (typeof window.ZykosMediaAgent !== 'undefined') window.ZykosMediaAgent.reportGameEvent('error');
+    } else {
+        // ERROR total
+        CHOOSE_TARGET.wrong_clicks++;
+        CHOOSE_TARGET.score = Math.max(0, CHOOSE_TARGET.score - 2);
+        updateScore(CHOOSE_TARGET.score);
+        playTone(180, 0.14, 'sawtooth');
+        el.style.opacity = '0.15';
+        setTimeout(function() { if (el.parentNode) el.remove(); }, 300);
+        CHOOSE_TARGET.objects = CHOOSE_TARGET.objects.filter(function(o){ return o !== el; });
+        if (typeof window.ZykosMediaAgent !== 'undefined') window.ZykosMediaAgent.reportGameEvent('error');
+    }
+}
+
+function endChooseTarget(lv) {
+    CHOOSE_TARGET.active = false;
+    if (CHOOSE_TARGET.raf)     cancelAnimationFrame(CHOOSE_TARGET.raf);
+    if (CHOOSE_TARGET.spawn_iv) clearInterval(CHOOSE_TARGET.spawn_iv);
+    if (CHOOSE_TARGET.end_to)  clearTimeout(CHOOSE_TARGET.end_to);
+    var badge = document.getElementById('rule-badge');
+    if (badge) badge.style.display = 'none';
+    document.getElementById('arena').innerHTML = '';
+    STATE.chooseTargetMetrics = {
+        chosen_color:  CHOOSE_TARGET.rule_color,
+        chosen_shape:  CHOOSE_TARGET.rule_shape,
+        rule_set_at_ms: CHOOSE_TARGET.rule_set_at,
+        hits:          CHOOSE_TARGET.hits,
+        misses:        CHOOSE_TARGET.misses,
+        wrong_clicks:  CHOOSE_TARGET.wrong_clicks,
+        score:         CHOOSE_TARGET.score
+    };
+    endLevel();
+}
+
+// ======================== HELPERS COMPARTIDOS ========================
+function showFirstClickHint(text) {
+    var hint = document.getElementById('first-click-hint');
+    if (!hint) {
+        hint = document.createElement('div');
+        hint.id = 'first-click-hint';
+        document.body.appendChild(hint);
+    }
+    hint.innerHTML = text;
+    hint.style.opacity = '1';
+}
+
+function hideFirstClickHint() {
+    var hint = document.getElementById('first-click-hint');
+    if (hint) { hint.style.opacity = '0'; setTimeout(function(){ if(hint.parentNode) hint.remove(); }, 400); }
+}
+
+function showRuleBadge(color, text) {
+    var badge = document.getElementById('rule-badge');
+    if (!badge) return;
+    var col = COLORS[color] || { hex: '#888', rgb: '136,136,136' };
+    badge.style.cssText = 'position:fixed;top:58px;left:50%;transform:translateX(-50%);' +
+        'padding:6px 18px;border-radius:20px;font-size:0.8rem;font-weight:700;z-index:200;' +
+        'display:block;border:2px solid ' + col.hex + ';' +
+        'color:' + col.hex + ';background:rgba(' + col.rgb + ',0.12);';
+    badge.textContent = text;
+}
+
+function updateScore(val) {
+    var el = document.getElementById('score-display');
+    if (el) el.textContent = val;
+    STATE.score = val;
+}
+
 // ======================== END LEVEL ========================
 function endLevel() {
     STATE.phase = 'results';
     clearInterval(STATE.timerInterval);
     clearTimeout(STATE.stimTimeout);
     clearTimeout(STATE.nextTimeout);
-    
+
     var lv = LEVELS[STATE.level];
-    var stims = STATE.stimuli;
     var duration = (performance.now() - STATE.startTime) / 1000;
-    
-    // === COMPUTE CLINICAL METRICS ===
+
+    // Niveles 7 y 8 — métricas propias, no CPT
+    var mode = lv.rules && lv.rules.mode;
+    if (mode === 'car_rain' && STATE.carRainMetrics) {
+        var m7 = STATE.carRainMetrics;
+        var metrics7 = {
+            level: lv.id, level_name: lv.name, mode: 'car_rain',
+            // Dato afectivo/proyectivo: el color elegido como primer objeto
+            chosen_color:       m7.chosen_color,
+            rule_set_at_ms:     m7.rule_set_at_ms,
+            // SDT simplificado
+            hits:               m7.hits,
+            errores_omision:    m7.misses,
+            errores_comision:   m7.wrong_clicks,
+            hit_rate:           m7.target_ratio,
+            score:              m7.score,
+            duration_seconds:   Math.round(duration),
+            constructs:         lv.constructs
+        };
+        saveMetrics(metrics7);
+        showResults(metrics7, lv);
+        return;
+    }
+    if (mode === 'choose_target' && STATE.chooseTargetMetrics) {
+        var m8 = STATE.chooseTargetMetrics;
+        var metrics8 = {
+            level: lv.id, level_name: lv.name, mode: 'choose_target',
+            // Dato proyectivo + ejecutivo: qué dupla eligió y cuánto tardó
+            chosen_color:       m8.chosen_color,
+            chosen_shape:       m8.chosen_shape,
+            rule_set_at_ms:     m8.rule_set_at_ms,
+            hits:               m8.hits,
+            errores_omision:    m8.misses,
+            errores_comision:   m8.wrong_clicks,
+            score:              m8.score,
+            duration_seconds:   Math.round(duration),
+            constructs:         lv.constructs
+        };
+        saveMetrics(metrics8);
+        showResults(metrics8, lv);
+        return;
+    }
+
+    var stims = STATE.stimuli;
+
+    // === COMPUTE CLINICAL METRICS (CPT estándar niveles 1-6) ===
     var targets = stims.filter(function(s) { return s.isTarget; });
     var nonTargets = stims.filter(function(s) { return !s.isTarget; });
     
