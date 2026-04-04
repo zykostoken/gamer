@@ -1534,30 +1534,20 @@
     } catch(e) { console.warn('[lawn-mower] Supabase save fail:', e.message); }
   }
 
-  // Generate clinical flags automatically from metrics
+  // Observaciones de sesión — valores numéricos sin interpretación clínica
+  // El clínico interpreta. El sistema mide.
   function lmGenerateClinicalFlags(cm, mm, pm, rt_cv, fatiga, comOm, postErr) {
     const flags = [];
-    // Attention
-    if (rt_cv > 0.35) flags.push({flag:'HIGH_RT_VARIABILITY',severity:'high',desc:'CV >0.35 — inconsistencia atencional (ADHD marker d=0.76)'});
-    if (fatiga > 1.3) flags.push({flag:'COGNITIVE_FATIGUE',severity:'high',desc:'Fatiga index >1.3 — enlentecimiento significativo en 2da mitad'});
-    if (fatiga && fatiga < 1.1 && fatiga > 0.9) flags.push({flag:'SUSTAINED_ATTENTION',severity:'positive',desc:'Atencion sostenida estable (fatiga <1.1)'});
-    if (cm.time_to_first_action_ms < 2000) flags.push({flag:'QUICK_START',severity:'positive',desc:'Inicio rapido — latencia < 2s'});
-    if (cm.time_to_first_action_ms > 8000) flags.push({flag:'DELAYED_START',severity:'medium',desc:'Inicio demorado — latencia > 8s'});
-    // Inhibition
-    if (comOm > 2) flags.push({flag:'IMPULSIVE_PATTERN',severity:'high',desc:'Comision >> Omision — patron impulsivo'});
-    if (comOm < 0.3 && cm.omission_errors > 2) flags.push({flag:'INATTENTIVE_PATTERN',severity:'high',desc:'Omision >> Comision — patron inatento'});
-    if (postErr === 'freezes') flags.push({flag:'POST_ERROR_FREEZING',severity:'medium',desc:'Se paraliza despues de error — patron ansioso'});
-    if (postErr === 'accelerates') flags.push({flag:'POST_ERROR_ACCELERATION',severity:'medium',desc:'Acelera despues de error — patron impulsivo'});
-    if (postErr === 'perseverates') flags.push({flag:'PERSEVERATION',severity:'high',desc:'Persevera en error — rigidez cognitiva'});
-    if (postErr === 'adapts') flags.push({flag:'ADAPTIVE_ERROR_RESPONSE',severity:'positive',desc:'Adapta conducta post-error — flexibilidad'});
-    // Motor
-    if (mm.jitter_reposo_px > 0.5) flags.push({flag:'ELEVATED_TREMOR',severity:'medium',desc:'Tremor jitter elevado — evaluar medicacion/ansiedad'});
-    if (mm.dysmetria_ratio > 0.2) flags.push({flag:'DYSMETRIA',severity:'medium',desc:'Dismetria >20% movimientos — precision motora alterada'});
-    if (mm.rapid_reversals > 10) flags.push({flag:'MOTOR_INDECISION',severity:'medium',desc:'Reversals rapidos frecuentes — indecision motora'});
-    // Planning
-    if (pm.plan_efficiency > 0.75) flags.push({flag:'EFFICIENT_PLANNING',severity:'positive',desc:'Planificacion eficiente (>75% optimo)'});
-    if (pm.plan_efficiency < 0.4 && pm.plan_efficiency > 0) flags.push({flag:'POOR_PLANNING',severity:'high',desc:'Planificacion deficiente (<40% optimo)'});
-    if (pm.neatness?.score > 0.7) flags.push({flag:'SYSTEMATIC_COVERAGE',severity:'positive',desc:'Cobertura sistematica — patron organizado'});
+    // Variaciones observadas — etiquetas descriptivas de la medición, no diagnósticas
+    if (rt_cv > 0.35) flags.push({flag:'HIGH_RT_VARIABILITY', severity:'info', desc:'rt_cv=' + rt_cv.toFixed(3) + ' (>0.35)'});
+    if (fatiga > 1.3) flags.push({flag:'FATIGA_INDEX', severity:'info', desc:'decaimiento_mitades=' + fatiga.toFixed(2) + ' (>1.3)'});
+    if (cm.time_to_first_action_ms < 2000) flags.push({flag:'LATENCIA_INICIO', severity:'info', desc:'first_action_latency=' + Math.round(cm.time_to_first_action_ms) + 'ms (<2000)'});
+    if (cm.time_to_first_action_ms > 8000) flags.push({flag:'LATENCIA_INICIO', severity:'info', desc:'first_action_latency=' + Math.round(cm.time_to_first_action_ms) + 'ms (>8000)'});
+    if (comOm > 2) flags.push({flag:'RATIO_COM_OM', severity:'info', desc:'comision/omision=' + comOm.toFixed(2) + ' (>2)'});
+    if (comOm < 0.3 && cm.omission_errors > 2) flags.push({flag:'RATIO_COM_OM', severity:'info', desc:'comision/omision=' + comOm.toFixed(2) + ' (<0.3)'});
+    if (mm.jitter_reposo_px > 0.5) flags.push({flag:'JITTER_REPOSO', severity:'info', desc:'jitter_reposo_px=' + (mm.jitter_reposo_px||0).toFixed(3) + ' (>0.5)'});
+    if (pm.plan_efficiency > 0.75) flags.push({flag:'EFICIENCIA_TRAYECTORIA', severity:'info', desc:'eficiencia_trayectoria=' + pm.plan_efficiency.toFixed(2) + ' (>0.75)'});
+    if (pm.plan_efficiency < 0.4 && pm.plan_efficiency > 0) flags.push({flag:'EFICIENCIA_TRAYECTORIA', severity:'info', desc:'eficiencia_trayectoria=' + pm.plan_efficiency.toFixed(2) + ' (<0.40)'});
     return flags;
   }
 
@@ -1646,8 +1636,8 @@
       dysmetria_overshoots: stats.motor_markers?.overshoot_count || 0,
       direction_changes: stats.motor_markers?.direction_changes || 0,
       rapid_reversals: stats.motor_markers?.rapid_reversals || 0,
-      motor_clumsiness: stats.motor_markers?.vel_oscilacion_index || 0,
-      meticulousness: stats.motor_markers?.ratio_acciones_util || 0,
+      vel_oscilacion_index: stats.motor_markers?.vel_oscilacion_index || 0,
+      ratio_acciones_util: stats.motor_markers?.ratio_acciones_util || 0,
       // Planning
       plan_efficiency: stats.planning_markers?.plan_efficiency || 0,
       ratio_completados: stats.planning_markers?.neatness?.score || 0,
@@ -1896,7 +1886,7 @@
         tremor_event_count: clinicalMetrics.tremorEvents.length,
         jitter_reposo_px: 0,
         tremor_max_jitter: 0,
-        tremor_avg_speed_var: 0,
+        vel_cv_baseline: 0,
 
         // Dysmetria (imprecise targeting)
         overshoot_count: clinicalMetrics.overshootCount,
@@ -1982,7 +1972,7 @@
         Math.round(tremors.reduce((a, t) => a + t.jitter, 0) / tremors.length * 100) / 100;
       stats.motor_markers.tremor_max_jitter =
         Math.round(Math.max(...tremors.map(t => t.jitter)) * 100) / 100;
-      stats.motor_markers.tremor_avg_speed_var =
+      stats.motor_markers.vel_cv_baseline =
         Math.round(tremors.reduce((a, t) => a + t.speed_var, 0) / tremors.length * 1000) / 1000;
     }
 

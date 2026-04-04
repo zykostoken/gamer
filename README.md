@@ -1,234 +1,106 @@
 # ZYKOS GAMER
 
-Plataforma de fenotipado cognitivo-motor-proyectivo digital.
+Plataforma B2B de rehabilitación cognitiva gamificada con captura de biomarcadores digitales.
 
-Repo: Psykostoken/gamer | Supabase: aypljitzifwjosjkqsuu | Dominio: zykos.ar
+Desarrollada por Dr. Gonzalo J. Perez Cortizo — Clínica Psiquiátrica Privada José Ingenieros SRL, Necochea, Argentina.
 
-## DICCIONARIO CANONICO DE METRICAS (53)
+Repo: Psykostoken/gamer (privado) | Supabase: aypljitzifwjosjkqsuu | Dominio: zykos.ar
 
-Un concepto = un nombre. Si no esta aca, no existe en la plataforma.
-Captura en tiempo real, constante. Analisis siempre diferido.
-La velocidad es velocidad. No es tristeza. La interpretacion es del profesional.
+---
 
-### MOTOR — Tremor (M1)
+## Stack
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 1 | tremor_reposo_px | px | SPY | Jitter cursor quieto >500ms |
-| 2 | tremor_inicio_px | px | SPY | Jitter primeros 150ms movimiento |
-| 3 | tremor_terminal_px | px | SPY | Jitter ultimos 80px antes click |
+Frontend: HTML/CSS/JS vanilla sin frameworks
+Deploy: Netlify auto-deploy desde GitHub main
+Backend: Supabase PostgreSQL + RPC + RLS + Edge Functions
+Auth: Custom bcrypt RPC — sin Supabase Auth
+Dominio: zykos.ar
 
-Eliminados: tremorIndex, tremor_index, tremor_avg, tremor_speed_var, tremor_event_count, tremor_avg_jitter, tremor_max_jitter
+---
 
-### MOTOR — Velocidad (M2)
+## Arquitectura del engine de métricas
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 4 | rt_mean_ms | ms | SPY | Tiempo de reaccion medio |
-| 5 | vel_peak_mean | px/ms | SPY | Velocidad pico media |
-| 6 | vel_peak_sd | px/ms | SPY | SD velocidad pico |
+Los juegos son instrumentos tontos. No saben que los miden. No escriben a Supabase directamente.
 
-Eliminados: mean_rt_ms, mean_reaction_time_ms, reaction_time_ms, mean_decision_time_ms, avg_hesitation_ms, first_click_latency_ms, time_to_first_action_ms, latencia_inicio_ms, avgSpeed
+JUEGO (dumb) → ZYKOS ENGINE → Supabase zykos_game_metrics
+                     ↑
+         corsario + agentes (DOM observers)
 
-### MOTOR — Precision (M3)
+Capas: RAW (stream DOM) → AGENTES (cómputo biométrico) → ENGINE (unifica, escribe) → ANÁLISIS SQL
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 7 | dismetria_mean_px | px | SPY | Distancia click al centro target |
-| 8 | eficiencia_trayectoria | ratio | SPY+GAME | Path recto / path real |
-| 9 | rectificaciones_count | count | SPY | Cambios direccion >45 grados |
+El engine es el único escritor. Los juegos aportan via ZYKOS.endSession() las métricas que solo su lógica conoce. Los agentes capturan todo lo observable desde afuera.
 
-Eliminados: pathEfficiency, path_efficiency, movement_efficiency, scan_score, drop_precision, drop_offset_mean_px, abruptRedirections, motor_clumsiness_score, overshoot_count, dysmetria_ratio
+El sistema mide. El clínico interpreta. No hay constructos diagnósticos en el código.
 
-### MOTOR — Extrapiramidal (M4)
+---
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 10 | vel_cv | ratio | SPY | CV velocidad |
-| 11 | rigidez_index | index | SPY | 1-vel_cv |
-| 12 | cogwheel_index | index | SPY | Oscilaciones ritmicas velocidad |
-| 13 | clasp_knife_ratio | ratio | SPY | Caidas bruscas aceleracion |
-| 14 | espasticidad_index | index | SPY | Clasp-knife normalizado |
+## Diccionario canónico — 96 métricas, 16 dominios
 
-### ATENCION — Vigilancia (A1)
+Un constructo = un nombre = una columna. Si no está en METRIC_DICTIONARY (zykos-engine.js) no existe.
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 15 | rt_sd_ms | ms | SPY | SD del RT |
-| 16 | rt_cv | ratio | SPY | CV RT. >0.25 irregular. ADHD g=0.76 |
-| 17 | decaimiento_vigilancia | ratio | SPY | RT 2da/1ra mitad |
-| 18 | iiv_consecutiva | ms | SPY | SD diferencias consecutivas RT |
+Dominios: MOTOR(11) EJECUTIVO(13) FATIGABILIDAD(10) MEMORIA(8) CALCULO(7) SDT(6) RT_DIST(6) COMPRENSION(6) PLANIFICACION(5) ESPACIAL(5) ATENCION(5) INHIBICION(3) PRAXIS(3) MEMORIA_TRABAJO(3) META(3) HARDWARE(2)
 
-### ATENCION — Fatiga (A2)
+Métricas clave: jitter_reposo_px, vel_cv, vel_oscilacion_index, precision_deposito_px, rt_mean_ms, rt_cv, decaimiento_mitades, perseveracion_count, d_prime, hit_rate, evocacion_libre_count, calculo_correcto_count, tiempo_planificacion_ms, consigna_repeticiones_count
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 19 | fatiga_motor | ratio | SPY | Tremor 2da/1ra mitad |
-| 20 | fatiga_precision | ratio | SPY | Dismetria 2da/1ra mitad |
-| 21 | fatiga_global | ratio | SPY | Media ratios fatiga |
+---
 
-### EJECUTIVO — Inhibicion (E1)
+## Juegos (15 en portal)
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 22 | errores_comision | count | SPY+GAME | Respondio cuando no debia |
-| 23 | errores_omision | count | GAME | No respondio cuando debia |
-| 24 | impulsividad_ratio | ratio | SPY | Acciones <150ms / total |
-| 25 | inhibicion_motor | ratio | SPY | Movimientos abortados / iniciados |
-| 26 | falsos_clicks | count | SPY+GAME | Clicks fuera de targets |
+Activos: lawn-mower, pill-organizer, super-market, neuro-chef, medication-memory, fridge-logic, reflejos, daily-routine, ferretería, almacén, electrodomésticos, librería, carnicería, mercería.
+En reparación: inkblot.
 
-Eliminados: commission_errors, omission_errors, false_alarms, impulsivity_ratio
+Modos en packs classify-and-place: clasificar, armar kit, calcular, semejanzas, ordenar (seriación), razonar (inferencia).
 
-### EJECUTIVO — Planificacion (E2)
+---
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 27 | eficacia_objetivo | ratio | GAME | Objetivos logrados / totales |
-| 28 | eficacia_plan | ratio | GAME | Ejecucion del propio plan |
-| 29 | economia_cognitiva | ratio | SPY | Acciones utiles / totales |
-| 30 | secuencia_correcta_pct | pct | GAME | % acciones en orden correcto |
-| 31 | hesitaciones_count | count | SPY | Pausas >200ms |
-| 32 | hesitacion_mean_ms | ms | SPY | Duracion media hesitacion |
+## Base de datos (Supabase: aypljitzifwjosjkqsuu)
 
-Eliminados: plan_efficiency, planificacion_ratio, escaneo_sistematico, neatness_score, completeness_pct, long_pauses_count, avg_pause_duration_ms
+Tablas: zykos_users (45 cols, RLS), zykos_game_metrics (hash chain SHA-256), zykos_game_sessions, zykos_calibrations, zykos_audit_log, zykos_raw_stream.
 
-### EJECUTIVO — Flexibilidad (E3)
+RPCs: zykos_register, zykos_login, zykos_validate_session, zykos_consume_session, zykos_get_metric_zscores, zykos_get_oscillations, zykos_get_concomitants.
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 33 | perseveracion_count | count | SPY | Repeticion estereotipada. Bufestron |
-| 34 | autocorreccion_ratio | ratio | SPY+GAME | Errores corregidos / totales |
-| 35 | post_error_rt_ratio | ratio | SPY+GAME | RT post-error / RT medio |
+Registro: 15 sesiones iniciales por usuario. Notificación mail al admin en cada registro.
 
-### MEMORIA — Trabajo (MEM1)
+---
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 36 | memory_span | count | GAME | Items retenidos simultaneamente |
+## Seguridad
 
-### MEMORIA — Aprendizaje (MEM2)
+HSTS, X-Frame-Options DENY, CSP estricta, XSS-Protection en todos los headers.
+Evidence hash chain SHA-256 en zykos_game_metrics (inmutabilidad).
+RLS: cada usuario solo ve sus propios datos. Admin solo accesible a superadmin.
+Anon key pública segura por RLS (no permite acceso directo a tablas).
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 37 | curva_aprendizaje | ratio | COMPUTED | Eficiencia sesion N / N-1 |
+---
 
-### COMPRENSION (C1)
+## Variables de entorno
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 38 | instruction_time_ms | ms | SPY | Tiempo leyendo instrucciones |
-| 39 | instruction_reread | count | SPY | Releer instrucciones |
-| 40 | first_action_latency_ms | ms | SPY | Inicio hasta primera accion |
+RESEND_API_KEY — envío de mails de registro (notify-registration)
 
-### CALCULO (CAL1)
+---
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 41 | error_estimacion_abs | currency | GAME | Error absoluto estimacion |
-| 42 | error_estimacion_pct | pct | GAME | Error porcentual estimacion |
+## Propiedad intelectual
 
-### AFECTIVO — Frustracion (AFEC1)
+DNDA Argentina — obra inédita (en trámite)
+INPI Argentina — PSYKooD Clase 44 (en trámite)
+Copyright en /COPYRIGHT | Licencia propietaria en /LICENSE
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 43 | engagement_decay | ratio | COMPUTED | Tiempo sesion N / N-1 |
+---
 
-### AFECTIVO — Proyectivo (AFEC2)
+## Deudas técnicas
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 44 | color_hex | hex | MOOD | Color proyectivo elegido |
-| 45 | color_congruencia | index | COMPUTED | Correlacion rendimiento-color |
+- neuro-chef: biometrics.js propio, no migrado al engine canónico
+- daily-routine, fridge-logic, super-market: sin engine canónico ni agentes activos
+- inkblot: en reparación, rediseño pendiente
+- d-prime: requiere corrección loglineal de Hautus para hit rate = 1.0 o FAR = 0.0
+- SEM por métrica: no calculado aún — requiere estudio test-retest
+- Validación clínica pendiente: test-retest ICC, validez convergente, normas poblacionales
 
-### META
+---
 
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 46 | session_duration_ms | ms | SPY | Duracion sesion |
-| 47 | total_clicks | count | SPY | Total clicks |
-| 48 | total_actions | count | SPY | Acciones significativas |
+## Nota epistemológica
 
-### HARDWARE
-
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 49 | hw_idle_jitter_px | px | SPY | Ruido dispositivo reposo |
-| 50 | hw_latency_ms | ms | SPY | Delay input device |
-
-### CONTEXTO
-
-| # | Metrica | U | Fuente | Descripcion |
-|---|---------|---|--------|-------------|
-| 51 | tab_switches | count | SPY | Cambios pestana |
-| 52 | time_hidden_ms | ms | SPY | Tiempo pestana oculta |
-| 53 | orientation_changes | count | SPY | Rotaciones dispositivo |
-
-### SDT (derivadas)
-
-| Metrica | Descripcion |
-|---------|-------------|
-| d_prime | Sensibilidad: z(hit_rate) - z(fa_rate) |
-| response_bias | Criterio: conservador vs liberal |
-
-## 15 PERFILES COMPUESTOS
-
-No diagnosticos. Contra baseline individual (RCI, min 5 sesiones).
-
-| Perfil | Formula |
-|--------|---------|
-| EFICIENCIA PLENA | M2 rapido + M3 preciso + E1 bajo + E2 alto |
-| ACELERAMIENTO DESINHIBIDO | M2 rapido + M3 bajo + E1 alto + E2 bajo |
-| ENLENTECIMIENTO COMPENSADO | M2 lento + M3 preciso + E1 bajo |
-| ENLENTECIMIENTO DETERIORANTE | M2 lento + M3 bajo + omisiones + E2 bajo |
-| VARIABILIDAD ATENCIONAL | rt_cv > baseline + precision intermitente |
-| DISOCIACION MOTOR-COGNITIVO | (M1 alto + M3 ok) o (M1 bajo + M3 bajo) |
-| FATIGA PROGRESIVA | 2da mitad > 20% peor que 1ra |
-| PERSEVERACION RIGIDA | perseveracion > baseline + autocorreccion < baseline |
-| CONFUSION PERCEPTUAL | C1 bajo + irrelevantes + recorrido caotico |
-| APRENDIZAJE ACTIVO | Mejora inter-sesion significativa |
-| AUSENCIA DE APRENDIZAJE | No mejora inter-sesion |
-| ANHEDONIA CONDUCTUAL | color constante + engagement descendente |
-| DISOCIACION SUBJETIVO-OBJETIVO | color alegre + rendimiento malo |
-| EXPANSION SIN ANCLAJE | agencia max + riesgo max + complejidad baja |
-| RETRACCION EVITATIVA | agencia min + riesgo min + solo basico |
-
-## DCAT — Digital Choice Attribute Taxonomy
-
-| Dimension | Polo A | Polo B |
-|-----------|--------|--------|
-| AGENCIA | Activo | Pasivo |
-| ORIENTACION TEMPORAL | Presente/Futuro | Pasado |
-| REFERENCIA AL SELF | Autocentrado | Alocentrado |
-| FUNCIONAL vs AFECTIVO | Pragmatico | Emocional |
-| RIESGO vs SEGURIDAD | Exploratorio | Conservador |
-| COMPLEJIDAD | Elaborado | Simple |
-| CONSISTENCIA | Estable | Variable |
-| CONGRUENCIA | Congruente | Disociado |
-
-Regla de oro: nunca se codifica UNA eleccion. Se codifica el PATRON longitudinal.
-
-## FUENTES
-
-- SPY: spy pasivo sin cooperacion del juego
-- GAME: juego reporta via ZYKOS.report()
-- SPY+GAME: spy estima proxy, juego da dato exacto
-- COMPUTED: longitudinal en dashboard
-- MOOD: color picker proyectivo
-
-## EFECTOS FARMACOLOGICOS
-
-| Farmaco | Efecto | Tamano |
-|---------|--------|--------|
-| BZD | Deficit amplio | d=-0.74 |
-| Litio | Psicomotor+verbal | ES=0.62 |
-| ISRS | Neutro a positivo | Pequeno |
-| AP2G | Marginal mejoria | g=0.17 |
-| AP1G | Deterioro | Peor que AP2G |
-
-## STACK
-
-- Frontend: Vanilla JS, cero frameworks
-- DB: Supabase PostgreSQL con RLS
-- Deploy: Netlify auto-deploy
-- Seguridad: bcrypt, SHA-256 hash chain, inmutabilidad
-- Regulatorio: ANMAT SaMD Clase II, ReNaPDiS, Ley 25.326/26.529/26.657
+ZYKOS GAMER no diagnostica. Las métricas son observaciones conductuales digitales.
+La nomenclatura evita deliberadamente términos diagnósticos.
+Los estudios requeridos antes de uso clínico estandarizado incluyen test-retest ICC por métrica,
+validez convergente contra baterías estándar (MATRICS, CANTAB, NIH Toolbox),
+y normas poblacionales por edad, sexo, escolaridad y lateralidad (mínimo 300 sujetos).

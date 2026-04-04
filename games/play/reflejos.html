@@ -458,7 +458,7 @@ function handleResponse(type, e) {
     stim.response = type;
     var rt = stim.respondedAt - stim.appearedAt;
     
-    // Motor metrics: click precision (dismetria = distance from stimulus center)
+    // Motor metrics: click precision (precision_deposito = distance from stimulus center)
     var stimCenterX = stim.x + stim.size/2;
     var stimCenterY = stim.y + stim.size/2 + 56; // +56 for header height
     var clickOffsetX = e.clientX - stimCenterX;
@@ -606,15 +606,15 @@ function endLevel() {
         }
     }
     
-    // Motor metrics: dismetria and tremor
+    // Motor metrics: precision_deposito y jitter
     var clickDistances = stims.filter(function(s) { return s.clickDistance !== undefined; }).map(function(s) { return s.clickDistance; });
     var meanDismetria = clickDistances.length > 0 ? clickDistances.reduce(function(a,b){return a+b;},0) / clickDistances.length : 0;
-    var dismetriaSD = 0;
+    var precisionSD = 0;
     if (clickDistances.length > 1) {
         var dSqDiffs = clickDistances.map(function(v) { return Math.pow(v - meanDismetria, 2); });
-        dismetriaSD = Math.sqrt(dSqDiffs.reduce(function(a,b){return a+b;},0) / (clickDistances.length - 1));
+        precisionSD = Math.sqrt(dSqDiffs.reduce(function(a,b){return a+b;},0) / (clickDistances.length - 1));
     }
-    var tremorIndex = meanDismetria > 0 ? dismetriaSD / meanDismetria : 0; // CV of click precision
+    var jitterIndex = meanDismetria > 0 ? precisionSD / meanDismetria : 0; // CV of click precision
     
     // Path efficiency: for double-clicks, measure time between clicks
     var doubleClickTimes = stims.filter(function(s) { return s.response === 'double' && s.correct; }).map(function(s) { return s.respondedAt - s.appearedAt; });
@@ -645,8 +645,8 @@ function endLevel() {
         perseverations: perseverations,
         score: STATE.score,
         duration_seconds: Math.round(duration),
-        mean_dismetria_px: Math.round(meanDismetria * 10) / 10,
-        dismetria_sd_px: Math.round(dismetriaSD * 10) / 10,
+        precision_deposito_px: Math.round(meanDismetria * 10) / 10,
+        precision_deposito_sd_px: Math.round(precisionSD * 10) / 10,
         tremor_index: Math.round(tremorIndex * 1000) / 1000,
         avg_double_click_ms: Math.round(avgDoubleClickTime),
         rt_left_ms: Math.round(rtLeft),
@@ -724,7 +724,7 @@ function showResults(m, lv) {
         '<div class="metric-card"><div class="mv">' + m.rt_cv + '</div><div class="ml">Variabilidad RT</div></div>' +
         '<div class="metric-card"><div class="mv">' + m.perseverations + '</div><div class="ml">Perseveraciones</div></div>' +
         '<div class="metric-card"><div class="mv">' + m.score + '</div><div class="ml">Puntuación</div></div>' +
-        '<div class="metric-card"><div class="mv">' + m.mean_dismetria_px + '</div><div class="ml">Dismetría (px)</div></div>' +
+        '<div class="metric-card"><div class="mv">' + m.precision_deposito_px + '</div><div class="ml">Precisión depósito (px)</div></div>' +
         '<div class="metric-card"><div class="mv">' + m.tremor_index + '</div><div class="ml">Índice Tremor</div></div>' +
         (m.lateral_differential_ms > 0 ? '<div class="metric-card"><div class="mv">' + m.lateral_differential_ms + '</div><div class="ml">Dif. Lateral (ms)</div></div>' : '') +
         '</div>' +
