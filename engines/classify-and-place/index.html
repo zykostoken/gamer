@@ -146,7 +146,7 @@ const PACK_MAP={
   'carniceria':      '/packs/classify-and-place/carniceria/pack.json',
   'merceria':        '/packs/classify-and-place/merceria/pack.json'
 };
-let PACK=null,STATE={phase:'intro',mode:'classify',level:1,score:0,correct:0,errors:0,totalItems:0,placedItems:0,startTime:0,timerInterval:null,currentItems:[],moves:[],mouseData:[],lastMoveTime:0,kitCart:{},kitMissionIdx:0,calcIdx:0,simIdx:0,kitBudget:0,kitSpent:0,kitScenario:null,
+let PACK=null,STATE={phase:'intro',mode:'classify',level:1,score:0,correct:0,errors:0,totalItems:0,placedItems:0,startTime:0,timerInterval:null,currentItems:[],moves:[],mouseData:[],lastMoveTime:0,kitCart:{},kitMissionIdx:0,calcIdx:0,simIdx:0,kitBudget:0,kitSpent:0,kitScenario:null,seriationIdx:0,groupIdx:0,reasonIdx:0,reasonScenIdx:0,
 // Kit telemetry
 kitLog:[],       // every add/remove action timestamped
 kitRemovals:0,   // how many times removed item from cart
@@ -166,7 +166,7 @@ showIntro()}
 function showIntro(){STATE.phase='intro';const ml=Object.keys(PACK.difficulty_scaling||{}).length||4,g=document.getElementById('game'),hm=PACK.missions&&(PACK.missions.grouping||PACK.missions.calculation||PACK.missions.similarity_discrimination);
 g.innerHTML=`<div class="game-intro"><span class="big-em">${PACK.meta.emoji}</span><h2>${PACK.meta.name}</h2><p>${PACK.meta.description||''}</p><p style="font-size:.75rem;color:var(--dim);margin-bottom:20px;font-style:italic">${PACK.meta.setting||''}</p>
 <div style="margin-bottom:20px"><span style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em">Modo de juego</span>
-<div class="diff-select" style="margin-top:12px" id="mode-sel"><button class="diff-btn active" onclick="pickMode(this,'classify')"> Clasificar</button><button class="diff-btn" onclick="pickMode(this,'kit')"> Armar Kit</button>${PACK.missions?.calculation?'<button class="diff-btn" onclick="pickMode(this,\'calc\')"> Calcular</button>':''}${PACK.missions?.similarity_discrimination?'<button class="diff-btn" onclick="pickMode(this,\'sim\')"> Semejanzas</button>':''}</div></div>
+<div class="diff-select" style="margin-top:12px" id="mode-sel"><button class="diff-btn active" onclick="pickMode(this,'classify')"> Clasificar</button><button class="diff-btn" onclick="pickMode(this,'kit')"> Armar Kit</button>${PACK.missions?.calculation?'<button class="diff-btn" onclick="pickMode(this,\'calc\')"> Calcular</button>':''}${PACK.missions?.similarity_discrimination?'<button class="diff-btn" onclick="pickMode(this,\'sim\')"> Semejanzas</button>':''}${PACK.missions?.seriation?'<button class="diff-btn" onclick="pickMode(this,\'seriation\')"> Ordenar</button>':''}${PACK.missions?.grouping?'<button class="diff-btn" onclick="pickMode(this,\'grouping\')"> Armar kit</button>':''}${PACK.missions?.reasoning?'<button class="diff-btn" onclick="pickMode(this,\'reasoning\')"> Razonar</button>':''}</div></div>
 <div style="margin-bottom:24px"><span style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em">Dificultad</span><div class="diff-select" id="diff-sel"></div></div>
 <button class="btn btn-primary" onclick="startMode()">[G] Empezar</button></div>`;
 const ds=document.getElementById('diff-sel');for(let i=1;i<=ml;i++){const b=document.createElement('button');b.className='diff-btn'+(i===1?' active':'');b.textContent='Nivel '+i;b.onclick=()=>{STATE.level=i;ds.querySelectorAll('.diff-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('h-level').textContent='Nivel '+i};ds.appendChild(b)}}
@@ -176,7 +176,7 @@ function startMode(){if(typeof showPreGameChat==='function'&&!window._pgd){windo
 // Telemetria de mouse manejada por agent-motor.js via ZYKOS engine
 // Telemetry: start game session
 // sesion iniciada por ZYKOS.startSession() en loadPack()
-({classify:startClassify,kit:startKit,calc:startCalc,sim:startSim})[STATE.mode]()}
+({classify:startClassify,kit:startKit,calc:startCalc,sim:startSim,seriation:startSeriation,grouping:startGrouping,reasoning:startReasoning})[STATE.mode]()}
 function toast(m,t){const c=document.getElementById('toasts'),d=document.createElement('div');d.className='toast toast-'+(t||'info');d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),2500)}
 
 /* ===== CLASSIFY ===== */
@@ -307,6 +307,288 @@ function startSim(){STATE.phase='playing';const sd=PACK.missions?.similarity_dis
 document.getElementById('game').innerHTML=`<div style="text-align:center;margin-bottom:20px"><div style="font-size:.75rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em">Par ${(STATE.simIdx%pairs.length)+1} de ${pairs.length}</div><div style="font-size:1.2rem;font-weight:700;margin-top:8px">Estos dos se parecen. ¿En qué se diferencian?</div></div><div class="sim-pair"><div class="sim-card"><div class="s-em">${a.emoji}</div><div class="s-nm">${a.name}</div><div class="s-cat">${ca?.emoji||''} ${ca?.label||''}</div></div><div class="sim-card"><div class="s-em">${b.emoji}</div><div class="s-nm">${b.name}</div><div class="s-cat">${cb?.emoji||''} ${cb?.label||''}</div></div></div><div class="sim-vs">VS</div><div id="sim-rev" style="display:none"><div class="sim-explain"><strong>Diferencia clave:</strong><br>${pair.key_difference}</div><div style="text-align:center;margin-top:16px"><button class="btn btn-ghost btn-sm" onclick="STATE.simIdx++;startSim()">Siguiente →</button></div></div><div style="text-align:center"><button class="btn btn-primary" id="sim-btn" onclick="document.getElementById('sim-rev').style.display='block';this.remove();STATE.correct++;STATE.score+=50;document.getElementById('h-score').textContent=STATE.score">Revelar diferencia</button></div>`}
 
 /* ===== RESULTS (classify) ===== */
+
+/* ===== SERIATION — ordenar items en secuencia ===== */
+function startSeriation(){
+  STATE.phase='playing';
+  const missions=PACK.missions?.seriation;
+  if(!missions||!missions.length){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--dim)">Sin misiones de orden en este pack</p></div>';return;}
+  if(!STATE.seriationIdx)STATE.seriationIdx=0;
+  const mission=missions[STATE.seriationIdx%missions.length];
+  const items=mission.items_to_order.map(id=>PACK.items.find(i=>i.id===id)).filter(Boolean);
+  const shuffled=shuffle([...items]);
+  STATE._serMission=mission;
+  STATE._serItems=items;
+  STATE._serOrder=shuffled.map(i=>i.id);
+  STATE._serStart=performance.now();
+
+  const itemsHTML=shuffled.map((it,idx)=>
+    `<div class="ser-item" draggable="true" data-id="${it.id}" data-pos="${idx}"
+      style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin:6px 0;cursor:grab;display:flex;align-items:center;gap:10px;font-size:.9rem;">
+      <span style="color:var(--dim);font-family:monospace;min-width:20px">${idx+1}</span>
+      <span style="font-size:1.2rem">${it.emoji}</span>
+      <span>${it.name}</span>
+    </div>`
+  ).join('');
+
+  document.getElementById('game').innerHTML=`
+    <div style="max-width:600px;margin:0 auto;padding:16px">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:2rem">${mission.emoji||'📋'}</div>
+        <div style="font-size:1.1rem;font-weight:700;margin:8px 0">${mission.name}</div>
+        <div style="color:var(--dim);font-size:.85rem;line-height:1.5">${mission.description}</div>
+      </div>
+      <div style="color:var(--muted);font-size:.75rem;text-align:center;margin-bottom:12px">Arrastrá los items para ordenarlos</div>
+      <div id="ser-list" style="min-height:200px">${itemsHTML}</div>
+      <div style="text-align:center;margin-top:20px">
+        <button class="btn btn-primary" onclick="checkSeriation()">Verificar orden</button>
+        <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="STATE.seriationIdx++;startSeriation()">Otra misión</button>
+      </div>
+    </div>`;
+
+  // Drag to reorder
+  const list=document.getElementById('ser-list');
+  let dragging=null;
+  list.addEventListener('dragstart',e=>{dragging=e.target.closest('.ser-item');dragging.style.opacity='.4';});
+  list.addEventListener('dragend',e=>{if(dragging)dragging.style.opacity='1';dragging=null;});
+  list.addEventListener('dragover',e=>{e.preventDefault();const over=e.target.closest('.ser-item');if(over&&over!==dragging){const items=[...list.querySelectorAll('.ser-item')];const iDrag=items.indexOf(dragging),iOver=items.indexOf(over);if(iDrag<iOver)list.insertBefore(dragging,over.nextSibling);else list.insertBefore(dragging,over);}});
+}
+
+function checkSeriation(){
+  const mission=STATE._serMission;
+  const correctOrder=mission.items_to_order;
+  const actualOrder=[...document.querySelectorAll('.ser-item')].map(el=>el.dataset.id);
+  const rt=Math.round(performance.now()-STATE._serStart);
+  let correct=0;
+  actualOrder.forEach((id,i)=>{if(id===correctOrder[i])correct++;});
+  const pct=Math.round(correct/correctOrder.length*100);
+  const isOk=pct>=80;
+  if(isOk){STATE.correct++;STATE.score+=200;}else{STATE.errors++;}
+  document.getElementById('h-score').textContent=STATE.score;
+  STATE.moves.push({mode:'seriation',mission:mission.id,pct_correct:pct,rt_ms:rt,correct:isOk});
+
+  // Mostrar resultado con el orden correcto
+  const correctHTML=correctOrder.map((id,i)=>{
+    const it=PACK.items.find(x=>x.id===id);
+    const userPos=actualOrder.indexOf(id);
+    const ok=userPos===i;
+    return `<div style="padding:8px 12px;border-radius:8px;border:1px solid ${ok?'var(--ok)':'var(--err)'};margin:4px 0;display:flex;align-items:center;gap:10px;font-size:.85rem;">
+      <span style="color:${ok?'var(--ok)':'var(--err)'};font-weight:700">${i+1}</span>
+      <span>${it?.emoji||''}</span><span>${it?.name||id}</span>
+      ${ok?'':'<span style="color:var(--err);font-size:.75rem;margin-left:auto">vos pusiste pos '+(userPos+1)+'</span>'}
+    </div>`;
+  }).join('');
+
+  document.getElementById('game').innerHTML=`
+    <div style="max-width:600px;margin:0 auto;padding:16px;text-align:center">
+      <div style="font-size:2rem">${isOk?'[ok]':'[x]'}</div>
+      <div style="font-size:1.2rem;font-weight:700;margin:8px 0;color:${isOk?'var(--ok)':'var(--err)'}">${pct}% correcto</div>
+      <div style="color:var(--dim);font-size:.8rem;margin-bottom:16px">Orden correcto:</div>
+      ${correctHTML}
+      <div style="margin-top:20px;display:flex;gap:10px;justify-content:center">
+        <button class="btn btn-primary" onclick="STATE.seriationIdx++;startSeriation()">Siguiente misión</button>
+        <button class="btn btn-ghost btn-sm" onclick="showIntro()">Menú</button>
+      </div>
+    </div>`;
+}
+
+/* ===== GROUPING — armar kit funcional ===== */
+function startGrouping(){
+  STATE.phase='playing';
+  const missions=PACK.missions?.grouping;
+  if(!missions||!missions.length){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--dim)">Sin misiones de agrupamiento en este pack</p></div>';return;}
+  if(!STATE.groupIdx)STATE.groupIdx=0;
+  const mission=missions[STATE.groupIdx%missions.length];
+  STATE._grpMission=mission;
+  STATE._grpSelected=new Set();
+  STATE._grpStart=performance.now();
+
+  // Mezclar correctos + parciales + trampas + algunos random
+  const allIds=new Set([
+    ...(mission.correct_items||[]),
+    ...(mission.partial_credit||[]),
+    ...(mission.trap_items||[])
+  ]);
+  // Agregar items random de relleno hasta 12
+  shuffle(PACK.items.filter(i=>!allIds.has(i.id))).slice(0,Math.max(0,12-allIds.size)).forEach(i=>allIds.add(i.id));
+  const pool=shuffle([...allIds]).map(id=>PACK.items.find(i=>i.id===id)).filter(Boolean);
+
+  const itemsHTML=pool.map(it=>
+    `<div class="grp-item" data-id="${it.id}"
+      style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:.85rem;transition:all .15s;"
+      onclick="toggleGrp(this,'${it.id}')">
+      <span style="font-size:1.2rem">${it.emoji}</span>
+      <span>${it.name}</span>
+      ${it.price?`<span style="color:var(--dim);font-size:.75rem;margin-left:auto">$${it.price.toLocaleString('es-AR')}</span>`:''}
+    </div>`
+  ).join('');
+
+  document.getElementById('game').innerHTML=`
+    <div style="max-width:640px;margin:0 auto;padding:16px">
+      <div style="background:var(--surface);border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid var(--border)">
+        <div style="font-size:1.5rem;margin-bottom:8px">${mission.emoji||'🛠️'}</div>
+        <div style="font-size:1rem;font-weight:700;margin-bottom:6px">${mission.name}</div>
+        <div style="color:var(--dim);font-size:.85rem;line-height:1.5">${mission.description}</div>
+      </div>
+      <div style="color:var(--muted);font-size:.75rem;margin-bottom:10px">Tocá los productos que necesitás</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="grp-pool">${itemsHTML}</div>
+      <div style="text-align:center;margin-top:16px">
+        <button class="btn btn-primary" onclick="checkGrouping()">Confirmar selección</button>
+        <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="STATE.groupIdx++;startGrouping()">Otra misión</button>
+      </div>
+    </div>`;
+}
+
+function toggleGrp(el,id){
+  if(STATE._grpSelected.has(id)){
+    STATE._grpSelected.delete(id);
+    el.style.borderColor='var(--border)';
+    el.style.background='var(--card)';
+  }else{
+    STATE._grpSelected.add(id);
+    el.style.borderColor='var(--accent)';
+    el.style.background='rgba(99,102,241,.1)';
+  }
+}
+
+function checkGrouping(){
+  const m=STATE._grpMission;
+  const sel=[...STATE._grpSelected];
+  const rt=Math.round(performance.now()-STATE._grpStart);
+  const correct=m.correct_items||[];
+  const partial=m.partial_credit||[];
+  const traps=m.trap_items||[];
+
+  let pts=0,hits=0,missed=0,trapsHit=0,partialHit=0;
+  correct.forEach(id=>{if(sel.includes(id))hits++;else missed++;});
+  traps.forEach(id=>{if(sel.includes(id))trapsHit++;});
+  partial.forEach(id=>{if(sel.includes(id))partialHit++;});
+  pts=hits*3+partialHit-trapsHit*2;
+  const maxPts=correct.length*3;
+  const pct=maxPts>0?Math.round(Math.max(0,pts)/maxPts*100):0;
+  const isOk=pct>=60;
+
+  if(isOk){STATE.correct++;STATE.score+=Math.round(pct*2);}else{STATE.errors++;}
+  document.getElementById('h-score').textContent=STATE.score;
+  STATE.moves.push({mode:'grouping',mission:m.id,pct_correct:pct,rt_ms:rt,hits,missed,traps_hit:trapsHit,correct:isOk});
+
+  const feedHTML=[
+    ...correct.map(id=>{const it=PACK.items.find(x=>x.id===id);const ok=sel.includes(id);return`<div style="padding:6px 10px;border-radius:6px;background:${ok?'rgba(34,197,94,.1)':'rgba(239,68,68,.05)'};border:1px solid ${ok?'var(--ok)':'var(--err)'};font-size:.8rem;margin:3px 0;display:flex;align-items:center;gap:8px"><span>${it?.emoji||''}</span><span>${it?.name||id}</span><span style="margin-left:auto;color:${ok?'var(--ok)':'var(--err)'}">${ok?'[ok]':'[faltó]'}</span></div>`;}),
+    ...traps.filter(id=>sel.includes(id)).map(id=>{const it=PACK.items.find(x=>x.id===id);return`<div style="padding:6px 10px;border-radius:6px;background:rgba(239,68,68,.1);border:1px solid var(--err);font-size:.8rem;margin:3px 0;display:flex;align-items:center;gap:8px"><span>${it?.emoji||''}</span><span>${it?.name||id}</span><span style="margin-left:auto;color:var(--err)">[trampa]</span></div>`;})
+  ].join('');
+
+  document.getElementById('game').innerHTML=`
+    <div style="max-width:600px;margin:0 auto;padding:16px;text-align:center">
+      <div style="font-size:2rem">${isOk?'[ok]':'[x]'}</div>
+      <div style="font-size:1.2rem;font-weight:700;color:${isOk?'var(--ok)':'var(--err)'};margin:8px 0">${pct}% del kit correcto</div>
+      <div style="text-align:left;margin:16px 0">${feedHTML}</div>
+      <div style="color:var(--dim);font-size:.8rem;margin-bottom:16px">Tiempo: ${(rt/1000).toFixed(1)}s · Trampas tocadas: ${trapsHit}</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn btn-primary" onclick="STATE.groupIdx++;startGrouping()">Siguiente misión</button>
+        <button class="btn btn-ghost btn-sm" onclick="showIntro()">Menú</button>
+      </div>
+    </div>`;
+}
+
+/* ===== REASONING — inferencia: el cliente describe un problema ===== */
+function startReasoning(){
+  STATE.phase='playing';
+  const missions=PACK.missions?.reasoning;
+  if(!missions||!missions.length){document.getElementById('game').innerHTML='<div class="loading"><p style="color:var(--dim)">Sin misiones de razonamiento en este pack</p></div>';return;}
+  if(!STATE.reasonIdx)STATE.reasonIdx=0;
+  const mission=missions[STATE.reasonIdx%missions.length];
+  if(!STATE.reasonScenIdx)STATE.reasonScenIdx=0;
+  const scenarios=mission.scenarios||[];
+  const sc=scenarios[STATE.reasonScenIdx%scenarios.length];
+  STATE._rsnMission=mission;
+  STATE._rsnScenario=sc;
+  STATE._rsnSelected=new Set();
+  STATE._rsnStart=performance.now();
+
+  // Pool: correctos + distractores random
+  const correctIds=new Set(sc.correct_items||[]);
+  const pool=shuffle([
+    ...sc.correct_items.map(id=>PACK.items.find(i=>i.id===id)).filter(Boolean),
+    ...shuffle(PACK.items.filter(i=>!correctIds.has(i.id))).slice(0,8)
+  ]);
+
+  const itemsHTML=pool.map(it=>
+    `<div class="rsn-item" data-id="${it.id}"
+      style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:.85rem;transition:all .15s;"
+      onclick="toggleRsn(this,'${it.id}')">
+      <span style="font-size:1.2rem">${it.emoji}</span>
+      <span>${it.name}</span>
+    </div>`
+  ).join('');
+
+  document.getElementById('game').innerHTML=`
+    <div style="max-width:640px;margin:0 auto;padding:16px">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px">
+        <div style="font-size:1rem;font-weight:700;margin-bottom:8px">${mission.emoji||'🤔'} ${mission.name}</div>
+        <div style="background:var(--card2);border-radius:10px;padding:14px;font-size:.95rem;line-height:1.6;font-style:italic;color:var(--text)">
+          "${sc.client_says}"
+        </div>
+        <div style="color:var(--dim);font-size:.78rem;margin-top:8px">¿Qué necesita este cliente? Seleccioná los productos.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="rsn-pool">${itemsHTML}</div>
+      <div style="text-align:center;margin-top:16px">
+        <button class="btn btn-primary" onclick="checkReasoning()">Confirmar</button>
+        <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="STATE.reasonScenIdx++;startReasoning()">Otro caso</button>
+      </div>
+    </div>`;
+}
+
+function toggleRsn(el,id){
+  if(STATE._rsnSelected.has(id)){
+    STATE._rsnSelected.delete(id);
+    el.style.borderColor='var(--border)';el.style.background='var(--card)';
+  }else{
+    STATE._rsnSelected.add(id);
+    el.style.borderColor='var(--accent)';el.style.background='rgba(99,102,241,.1)';
+  }
+}
+
+function checkReasoning(){
+  const sc=STATE._rsnScenario;
+  const sel=[...STATE._rsnSelected];
+  const rt=Math.round(performance.now()-STATE._rsnStart);
+  const correct=sc.correct_items||[];
+  let hits=0,missed=0,extra=0;
+  correct.forEach(id=>{if(sel.includes(id))hits++;else missed++;});
+  sel.forEach(id=>{if(!correct.includes(id))extra++;});
+  const pct=correct.length>0?Math.round(hits/correct.length*100):0;
+  const isOk=pct>=75&&extra<=1;
+
+  if(isOk){STATE.correct++;STATE.score+=250;}else{STATE.errors++;}
+  document.getElementById('h-score').textContent=STATE.score;
+  STATE.moves.push({mode:'reasoning',scenario:sc.client_says?.slice(0,40),pct:pct,rt_ms:rt,extra_items:extra,correct:isOk});
+
+  const feedHTML=correct.map(id=>{
+    const it=PACK.items.find(x=>x.id===id);
+    const ok=sel.includes(id);
+    return`<div style="padding:6px 10px;border-radius:6px;background:${ok?'rgba(34,197,94,.1)':'rgba(239,68,68,.05)'};border:1px solid ${ok?'var(--ok)':'var(--err)'};font-size:.8rem;margin:3px 0;display:flex;align-items:center;gap:8px">
+      <span>${it?.emoji||''}</span><span>${it?.name||id}</span>
+      <span style="margin-left:auto;color:${ok?'var(--ok)':'var(--err)'}">${ok?'[ok]':'[faltó]'}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('game').innerHTML=`
+    <div style="max-width:600px;margin:0 auto;padding:16px;text-align:center">
+      <div style="font-size:2rem">${isOk?'[ok]':'[x]'}</div>
+      <div style="font-size:1.2rem;font-weight:700;color:${isOk?'var(--ok)':'var(--err)'};margin:8px 0">${pct}% correcto</div>
+      <div style="background:var(--surface);border-radius:10px;padding:12px;margin:12px 0;text-align:left">
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:6px">Razonamiento correcto:</div>
+        <div style="font-size:.82rem;color:var(--dim);line-height:1.5">${sc.reasoning||''}</div>
+      </div>
+      <div style="text-align:left">${feedHTML}</div>
+      ${extra>0?`<div style="color:var(--warn);font-size:.78rem;margin-top:8px">Seleccionaste ${extra} producto(s) que no corresponde(n)</div>`:''}
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px">
+        <button class="btn btn-primary" onclick="STATE.reasonScenIdx++;startReasoning()">Siguiente caso</button>
+        <button class="btn btn-ghost btn-sm" onclick="showIntro()">Menú</button>
+      </div>
+    </div>`;
+}
+
 function showResults(){STATE.phase='results';const el=((performance.now()-STATE.startTime)/1000).toFixed(1),acc=STATE.correct+STATE.errors>0?Math.round(STATE.correct/(STATE.correct+STATE.errors)*100):0,avgRT=STATE.moves.length?Math.round(STATE.moves.reduce((a,m)=>a+m.rt,0)/STATE.moves.length):0;let pers=0;for(let i=1;i<STATE.moves.length;i++)if(!STATE.moves[i].correct&&!STATE.moves[i-1].correct&&STATE.moves[i].targetCat===STATE.moves[i-1].targetCat)pers++;
 // ENGINE CANONICO
 if(typeof ZYKOS!=='undefined'&&ZYKOS.isActive()){
