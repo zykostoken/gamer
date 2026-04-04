@@ -104,6 +104,14 @@ var METRIC_DICTIONARY = {
     // === HARDWARE CORRECTION ===
     hw_idle_jitter_px:      { domain:'HARDWARE', construct:'Jitter basal del dispositivo', unit:'px', range:[0,20], desc:'Ruido del input device en reposo.' },
     hw_latency_ms:          { domain:'HARDWARE', unit:'ms', range:[0,100], desc:'Delay inherente del input device.' },
+
+    // === PRESENCIA ACTIVA ===
+    presencia_activa_pct:               { domain:'PRESENCIA', construct:'Presencia activa', unit:'%', range:[0,100], desc:'Porcentaje del tiempo con actividad real (mouse/touch).' },
+    presencia_idle_pct:                 { domain:'PRESENCIA', construct:'Presencia idle', unit:'%', range:[0,100], desc:'Porcentaje del tiempo presente pero sin accion.' },
+    presencia_ausente_pct:              { domain:'PRESENCIA', construct:'Ausencia', unit:'%', range:[0,100], desc:'Porcentaje del tiempo fuera de la pantalla (otra app, pantalla apagada).' },
+    presencia_segmentos_activos:        { domain:'PRESENCIA', construct:'Fragmentation', unit:'count', range:[0,200], desc:'Cantidad de rafagas continuas de actividad.' },
+    presencia_duracion_media_activa_ms: { domain:'PRESENCIA', construct:'Duracion media de actividad', unit:'ms', range:[0,600000], desc:'Duracion media de cada rafaga activa.' },
+    presencia_idle_max_ms:              { domain:'PRESENCIA', construct:'Idle maximo', unit:'ms', range:[0,600000], desc:'Periodo idle mas largo de la sesion.' },
     // ── MEMORIA ──────────────────────────────────────────────────────────────
     evocacion_libre_count:        { domain:'MEMORIA', unit:'count', range:[0,20],    desc:'Items recordados sin ayuda en fase de evocacion libre.' },
     evocacion_indiciada_count:    { domain:'MEMORIA', unit:'count', range:[0,20],    desc:'Items recordados con pista semantica o perceptual.' },
@@ -463,6 +471,34 @@ window.addEventListener('beforeunload', function() {
     } catch(e) { /* silencioso — contexto en cierre */ }
     _sessionId = null;
 });
+
+// Mouse idle detector — distingue ausencia fisica de multitasking
+// Si el mouse no se mueve en N segundos con tab visible = ausencia fisica
+// Si el mouse se mueve pero la tab esta oculta = multitasking
+var _lastMouseMoveTime = performance.now();
+var _mouseIdleTimer = null;
+var MOUSE_IDLE_THRESHOLD_MS = 90000; // 90s sin mouse = probable ausencia fisica
+
+document.addEventListener('mousemove', function() {
+    _lastMouseMoveTime = performance.now();
+}, { passive: true });
+
+document.addEventListener('touchstart', function() {
+    _lastMouseMoveTime = performance.now();
+}, { passive: true });
+
+// Chequear idle cada 30s
+setInterval(function() {
+    if (!ZYKOS.isActive()) return;
+    var idleMs = Math.round(performance.now() - _lastMouseMoveTime);
+    if (idleMs > MOUSE_IDLE_THRESHOLD_MS) {
+        ZYKOS._pushRaw('mouse_idle', {
+            idle_ms: idleMs,
+            session_ms: Math.round(performance.now() - _sessionStart),
+            tab_visible: !document.hidden
+        });
+    }
+}, 30000);
 
 // Visibility change — pausar/reanudar agentes al cambiar de ventana
 // Problema: cuando el usuario alterna ventanas, el browser congela el hilo.
