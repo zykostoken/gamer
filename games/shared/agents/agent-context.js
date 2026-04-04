@@ -130,7 +130,15 @@ var agent = {
         };
     },
     
-    stop: function() {
+    pause: function() {
+        state.active = false;
+    },
+
+    resume: function() {
+        state.active = true;
+    },
+
+        stop: function() {
         state.active = false;
         document.removeEventListener('visibilitychange', onVisibility);
         window.removeEventListener('focus', onFocus);

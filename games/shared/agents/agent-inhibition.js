@@ -146,7 +146,15 @@ var agent = {
         };
     },
     
-    stop: function() {
+    pause: function() {
+        state.active = false;
+    },
+
+    resume: function() {
+        state.active = true;
+    },
+
+        stop: function() {
         state.active = false;
         document.removeEventListener('click', onClick, { capture: true });
         document.removeEventListener('mousedown', onMouseDown);
