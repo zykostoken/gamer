@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZYKOS GAMER</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/supabase-config.js"></script>
+
+<!-- SPY: loads FIRST, starts recording IMMEDIATELY -->
+<script src="/v3/js/spy.js"></script>
+
+<!-- DOMPurify -->
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+
+<style>
+:root {
+  --bg: #0A0E27;
+  --surface: #111633;
+  --surface2: #1a1f4a;
+  --border: rgba(255,255,255,0.08);
+  --border-hover: rgba(255,255,255,0.15);
+  --neon: #00D4FF;
+  --neon2: #39FF14;
+  --purple: #B026FF;
+  --danger: #ef4444;
+  --warn: #f59e0b;
+  --text: #e2e8f0;
+  --dim: #64748b;
+  --radius: 16px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+body {
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* === NAV === */
+nav {
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:14px 24px;
+  position:sticky; top:0; z-index:100;
+}
+.nav-inner {
+  max-width:1100px; margin:0 auto;
+  display:flex; justify-content:space-between; align-items:center;
+  flex-wrap:wrap; gap:12px;
+}
+.logo {
+  font-family:'Orbitron',monospace;
+  font-size:1.3rem; font-weight:800;
+  background:linear-gradient(135deg,var(--neon),var(--neon2));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  text-decoration:none; cursor:pointer;
+}
+.user-bar { display:flex; align-items:center; gap:14px; font-size:0.82rem; }
+.badge {
+  padding:5px 12px; border-radius:20px; font-weight:600; font-size:0.78rem;
+  background:rgba(57,255,20,0.1); border:1px solid rgba(57,255,20,0.2); color:var(--neon2);
+}
+.badge.low { background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.2); color:var(--danger); }
+.badge.admin { background:rgba(176,38,255,0.12); border-color:rgba(176,38,255,0.25); color:var(--purple); }
+.btn-ghost {
+  background:none; border:1px solid var(--border); color:var(--dim);
+  padding:5px 12px; border-radius:8px; cursor:pointer; font-size:0.78rem;
+  transition:all .15s;
+}
+.btn-ghost:hover { border-color:var(--danger); color:var(--danger); }
+
+/* === MAIN CONTAINER === */
+#app { max-width:1100px; margin:0 auto; padding:24px 16px; min-height:80vh; }
+
+/* === GAME CARDS === */
+.games-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+  gap:16px; margin-top:16px;
+}
+.game-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:20px;
+  transition:all .2s; cursor:pointer; display:block;
+}
+.game-card:hover {
+  border-color:var(--neon); transform:translateY(-2px);
+  box-shadow:0 4px 24px rgba(0,212,255,0.08);
+}
+.gc-head { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.gc-icon {
+  width:44px; height:44px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'JetBrains Mono',monospace; font-size:0.9rem; font-weight:600;
+}
+.gc-title { font-weight:700; font-size:0.95rem; }
+.gc-desc { font-size:0.78rem; color:var(--dim); line-height:1.5; margin-bottom:10px; }
+.gc-tags { display:flex; flex-wrap:wrap; gap:4px; }
+.gc-tag {
+  font-size:0.58rem; padding:2px 6px; border-radius:4px;
+  background:rgba(0,212,255,0.06); color:var(--neon);
+  border:1px solid rgba(0,212,255,0.12);
+}
+
+/* === BACK BUTTON (in-game) === */
+.back-btn {
+  display:inline-flex; align-items:center; gap:6px;
+  color:var(--dim); font-size:0.82rem; cursor:pointer;
+  margin-bottom:16px; transition:color .15s;
+}
+.back-btn:hover { color:var(--neon); }
+
+/* === LOADING === */
+.loading {
+  text-align:center; padding:60px 20px; color:var(--dim);
+  font-family:'JetBrains Mono',monospace; font-size:0.85rem;
+}
+
+/* === FEEDBACK (no emojis, color circles) === */
+.fb-colors { display:flex; gap:8px; justify-content:center; margin:16px 0; }
+.fb-dot {
+  width:40px; height:40px; border-radius:50%;
+  border:2px solid var(--border); cursor:pointer;
+  transition:all .15s;
+}
+.fb-dot:hover { transform:scale(1.2); border-color:var(--neon); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <span class="logo" onclick="location.hash='/'">ZYKOS GAMER</span>
+    <div class="user-bar">
+      <span id="user-info" style="color:var(--dim)"></span>
+      <span class="badge" id="badge">--</span>
+      <button class="btn-ghost" id="btn-logout">Salir</button>
+    </div>
+  </div>
+</nav>
+
+<main id="app">
+  <div class="loading">Inicializando...</div>
+</main>
+
+<!-- Router + Mood + Game loader -->
+<script src="/v3/js/mood.js"></script>
+<script src="/v3/js/router.js"></script>
+
+<script>
+// ================================================================
+// ZYKOS PORTAL V3 — SPA Controller
+// ================================================================
+(function() {
+'use strict';
+
+var GAMES = [
+  { slug:'lawn-mower', name:'Cortadora de Cesped', abbr:'LM', color:'#22c55e',
+    desc:'Planifica el recorrido para cortar todo el cesped.',
+    domains:['E2','M3','AFEC1','A1'], src:'/games/play/lawn-mower.html' },
+  { slug:'pill-organizer', name:'Organizador de Medicacion', abbr:'PO', color:'#3b82f6',
+    desc:'Coloca cada medicamento en el dia y horario correcto.',
+    domains:['M1','M3','MEM1','E2'], src:'/games/play/pill-organizer.html' },
+  { slug:'super-market', name:'Desafio Milanesas', abbr:'SM', color:'#f59e0b',
+    desc:'Lee la receta, recorda los ingredientes y compra con presupuesto.',
+    domains:['C1','MEM1','CAL1','E1'], src:'/games/play/super-market.html' },
+  { slug:'neuro-chef', name:'Cocinero Neuronal', abbr:'NC', color:'#ef4444',
+    desc:'Selecciona ingredientes correctos. Signal Detection Theory.',
+    domains:['MEM1','E1','M1'], src:'/games/play/neuro-chef/index.html' },
+  { slug:'medication-memory', name:'Memoria de Medicacion', abbr:'MM', color:'#8b5cf6',
+    desc:'Recorda que medicamentos tomar en cada horario.',
+    domains:['MEM1','E2','A1'], src:'/games/play/medication-memory.html' },
+  { slug:'fridge-logic', name:'Heladera Inteligente', abbr:'FL', color:'#10b981',
+    desc:'Organiza alimentos en la heladera por categoria.',
+    domains:['E2','MEM1','E3'], src:'/games/play/fridge-logic.html' },
+  { slug:'ferreteria', name:'La Ferreteria de Berugo', abbr:'FE', color:'#d97706',
+    desc:'Clasifica 90 productos de ferreteria en 9 categorias.',
+    domains:['E3','CAL1','MEM1','E2'], src:'/engines/classify-and-place/index.html?pack=ferreteria' },
+  { slug:'almacen', name:'El Almacen de Don Tito', abbr:'AL', color:'#0ea5e9',
+    desc:'Ordena 79 productos del almacen de barrio.',
+    domains:['E3','MEM1','CAL1','C1'], src:'/engines/classify-and-place/index.html?pack=almacen-general' },
+  { slug:'electrodomesticos', name:'Electrodomesticos El Rayo', abbr:'ED', color:'#6366f1',
+    desc:'Clasifica 61 electrodomesticos por funcion y especificacion.',
+    domains:['CAL1','E3','MEM1','E2'], src:'/engines/classify-and-place/index.html?pack=electrodomesticos' },
+  { slug:'libreria', name:'La Libreria de la Seno Marta', abbr:'LI', color:'#ec4899',
+    desc:'Arma pedidos escolares sin equivocarte.',
+    domains:['E2','CAL1','MEM1','E1'], src:'/engines/classify-and-place/index.html?pack=libreria-escolar' },
+  { slug:'inkblot', name:'Manchas ZYKOS', abbr:'MZ', color:'#8b5cf6',
+    desc:'Manchas simetricas algoritmicas con paletas de Necochea.',
+    domains:['E3','MEM1','AFEC1','A1'], src:'/engines/inkblot/index.html' },
+  { slug:'reflejos', name:'Reflejos ZYKOS', abbr:'RF', color:'#f43f5e',
+    desc:'Test de performance continua. d-prime, lateralizacion.',
+    domains:['A1','E1','M3','E3'], src:'/games/play/reflejos.html' }
+];
+
+var sb = null;
+var userData = null;
+var activeGameIframe = null;
+
+// ================================================================
+// AUTH
+// ================================================================
+function checkAuth() {
+  var token = localStorage.getItem('zykos_token');
+  if (!token) { window.location.href = '/auth/'; return null; }
+  return token;
+}
+
+async function loadUser() {
+  var token = checkAuth();
+  if (!token) return;
+  sb = getSupabaseClient();
+  if (!sb) { document.getElementById('app').innerHTML = '<div class="loading">Error de conexion</div>'; return; }
+
+  try {
+    var res = await sb.rpc('zykos_validate_session', { p_token: token });
+    if (res.error || !res.data || !res.data.ok) {
+      localStorage.removeItem('zykos_token');
+      window.location.href = '/auth/';
+      return;
+    }
+    userData = res.data;
+    localStorage.setItem('zykos_patient_dni', userData.dni);
+
+    // Update nav
+    document.getElementById('user-info').textContent = 'ID ' + userData.dni;
+    var badge = document.getElementById('badge');
+    if (userData.role === 'superadmin') {
+      badge.textContent = 'SUPERADMIN';
+      badge.className = 'badge admin';
+    } else {
+      badge.textContent = userData.sessions_remaining + ' sesion' + (userData.sessions_remaining !== 1 ? 'es' : '');
+      badge.className = 'badge' + (userData.sessions_remaining <= 3 ? ' low' : '');
+    }
+
+    // Notify spy that we have a patient
+    if (typeof ZYKOS !== 'undefined' && !ZYKOS.isActive()) {
+      // Spy might have started dormant if DNI wasnt in URL yet
+      // Re-trigger by setting localStorage (spy reads it)
+    }
+
+    // Init router
+    initRouter();
+
+    // Show pre-session color picker
+    if (typeof ZykosMood !== 'undefined') {
+      ZykosMood.show('pre_session');
+    }
+
+  } catch(e) {
+    document.getElementById('app').innerHTML = '<div class="loading">Error: ' + e.message + '</div>';
+  }
+}
+
+// ================================================================
+// ROUTER INIT
+// ================================================================
+function initRouter() {
+  ZykosRouter.init('app', renderMenu, function(hash) {
+    // Notify spy of context change
+    if (typeof ZYKOS !== 'undefined') {
+      var ctx = hash === '/' ? 'menu' : hash.replace(/^\//, '');
+      ZYKOS.setContext(ctx);
+    }
+  });
+}
+
+// ================================================================
+// MENU RENDERER
+// ================================================================
+function renderMenu(container) {
+  var remaining = userData.role === 'superadmin' ? 999 : userData.sessions_remaining;
+
+  if (remaining <= 0) {
+    container.innerHTML =
+      '<div style="text-align:center;padding:48px 24px;">' +
+        '<h2 style="font-size:1.3rem;margin-bottom:12px;color:var(--warn);">Sesiones gratuitas completadas</h2>' +
+        '<p style="color:var(--dim);font-size:0.9rem;max-width:500px;margin:0 auto 24px;line-height:1.6;">Tus 15 sesiones terminaron. Tu perfil y datos siguen guardados.</p>' +
+      '</div>';
+    return;
+  }
+
+  var html = '<div style="margin-bottom:20px;">' +
+    '<h1 style="font-size:1.3rem;font-weight:700;">Hola, ' + (userData.display_name || 'Jugador') + '</h1>' +
+    '<p style="color:var(--dim);font-size:0.82rem;margin-top:4px;">Selecciona un juego. Cada sesion evalua funciones cognitivas distintas.</p>' +
+    '</div>' +
+    '<div class="games-grid">';
+
+  GAMES.forEach(function(g) {
+    html += '<div class="game-card" data-slug="' + g.slug + '">' +
+      '<div class="gc-head">' +
+        '<div class="gc-icon" style="background:' + g.color + '18;border:1px solid ' + g.color + '33;color:' + g.color + ';">' + g.abbr + '</div>' +
+        '<div class="gc-title">' + g.name + '</div>' +
+      '</div>' +
+      '<div class="gc-desc">' + g.desc + '</div>' +
+      '<div class="gc-tags">' + g.domains.map(function(d) { return '<span class="gc-tag">' + d + '</span>'; }).join('') + '</div>' +
+    '</div>';
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+
+  // Attach click handlers
+  container.querySelectorAll('.game-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      var slug = card.getAttribute('data-slug');
+      startGame(slug);
+    });
+  });
+}
+
+// ================================================================
+// GAME LOADER — iframe approach for V3 MVP
+// Games load inside an iframe within the SPA.
+// The spy in the parent frame continues running.
+// The iframe can communicate via postMessage.
+// ================================================================
+async function startGame(slug) {
+  var game = GAMES.find(function(g) { return g.slug === slug; });
+  if (!game) return;
+
+  // Consume session
+  var token = localStorage.getItem('zykos_token');
+  try {
+    var res = await sb.rpc('zykos_consume_session', { p_token: token, p_game_slug: slug });
+    if (!res.data || !res.data.ok) {
+      if (res.data && res.data.sessions_remaining === 0) { renderMenu(document.getElementById('app')); return; }
+      alert(res.data ? res.data.error : 'Error al iniciar juego');
+      return;
+    }
+    // Update badge
+    var badge = document.getElementById('badge');
+    badge.textContent = res.data.sessions_remaining + ' sesiones';
+    badge.className = 'badge' + (res.data.sessions_remaining <= 3 ? ' low' : '');
+  } catch(e) {
+    alert('Error: ' + e.message);
+    return;
+  }
+
+  // Navigate to game route
+  location.hash = '/play/' + slug;
+
+  // The router will call the game loader registered below
+}
+
+// ================================================================
+// REGISTER GAME LOADERS
+// Each game loads via iframe inside the SPA container.
+// Spy continues in parent. Iframe gets DNI via URL param.
+// ================================================================
+GAMES.forEach(function(g) {
+  ZykosRouter.registerGame(g.slug, function(container, onReady) {
+    // Back button
+    var back = document.createElement('div');
+    back.className = 'back-btn';
+    back.innerHTML = '&#8592; Volver al menu';
+    back.onclick = function() {
+      // Post-game color picker
+      if (typeof ZykosMood !== 'undefined') {
+        ZykosMood.show('post_game', function() {
+          location.hash = '/';
+        });
+      } else {
+        location.hash = '/';
+      }
+    };
+    container.appendChild(back);
+
+    // iframe
+    var iframe = document.createElement('iframe');
+    var src = g.src + (g.src.indexOf('?') > -1 ? '&' : '?') + 'dni=' + userData.dni + '&source=zykos&embedded=1';
+    iframe.src = src;
+    iframe.style.cssText = 'width:100%;min-height:75vh;border:none;border-radius:var(--radius);background:var(--surface);';
+    iframe.setAttribute('allow', 'autoplay');
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+
+    // Listen for messages from game iframe
+    function onMsg(e) {
+      if (!e.data || !e.data.zykos) return;
+      // Game reports metrics to spy
+      if (e.data.zykos === 'report' && typeof ZYKOS !== 'undefined') {
+        ZYKOS.report(e.data.metrics);
+      }
+      // Game signals completion
+      if (e.data.zykos === 'complete') {
+        if (typeof ZykosMood !== 'undefined') {
+          ZykosMood.show('post_game', function() {
+            location.hash = '/';
+          });
+        }
+      }
+    }
+    window.addEventListener('message', onMsg);
+
+    container.appendChild(iframe);
+    activeGameIframe = iframe;
+
+    onReady({
+      destroy: function() {
+        window.removeEventListener('message', onMsg);
+        activeGameIframe = null;
+      }
+    });
+  });
+});
+
+// ================================================================
+// LOGOUT
+// ================================================================
+document.getElementById('btn-logout').addEventListener('click', function() {
+  var token = localStorage.getItem('zykos_token');
+  if (sb && token) sb.rpc('zykos_logout', { p_token: token }).catch(function(){});
+  // End spy session on logout
+  if (typeof ZYKOS !== 'undefined') ZYKOS.endSession();
+  localStorage.removeItem('zykos_token');
+  localStorage.removeItem('zykos_user');
+  localStorage.removeItem('zykos_patient_dni');
+  window.location.href = '/';
+});
+
+// ================================================================
+// BOOT
+// ================================================================
+loadUser();
+
+})();
+</script>
+</body>
+</html>
