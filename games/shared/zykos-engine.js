@@ -220,6 +220,12 @@ var ZYKOS = {
             }
         });
 
+        // Flush audio module si existe
+        if (typeof ZykosAudio !== 'undefined' && ZykosAudio.flush) {
+            try { agentResults['_audio'] = ZykosAudio.flush(); }
+            catch(e) { console.warn('[zykos-engine] Audio flush error:', e.message); }
+        }
+
         // Merge into unified metric record
         var metrics = ZYKOS._mergeAgentResults(agentResults, duration);
 
@@ -230,7 +236,12 @@ var ZYKOS = {
         return metrics;
     },
 
-    // --- Agent registration ---
+    // --- Audio module registration ---
+    registerAudioModule: function(audioModule) {
+        // ZykosAudio se auto-registra via DOMContentLoaded
+        console.log('[zykos-engine] Audio module registered');
+    },
+
     registerAgent: function(name, agent) {
         if (!agent.start || !agent.collect || !agent.stop) {
             console.error('[zykos-engine] Agent "' + name + '" must implement start(), collect(), stop()');

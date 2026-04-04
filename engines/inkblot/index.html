@@ -8,7 +8,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../../js/supabase-config.js"></script>
 <script src="../../games/shared/require-auth.js"></script>
-<script src="../../shared/telemetry.js"></script>
 <script src="../../games/shared/evidence-hash.js"></script>
 <script src="../../games/shared/input-calibration.js"></script>
 <script src="../../games/shared/mood-modals.js"></script>
@@ -258,8 +257,8 @@ function _startClassifyReal() {
   var params = new URLSearchParams(location.search);
   STATE.patientDni = params.get('dni') || localStorage.getItem('zykos_patient_dni') || 'DEMO';
   
-  if (typeof TELEM !== 'undefined') TELEM.init(STATE.patientDni).catch(function(){});
-  if (typeof TELEM !== 'undefined') TELEM.startGameSession({frame:'inkblot',packId:'necochea-locals',mode:'classify',level:1}).catch(function(){});
+  // inkblot en reparacion — guardado deshabilitado
+
   
   document.getElementById('screen-intro').style.display = 'none';
   document.getElementById('screen-classify').style.display = 'block';
@@ -415,14 +414,7 @@ function endClassify() {
     }
   }
   
-  if (typeof TELEM !== 'undefined') {
-    TELEM.endGameSession({
-      durationMs: totalTime, score: STATE.correct * 10, correct: STATE.correct,
-      errors: STATE.errors, totalItems: STATE.maxRounds, accuracyPct: accuracy,
-      completed: true, perseverations: perseverations, avgReactionTimeMs: meanRT,
-      packId: 'necochea-locals', mode: 'classify'
-    }).catch(function(){});
-  }
+  // inkblot en reparacion — guardado deshabilitado
   
   // Show results then transition to create phase
   document.getElementById('screen-classify').style.display = 'none';

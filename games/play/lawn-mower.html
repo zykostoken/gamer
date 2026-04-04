@@ -1093,6 +1093,7 @@
     <div class="instruction-card">
       <h2 id="instructionTitle">Instrucciones</h2>
       <ul class="tip-list" id="instructionTips"></ul>
+      <div id="instruction-audio-btn-container" style="text-align:center;margin-bottom:10px;min-height:28px;"></div>
       <button class="start-btn" id="instructionStartBtn">Comenzar</button>
     </div>
   </div>
@@ -3315,11 +3316,23 @@
     instructionOverlay.classList.remove('hidden');
     instructionShowTime = Date.now();
 
+    // Init audio para este nivel
+    if (typeof ZykosAudio !== 'undefined') {
+      ZykosAudio.init({ patientDni: lmPatientDni });
+      // Leer consigna en voz alta — primer tip como consigna principal
+      var consignaText = title + '. ' + tips.slice(0,2).join('. ');
+      // Pequeño delay para que el overlay sea visible primero
+      setTimeout(function() {
+        ZykosAudio.consigna(consignaText, 'instruction-audio-btn-container');
+      }, 600);
+    }
+
     instructionStartBtn.onclick = function() {
       instructionOverlay.classList.add('hidden');
       if (instructionShowTime) {
         instructionReadTimeMs = Date.now() - instructionShowTime;
       }
+      if (typeof ZykosAudio !== 'undefined') ZykosAudio.stop();
       if (callback) callback();
     };
   }
@@ -3768,6 +3781,34 @@
       timerDisplay.textContent = formatTime(timerSeconds);
       recordTimeSeriesPoint();
     }, 1000);
+
+    // Estimulos auditivos aleatorios — solo desde nivel 4+
+    if (typeof ZykosAudio !== 'undefined' && currentLevel >= 4) {
+      var _audioEstimulosUsados = new Set();
+      var ESTIMULOS_LM = [
+        { type:'perro',    text:'Cuidado, se escapó el perro.' },
+        { type:'vecino',   text:'El vecino dice que no cortes cerca del cantero.' },
+        { type:'lluvia',   text:'Va a llover, terminá rápido.' },
+        { type:'nino',     text:'Hay un nene jugando en el jardín, esquivalo.' },
+        { type:'telefono', text:'Te llaman por teléfono.' },
+      ];
+      // Primer estímulo entre 20-40s, luego cada 45-90s si el nivel es largo
+      var _stimDelay = 20000 + Math.random() * 20000;
+      window._audioEstimTimer = setTimeout(function dispararEstimulo() {
+        if (!gameRunning) return;
+        var disponibles = ESTIMULOS_LM.filter(function(e) {
+          return !_audioEstimulosUsados.has(e.type);
+        });
+        if (disponibles.length === 0) return;
+        var est = disponibles[Math.floor(Math.random() * disponibles.length)];
+        _audioEstimulosUsados.add(est.type);
+        ZykosAudio.estimulo(est.type, est.text);
+        // Siguiente estímulo
+        if (_audioEstimulosUsados.size < ESTIMULOS_LM.length) {
+          window._audioEstimTimer = setTimeout(dispararEstimulo, 45000 + Math.random() * 45000);
+        }
+      }, _stimDelay);
+    }
 
     // Start time series recording every second
     timeSeriesInterval = setInterval(recordTimeSeriesPoint, 1000);
@@ -5522,6 +5563,7 @@
     <script src="/games/shared/auto-save.js"></script>
   <script src="/games/shared/mood-modals.js"></script>
   <script src="/games/shared/show-metrics.js"></script>
+  <script src="/games/shared/audio.js"></script>
   <script>if (typeof initMoodModals === 'function') initMoodModals();</script>
 
 
