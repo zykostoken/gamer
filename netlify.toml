@@ -46,6 +46,16 @@
   to = "/games/portal/:splat"
   status = 301
   [[redirects]]
+  from = "/demo"
+  to = "/demo/"
+  status = 301
+
+[[redirects]]
+  from = "/probar"
+  to = "/demo/"
+  status = 301
+
+[[redirects]]
   from = "/admin"
   to = "/admin/"
   status = 301

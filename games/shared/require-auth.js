@@ -48,8 +48,11 @@ if (!dni) {
 var token = null;
 try { token = localStorage.getItem('zykos_token'); } catch(e) {}
 
+// Modo demo: token con prefijo demo_ — dejar pasar sin validar en servidor
+var isDemoMode = token && token.indexOf('demo_token_') === 0;
+
 // GUARD: no dni OR no token → block game, redirect to auth
-if (!dni || !token) {
+if (!dni || (!token && !isDemoMode)) {
   // Don't redirect if already on auth page
   if (window.location.pathname.indexOf('/auth') === -1) {
     var returnUrl = window.location.pathname + window.location.search;
@@ -62,6 +65,7 @@ if (!dni || !token) {
 }
 
 // VALID: set globals
+window.ZYKOS_DEMO_MODE = isDemoMode;
 window.ZYKOS_DNI = dni;
 window.ZYKOS_USER_ID = userId;
 window.ZYKOS_AUTH_BLOCKED = false;
