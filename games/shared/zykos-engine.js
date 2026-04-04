@@ -271,6 +271,25 @@ var ZYKOS = {
             timestamp: new Date().toISOString()
         };
 
+        // Adjuntar perfil de hardware activo — contexto de dispositivo por sesion
+        // Sin esto, jitter_reposo_px de un mouse no es comparable a uno de touchpad
+        if (typeof InputCalibration !== 'undefined' && InputCalibration.getProfile) {
+            var hwp = InputCalibration.getProfile();
+            if (hwp) {
+                unified.hw_idle_jitter_px  = hwp.idle_jitter_px  || null;
+                unified.hw_latency_ms      = hwp.rt_p10_ms       || null;
+                unified._hw_profile = {
+                    device:           hwp.input_device,
+                    profile_ts:       hwp.timestamp,
+                    idle_jitter_px:   hwp.idle_jitter_px,
+                    rt_p10_ms:        hwp.rt_p10_ms,
+                    offset_mean_px:   hwp.offset_mean_px,
+                    path_efficiency:  hwp.path_efficiency_mean,
+                    approach_jitter:  hwp.approach_jitter_mean
+                };
+            }
+        }
+
         // Each agent returns an object with ONLY canonical metric names
         Object.keys(agentResults).forEach(function(agentName) {
             var result = agentResults[agentName];

@@ -558,7 +558,15 @@ function needsCalibration(maxAgeMs) {
     try {
         var ts = localStorage.getItem('zykos_hw_profile_ts');
         if (!ts) return true;
-        return (Date.now() - new Date(ts).getTime()) > maxAge;
+        // Expirado por tiempo
+        if ((Date.now() - new Date(ts).getTime()) > maxAge) return true;
+        // Cambio de tipo de dispositivo (touch vs mouse)
+        var profile = getProfile();
+        if (!profile) return true;
+        var currentIsMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+        var profileIsMobile = profile.input_device === 'touch';
+        if (currentIsMobile !== profileIsMobile) return true;
+        return false;
     } catch(e) { return true; }
 }
 
@@ -570,6 +578,7 @@ global.InputCalibration = {
     getProfile: getProfile,
     adjust: adjust,
     needsCalibration: needsCalibration,
+    isNeeded: needsCalibration,  // alias usado en pill-organizer y otros juegos
     // For testing
     _CALIB: CALIB
 };

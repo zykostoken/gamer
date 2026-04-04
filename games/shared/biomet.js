@@ -701,23 +701,27 @@ function compute() {
         vel_perfil_abrupto:       m.acceleration_drops.length ? +Math.min(1, Math.max(0, (vel_caida_brusca - 1) / 4)).toFixed(3) : null,
 
         // Hardware-adjusted metrics (if calibration profile exists)
+        // Para comparacion inter-sesion: metrica_ajustada = metrica_raw - baseline_hw
         hw_adjusted: (function() {
             var IC = typeof InputCalibration !== 'undefined' ? InputCalibration : null;
             if (!IC) return null;
             var hw = IC.getProfile();
             if (!hw) return null;
             return {
-                calibrated: true,
-                profile_ts: hw.timestamp,
-                device: hw.input_device,
-                idle_jitter_baseline: hw.idle_jitter_px,
-                tremor_reposo:     IC.adjust('tremor_reposo', tremor_reposo, hw),
-                tremor_inicio:     IC.adjust('tremor_inicio', tremor_inicio, hw),
-                tremor_terminal:   IC.adjust('tremor_terminal', tremor_terminal, hw),
-                dismetria:         IC.adjust('dismetria', precision_deposito_px, hw),
-                rt_mean:           IC.adjust('rt_ms', rt_mean, hw),
-                path_efficiency:   IC.adjust('efficiency', eficiencia_trayectoria, hw),
-                approach_jitter_baseline: hw.approach_jitter_mean
+                calibrated:              true,
+                profile_ts:              hw.timestamp,
+                device:                  hw.input_device,
+                hw_idle_jitter_px:       hw.idle_jitter_px,
+                hw_latency_ms:           hw.rt_p10_ms,
+                hw_offset_mean_px:       hw.offset_mean_px,
+                hw_path_efficiency:      hw.path_efficiency_mean,
+                // Metricas ajustadas por baseline de hardware
+                jitter_reposo_adj:       IC.adjust('tremor_reposo', tremor_reposo, hw).adjusted,
+                jitter_inicio_adj:       IC.adjust('tremor_inicio', tremor_inicio, hw).adjusted,
+                jitter_terminal_adj:     IC.adjust('tremor_terminal', tremor_terminal, hw).adjusted,
+                precision_deposito_adj:  IC.adjust('dismetria', precision_deposito_px, hw).adjusted,
+                rt_mean_adj_ms:          IC.adjust('rt_ms', rt_mean, hw).adjusted,
+                eficiencia_tray_adj:     IC.adjust('efficiency', eficiencia_trayectoria, hw).adjusted
             };
         })()
     };
