@@ -312,6 +312,41 @@ var METRIC_DICTIONARY = {
     mic_external_noise_count:     { domain:'MEDIA', unit:'count',  range:[0,500],    desc:'Picos de ruido externo >70dB. Proxy de distractores ambientales.' },
 
     // ---------------------------------------------------------------
+    // DOMINIO OG_MEDIA — Original Graphics Media (capa fundacional cam+mic)
+    // Sin face-api. Vanilla JS. Bajo CPU. Base sobre la que MEDIA extiende.
+    // Captura: presencia, luminancia, canal verde (proxy PPG), audio.
+    // Lit: Verkruysse (2008), Poh (2010), De Haan (2013), Mcduff (2014)
+    // ---------------------------------------------------------------
+    og_cam_present:               { domain:'OG_MEDIA', unit:'bool',  range:[0,1],
+        desc:'1 si la camara estuvo activa en la sesion.' },
+    og_cam_presence_pct:          { domain:'OG_MEDIA', unit:'ratio', range:[0,1],
+        desc:'Fraccion del tiempo con contenido visual significativo en el frame.' },
+    og_cam_blackout_count:        { domain:'OG_MEDIA', unit:'count', range:[0,100],
+        desc:'Episodios sin contenido visual. Proxy de ausencia fisica o camara tapada.' },
+    og_cam_blackout_max_ms:       { domain:'OG_MEDIA', unit:'ms',    range:[0,600000],
+        desc:'Blackout mas largo. Lit: correlato de ausencia fisica o atencional.' },
+    og_cam_luminance_mean:        { domain:'OG_MEDIA', unit:'0-255', range:[0,255],
+        desc:'Luminancia media del frame. Informa sobre condiciones de iluminacion.' },
+    og_cam_luminance_cv:          { domain:'OG_MEDIA', unit:'ratio', range:[0,3],
+        desc:'Variabilidad de luminancia. Alto=cambios de luz o movimiento frecuente.' },
+    og_cam_green_channel_mean:    { domain:'OG_MEDIA', unit:'0-255', range:[0,255],
+        desc:'Canal verde medio. Proxy PPG para HR remoto (Verkruysse 2008, Poh 2010).' },
+    og_cam_green_cv:              { domain:'OG_MEDIA', unit:'ratio', range:[0,3],
+        desc:'Variabilidad canal verde. Correlato de pulso cardiaco rPPG (De Haan 2013).' },
+    og_mic_present:               { domain:'OG_MEDIA', unit:'bool',  range:[0,1],
+        desc:'1 si el microfono estuvo activo.' },
+    og_mic_db_mean:               { domain:'OG_MEDIA', unit:'dB',    range:[0,100],
+        desc:'Volumen ambiental medio. Contexto acustico de la sesion.' },
+    og_mic_db_cv:                 { domain:'OG_MEDIA', unit:'ratio', range:[0,3],
+        desc:'Variabilidad de volumen. Alto=entorno ruidoso o variable.' },
+    og_mic_silence_pct:           { domain:'OG_MEDIA', unit:'ratio', range:[0,1],
+        desc:'Fraccion del tiempo en silencio (<30dB). Alto=entorno controlado.' },
+    og_mic_speech_episodes:       { domain:'OG_MEDIA', unit:'count', range:[0,500],
+        desc:'Episodios de vocalizacion (>50dB). Lit: Cummins (2015) speech biomarkers.' },
+    og_mic_peak_db:               { domain:'OG_MEDIA', unit:'dB',    range:[0,100],
+        desc:'Pico maximo de audio. Indica ruido externo extremo o vocalizacion fuerte.' },
+
+    // ---------------------------------------------------------------
     // DOMINIO OG_MEDIA — Original Graphics Media (capa fundacional)
     // Vanilla JS, sin dependencias. Bajo CPU. Hardware hospitalario.
     // Captura presencia, luminancia, canal verde (proxy PPG), audio.
