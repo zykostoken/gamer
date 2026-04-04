@@ -162,7 +162,17 @@ var METRIC_DICTIONARY = {
     sesgo_lateral_px:             { domain:'ESPACIAL', unit:'px',    range:[-200,200], desc:'Error sistematico lateral: positivo=derecha, negativo=izquierda.' },
     scroll_depth_max_px:          { domain:'ESPACIAL', unit:'px',    range:[0,10000], desc:'Profundidad maxima de scroll alcanzada en la sesion.' },
     scroll_reversals_count:       { domain:'ESPACIAL', unit:'count', range:[0,100], desc:'Veces que invirtio la direccion del scroll.' },
+    scroll_velocity_mean:         { domain:'ESPACIAL', unit:'px/ms', range:[0,50],  desc:'Velocidad media de scroll — proxy de agitacion motora.' },
+    scroll_total_distance_px:     { domain:'ESPACIAL', unit:'px',    range:[0,50000], desc:'Distancia total recorrida con scroll en la sesion.' },
+    scroll_time_at_bottom_ms:     { domain:'ESPACIAL', unit:'ms',    range:[0,300000], desc:'Tiempo en zona inferior del documento — busqueda activa.' },
     zona_ignorada:                { domain:'ESPACIAL', unit:'bool',  range:[0,1],   desc:'1 si hay una region del tablero que nunca fue visitada.' },
+
+    // === FOCO Y ATENCION AMBIENTAL ===
+    focus_interruptions_count:    { domain:'ATENCION', unit:'count', range:[0,50],  desc:'Veces que el usuario salio de la ventana/pestaña.' },
+    focus_time_away_ms:           { domain:'ATENCION', unit:'ms',    range:[0,3600000], desc:'Tiempo total fuera de foco durante la sesion.' },
+    focus_time_away_max_ms:       { domain:'ATENCION', unit:'ms',    range:[0,3600000], desc:'Duracion de la interrupcion mas larga.' },
+    focus_away_pct:               { domain:'ATENCION', unit:'ratio', range:[0,1],   desc:'Porcentaje del tiempo de sesion fuera de foco.' },
+    tab_switches_count:           { domain:'META',     unit:'count', range:[0,50],  desc:'Cambios de pestana durante la sesion.' },
 
 };
 
@@ -204,21 +214,32 @@ var ZYKOS = {
         console.log('[zykos-engine] Session started: ' + _sessionId + ' | Agents: ' + Object.keys(_agents).join(', '));
     },
 
-    endSession: function() {
+    endSession: async function() {
         if (!_sessionId) return;
         var duration = performance.now() - _sessionStart;
         ZYKOS._pushRaw('session_end', { duration_ms: Math.round(duration) });
 
-        // Collect from all agents
+        // Collect from all agents — puede retornar Promise (Web Worker) o valor sincrono
+        var agentNames = Object.keys(_agents);
         var agentResults = {};
-        Object.keys(_agents).forEach(function(name) {
-            try { 
-                agentResults[name] = _agents[name].collect(); 
-                _agents[name].stop();
-            } catch(e) { 
-                console.warn('[zykos-engine] Agent ' + name + ' collect error:', e.message); 
+
+        // Parar todos los agentes primero, luego recolectar
+        var collectPromises = agentNames.map(async function(name) {
+            try {
+                var result = _agents[name].collect();
+                // Si collect() devuelve una Promise (Web Worker), la esperamos
+                if (result && typeof result.then === 'function') {
+                    result = await result;
+                }
+                agentResults[name] = result;
+            } catch(e) {
+                console.warn('[zykos-engine] Agent ' + name + ' collect error:', e.message);
+            } finally {
+                try { _agents[name].stop(); } catch(e) {}
             }
         });
+
+        await Promise.all(collectPromises);
 
         // Flush audio module si existe
         if (typeof ZykosAudio !== 'undefined' && ZykosAudio.flush) {
@@ -231,7 +252,7 @@ var ZYKOS = {
 
         // Persist to Supabase
         ZYKOS._persist(metrics);
-        
+
         _sessionId = null;
         return metrics;
     },
@@ -403,9 +424,36 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 window.addEventListener('beforeunload', function() {
-    if (ZYKOS.isActive()) {
-        ZYKOS.endSession();
-    }
+    if (!ZYKOS.isActive()) return;
+    // beforeunload no puede esperar Promises ni Web Workers.
+    // Guardamos el raw stream via sendBeacon (sincrono, sobrevive al cierre).
+    // El analisis matematico ocurre en Supabase sobre el material guardado.
+    // Principio: el motor matematico no existe para el frontend — el analisis es siempre diferido.
+    try {
+        var sb = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
+        var dni = ZYKOS.meta ? ZYKOS.meta.patient_dni : null;
+        var slug = ZYKOS.meta ? ZYKOS.meta.game_slug : 'unknown';
+        if (sb && dni && _rawStream && _rawStream.length > 0) {
+            // sendBeacon: fire-and-forget, sobrevive al cierre del contexto
+            var payload = JSON.stringify({
+                patient_dni: dni,
+                game_slug: slug,
+                session_id: _sessionId,
+                metric_type: 'raw_stream_unload',
+                metric_value: _rawStream.length,
+                metric_data: {
+                    raw_events: _rawStream.slice(-200), // ultimos 200 eventos
+                    duration_ms: Math.round(performance.now() - _sessionStart),
+                    unload_reason: 'beforeunload'
+                }
+            });
+            navigator.sendBeacon(
+                'https://aypljitzifwjosjkqsuu.supabase.co/rest/v1/zykos_raw_stream',
+                new Blob([payload], { type: 'application/json' })
+            );
+        }
+    } catch(e) { /* silencioso — estamos en cierre */ }
+    _sessionId = null;
 });
 
 // Visibility change — track tab switches
