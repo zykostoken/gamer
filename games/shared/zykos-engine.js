@@ -28,17 +28,20 @@
 // ================================================================
 var METRIC_DICTIONARY = {
 
-    // === TREMOR (Motor - Extrapiramidal) ===
-    // PROTOCOLO: tremor_reposo_px = jitter_reposo_px (alias clínico del protocolo ZYKOS)
-    // El protocolo clínico usa tremor_* para comunicación con el clínico;
-    // el código usa jitter_* para evitar inferencia diagnóstica prematura.
-    // La equivalencia está documentada en el Protocolo Clínico v1.
-    jitter_reposo_px:       { domain:'MOTOR', construct:'Jitter de reposo', unit:'px', range:[0,50],
-        desc:'Jitter basal con input quieto >500ms. Protocolo: tremor_reposo_px. Correlato: parkinsonismo, ansiedad basal.' },
-    jitter_inicio_px:       { domain:'MOTOR', construct:'Jitter de inicio (irregularidad al iniciar movimiento)', unit:'px', range:[0,50], desc:'Jitter al iniciar movimiento hacia target.' },
-    jitter_terminal_px:     { domain:'MOTOR', construct:'Jitter terminal (irregularidad al aproximar target)', unit:'px', range:[0,50], desc:'Jitter al llegar al target. Correlato: cerebeloso.' },
-    precision_deposito_px:      { domain:'MOTOR', construct:'Precisión de depósito (dismetria_mean_px)', unit:'px', range:[0,200],
-        desc:'Protocolo M3: dismetria_mean_px. Distancia media del click/touch al centro del target.' },
+    // === IRREGULARIDAD MOTORA ===
+    // Nombres de código: jitter_* (descriptivo, no diagnóstico)
+    // Lo que el clínico puede inferir de valores altos está en la literatura:
+    //   jitter_reposo_px alto → parkinsonismo, temblor esencial, ansiedad basal (Jankovic 2008)
+    //   jitter_terminal_px alto → patología cerebelosa (Holmes 1922)
+    // El sistema mide. El clínico interpreta.
+    jitter_reposo_px:       { domain:'MOTOR', unit:'px', range:[0,50],
+        desc:'Irregularidad del cursor en reposo >500ms. Lit: parkinsonismo, temblor esencial (Jankovic 2008).' },
+    jitter_inicio_px:       { domain:'MOTOR', unit:'px', range:[0,50],
+        desc:'Irregularidad al iniciar movimiento (primeros 150ms). Proxy de inicio motor.' },
+    jitter_terminal_px:     { domain:'MOTOR', unit:'px', range:[0,50],
+        desc:'Irregularidad al aproximar el target (últimos 80px). Lit: patología cerebelosa (Holmes 1922).' },
+    precision_deposito_px:  { domain:'MOTOR', unit:'px', range:[0,200],
+        desc:'Distancia media del click/touch al centro del target. Proxy de dismetría.' },
 
     // === VELOCIDAD MOTORA ===
     vel_peak_mean:          { domain:'MOTOR', construct:'Velocidad pico', unit:'px/ms', range:[0,5], desc:'Velocidad pico media del cursor durante movimientos.' },

@@ -85,10 +85,10 @@ global.showMetricsModal = async function(resultData) {
             
             // === COORDINACIÓN MOTORA ===
             motor: {
-                tremor_reposo: biomet.tremor_reposo_px || null,
-                tremor_inicio: biomet.tremor_inicio_px || null,
-                tremor_terminal: biomet.tremor_terminal_px || null,
-                rectificaciones: biomet.rectificaciones_count || 0
+                jitter_reposo_px:   biomet.jitter_reposo_px   || null,
+                jitter_inicio_px:   biomet.jitter_inicio_px   || null,
+                jitter_terminal_px: biomet.jitter_terminal_px || null,
+                rectificaciones:    biomet.rectificaciones_count || 0
             },
             
             // === EJECUTIVO ===
