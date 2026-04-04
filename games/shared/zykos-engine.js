@@ -339,6 +339,17 @@ var ZYKOS = {
             catch(e) { console.warn('[zykos-engine] Audio flush error:', e.message); }
         }
 
+        // Flush media agent si está activo (opt-in, no en _agents)
+        // Sus métricas se mezclan con el resto — son biomarcadores del mismo evento
+        if (typeof ZykosMediaAgent !== 'undefined' && ZykosMediaAgent.collect) {
+            try {
+                var mediaResult = ZykosMediaAgent.collect();
+                ZykosMediaAgent.stop();
+                // Mezclar directo en unified — misma jerarquía que jitter_reposo_px
+                if (mediaResult) Object.assign(agentResults['_media'] = {}, mediaResult);
+            } catch(e) { console.warn('[zykos-engine] Media flush error:', e.message); }
+        }
+
         // Merge into unified metric record
         var metrics = ZYKOS._mergeAgentResults(agentResults, duration);
 
