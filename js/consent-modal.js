@@ -89,20 +89,40 @@ function saveMediaConsent(cam, mic) {
     return obj;
 }
 
-// Inicializar agentes de media según consentimiento guardado
-// Llamar desde el portal después de que el usuario haya consentido
+// Inicializar y ARRANCAR agentes de media en el momento del consentimiento
+// El agente corre desde aquí — antes del portal, antes del pre-game, antes del juego
+// Captura estado basal: humor, presencia, audio ambiente desde el OK del modal
+// Esto también provee comprobación implícita de identidad:
+//   si quien consintió no es quien juega, habrá discontinuidad de presencia
 function initMediaAgents(consent) {
-    if (!consent) return;
-    // agent-og-media: liviano, siempre si hay cualquier consentimiento
+    if (!consent || consent.skipped || (!consent.cam && !consent.mic)) return;
+
+    // og-media: liviano, arranca siempre que haya cualquier consentimiento
     if (typeof window.ZykosOgMediaAgent !== 'undefined') {
         window.ZykosOgMediaAgent.setConsent(consent.cam, consent.mic);
+        window.ZykosOgMediaAgent.start().then(function() {
+            console.log('[ZYKOS media] og-media activo desde consentimiento — tier:', 
+                window.ZykosOgMediaAgent._tier || 'iniciando');
+        }).catch(function(e) {
+            console.warn('[ZYKOS media] og-media no pudo arrancar:', e.message);
+        });
     }
-    // agent-media: solo si hay consentimiento de cámara (requiere face-api)
-    if (typeof window.ZykosMediaAgent !== 'undefined') {
+
+    // agent-media: solo si hay cam (requiere face-api 2.8MB — carga lazy)
+    if (consent.cam && typeof window.ZykosMediaAgent !== 'undefined') {
         window.ZykosMediaAgent.setConsent(consent.cam, consent.mic);
+        window.ZykosMediaAgent.start().then(function() {
+            console.log('[ZYKOS media] agent-media activo — expresiones faciales capturando');
+        }).catch(function(e) {
+            console.warn('[ZYKOS media] agent-media no pudo arrancar:', e.message);
+        });
     }
-    // Guardar en window para que los juegos puedan leerlo
+
+    // Marcar timestamp de inicio para el engine
     window.ZYKOS_MEDIA_CONSENT = consent;
+    window.ZYKOS_MEDIA_START_TS = Date.now();
+    localStorage.setItem('zykos_media_session_start', window.ZYKOS_MEDIA_START_TS);
+    console.log('[ZYKOS media] sesion de captura iniciada:', new Date().toISOString());
 }
 
 function showMediaConsent(onComplete) {
