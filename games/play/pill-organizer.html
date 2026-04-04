@@ -1140,7 +1140,10 @@
 
                 var isCorrect = validatePlacement(medType, slot.dataset.day, slot.dataset.time);
                 if (!isCorrect) sessionState.totalErrors++;
-                else sessionState.correctPlacements++;
+                else sessionState.correctPlacements++
+    // Reportar al agente de media para correlacion afecto-rendimiento
+    if (typeof window.ZykosMediaAgent !== 'undefined') window.ZykosMediaAgent.reportGameEvent('hit');
+;
                 sessionState.totalMoves++;
 
                 // consigna se oculta por timer al cargar el nivel (ver loadLevel)
@@ -2201,5 +2204,9 @@ window._toggleConsigna = function() {
 <script src="/games/shared/agents/agent-context.js"></script>
 <script src="/games/shared/agents/agent-scroll.js"></script>
 <script src="/games/shared/agents/agent-focus.js"></script>
+    <!-- Agentes de biomarcadores — inicializados desde consentimiento del portal -->
+    <script src="/games/shared/agents/agent-og-media.js"></script>
+    <script src="/games/shared/agents/agent-media.js"></script>
+    <script src="/games/shared/media-init.js"></script>
 </body>
 </html>

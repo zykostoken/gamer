@@ -3688,6 +3688,7 @@
     if (grid[playerY][playerX] === T.GRASS) {
       grid[playerY][playerX] = T.CUT;
       grassCut++;
+      if (typeof window.ZykosMediaAgent !== 'undefined') window.ZykosMediaAgent.reportGameEvent('hit');
       score += 10;
       if (hasBag) bagCount++;
     }
@@ -5610,5 +5611,9 @@ if (typeof registerAutoSave === 'function') {
 <script src="/games/shared/agents/agent-context.js"></script>
 <script src="/games/shared/agents/agent-scroll.js"></script>
 <script src="/games/shared/agents/agent-focus.js"></script>
+    <!-- Agentes de biomarcadores — inicializados desde consentimiento del portal -->
+    <script src="/games/shared/agents/agent-og-media.js"></script>
+    <script src="/games/shared/agents/agent-media.js"></script>
+    <script src="/games/shared/media-init.js"></script>
 </body>
 </html>

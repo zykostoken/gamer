@@ -66,3 +66,120 @@ function showZykosConsent(onAccept) {
     window.location.href = '/';
   };
 }
+
+
+// ================================================================
+// CONSENTIMIENTO DE CÁMARA Y MICRÓFONO
+// Se muestra DESPUÉS del consentimiento de datos, UNA SOLA VEZ.
+// El resultado se guarda en localStorage y el agente media lo lee.
+// ================================================================
+
+var ZYKOS_MEDIA_CONSENT_KEY = 'zykos_media_consent_v1';
+
+function getMediaConsent() {
+    try {
+        var raw = localStorage.getItem(ZYKOS_MEDIA_CONSENT_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch(e) { return null; }
+}
+
+function saveMediaConsent(cam, mic) {
+    var obj = { cam: !!cam, mic: !!mic, ts: new Date().toISOString(), skipped: (!cam && !mic) };
+    localStorage.setItem(ZYKOS_MEDIA_CONSENT_KEY, JSON.stringify(obj));
+    return obj;
+}
+
+// Inicializar agentes de media según consentimiento guardado
+// Llamar desde el portal después de que el usuario haya consentido
+function initMediaAgents(consent) {
+    if (!consent) return;
+    // agent-og-media: liviano, siempre si hay cualquier consentimiento
+    if (typeof window.ZykosOgMediaAgent !== 'undefined') {
+        window.ZykosOgMediaAgent.setConsent(consent.cam, consent.mic);
+    }
+    // agent-media: solo si hay consentimiento de cámara (requiere face-api)
+    if (typeof window.ZykosMediaAgent !== 'undefined') {
+        window.ZykosMediaAgent.setConsent(consent.cam, consent.mic);
+    }
+    // Guardar en window para que los juegos puedan leerlo
+    window.ZYKOS_MEDIA_CONSENT = consent;
+}
+
+function showMediaConsent(onComplete) {
+    // Si ya fue respondido, inicializar directamente
+    var existing = getMediaConsent();
+    if (existing) {
+        initMediaAgents(existing);
+        if (onComplete) onComplete(existing);
+        return;
+    }
+
+    var overlay = document.createElement('div');
+    overlay.id = 'zykos-media-consent-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;padding:16px;';
+
+    overlay.innerHTML =
+        '<div style="background:#111827;border:1px solid rgba(0,212,255,0.2);border-radius:16px;padding:28px;max-width:480px;width:100%;color:#e2e8f0;font-family:system-ui,sans-serif;">' +
+            '<h3 style="font-size:1rem;font-weight:600;margin-bottom:6px;color:#00d4ff;">Biomarcadores opcionales</h3>' +
+            '<p style="font-size:0.8rem;color:#94a3b8;line-height:1.6;margin-bottom:20px;">' +
+                'ZYKOS GAMER puede capturar expresiones faciales y audio ambiental para enriquecer el perfil cognitivo. ' +
+                'Todo el procesamiento ocurre <strong style="color:#e2e8f0;">en tu dispositivo</strong> — ningún video ni audio se envía al servidor. ' +
+                'Solo se guardan métricas numéricas computadas localmente.' +
+            '</p>' +
+            '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">' +
+                '<label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:pointer;">' +
+                    '<input type="checkbox" id="consent-cam" style="width:16px;height:16px;accent-color:#00d4ff;">' +
+                    '<div>' +
+                        '<div style="font-size:0.85rem;font-weight:500;">Cámara — expresiones faciales</div>' +
+                        '<div style="font-size:0.72rem;color:#94a3b8;">Action Units (Ekman 1978), sonrisa genuina, ceño fruncido, parpadeo</div>' +
+                    '</div>' +
+                '</label>' +
+                '<label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:pointer;">' +
+                    '<input type="checkbox" id="consent-mic" style="width:16px;height:16px;accent-color:#00d4ff;">' +
+                    '<div>' +
+                        '<div style="font-size:0.85rem;font-weight:500;">Micrófono — contexto sonoro</div>' +
+                        '<div style="font-size:0.72rem;color:#94a3b8;">Nivel ambiental en dB, episodios de voz — sin grabar, sin transcribir</div>' +
+                    '</div>' +
+                '</label>' +
+            '</div>' +
+            '<div style="display:flex;gap:10px;">' +
+                '<button id="media-consent-accept" style="flex:1;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#00d4ff,#0099cc);color:#000;font-weight:700;font-size:0.9rem;cursor:pointer;">Confirmar selección</button>' +
+                '<button id="media-consent-skip" style="padding:13px 18px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:transparent;color:#94a3b8;font-size:0.85rem;cursor:pointer;">Sin biomarcadores</button>' +
+            '</div>' +
+            '<p style="font-size:0.68rem;color:#4b5563;margin-top:12px;line-height:1.5;">' +
+                'Podés cambiar esta preferencia en cualquier momento desde tu perfil. ' +
+                'El consentimiento se registra con timestamp y se puede revocar.' +
+            '</p>' +
+        '</div>';
+
+    document.body.appendChild(overlay);
+
+    document.getElementById('media-consent-accept').onclick = function() {
+        var cam = document.getElementById('consent-cam').checked;
+        var mic = document.getElementById('consent-mic').checked;
+        var consent = saveMediaConsent(cam, mic);
+        overlay.remove();
+        initMediaAgents(consent);
+        // Registrar en Supabase (no bloqueante)
+        try {
+            var sb = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+            if (sb) {
+                sb.from('digital_consents').insert({
+                    user_identifier: localStorage.getItem('zykos_token') || 'anonymous',
+                    consent_type: 'media_biomarcadores',
+                    consent_version: 'v1',
+                    status: 'active',
+                    metadata: JSON.stringify({ cam: cam, mic: mic }),
+                    created_at: new Date().toISOString()
+                }).then(function(){}).catch(function(){});
+            }
+        } catch(e) {}
+        if (onComplete) onComplete(consent);
+    };
+
+    document.getElementById('media-consent-skip').onclick = function() {
+        var consent = saveMediaConsent(false, false);
+        overlay.remove();
+        if (onComplete) onComplete(consent);
+    };
+}

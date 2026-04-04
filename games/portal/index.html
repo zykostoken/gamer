@@ -333,12 +333,21 @@ async function init() {
     }
 
 
-    showZykosConsent(function() { renderGames(data.role === 'superadmin' ? 999 : data.sessions_remaining); });
+    showZykosConsent(function() {
+      // Paso 2: consentimiento de biomarcadores (cam/mic)
+      // Se muestra una sola vez — si ya fue respondido, pasa directo
+      showMediaConsent(function() {
+        renderGames(data.role === 'superadmin' ? 999 : data.sessions_remaining);
+      });
+    });
   } catch(e) { document.getElementById('greeting').textContent = 'Error: ' + e.message; }
 }
 
 init();
 </script>
 <script src="/js/track.js"></script>
+<!-- Agentes de biomarcadores media — inicializados desde el portal, no desde los juegos -->
+<script src="/games/shared/agents/agent-og-media.js"></script>
+<script src="/games/shared/agents/agent-media.js"></script>
 </body>
 </html>
