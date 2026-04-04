@@ -311,6 +311,27 @@ var METRIC_DICTIONARY = {
     mic_speech_episodes:          { domain:'MEDIA', unit:'count',  range:[0,200],    desc:'Episodios de vocalización del paciente.' },
     mic_external_noise_count:     { domain:'MEDIA', unit:'count',  range:[0,500],    desc:'Picos de ruido externo >70dB. Proxy de distractores ambientales.' },
 
+    // ---------------------------------------------------------------
+    // DOMINIO OG_MEDIA — Original Graphics Media (capa fundacional)
+    // Vanilla JS, sin dependencias. Bajo CPU. Hardware hospitalario.
+    // Captura presencia, luminancia, canal verde (proxy PPG), audio.
+    // Lit: Verkruysse (2008), Poh (2010), De Haan & Jeanne (2013)
+    // ---------------------------------------------------------------
+    og_cam_present:               { domain:'OG_MEDIA', unit:'bool',   range:[0,1],      desc:'1 si la camara estuvo activa en la sesion.' },
+    og_cam_presence_pct:          { domain:'OG_MEDIA', unit:'ratio',  range:[0,1],      desc:'Fraccion del tiempo con contenido visual en el frame.' },
+    og_cam_blackout_count:        { domain:'OG_MEDIA', unit:'count',  range:[0,100],    desc:'Episodios sin contenido visual. Correlato de ausencia fisica.' },
+    og_cam_blackout_max_ms:       { domain:'OG_MEDIA', unit:'ms',     range:[0,600000], desc:'Blackout mas largo de la sesion.' },
+    og_cam_luminance_mean:        { domain:'OG_MEDIA', unit:'0-255',  range:[0,255],    desc:'Luminancia media del frame (ITU-R BT.709).' },
+    og_cam_luminance_cv:          { domain:'OG_MEDIA', unit:'ratio',  range:[0,3],      desc:'Variabilidad de luminancia. Alto=cambios de luz o movimiento.' },
+    og_cam_green_channel_mean:    { domain:'OG_MEDIA', unit:'0-255',  range:[0,255],    desc:'Canal verde medio. Proxy PPG para HR (Verkruysse 2008, Poh 2010).' },
+    og_cam_green_cv:              { domain:'OG_MEDIA', unit:'ratio',  range:[0,3],      desc:'Variabilidad canal verde. Correlato de pulso cardiaco rPPG (De Haan 2013).' },
+    og_mic_present:               { domain:'OG_MEDIA', unit:'bool',   range:[0,1],      desc:'1 si el microfono estuvo activo en la sesion.' },
+    og_mic_db_mean:               { domain:'OG_MEDIA', unit:'dB',     range:[0,100],    desc:'Volumen ambiental medio. Contexto acustico de la sesion.' },
+    og_mic_db_cv:                 { domain:'OG_MEDIA', unit:'ratio',  range:[0,3],      desc:'Variabilidad de volumen. Alto=entorno ruidoso o variable.' },
+    og_mic_silence_pct:           { domain:'OG_MEDIA', unit:'ratio',  range:[0,1],      desc:'Fraccion del tiempo en silencio (<30dB). Entorno controlado.' },
+    og_mic_speech_episodes:       { domain:'OG_MEDIA', unit:'count',  range:[0,500],    desc:'Episodios de vocalizacion (>50dB). Lit: Cummins (2015).' },
+    og_mic_peak_db:               { domain:'OG_MEDIA', unit:'dB',     range:[0,100],    desc:'Pico maximo de audio. Ruido externo extremo o vocalizacion intensa.' },
+
     // Contexto de sesión — imprescindible para interpretar cualquier métrica conductual.
     // Sesión 1 de un paciente nuevo ≠ sesión 15 de un paciente establecido.
     // La expansividad (salirse, explorar) en sesión 1 puede ser un indicador
