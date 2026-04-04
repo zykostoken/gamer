@@ -6,15 +6,15 @@
 // perseveración, capacidad inhibitoria, y economía cognitiva.
 // No sabe qué está haciendo el juego — solo mira la conducta.
 //
-// Métricas canónicas:
-// - errores_comision, errores_omision
-// - perseveracion_count
-// - impulsividad_ratio
-// - count_drags_abortados
-// - ratio_acciones_util
-// - secuencia_correcta_pct
-// - ratio_completados, eficacia_plan_propio
-// - plan_failed_attempts
+// Métricas que PUEDE producir (conducta observable desde DOM):
+// - perseveracion_count   — mismo target 3+ veces consecutivo
+// - impulsividad_ratio    — clicks < 150ms entre si / total clicks
+// - count_drags_abortados — mousedown sin mouseup en mismo target
+// - total_actions         — conteo bruto de interacciones
+//
+// NO puede producir (requieren logica interna del juego):
+// - errores_comision, errores_omision — el juego sabe si fue correcto, el agente no
+// - ratio_completados, ratio_acciones_util — requieren conocer el objetivo del juego
 // ================================================================
 
 (function() {
@@ -34,8 +34,7 @@ var state = {
     repeatedTargets: {},   // count per target_id
     
     // DOM tracking
-    removedAfterClick: 0,  // elements removed shortly after click (correct actions)
-    notRemovedAfterClick: 0, // clicked but nothing happened (wrong target / commission)
+    // errores_comision viene del juego via ZYKOS.endSession() — no del DOM
     
     observer: null
 };
@@ -67,15 +66,8 @@ function onClick(e) {
     state.targetSequence.push(targetId);
     state.repeatedTargets[targetId] = (state.repeatedTargets[targetId] || 0) + 1;
     
-    // Track if element gets removed after click (= correct action in most games)
-    var clickedEl = e.target;
-    setTimeout(function() {
-        if (!clickedEl.parentNode || !document.contains(clickedEl)) {
-            state.removedAfterClick++;
-        } else {
-            state.notRemovedAfterClick++;
-        }
-    }, 500);
+    // errores_comision y ratio_completados son propios del juego
+    // este agente no puede inferirlos desde el DOM
 }
 
 function onMouseDown(e) {
@@ -132,23 +124,11 @@ var agent = {
         var impulsivity = total > 0 ? state.rapidActions / total : 0;
         var inhibition = total > 0 ? state.stoppedActions / total : 0;
         
-        // Economy: useful actions (removed element) / total actions
-        var usefulActions = state.removedAfterClick;
-        var economy = total > 0 ? usefulActions / total : 0;
-        
-        // Commission estimate: clicked but nothing happened
-        var commissions = state.notRemovedAfterClick;
-        
-        // Eficacia: useful / (useful + wasted)
-        var eficacia = (usefulActions + commissions) > 0 ? usefulActions / (usefulActions + commissions) : null;
-        
+        // Solo mediciones conductuales puras — sin inferencia de logica del juego
         return {
-            errores_comision:       commissions,
             perseveracion_count:    countPerseverations(),
             impulsividad_ratio:     +(impulsivity.toFixed(3)),
-            count_drags_abortados:       +(inhibition.toFixed(3)),
-            ratio_acciones_util:     +(economy.toFixed(3)),
-            ratio_completados:      eficacia !== null ? +(eficacia.toFixed(3)) : null,
+            count_drags_abortados:  +(inhibition.toFixed(3)),
             total_actions:          total,
             
             _raw_inhibition: {
