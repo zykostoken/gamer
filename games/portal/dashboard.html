@@ -183,6 +183,24 @@
             </table>
         </div>
 
+        <!-- TIMESERIES CHART — variaciones apareadas -->
+        <div class="charts-grid" style="margin-top:18px;" id="timeseries-section" style="display:none;">
+            <div class="chart-card" style="grid-column:1/-1;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                    <h3 style="margin:0;">[C] Variaciones por sesión</h3>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;" id="metric-toggles"></div>
+                </div>
+                <p style="color:var(--muted);font-size:0.78rem;margin-bottom:14px;">
+                    Z-scores intra-sujeto — todas las métricas en la misma escala.
+                    Líneas que suben/bajan juntas indican variación concomitante.
+                    El clínico interpreta.
+                </p>
+                <div style="position:relative;height:320px;">
+                    <canvas id="chart-timeseries"></canvas>
+                </div>
+            </div>
+        </div>
+
         <!-- MOTOR & CLINICAL METRICS PANEL -->
         <div class="charts-grid" style="margin-top:18px;">
             <div class="chart-card" style="grid-column:1/-1;">
@@ -284,6 +302,10 @@ async function loadDashboard() {
         renderBiometricsTable(biometrics || [], patients || [], gameMap);
         renderClinicalMetrics(gameMetrics || [], patients || []);
         renderMotorProfile(gameMetrics || []);
+
+        // Cargar timeseries si hay filtro de paciente activo
+        const dniActivo = document.getElementById('filter-patient').value;
+        if (dniActivo) loadTimeseries(dniActivo);
 
         document.getElementById('loading').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
@@ -591,6 +613,170 @@ function renderMotorProfile(metrics) {
         metricCard('Reinicios Total', totalResets, totalResets > 10 ? 'var(--warn)' : 'var(--text)') +
     '</div>' +
     '<p style="color:var(--muted);font-size:0.72rem;margin-top:10px;text-align:center;">Promedio de ' + motorData.length + ' sesiones</p>');
+}
+
+// ========== TIMESERIES — variaciones apareadas ==========
+let chartTimeseries = null;
+
+const METRIC_COLORS = {
+    z_rt_mean:          '#60a5fa',  // azul
+    z_rt_cv:            '#93c5fd',  // azul claro
+    z_decaimiento:      '#f97316',  // naranja
+    z_hesitaciones:     '#fbbf24',  // amarillo
+    z_errores_comision: '#f87171',  // rojo
+    z_errores_omision:  '#fca5a5',  // rojo claro
+    z_impulsividad:     '#c084fc',  // violeta
+    z_eficiencia_tray:  '#34d399',  // verde
+    z_jitter_reposo:    '#6ee7b7',  // verde claro
+    z_precision_dep:    '#a78bfa',  // lila
+    z_economia:         '#2dd4bf',  // teal
+    z_vel_cv:           '#f472b6',  // rosa
+};
+
+const METRIC_LABELS = {
+    z_rt_mean:          'RT medio',
+    z_rt_cv:            'RT variabilidad',
+    z_decaimiento:      'Decaimiento',
+    z_hesitaciones:     'Hesitaciones',
+    z_errores_comision: 'Errores comision',
+    z_errores_omision:  'Errores omision',
+    z_impulsividad:     'Impulsividad',
+    z_eficiencia_tray:  'Efic. trayectoria',
+    z_jitter_reposo:    'Jitter reposo',
+    z_precision_dep:    'Precision deposito',
+    z_economia:         'Economia cognitiva',
+    z_vel_cv:           'Vel. variabilidad',
+};
+
+// Métricas visibles por defecto al cargar
+const DEFAULT_VISIBLE = ['z_rt_mean', 'z_rt_cv', 'z_errores_comision', 'z_eficiencia_tray', 'z_jitter_reposo'];
+
+async function loadTimeseries(dni) {
+    const section = document.getElementById('timeseries-section');
+    if (!section) return;
+
+    try {
+        const sb = getSupabaseClient();
+        const { data, error } = await sb.rpc('zykos_get_metric_zscores', {
+            p_dni: dni,
+            p_days_back: 90
+        });
+
+        if (error || !data || data.length < 2) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+
+        const labels = data.map(function(r) {
+            return 'S' + r.sesion_n + ' (' + new Date(r.sesion_ts).toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit' }) + ')';
+        });
+
+        // Construir datasets
+        const datasets = Object.keys(METRIC_LABELS).map(function(key) {
+            const vals = data.map(function(r) { return r[key] != null ? r[key] : null; });
+            const hasData = vals.some(function(v) { return v !== null; });
+            return {
+                label: METRIC_LABELS[key],
+                data: vals,
+                borderColor: METRIC_COLORS[key],
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                tension: 0.3,
+                hidden: !DEFAULT_VISIBLE.includes(key) || !hasData,
+                spanGaps: true,
+                _key: key
+            };
+        });
+
+        // Renderizar toggles
+        const togglesDiv = document.getElementById('metric-toggles');
+        togglesDiv.innerHTML = '';
+        datasets.forEach(function(ds) {
+            const btn = document.createElement('button');
+            btn.textContent = ds.label;
+            btn.dataset.key = ds._key;
+            btn.style.cssText = 'padding:3px 9px;border-radius:20px;border:1.5px solid ' + METRIC_COLORS[ds._key] + ';background:' + (ds.hidden ? 'transparent' : METRIC_COLORS[ds._key] + '33') + ';color:' + METRIC_COLORS[ds._key] + ';font-size:0.72rem;cursor:pointer;';
+            btn.addEventListener('click', function() {
+                if (!chartTimeseries) return;
+                const idx = datasets.findIndex(function(d) { return d._key === ds._key; });
+                const meta = chartTimeseries.getDatasetMeta(idx);
+                meta.hidden = !meta.hidden;
+                btn.style.background = meta.hidden ? 'transparent' : METRIC_COLORS[ds._key] + '33';
+                chartTimeseries.update();
+            });
+            togglesDiv.appendChild(btn);
+        });
+
+        // Línea de referencia en 0
+        const zeroLine = {
+            id: 'zeroLine',
+            beforeDraw: function(chart) {
+                const ctx = chart.ctx;
+                const yScale = chart.scales.y;
+                const y0 = yScale.getPixelForValue(0);
+                ctx.save();
+                ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(chart.chartArea.left, y0);
+                ctx.lineTo(chart.chartArea.right, y0);
+                ctx.stroke();
+                ctx.restore();
+            }
+        };
+
+        if (chartTimeseries) chartTimeseries.destroy();
+        chartTimeseries = new Chart(document.getElementById('chart-timeseries'), {
+            type: 'line',
+            data: { labels: labels, datasets: datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                if (ctx.parsed.y == null) return '';
+                                const sign = ctx.parsed.y >= 0 ? '+' : '';
+                                return ctx.dataset.label + ': ' + sign + ctx.parsed.y.toFixed(2) + ' SD';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#888', font: { size: 11 } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: {
+                            color: '#888',
+                            font: { size: 11 },
+                            callback: function(v) { return (v >= 0 ? '+' : '') + v + ' SD'; }
+                        },
+                        title: {
+                            display: true,
+                            text: 'z-score intra-sujeto',
+                            color: '#666',
+                            font: { size: 11 }
+                        }
+                    }
+                }
+            },
+            plugins: [zeroLine]
+        });
+
+    } catch(e) {
+        console.warn('[timeseries] Error:', e.message);
+    }
 }
 
 // ========== INIT ==========
