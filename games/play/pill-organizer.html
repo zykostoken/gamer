@@ -23,7 +23,35 @@
             color: #1e293b;
         }
 
-        .pill-source {
+        .pill-fraction-hint {
+    font-size:.65rem;font-weight:700;color:#8b5cf6;
+    display:block;text-align:center;margin-top:3px;
+    letter-spacing:.05em;
+}
+.pill-source[data-fraction="0.5"] { filter: brightness(1.1); }
+.pill-source[data-fraction="0.25"] { filter: brightness(1.2) saturate(1.3); }
+.pill-source:not([data-fraction]) .fraction-label,
+.pill-source[data-fraction="1"] .fraction-label { display:none; }
+.pill-source .fraction-label {
+    position:absolute;bottom:2px;right:3px;
+    font-size:9px;font-weight:900;color:#fff;
+    background:rgba(0,0,0,.45);border-radius:4px;
+    padding:1px 4px;pointer-events:none;
+}
+.pill-source { position:relative; }
+.ctx-menu {
+    position:fixed;z-index:99999;background:var(--surface,#1a1a27);
+    border:1px solid rgba(255,255,255,.12);border-radius:10px;
+    padding:6px 0;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.4);
+    font-family:'DM Sans',sans-serif;
+}
+.ctx-menu-item {
+    padding:9px 16px;font-size:.82rem;cursor:pointer;
+    color:#e8e8ed;display:flex;align-items:center;gap:8px;
+}
+.ctx-menu-item:hover { background:rgba(99,102,241,.15); }
+.ctx-menu-item.active { color:#a78bfa;font-weight:600; }
+.pill-source {
             cursor: grab;
             transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
@@ -620,6 +648,134 @@
             }
         ];
 
+
+        // ================================================================
+        // POOL DE MEDICAMENTOS — rota entre partidas
+        // El nivel define la estructura. El pool provee el contenido.
+        // ================================================================
+        const MED_POOL = [
+            { id:'risperidona',   name:'Risperidona',   dotColor:'#ef4444', colors:{from:'from-red-400',to:'to-red-600',border:'border-red-700',bgFrom:'from-red-50',bgTo:'to-red-100',borderCard:'border-red-300'}, shape:'redondo',   size:'pequeño' },
+            { id:'clonazepam',    name:'Clonazepam',    dotColor:'#3b82f6', colors:{from:'from-blue-400',to:'to-blue-600',border:'border-blue-700',bgFrom:'from-blue-50',bgTo:'to-blue-100',borderCard:'border-blue-300'}, shape:'redondo',   size:'pequeño' },
+            { id:'sertralina',    name:'Sertralina',    dotColor:'#22c55e', colors:{from:'from-green-400',to:'to-green-600',border:'border-green-700',bgFrom:'from-green-50',bgTo:'to-green-100',borderCard:'border-green-300'}, shape:'ovalado',   size:'mediano' },
+            { id:'melatonina',    name:'Melatonina',    dotColor:'#a855f7', colors:{from:'from-purple-400',to:'to-purple-600',border:'border-purple-700',bgFrom:'from-purple-50',bgTo:'to-purple-100',borderCard:'border-purple-300'}, shape:'redondo',   size:'pequeño' },
+            { id:'litio',         name:'Litio',         dotColor:'#eab308', colors:{from:'from-yellow-400',to:'to-yellow-600',border:'border-yellow-700',bgFrom:'from-yellow-50',bgTo:'to-yellow-100',borderCard:'border-yellow-300'}, shape:'ovalado',   size:'grande' },
+            { id:'sertralina50',  name:'Sertralina 50', dotColor:'#16a34a', colors:{from:'from-emerald-400',to:'to-emerald-600',border:'border-emerald-700',bgFrom:'from-emerald-50',bgTo:'to-emerald-100',borderCard:'border-emerald-300'}, shape:'ovalado',   size:'mediano' },
+            { id:'haloperidol',   name:'Haloperidol',   dotColor:'#f97316', colors:{from:'from-orange-400',to:'to-orange-600',border:'border-orange-700',bgFrom:'from-orange-50',bgTo:'to-orange-100',borderCard:'border-orange-300'}, shape:'redondo',   size:'pequeño' },
+            { id:'quetiapina',    name:'Quetiapina',    dotColor:'#06b6d4', colors:{from:'from-cyan-400',to:'to-cyan-600',border:'border-cyan-700',bgFrom:'from-cyan-50',bgTo:'to-cyan-100',borderCard:'border-cyan-300'}, shape:'ovalado',   size:'grande' },
+            { id:'olanzapina',    name:'Olanzapina',    dotColor:'#ec4899', colors:{from:'from-pink-400',to:'to-pink-600',border:'border-pink-700',bgFrom:'from-pink-50',bgTo:'to-pink-100',borderCard:'border-pink-300'}, shape:'redondo',   size:'mediano' },
+            { id:'levotiroxina',  name:'Levotiroxina',  dotColor:'#8b5cf6', colors:{from:'from-violet-400',to:'to-violet-600',border:'border-violet-700',bgFrom:'from-violet-50',bgTo:'to-violet-100',borderCard:'border-violet-300'}, shape:'redondo',   size:'pequeño' },
+            { id:'atenolol',      name:'Atenolol',      dotColor:'#64748b', colors:{from:'from-slate-400',to:'to-slate-600',border:'border-slate-700',bgFrom:'from-slate-50',bgTo:'to-slate-100',borderCard:'border-slate-300'}, shape:'redondo',   size:'mediano' },
+            { id:'metformina',    name:'Metformina',    dotColor:'#92400e', colors:{from:'from-amber-600',to:'to-amber-800',border:'border-amber-900',bgFrom:'from-amber-50',bgTo:'to-amber-100',borderCard:'border-amber-300'}, shape:'oblongo',   size:'grande' },
+            { id:'enalapril',     name:'Enalapril',     dotColor:'#065f46', colors:{from:'from-teal-400',to:'to-teal-600',border:'border-teal-700',bgFrom:'from-teal-50',bgTo:'to-teal-100',borderCard:'border-teal-300'}, shape:'redondo',   size:'pequeño' },
+            { id:'omeprazol',     name:'Omeprazol',     dotColor:'#7c3aed', colors:{from:'from-purple-500',to:'to-purple-700',border:'border-purple-800',bgFrom:'from-purple-50',bgTo:'to-purple-100',borderCard:'border-purple-300'}, shape:'capsula',   size:'mediano' },
+            { id:'amlodipina',    name:'Amlodipina',    dotColor:'#be123c', colors:{from:'from-rose-400',to:'to-rose-600',border:'border-rose-700',bgFrom:'from-rose-50',bgTo:'to-rose-100',borderCard:'border-rose-300'}, shape:'redondo',   size:'pequeño' },
+            { id:'gabapentin',    name:'Gabapentin',    dotColor:'#0891b2', colors:{from:'from-sky-400',to:'to-sky-600',border:'border-sky-700',bgFrom:'from-sky-50',bgTo:'to-sky-100',borderCard:'border-sky-300'}, shape:'capsula',   size:'grande' },
+            { id:'lamotrigina',   name:'Lamotrigina',   dotColor:'#d97706', colors:{from:'from-yellow-500',to:'to-yellow-700',border:'border-yellow-800',bgFrom:'from-yellow-50',bgTo:'to-yellow-100',borderCard:'border-yellow-300'}, shape:'ovalado',   size:'mediano' },
+            { id:'valproato',     name:'Valproato',     dotColor:'#4f46e5', colors:{from:'from-indigo-400',to:'to-indigo-600',border:'border-indigo-700',bgFrom:'from-indigo-50',bgTo:'to-indigo-100',borderCard:'border-indigo-300'}, shape:'comprimido', size:'grande' },
+            { id:'lorazepam',     name:'Lorazepam',     dotColor:'#0f766e', colors:{from:'from-teal-500',to:'to-teal-700',border:'border-teal-800',bgFrom:'from-teal-50',bgTo:'to-teal-100',borderCard:'border-teal-300'}, shape:'redondo',   size:'pequeño' },
+            { id:'aripiprazol',   name:'Aripiprazol',   dotColor:'#b45309', colors:{from:'from-amber-500',to:'to-amber-700',border:'border-amber-800',bgFrom:'from-amber-50',bgTo:'to-amber-100',borderCard:'border-amber-300'}, shape:'ovalado',   size:'mediano' }
+        ];
+
+        // Patrones de schedule por complejidad
+        const SCHEDULE_PATTERNS = {
+            simple: [
+                { am:true,  pm:false, days:[1,2,3,4,5,6,7], desc:'1 comp. Mañana (todos los días)',       half:false },
+                { am:false, pm:true,  days:[1,2,3,4,5,6,7], desc:'1 comp. Noche (todos los días)',        half:false },
+                { am:true,  pm:true,  days:[1,2,3,4,5,6,7], desc:'1 comp. Mañana + 1 comp. Noche',        half:false }
+            ],
+            intermediate: [
+                { am:true,  pm:false, days:[1,2,3,4,5],     desc:'1 comp. Mañana (Lunes a Viernes)',      half:false },
+                { am:false, pm:true,  days:[1,2,3,4,5],     desc:'1 comp. Noche (Lunes a Viernes)',       half:false },
+                { am:true,  pm:false, days:[6,7],            desc:'1 comp. Mañana (fin de semana)',        half:false },
+                { am:false, pm:true,  days:[6,7],            desc:'1 comp. Noche (fin de semana)',         half:false }
+            ],
+            half_dose: [
+                { am:true,  pm:false, days:[1,2,3,4,5,6,7], desc:'½ comp. Mañana (todos los días)',       half:true  },
+                { am:false, pm:true,  days:[1,2,3,4,5,6,7], desc:'½ comp. Noche (todos los días)',        half:true  },
+                { am:true,  pm:true,  days:[1,2,3,4,5,6,7], desc:'1 comp. Mañana + ½ comp. Noche',        half:'pm'  },
+                { am:true,  pm:true,  days:[1,2,3,4,5,6,7], desc:'½ comp. Mañana + 1 comp. Noche',        half:'am'  }
+            ],
+            alternating: [
+                { am:true,  pm:false, days:[1,3,5,7],        desc:'1 comp. Mañana (Lunes, Miércoles, Viernes, Dom.)', half:false },
+                { am:false, pm:true,  days:[2,4,6],           desc:'1 comp. Noche (Martes, Jueves, Sábado)',           half:false },
+                { am:true,  pm:false, days:[3,5],             desc:'1 comp. Mañana (Miércoles y Viernes)',             half:false },
+                { am:false, pm:true,  days:[1,3,5],           desc:'1 comp. Noche (Lunes, Miércoles, Viernes)',        half:false }
+            ],
+            conditional: [
+                { am:true,  pm:false, days:[1,2,3,4,5],     desc:'1 comp. Mañana en ayunas (Lunes a Viernes)',  half:false, note:'ayunas' },
+                { am:false, pm:true,  days:[3,5],             desc:'1 comp. Noche si hay ansiedad (Mié y Vie)',   half:false, note:'condicional' },
+                { am:true,  pm:true,  days:[1,2,3,4,5,6,7], desc:'1 comp. Mañana + 1 comp. Noche (control TA)', half:false, note:'TA' }
+            ]
+        };
+
+        // Definicion estructural de cada nivel — SIN contenido especifico
+        const LEVEL_DEFS = [
+            { id:1, name:'Nivel 1',  n_meds:2, patterns:['simple'],                          allow_half:false, similar_colors:false, consigna:'Organizá la medicación semanal con 2 medicamentos. Horarios simples.' },
+            { id:2, name:'Nivel 2',  n_meds:3, patterns:['simple','intermediate'],           allow_half:false, similar_colors:false, consigna:'Ahora con 3 medicamentos. Uno solo se toma de Lunes a Viernes.' },
+            { id:3, name:'Nivel 3',  n_meds:4, patterns:['simple','intermediate'],           allow_half:false, similar_colors:false, consigna:'4 medicamentos. Uno solo algunos días de la semana.' },
+            { id:4, name:'Nivel 4',  n_meds:4, patterns:['simple','intermediate','half_dose'], allow_half:true,  similar_colors:false, consigna:'4 medicamentos. Algunos en media pastilla. Leé bien las dosis.' },
+            { id:5, name:'Nivel 5',  n_meds:5, patterns:['simple','intermediate','half_dose','alternating'], allow_half:true, similar_colors:false, consigna:'5 medicamentos con días alternos y medias dosis.' },
+            { id:6, name:'Nivel 6',  n_meds:5, patterns:['simple','intermediate','half_dose','alternating'], allow_half:true, similar_colors:true,  consigna:'5 medicamentos. Cuidado — algunos colores se parecen.' },
+            { id:7, name:'Nivel 7',  n_meds:6, patterns:['simple','intermediate','half_dose','alternating','conditional'], allow_half:true, similar_colors:true, consigna:'6 medicamentos con instrucciones especiales. Máxima atención.' }
+        ];
+
+        // Genera contenido dinamico para un nivel — distinto cada partida
+        function buildLevelContent(levelDef) {
+            // Seleccionar meds al azar del pool (sin repetir)
+            const poolShuffled = shuffleArray([...MED_POOL]);
+            const selected = poolShuffled.slice(0, levelDef.n_meds);
+
+            // Si similar_colors, forzar 2 meds con colores parecidos
+            // (simplificado: dejar al azar del pool — el pool tiene rojos/bordes similares naturalmente)
+
+            // Asignar schedules al azar según patrones permitidos
+            const allPatterns = levelDef.patterns.flatMap(p => SCHEDULE_PATTERNS[p] || []);
+            const schedulesShuffled = shuffleArray([...allPatterns]);
+
+            return selected.map((med, i) => {
+                const sch = schedulesShuffled[i % schedulesShuffled.length];
+                return {
+                    id:          med.id,
+                    name:        med.name,
+                    colorFrom:   med.colors.from,
+                    colorTo:     med.colors.to,
+                    borderColor: med.colors.border,
+                    bgFrom:      med.colors.bgFrom,
+                    bgTo:        med.colors.bgTo,
+                    borderCard:  med.colors.borderCard,
+                    dotColor:    med.dotColor,
+                    shape:       med.shape,
+                    size:        med.size,
+                    half:        sch.half || false,
+                    schedule:    { am: sch.am, pm: sch.pm, days: sch.days },
+                    dosisDesc:   sch.desc,
+                    note:        sch.note || null
+                };
+            });
+        }
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Construir LEVELS dinamicamente al inicio y en cada retry
+        function buildLevels() {
+            return LEVEL_DEFS.map(def => ({
+                id:          def.id,
+                name:        def.name,
+                consigna:    def.consigna,
+                levelDef:    def,
+                medications: buildLevelContent(def)
+            }));
+        }
+
+        // LEVELS ahora es dinamico — se regenera en cada partida
+        let LEVELS = buildLevels();
+
         const DAY_NAMES = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
         // ===========================================
@@ -753,21 +909,48 @@
                 <h4>[L] ${level.name} — ${level.consigna}</h4>
                 <div style="margin-top:6px;">${medsHtml}</div>
             `;
+            // Mostrar consigna, luego ocultar despues de 5s (ejercicio de memoria)
+            consignaEl.style.display = 'block';
+            consignaEl.style.opacity = '1';
+            consignaEl.style.maxHeight = '200px';
+            consignaEl.style.overflow = 'hidden';
+            consignaEl.style.transition = 'opacity 0.6s ease, max-height 0.6s ease';
+            clearTimeout(window._consignaTimer);
+            window._consignaTimer = setTimeout(function() {
+                consignaEl.style.opacity = '0';
+                consignaEl.style.maxHeight = '0';
+                setTimeout(function() { consignaEl.style.display = 'none'; }, 650);
+            }, 5000);
 
             // Render dispensador
             const dispEl = document.getElementById('dispensador-meds');
-            dispEl.innerHTML = level.medications.map(m => `
+            dispEl.innerHTML = level.medications.map(m => {
+                // Visualizacion de media pastilla: semicirculo con linea de corte
+                const isHalf = m.half === true || m.half === 'am' || m.half === 'pm';
+                const pillStyle = isHalf
+                    ? `width:48px;height:48px;border-radius:50%;background:linear-gradient(90deg,var(--fallback) 50%,white 50%);position:relative;overflow:hidden;`
+                    : '';
+                const pillShape = isHalf
+                    ? `<div class="pill-source" data-med="${m.id}" data-half="${m.half}"
+                        style="width:48px;height:48px;border-radius:50%;overflow:hidden;position:relative;cursor:grab;">
+                        <div style="position:absolute;left:0;top:0;width:50%;height:100%;background:linear-gradient(to bottom right,var(--tw-gradient-from,#ef4444),var(--tw-gradient-to,#dc2626));"></div>
+                        <div style="position:absolute;right:0;top:0;width:50%;height:100%;background:white;"></div>
+                        <div style="position:absolute;left:50%;top:0;width:2px;height:100%;background:rgba(0,0,0,.15);"></div>
+                      </div>`
+                    : `<div class="pill-source w-12 h-12 rounded-full bg-gradient-to-br ${m.colorFrom} ${m.colorTo} border-3 ${m.borderColor}" data-med="${m.id}" data-fraction="1" title="Click derecho para partir"><span class="fraction-label">1</span></div>`;
+                const noteHtml = m.note ? `<span class="text-xs font-bold" style="color:#f97316;display:block;margin-top:2px">${m.note}</span>` : '';
+                return `
                 <div class="bg-gradient-to-br ${m.bgFrom} ${m.bgTo} p-5 rounded-2xl border-3 ${m.borderCard} shadow-md">
                     <div class="w-20 h-20 mx-auto bg-white rounded-full flex items-center justify-center mb-3 shadow-xl">
-                        <div class="pill-source w-12 h-12 rounded-full bg-gradient-to-br ${m.colorFrom} ${m.colorTo} border-3 ${m.borderColor}"
-                             data-med="${m.id}"></div>
+                        ${pillShape}
                     </div>
                     <div class="text-center">
                         <span class="font-bold text-gray-800 block">${m.name}</span>
+                        ${isHalf ? '<span style="font-size:.7rem;font-weight:700;color:#8b5cf6;display:block">½ pastilla</span>' : ''}
                         <span class="text-xs text-gray-600 block mt-1">${m.dosisDesc}</span>
+                        ${noteHtml}
                     </div>
-                </div>
-            `).join('');
+                </div>`;}).join('');
 
             // Reset metrics display
             document.getElementById('tremor-display').textContent = '--';
@@ -945,17 +1128,7 @@
                 else sessionState.correctPlacements++;
                 sessionState.totalMoves++;
 
-                // Hide consigna after first placement (memory exercise)
-                if (sessionState.totalMoves === 1) {
-                  var cEl = document.getElementById('level-consigna');
-                  if (cEl) {
-                    cEl.style.transition = 'opacity 0.5s, max-height 0.5s';
-                    cEl.style.opacity = '0';
-                    cEl.style.maxHeight = '0';
-                    cEl.style.overflow = 'hidden';
-                    setTimeout(function(){ cEl.style.display = 'none'; }, 600);
-                  }
-                }
+                // consigna se oculta por timer al cargar el nivel (ver loadLevel)
 
                 var movement = {
                     from_compartment: 'medication_area_' + medType,
@@ -1693,6 +1866,11 @@
         }
 
         function retryLevel() {
+            // Regenerar contenido del nivel — nuevos medicamentos cada partida
+            const currentDef = LEVELS[sessionState.currentLevelIndex].levelDef;
+            if (currentDef) {
+                LEVELS[sessionState.currentLevelIndex].medications = buildLevelContent(currentDef);
+            }
             document.getElementById('results-overlay').style.display = 'none';
             if (sessionState.timerInterval) { clearInterval(sessionState.timerInterval); sessionState.timerInterval = null; }
             sessionState.gameActive = false;
