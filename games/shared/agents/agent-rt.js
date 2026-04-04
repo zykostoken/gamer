@@ -207,16 +207,20 @@ var agent = {
     },
     
     pause: function() {
-        // Suspender captura de RT — resetear lastActionTime para evitar
-        // hesitaciones falsas causadas por el gap de visibilidad
-        state.active = false;
-        state.lastActionTime = 0;
-        state.pendingStimuli = []; // limpiar estimulos pendientes del gap
+        // Tab ocultada.
+        // NO limpiar pendingStimuli — si habia estimulos activos y el paciente
+        // se fue, esas son omisiones reales. Es su comportamiento real.
+        // Solo marcar el tiempo del gap para que el delta al volver
+        // no genere un RT de N segundos artificialmente.
+        state._gapStart = performance.now();
     },
 
     resume: function() {
-        state.active = true;
-        state.lastActionTime = performance.now(); // nuevo origen de tiempo
+        // Tab visible de nuevo.
+        // Actualizar lastActionTime para que el primer RT post-gap
+        // se mida desde el momento en que volvio, no desde antes del gap.
+        state.lastActionTime = performance.now();
+        state._gapStart = null;
     },
 
     stop: function() {

@@ -523,17 +523,23 @@ document.addEventListener('visibilitychange', function() {
             t: Date.now(),
             session_ms: Math.round(performance.now() - _sessionStart)
         });
+        // Tasker: iniciar medicion de actividad durante el gap
+        if (window._ZykosTasker) window._ZykosTasker.enterGap(performance.now());
     } else {
         // Tab visible de nuevo — reanudar y registrar gap
         var gapMs = _visibilityGapStart ? Math.round(performance.now() - _visibilityGapStart) : 0;
         _visibilityGapStart = null;
-        // Registrar el gap para que el analisis SQL pueda descartar
-        // metricas calculadas sobre segmentos que incluyen este gap
+        // El gap es dato clinico real — no se descarta, se contextualiza.
+        // Cuantas veces se fue el paciente, por cuanto tiempo, en que momento
+        // de la sesion: eso es parte del fenotipo, no ruido.
         ZYKOS._pushRaw('tab_visible', {
             t: Date.now(),
             gap_ms: gapMs,
-            session_ms: Math.round(performance.now() - _sessionStart)
+            session_ms: Math.round(performance.now() - _sessionStart),
+            clinical_context: 'interrupcion_real_del_paciente'
         });
+        // Tasker: cerrar medicion del gap
+        if (window._ZykosTasker) window._ZykosTasker.exitGap(performance.now());
         // Reanudar agentes — resetear lastSample para evitar delta enorme
         Object.keys(_agents).forEach(function(name) {
             try {
