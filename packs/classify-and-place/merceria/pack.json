@@ -1,0 +1,88 @@
+{
+  "meta": {
+    "id": "merceria",
+    "name": "La Merceria de Pituka",
+    "emoji": "🧵",
+    "description": "Clasifica 64 articulos de merceria en 8 categorias. Hilos, telas, botones, cierres, agujas, cintas y accesorios de costura.",
+    "setting": "Merceria clasica de Necochea. Estantes con cajoneras de madera, hilos en bobinas ordenados por color, telas enrolladas paradas.",
+    "colors": { "accent": "#8e44ad", "surface": "#0f0a14" },
+    "cognitive_targets": ["E2 Planificacion", "MEM1 Trabajo", "CAL1 Estimacion", "E1 Inhibicion"],
+    "difficulty_levels": 4
+  },
+  "categories": [
+    { "id": "hilos", "label": "Hilos y hebras", "emoji": "🧵", "zone": "cajonera-hilos", "description": "Hilo de coser, bordar, tejer, punto cruz, seda, algodon, poliester", "color": "#8e44ad" },
+    { "id": "telas", "label": "Telas y generos", "emoji": "🪡", "zone": "estante-telas", "description": "Tela de algodon, lino, seda, polyester, lycra, jean, poplin", "color": "#2980b9" },
+    { "id": "cierres_broches", "label": "Cierres y broches", "emoji": "🔗", "zone": "cajonera-cierres", "description": "Cierre de metal, plastico, invisible, automaticos, velcro, broches", "color": "#27ae60" },
+    { "id": "botones", "label": "Botones y apliques", "emoji": "🔘", "zone": "cajonera-botones", "description": "Botones de camisa, saco, tapado, apliques decorativos, tachas", "color": "#f39c12" },
+    { "id": "agujas_alfileres", "label": "Agujas y alfileres", "emoji": "📍", "zone": "mostrador", "description": "Aguja de coser, bordar, tejer, crochet, alfileres, agujas de lana", "color": "#e74c3c" },
+    { "id": "cintas_elasticos", "label": "Cintas y elasticos", "emoji": "🎀", "zone": "cajonera-cintas", "description": "Cinta de raso, organza, grosgrain, elastico plano, elastico redondo", "color": "#e91e8c" },
+    { "id": "entretelas_rellenos", "label": "Entretelas y rellenos", "emoji": "🪣", "zone": "estante-fondo", "description": "Entretela fusionable, guata, vellón, relleno de almohadon, espuma", "color": "#95a5a6" },
+    { "id": "herramientas", "label": "Herramientas de costura", "emoji": "✂️", "zone": "mostrador-herramientas", "description": "Tijeras, descosedor, dedal, metro, tiza sastreria, plancha, bastidor", "color": "#7f8c8d" }
+  ],
+  "items": [
+    { "id": "hilo_coser_blanco", "name": "Hilo de coser blanco nro 40", "emoji": "🧵", "category": "hilos", "difficulty": 1, "price": 280 },
+    { "id": "hilo_coser_negro", "name": "Hilo de coser negro nro 40", "emoji": "🧵", "category": "hilos", "difficulty": 1, "price": 280 },
+    { "id": "hilo_bordar_rojo", "name": "Hilo de bordar rojo madeja", "emoji": "🧵", "category": "hilos", "difficulty": 2, "price": 420, "confusable_with": "hilo_coser_blanco", "similarity_note": "Ambos hilos pero el de bordar es mas grueso y en madeja — no vale para maquina" },
+    { "id": "hilo_seda", "name": "Hilo de seda natural", "emoji": "🧵", "category": "hilos", "difficulty": 3, "price": 980 },
+    { "id": "hilo_tejer_grueso", "name": "Hilo de tejer grueso (lana)", "emoji": "🧵", "category": "hilos", "difficulty": 2, "price": 650 },
+    { "id": "hilo_crochet", "name": "Hilo de crochet algodon", "emoji": "🧵", "category": "hilos", "difficulty": 2, "price": 480 },
+    { "id": "hilo_punto_cruz", "name": "Hilo punto cruz multicolor", "emoji": "🧵", "category": "hilos", "difficulty": 3, "price": 350 },
+    { "id": "tela_algodon", "name": "Tela de algodon estampada (metro)", "emoji": "🪡", "category": "telas", "difficulty": 1, "price": 1800 },
+    { "id": "tela_lino", "name": "Tela de lino natural (metro)", "emoji": "🪡", "category": "telas", "difficulty": 2, "price": 2400 },
+    { "id": "tela_jean", "name": "Tela de jean (metro)", "emoji": "🪡", "category": "telas", "difficulty": 1, "price": 2800 },
+    { "id": "tela_lycra", "name": "Tela de lycra (metro)", "emoji": "🪡", "category": "telas", "difficulty": 2, "price": 3200 },
+    { "id": "tela_poplin", "name": "Tela de poplin (metro)", "emoji": "🪡", "category": "telas", "difficulty": 2, "price": 1600, "confusable_with": "tela_algodon", "similarity_note": "Poplin es algodon pero tejido diferente — mas liso y liviano para camisa" },
+    { "id": "tela_terciopelo", "name": "Tela de terciopelo (metro)", "emoji": "🪡", "category": "telas", "difficulty": 3, "price": 4200 },
+    { "id": "tela_lame", "name": "Tela lame dorada (metro)", "emoji": "🪡", "category": "telas", "difficulty": 3, "price": 3600 },
+    { "id": "cierre_metal_20", "name": "Cierre de metal 20cm", "emoji": "🔗", "category": "cierres_broches", "difficulty": 1, "price": 380 },
+    { "id": "cierre_plastico_30", "name": "Cierre de plastico 30cm", "emoji": "🔗", "category": "cierres_broches", "difficulty": 1, "price": 280 },
+    { "id": "cierre_invisible_50", "name": "Cierre invisible 50cm", "emoji": "🔗", "category": "cierres_broches", "difficulty": 2, "price": 420, "confusable_with": "cierre_metal_20", "similarity_note": "Ambos cierres pero el invisible va cosido por detras — no se ve desde afuera" },
+    { "id": "velcro_blanco", "name": "Velcro blanco por metro", "emoji": "🔗", "category": "cierres_broches", "difficulty": 2, "price": 320 },
+    { "id": "broche_automatico", "name": "Broche automatico plateado x6", "emoji": "🔗", "category": "cierres_broches", "difficulty": 2, "price": 180 },
+    { "id": "boton_camisa", "name": "Boton de camisa nacar x12", "emoji": "🔘", "category": "botones", "difficulty": 1, "price": 320 },
+    { "id": "boton_saco_negro", "name": "Boton de saco negro x4", "emoji": "🔘", "category": "botones", "difficulty": 1, "price": 480 },
+    { "id": "boton_tapado_beige", "name": "Boton de tapado beige x3", "emoji": "🔘", "category": "botones", "difficulty": 2, "price": 560 },
+    { "id": "aplique_mariposa", "name": "Aplique bordado mariposa", "emoji": "🔘", "category": "botones", "difficulty": 2, "price": 280 },
+    { "id": "tacha_dorada", "name": "Tacha dorada x20", "emoji": "🔘", "category": "botones", "difficulty": 3, "price": 360, "confusable_with": "aplique_mariposa", "similarity_note": "Ambos apliques decorativos — tacha va remachada, aplique se cose" },
+    { "id": "aguja_coser_x10", "name": "Agujas de coser surtidas x10", "emoji": "📍", "category": "agujas_alfileres", "difficulty": 1, "price": 180 },
+    { "id": "aguja_lana", "name": "Agujas de lana nro 5 x2", "emoji": "📍", "category": "agujas_alfileres", "difficulty": 2, "price": 240 },
+    { "id": "aguja_crochet_4mm", "name": "Aguja crochet aluminio 4mm", "emoji": "📍", "category": "agujas_alfileres", "difficulty": 2, "price": 280, "confusable_with": "aguja_lana", "similarity_note": "Aguja de crochet es un solo gancho — la de lana son dos palitos rectos" },
+    { "id": "alfileres_cabeza_x50", "name": "Alfileres cabeza de colores x50", "emoji": "📍", "category": "agujas_alfileres", "difficulty": 1, "price": 220 },
+    { "id": "aguja_bordado_x5", "name": "Agujas de bordar x5", "emoji": "📍", "category": "agujas_alfileres", "difficulty": 2, "price": 160 },
+    { "id": "cinta_raso_azul", "name": "Cinta de raso azul 1cm x metro", "emoji": "🎀", "category": "cintas_elasticos", "difficulty": 1, "price": 120 },
+    { "id": "cinta_grosgrain", "name": "Cinta grosgrain rayada por metro", "emoji": "🎀", "category": "cintas_elasticos", "difficulty": 2, "price": 180 },
+    { "id": "elastico_plano_2cm", "name": "Elastico plano 2cm por metro", "emoji": "🎀", "category": "cintas_elasticos", "difficulty": 1, "price": 160 },
+    { "id": "elastico_redondo", "name": "Elastico redondo fino x metro", "emoji": "🎀", "category": "cintas_elasticos", "difficulty": 2, "price": 140, "confusable_with": "elastico_plano_2cm", "similarity_note": "Ambos elasticos pero redondo es para fruncido liviano — plano para cintura" },
+    { "id": "cinta_bies_blanca", "name": "Cinta bies blanca por metro", "emoji": "🎀", "category": "cintas_elasticos", "difficulty": 3, "price": 200 },
+    { "id": "cinta_velvet_burdeo", "name": "Cinta de velvet burdeo por metro", "emoji": "🎀", "category": "cintas_elasticos", "difficulty": 3, "price": 280 },
+    { "id": "entretela_fusionable", "name": "Entretela fusionable liviana por metro", "emoji": "🪣", "category": "entretelas_rellenos", "difficulty": 3, "price": 680 },
+    { "id": "guata_150", "name": "Guata 150gr metro", "emoji": "🪣", "category": "entretelas_rellenos", "difficulty": 3, "price": 820 },
+    { "id": "vellón_sintetico", "name": "Vellon sintetico 200gr metro", "emoji": "🪣", "category": "entretelas_rellenos", "difficulty": 3, "price": 920, "confusable_with": "guata_150", "similarity_note": "Ambos rellenos — vellon es mas grueso y abrigado que guata" },
+    { "id": "relleno_almohadon", "name": "Relleno de almohadon 500gr", "emoji": "🪣", "category": "entretelas_rellenos", "difficulty": 2, "price": 1200 },
+    { "id": "tijera_sastreria", "name": "Tijera de sastreria 20cm", "emoji": "✂️", "category": "herramientas", "difficulty": 1, "price": 2800 },
+    { "id": "tijera_bordar", "name": "Tijera de bordar curva", "emoji": "✂️", "category": "herramientas", "difficulty": 2, "price": 1600, "confusable_with": "tijera_sastreria", "similarity_note": "Ambas tijeras pero la de bordar es chica y curva — no corta tela" },
+    { "id": "descosedor", "name": "Descosedor de costuras", "emoji": "✂️", "category": "herramientas", "difficulty": 2, "price": 320 },
+    { "id": "metro_costura", "name": "Metro de costura plastico", "emoji": "✂️", "category": "herramientas", "difficulty": 1, "price": 280 },
+    { "id": "dedal", "name": "Dedal de metal nro 8", "emoji": "✂️", "category": "herramientas", "difficulty": 2, "price": 180 },
+    { "id": "tiza_sastreria", "name": "Tiza de sastreria triangular", "emoji": "✂️", "category": "herramientas", "difficulty": 3, "price": 240 },
+    { "id": "bastidor_15cm", "name": "Bastidor de bordar 15cm", "emoji": "✂️", "category": "herramientas", "difficulty": 3, "price": 480 },
+    { "id": "aguja_maquina_x5", "name": "Agujas de maquina de coser x5", "emoji": "📍", "category": "agujas_alfileres", "difficulty": 2, "price": 380, "confusable_with": "aguja_coser_x10", "similarity_note": "Ambas para coser pero la de maquina es diferente — tiene ojo abajo, no arriba" }
+  ],
+  "missions": {
+    "kit": [
+      { "title": "Reparo de ropa basico", "budget": 2000, "areas": ["hilos", "agujas_alfileres", "cierres_broches"], "description": "Lo esencial para coser un dobladillo, cambiar un boton y arreglar un cierre." },
+      { "title": "Empezar a bordar", "budget": 3500, "areas": ["hilos", "agujas_alfileres", "herramientas"], "description": "Kit inicial para bordado a mano. Bastidor, hilos y agujas correctas." },
+      { "title": "Hacer una pollera", "budget": 8000, "areas": ["telas", "cierres_broches", "cintas_elasticos", "herramientas"], "description": "Todo lo necesario para confeccionar una pollera desde cero." }
+    ],
+    "calculation": [
+      { "name": "Tela para cortina", "emoji": "🪡", "description": "Necesitas 3.5 metros de tela de algodon a $1800 el metro. Cuanto sale?", "correct_answer": 6300, "accept_range": [6100, 6500], "answer_unit": "$", "explanation": "3.5 x $1800 = $6300" },
+      { "name": "Cinta para regalo", "emoji": "🎀", "description": "Necesitas 4 metros de cinta de raso a $120 el metro. Cuanto sale?", "correct_answer": 480, "accept_range": [460, 500], "answer_unit": "$", "explanation": "4 x $120 = $480" }
+    ]
+  },
+  "difficulty_scaling": {
+    "1": { "items_per_round": 6, "time_limit": 45, "categories_shown": 4, "show_hints": true },
+    "2": { "items_per_round": 10, "time_limit": 35, "categories_shown": 6, "show_hints": true },
+    "3": { "items_per_round": 14, "time_limit": 30, "categories_shown": 8, "show_hints": false },
+    "4": { "items_per_round": 18, "time_limit": 25, "categories_shown": 8, "show_hints": false }
+  }
+}

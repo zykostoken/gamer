@@ -163,10 +163,9 @@ const ds=document.getElementById('diff-sel');for(let i=1;i<=ml;i++){const b=docu
 
 function pickMode(btn,m){STATE.mode=m;document.querySelectorAll('#mode-sel .diff-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
 function startMode(){if(typeof showPreGameChat==='function'&&!window._pgd){window._pgd=true;showPreGameChat();var _w=setInterval(function(){if(!document.getElementById('mood-pre-overlay')&&!document.getElementById('input-calibration-overlay')){clearInterval(_w);_startModeReal();}},200);setTimeout(function(){clearInterval(_w);_startModeReal();},15000);return;}_startModeReal();}function _startModeReal(){STATE.score=0;STATE.correct=0;STATE.errors=0;STATE.placedItems=0;STATE.moves=[];STATE.mouseData=[];STATE.scrollData=[];STATE.startTime=performance.now();STATE.lastMoveTime=0;document.getElementById('h-score').textContent='0';clearInterval(STATE.timerInterval);let el=0;STATE.timerInterval=setInterval(()=>{el++;document.getElementById('h-timer').textContent=String(Math.floor(el/60)).padStart(2,'0')+':'+String(el%60).padStart(2,'0')},1000);
-// Global mouse + scroll telemetry for ALL modes
-document.addEventListener('mousemove',trackMouse);document.addEventListener('scroll',trackScroll,true);
+// Telemetria de mouse manejada por agent-motor.js via ZYKOS engine
 // Telemetry: start game session
-if(typeof TELEM!=='undefined')TELEM.startGameSession({frame:'classify-and-place',packId:PACK.meta.id,mode:STATE.mode,level:STATE.level}).catch(()=>{});
+// sesion iniciada por ZYKOS.startSession() en loadPack()
 ({classify:startClassify,kit:startKit,calc:startCalc,sim:startSim})[STATE.mode]()}
 function toast(m,t){const c=document.getElementById('toasts'),d=document.createElement('div');d.className='toast toast-'+(t||'info');d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),2500)}
 
@@ -224,13 +223,26 @@ kitUI()}
 function kitUI(){const pct=Math.min(100,Math.round(STATE.kitSpent/STATE.kitBudget*100));const f=document.getElementById('kit-fill');f.style.width=pct+'%';f.style.background=pct>100?'var(--err)':pct>80?'var(--warn)':'var(--ok)';document.getElementById('kit-spent-label').textContent='Gastado: $'+STATE.kitSpent.toLocaleString('es-AR');const rem=STATE.kitBudget-STATE.kitSpent;const rE=document.getElementById('kit-remain');rE.textContent=(rem>=0?'Quedan: $':'Excedido: $')+Math.abs(rem).toLocaleString('es-AR');rE.className='kit-remaining'+(rem<0?' over':'');
 const cd=document.getElementById('kit-cart-items'),ids=Object.keys(STATE.kitCart);if(!ids.length){cd.innerHTML='<div class="kit-empty">Tocá productos para agregarlos</div>';return}cd.innerHTML=ids.map(id=>{const it=PACK.items.find(i=>i.id===id);return it?`<div class="kit-cart-item"><span class="ci-em">${it.emoji}</span>${it.name} <span class="ci-price">$${STATE.kitCart[id].toLocaleString('es-AR')}</span></div>`:''}).join('')}
 
-function kitFinish(){clearInterval(STATE.timerInterval);document.removeEventListener('mousemove',trackMouse);document.removeEventListener('scroll',trackScroll,true);const elapsed=Math.floor((performance.now()-STATE.startTime)/1000),ids=Object.keys(STATE.kitCart),sc=STATE.kitScenario,over=STATE.kitSpent>STATE.kitBudget;
+function kitFinish(){clearInterval(STATE.timerInterval);const elapsed=Math.floor((performance.now()-STATE.startTime)/1000),ids=Object.keys(STATE.kitCart),sc=STATE.kitScenario,over=STATE.kitSpent>STATE.kitBudget;
 const catsCov=new Set(ids.map(id=>{const it=PACK.items.find(i=>i.id===id);return it?it.category:null}).filter(Boolean));
-// TELEMETRY: send to Supabase
-if(typeof TELEM!=='undefined'){const mm=mouseMetrics();const adds=STATE.kitLog.filter(l=>l.action==='add');const avgDelib=STATE.kitLog.length>1?Math.round(STATE.kitLog.slice(1).reduce((a,l)=>a+l.sinceLastMs,0)/(STATE.kitLog.length-1)):0;
-TELEM.endGameSession({durationMs:elapsed*1000,score:STATE.score,correct:ids.length,errors:0,totalItems:PACK.items.length,accuracyPct:null,completed:true,kitScenario:sc.title,kitBudget:STATE.kitBudget,kitSpent:STATE.kitSpent,kitBudgetExceeded:over,kitBudgetExceededAtMs:STATE.kitBudgetExceededAt||null,kitItemsAdded:adds.length,kitItemsRemoved:STATE.kitRemovals,kitFirstActionMs:Math.round(STATE.kitFirstAction),kitAvgDeliberationMs:avgDelib,kitDeliberationPauses:STATE.kitDeliberationPauses,kitCategoriesCovered:catsCov.size,packId:PACK.meta.id,mode:'kit'}).catch(()=>{});
-TELEM.sendMouseTelemetry(mm).catch(()=>{});
-TELEM.sendKitLog(STATE.kitLog).catch(()=>{});
+// ENGINE CANONICO
+if(typeof ZYKOS!=='undefined'&&ZYKOS.isActive()){
+const adds=STATE.kitLog.filter(l=>l.action==='add');
+const avgDelib=STATE.kitLog.length>1?Math.round(STATE.kitLog.slice(1).reduce((a,l)=>a+l.sinceLastMs,0)/(STATE.kitLog.length-1)):0;
+ZYKOS.endSession({
+  errores_omision: Math.max(0, PACK.items.length - ids.length),
+  errores_comision: 0,
+  economia_cognitiva: ids.length>0 ? Math.min(1, ids.length/Math.max(1,PACK.items.length)) : 0,
+  eficacia_objetivo: catsCov.size/Math.max(1,PACK.categories.length),
+  first_action_latency_ms: Math.round(STATE.kitFirstAction)||null,
+  hesitaciones_count: STATE.kitDeliberationPauses,
+  inhibicion_motor: STATE.kitRemovals,
+  session_duration_ms: elapsed*1000,
+  _raw_kit: {scenario:sc.title,budget:STATE.kitBudget,spent:STATE.kitSpent,
+    exceeded:over,items_added:adds.length,removals:STATE.kitRemovals,
+    avg_deliberation_ms:avgDelib,categories_covered:catsCov.size,
+    pack_id:PACK.meta.id,mode:'kit'}
+});
 }
 const log=STATE.kitLog,adds=log.filter(l=>l.action==='add'),removes=log.filter(l=>l.action==='remove');
 const catSeq=[];adds.forEach(a=>{if(!catSeq.includes(a.category))catSeq.push(a)});
@@ -285,17 +297,26 @@ function startSim(){STATE.phase='playing';const sd=PACK.missions?.similarity_dis
 document.getElementById('game').innerHTML=`<div style="text-align:center;margin-bottom:20px"><div style="font-size:.75rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em">Par ${(STATE.simIdx%pairs.length)+1} de ${pairs.length}</div><div style="font-size:1.2rem;font-weight:700;margin-top:8px">Estos dos se parecen. ¿En qué se diferencian?</div></div><div class="sim-pair"><div class="sim-card"><div class="s-em">${a.emoji}</div><div class="s-nm">${a.name}</div><div class="s-cat">${ca?.emoji||''} ${ca?.label||''}</div></div><div class="sim-card"><div class="s-em">${b.emoji}</div><div class="s-nm">${b.name}</div><div class="s-cat">${cb?.emoji||''} ${cb?.label||''}</div></div></div><div class="sim-vs">VS</div><div id="sim-rev" style="display:none"><div class="sim-explain"><strong>Diferencia clave:</strong><br>${pair.key_difference}</div><div style="text-align:center;margin-top:16px"><button class="btn btn-ghost btn-sm" onclick="STATE.simIdx++;startSim()">Siguiente →</button></div></div><div style="text-align:center"><button class="btn btn-primary" id="sim-btn" onclick="document.getElementById('sim-rev').style.display='block';this.remove();STATE.correct++;STATE.score+=50;document.getElementById('h-score').textContent=STATE.score">Revelar diferencia</button></div>`}
 
 /* ===== RESULTS (classify) ===== */
-function showResults(){STATE.phase='results';document.removeEventListener('mousemove',trackMouse);document.removeEventListener('scroll',trackScroll,true);const el=((performance.now()-STATE.startTime)/1000).toFixed(1),acc=STATE.correct+STATE.errors>0?Math.round(STATE.correct/(STATE.correct+STATE.errors)*100):0,avgRT=STATE.moves.length?Math.round(STATE.moves.reduce((a,m)=>a+m.rt,0)/STATE.moves.length):0;let pers=0;for(let i=1;i<STATE.moves.length;i++)if(!STATE.moves[i].correct&&!STATE.moves[i-1].correct&&STATE.moves[i].targetCat===STATE.moves[i-1].targetCat)pers++;
-// TELEMETRY: send everything to Supabase
-if(typeof TELEM!=='undefined'){const mm=mouseMetrics();
-TELEM.endGameSession({durationMs:Math.round(performance.now()-STATE.startTime),score:STATE.score,correct:STATE.correct,errors:STATE.errors,totalItems:STATE.totalItems,accuracyPct:acc,completed:true,perseverations:pers,avgReactionTimeMs:avgRT,packId:PACK.meta.id,mode:'classify'}).catch(()=>{});
-TELEM.sendMouseTelemetry(mm).catch(()=>{});
-TELEM.sendClassifyMoves(STATE.moves,STATE.currentItems).catch(()=>{});
+function showResults(){STATE.phase='results';const el=((performance.now()-STATE.startTime)/1000).toFixed(1),acc=STATE.correct+STATE.errors>0?Math.round(STATE.correct/(STATE.correct+STATE.errors)*100):0,avgRT=STATE.moves.length?Math.round(STATE.moves.reduce((a,m)=>a+m.rt,0)/STATE.moves.length):0;let pers=0;for(let i=1;i<STATE.moves.length;i++)if(!STATE.moves[i].correct&&!STATE.moves[i-1].correct&&STATE.moves[i].targetCat===STATE.moves[i-1].targetCat)pers++;
+// ENGINE CANONICO
+if(typeof ZYKOS!=='undefined'&&ZYKOS.isActive()){
+ZYKOS.endSession({
+  errores_comision: STATE.errors,
+  errores_omision: STATE.totalItems - STATE.correct - STATE.errors,
+  economia_cognitiva: STATE.correct/Math.max(1,STATE.totalItems),
+  rt_mean_ms: avgRT||null,
+  perseveracion_count: pers,
+  session_duration_ms: Math.round(performance.now()-STATE.startTime),
+  _raw_classify: {score:STATE.score,correct:STATE.correct,errors:STATE.errors,
+    total:STATE.totalItems,accuracy_pct:acc,perseverations:pers,
+    avg_rt_ms:avgRT,pack_id:PACK.meta.id,mode:'classify',
+    moves:STATE.moves.slice(-50)}
+});
 }
 document.getElementById('game').innerHTML=`<div class="results"><h2>${acc>=80?' ¡Excelente!':acc>=60?' ¡Bien!':' Seguí practicando'}</h2><div class="big-score">${acc}%</div><p style="color:var(--dim)">Precisión · Nivel ${STATE.level}</p><div class="results-grid"><div class="res-card"><div class="rv" style="color:var(--ok)">${STATE.correct}</div><div class="rl">Correctos</div></div><div class="res-card"><div class="rv" style="color:var(--err)">${STATE.errors}</div><div class="rl">Errores</div></div><div class="res-card"><div class="rv">${el}s</div><div class="rl">Tiempo</div></div><div class="res-card"><div class="rv">${avgRT}ms</div><div class="rl">RT promedio</div></div><div class="res-card"><div class="rv" style="color:var(--accent)">${STATE.score}</div><div class="rl">Puntos</div></div><div class="res-card"><div class="rv">${pers}</div><div class="rl">Perseveraciones</div></div></div><div style="margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn btn-primary" onclick="startMode()"> De nuevo</button><button class="btn btn-ghost" onclick="showIntro()">️ Menú</button></div><div style="margin-top:24px;padding:16px;background:var(--surface);border-radius:12px;text-align:left;max-width:600px;margin:auto;border:1px solid var(--border)">${mouseHTML()}</div></div>`}
 
-function trackMouse(e){const n=performance.now();STATE.mouseData.push({x:e.clientX,y:e.clientY,t:n});if(STATE.mouseData.length>8000)STATE.mouseData.shift()}
-function trackScroll(){if(!STATE.scrollData)STATE.scrollData=[];STATE.scrollData.push({y:window.scrollY,t:performance.now()});if(STATE.scrollData.length>2000)STATE.scrollData.shift()}
+
+
 
 // === MOUSE METRICS ENGINE ===
 function mouseMetrics(){
@@ -358,7 +379,7 @@ function mouseHTML(){
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 loadPack();
 // Cleanup on exit
-window.addEventListener('beforeunload',()=>{if(typeof TELEM!=='undefined')TELEM.endPlatformSession()});
+window.addEventListener('beforeunload',function(){if(typeof ZYKOS!=='undefined'&&ZYKOS.isActive())ZYKOS.endSession();});
 </script>
 </body>
 </html>
