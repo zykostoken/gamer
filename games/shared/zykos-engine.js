@@ -433,6 +433,9 @@ var ZYKOS = {
 
     // --- Persist to Supabase (THE ONLY WRITER) ---
     _persist: async function(metrics) {
+        // Post-persist: llamar zykos_detect_patterns() de forma diferida
+        // No bloquea el guardado de métricas. Corre en background.
+        // Detecta patrones conductuales compuestos sobre datos ya guardados.
         try {
             var sb = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
             if (!sb) { console.warn('[zykos-engine] No Supabase client'); return; }
@@ -476,8 +479,20 @@ var ZYKOS = {
             }
 
             var { error } = await sb.from('zykos_game_metrics').insert(payload);
-            if (error) console.warn('[zykos-engine] Persist error:', error.message);
-            else console.log('[zykos-engine] Metrics persisted: ' + Object.keys(metrics).length + ' fields');
+            if (error) {
+                console.warn('[zykos-engine] Persist error:', error.message);
+            } else {
+                console.log('[zykos-engine] Metrics persisted: ' + Object.keys(metrics).length + ' fields');
+                // Detección de patrones conductuales — diferida, en background
+                // No bloquea. Corre sobre los datos recién guardados.
+                // Produce zykos_session_patterns con nomenclatura clínica descriptiva.
+                if (payload.session_id) {
+                    sb.rpc('zykos_detect_patterns', { p_session_id: payload.session_id })
+                      .then(function(r) {
+                          if (r.error) console.warn('[patterns]', r.error.message);
+                      }).catch(function(){});
+                }
+            }
 
             // Also persist raw event buffer (Capa 0)
             if (_eventBuffer.length > 0) {
