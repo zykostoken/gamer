@@ -546,6 +546,53 @@ function compute() {
         decaimiento_ratio = rt_first > 0 ? rt_second / rt_first : 1;
     }
 
+    // ---- EFICACIA POR TERCIOS (fatigabilidad) ----
+    // Divide la sesion en 3 partes temporales iguales
+    // Mide correctos/total en cada tercio → pendiente = fatigabilidad
+    var eficacia_tercio_1 = null;
+    var eficacia_tercio_2 = null;
+    var eficacia_tercio_3 = null;
+    var delta_ok_t3_menos_t1 = null;
+
+    var all_actions = BM.actions.filter(function(a) {
+        return typeof a.correct !== 'undefined';
+    });
+
+    if (all_actions.length >= 6 && BM.sessionStart) {
+        var t0 = BM.sessionStart;
+        var t_end = Date.now();
+        var dur = t_end - t0;
+        var t1 = t0 + dur / 3;
+        var t2 = t0 + 2 * dur / 3;
+
+        function eficacia_en_rango(desde, hasta) {
+            var en_rango = all_actions.filter(function(a) {
+                return a.t >= desde && a.t < hasta;
+            });
+            if (en_rango.length === 0) return null;
+            var correctos = en_rango.filter(function(a) { return a.correct; }).length;
+            return +(correctos / en_rango.length).toFixed(3);
+        }
+
+        eficacia_tercio_1 = eficacia_en_rango(t0, t1);
+        eficacia_tercio_2 = eficacia_en_rango(t1, t2);
+        eficacia_tercio_3 = eficacia_en_rango(t2, t_end);
+
+        // Pendiente lineal entre tercios: positivo = mejora (warmup), negativo = fatiga
+        if (eficacia_tercio_1 !== null && eficacia_tercio_3 !== null) {
+            delta_ok_t3_menos_t1 = +((eficacia_tercio_3 - eficacia_tercio_1) / 2).toFixed(3);
+        }
+    }
+
+    // Tambien por RT si hay suficientes datos
+    var rt_tercio_1 = null, rt_tercio_2 = null, rt_tercio_3 = null;
+    if (rt_list.length >= 6) {
+        var t_size = Math.floor(rt_list.length / 3);
+        rt_tercio_1 = +mean(rt_list.slice(0, t_size)).toFixed(1);
+        rt_tercio_2 = +mean(rt_list.slice(t_size, t_size * 2)).toFixed(1);
+        rt_tercio_3 = +mean(rt_list.slice(t_size * 2)).toFixed(1);
+    }
+
     // ---- HESITACIONES ----
     var hes = m.hesitations;
     var hesitaciones_count = hes.length;
@@ -558,10 +605,10 @@ function compute() {
     var impulsividad_ratio = n_clicks > 0 ? n_impulsivos / n_clicks : 0;
 
     // ---- ECONOMÍA COGNITIVA ----
-    var economia_cognitiva = m.actions_total > 0 ? m.actions_util / m.actions_total : 1;
+    var ratio_acciones_util = m.actions_total > 0 ? m.actions_util / m.actions_total : 1;
 
     // ---- EFICACIA OBJETIVO ----
-    var eficacia_objetivo = m.objectives_total > 0
+    var ratio_completados = m.objectives_total > 0
         ? m.objectives_achieved / m.objectives_total
         : null;
 
@@ -576,7 +623,7 @@ function compute() {
         : null;
 
     // ---- INHIBICIÓN MOTORA ----
-    var inhibicion_motor = m.moves_started > 0
+    var count_drags_abortados = m.moves_started > 0
         ? m.moves_aborted / m.moves_started
         : 0;
 
@@ -616,7 +663,7 @@ function compute() {
         secuencia_correcta_pct:   secuencia_correcta_pct !== null ? +secuencia_correcta_pct.toFixed(3) : null,
 
         // Eficacia
-        eficacia_objetivo:        eficacia_objetivo !== null ? +eficacia_objetivo.toFixed(3) : null,
+        ratio_completados:        ratio_completados !== null ? +ratio_completados.toFixed(3) : null,
         eficacia_plan_propio:     eficacia_plan_propio !== null ? +eficacia_plan_propio.toFixed(3) : null,
         plan_failed_attempts:     m.plan_failed_attempts,
 
@@ -624,14 +671,25 @@ function compute() {
         rt_mean_ms:               rt_list.length ? +rt_mean.toFixed(1) : null,
         rt_sd_ms:                 rt_list.length ? +rt_sd.toFixed(1) : null,
         rt_cv:                    rt_list.length ? +rt_cv.toFixed(3) : null,
-        decaimiento_mitades:   +decaimiento_ratio.toFixed(3),
+        decaimiento_mitades:      +decaimiento_ratio.toFixed(3),
         hesitaciones_count:       hesitaciones_count,
         hesitacion_duracion_mean_ms: hesitacion_duracion_mean_ms ? +hesitacion_duracion_mean_ms.toFixed(0) : null,
 
+        // Fatigabilidad — eficacia por tercios temporales
+        // null si no hay suficientes acciones (< 6)
+        eficacia_tercio_1:        eficacia_tercio_1,
+        eficacia_tercio_2:        eficacia_tercio_2,
+        eficacia_tercio_3:        eficacia_tercio_3,
+        delta_ok_t3_menos_t1:  delta_ok_t3_menos_t1,
+        // RT por tercios — null si no hay suficientes RTs
+        rt_tercio_1:              rt_tercio_1,
+        rt_tercio_2:              rt_tercio_2,
+        rt_tercio_3:              rt_tercio_3,
+
         // Ejecutivo
         impulsividad_ratio:       +impulsividad_ratio.toFixed(3),
-        inhibicion_motor:         +inhibicion_motor.toFixed(3),
-        economia_cognitiva:       +economia_cognitiva.toFixed(3),
+        count_drags_abortados:         +count_drags_abortados.toFixed(3),
+        ratio_acciones_util:       +ratio_acciones_util.toFixed(3),
 
         // Motor extrapiramidal
         vel_peak_mean_px_ms:      m.move_velocities.length ? +vel_peak_mean.toFixed(4) : null,
@@ -688,7 +746,7 @@ function save(extra_data) {
             game_slug:    result.game_slug,
             session_id:   BM.sessionId || null,
             metric_type:  'session_biomet',
-            metric_value: result.economia_cognitiva,
+            metric_value: result.ratio_acciones_util,
             metric_data:  result,
             session_date: new Date().toISOString().slice(0, 10),
             created_at:   new Date().toISOString()

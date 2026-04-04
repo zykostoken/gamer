@@ -10,10 +10,10 @@
 // - errores_comision, errores_omision
 // - perseveracion_count
 // - impulsividad_ratio
-// - inhibicion_motor
-// - economia_cognitiva
+// - count_drags_abortados
+// - ratio_acciones_util
 // - secuencia_correcta_pct
-// - eficacia_objetivo, eficacia_plan_propio
+// - ratio_completados, eficacia_plan_propio
 // - plan_failed_attempts
 // ================================================================
 
@@ -146,9 +146,9 @@ var agent = {
             errores_comision:       commissions,
             perseveracion_count:    countPerseverations(),
             impulsividad_ratio:     +(impulsivity.toFixed(3)),
-            inhibicion_motor:       +(inhibition.toFixed(3)),
-            economia_cognitiva:     +(economy.toFixed(3)),
-            eficacia_objetivo:      eficacia !== null ? +(eficacia.toFixed(3)) : null,
+            count_drags_abortados:       +(inhibition.toFixed(3)),
+            ratio_acciones_util:     +(economy.toFixed(3)),
+            ratio_completados:      eficacia !== null ? +(eficacia.toFixed(3)) : null,
             total_actions:          total,
             
             _raw_inhibition: {

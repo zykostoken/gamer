@@ -58,11 +58,11 @@ global.showMetricsModal = async function(resultData) {
         
         var analysis = {
             // === EFICACIA ===
-            eficacia_objetivo: biomet.eficacia_objetivo || null,  // objetivos logrados / objetivos totales
+            ratio_completados: biomet.ratio_completados || null,  // objetivos logrados / objetivos totales
             eficacia_plan_propio: biomet.eficacia_plan_propio || null,  // ejecutó correctamente su propio plan
             
             // === EFICIENCIA ===
-            economia_cognitiva: biomet.economia_cognitiva || null,  // acciones útiles / acciones totales
+            ratio_acciones_util: biomet.ratio_acciones_util || null,  // acciones útiles / acciones totales
             eficiencia_trayectoria: biomet.eficiencia_trayectoria || null,  // camino directo / camino real
             
             // === PATRÓN ANTE ERRORES (CRÍTICO CLÍNICO) ===
@@ -94,7 +94,7 @@ global.showMetricsModal = async function(resultData) {
             // === EJECUTIVO ===
             ejecutivo: {
                 impulsividad_ratio: biomet.impulsividad_ratio || null,
-                inhibicion_motor: biomet.inhibicion_motor || null,
+                count_drags_abortados: biomet.count_drags_abortados || null,
                 hesitaciones_count: biomet.hesitaciones_count || 0,
                 rt_mean_ms: biomet.rt_mean_ms || null,
                 rt_cv: biomet.rt_cv || null  // variabilidad = irregularidad atencional
@@ -190,12 +190,12 @@ global.showMetricsModal = async function(resultData) {
                 patient_dni: dni,
                 game_slug: gameSlug,
                 metric_type: 'clinical_analysis',
-                metric_value: analysis.eficacia_objetivo,  // métrica principal
+                metric_value: analysis.ratio_completados,  // métrica principal
                 metric_data: {
                     // Plan ejecutado vs ideal
-                    eficacia_objetivo: analysis.eficacia_objetivo,
+                    ratio_completados: analysis.ratio_completados,
                     eficacia_plan_propio: analysis.eficacia_plan_propio,
-                    economia_cognitiva: analysis.economia_cognitiva,
+                    ratio_acciones_util: analysis.ratio_acciones_util,
                     eficiencia_trayectoria: analysis.eficiencia_trayectoria,
                     
                     // Patrón ante errores (CRÍTICO)
@@ -217,7 +217,7 @@ global.showMetricsModal = async function(resultData) {
                     
                     // Ejecutivo
                     impulsividad_ratio: analysis.ejecutivo.impulsividad_ratio,
-                    inhibicion_motor: analysis.ejecutivo.inhibicion_motor,
+                    count_drags_abortados: analysis.ejecutivo.count_drags_abortados,
                     hesitaciones_count: analysis.ejecutivo.hesitaciones_count,
                     rt_mean_ms: analysis.ejecutivo.rt_mean_ms,
                     rt_cv: analysis.ejecutivo.rt_cv,

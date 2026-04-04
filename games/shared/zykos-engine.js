@@ -55,7 +55,7 @@ var METRIC_DICTIONARY = {
 
     // === SECUENCIA / PLANIFICACIÓN ===
     secuencia_correcta_pct: { domain:'EJECUTIVO', construct:'Secuenciación', unit:'pct', range:[0,100], desc:'% de acciones en orden correcto.' },
-    eficacia_objetivo:      { domain:'EJECUTIVO', construct:'Eficacia de objetivo', unit:'ratio', range:[0,1], desc:'Objetivos completados / esperados.' },
+    ratio_completados:      { domain:'EJECUTIVO', construct:'Completados sobre esperados', unit:'ratio', range:[0,1], desc:'Objetivos completados / esperados.' },
     eficacia_plan_propio:   { domain:'EJECUTIVO', construct:'Economía de plan', unit:'ratio', range:[0,1], desc:'Acciones útiles / acciones totales.' },
     plan_failed_attempts:   { domain:'EJECUTIVO', construct:'Intentos fallidos', unit:'count', range:[0,50], desc:'Planes iniciados pero no completados.' },
 
@@ -65,14 +65,31 @@ var METRIC_DICTIONARY = {
     rt_cv:                  { domain:'ATENCION', construct:'Coeficiente variación RT', unit:'ratio', range:[0,2], desc:'CV del RT. Estándar: <0.25 bueno.' },
     decaimiento_mitades: { domain:'ATENCION', construct:'Decaimiento por mitades (RT 2da/1ra mitad)', unit:'ratio', range:[0.5,3], desc:'RT 2da mitad / RT 1ra mitad. >1 = fatiga.' },
 
+    // Fatigabilidad y distribucion temporal — tercios, transversal a todos los juegos
+    eficacia_tercio_1:    { domain:'FATIGABILIDAD', construct:'Eficacia tercio inicial', unit:'ratio', range:[0,1], desc:'Correctos/total en el primer tercio temporal de la sesion.' },
+    eficacia_tercio_2:    { domain:'FATIGABILIDAD', construct:'Eficacia tercio medio', unit:'ratio', range:[0,1], desc:'Correctos/total en el segundo tercio temporal de la sesion.' },
+    eficacia_tercio_3:    { domain:'FATIGABILIDAD', construct:'Eficacia tercio final', unit:'ratio', range:[0,1], desc:'Correctos/total en el ultimo tercio temporal de la sesion.' },
+    delta_ok_t3_menos_t1: { domain:'FATIGABILIDAD', construct:'ok_t3/total_t3 menos ok_t1/total_t1', unit:'ratio', range:[-1,1], desc:'(ok_t3/total_t3) - (ok_t1/total_t1). El clinico interpreta la pendiente.' },
+    rt_tercio_1:          { domain:'FATIGABILIDAD', construct:'RT medio tercio inicial', unit:'ms', range:[0,5000], desc:'RT promedio en el primer tercio. Null si < 6 respuestas.' },
+    rt_tercio_2:          { domain:'FATIGABILIDAD', construct:'RT medio tercio intermedio', unit:'ms', range:[0,5000], desc:'RT promedio en el segundo tercio.' },
+    rt_tercio_3:          { domain:'FATIGABILIDAD', construct:'RT medio tercio final', unit:'ms', range:[0,5000], desc:'RT promedio en el ultimo tercio.' },
+    errores_tercio_1:     { domain:'FATIGABILIDAD', construct:'Errores tercio inicial', unit:'count', range:[0,100], desc:'Errores cometidos en el primer tercio temporal. Alto = no fijo la consigna.' },
+    errores_tercio_2:     { domain:'FATIGABILIDAD', construct:'Errores tercio medio', unit:'count', range:[0,100], desc:'Errores en el segundo tercio. Alto = fatiga atencional media sesion.' },
+    errores_tercio_3:     { domain:'FATIGABILIDAD', construct:'Errores tercio final', unit:'count', range:[0,100], desc:'Errores en el ultimo tercio. Alto = olvido de consigna o fatiga final.' },
+    // Automonitoreo — deteccion y correccion de error propio
+    correcciones_activas: { domain:'EJECUTIVO', construct:'Correcciones activas', unit:'count', range:[0,50], desc:'Errores seguidos de correccion del mismo item. Indica automonitoreo activo.' },
+    automonitoreo_pct:    { domain:'EJECUTIVO', construct:'Tasa de automonitoreo', unit:'pct', range:[0,100], desc:'Correcciones activas / total errores * 100. Que proporcion de sus errores el sujeto corrige solo.' },
+    completado_con_pct:   { domain:'EJECUTIVO', construct:'Completitud al declarar fin', unit:'pct', range:[0,100], desc:'% de objetivos completados cuando el sujeto presiona el boton de fin. <90 = automonitoreo deficiente.' },
+    movimientos_post_completado: { domain:'EJECUTIVO', construct:'Movimientos post-declaracion', unit:'count', range:[0,200], desc:'Movimientos realizados despues de declarar completado. Indica perseveracion o correccion tardia.' },
+
     // === HESITACIÓN ===
     hesitaciones_count:     { domain:'EJECUTIVO', construct:'Hesitaciones', unit:'count', range:[0,200], desc:'Pausas >200ms durante acción motora activa.' },
     hesitacion_mean_ms:     { domain:'EJECUTIVO', construct:'Duración hesitación', unit:'ms', range:[0,5000], desc:'Duración media de cada hesitación.' },
 
     // === CONTROL EJECUTIVO ===
     impulsividad_ratio:     { domain:'INHIBICION', construct:'Impulsividad', unit:'ratio', range:[0,1], desc:'Ratio de acciones rápidas (<150ms) sin pausa previa.' },
-    inhibicion_motor:       { domain:'INHIBICION', construct:'Inhibición motora', unit:'ratio', range:[0,1], desc:'Capacidad de frenar acción ya iniciada.' },
-    economia_cognitiva:     { domain:'EJECUTIVO', construct:'Economía cognitiva', unit:'ratio', range:[0,1], desc:'Acciones mínimas necesarias / acciones reales. 1=óptimo.' },
+    count_drags_abortados:       { domain:'INHIBICION', construct:'Drags iniciados y no completados', unit:'ratio', range:[0,1], desc:'Capacidad de frenar acción ya iniciada.' },
+    ratio_acciones_util:     { domain:'EJECUTIVO', construct:'Acciones utiles sobre acciones totales', unit:'ratio', range:[0,1], desc:'Acciones mínimas necesarias / acciones reales. 1=óptimo.' },
 
     // === INSTRUCCIONES / COMPRENSIÓN ===
     instruction_time_ms:    { domain:'COMPRENSION', construct:'Tiempo de lectura', unit:'ms', range:[0,60000], desc:'Tiempo total leyendo instrucciones.' },

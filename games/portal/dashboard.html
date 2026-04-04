@@ -538,14 +538,14 @@ function renderClinicalMetrics(metrics, patients) {
         const tremor = d.jitter_reposo_px != null ? d.jitter_reposo_px.toFixed(2) : (d.tremor_avg_jitter != null ? d.tremor_avg_jitter.toFixed(2) : "—");
         const dysmetria = d.dysmetria_overshoot_count != null ? d.dysmetria_overshoot_count : '—';
         const clumsiness = d.vel_oscilacion_index || d.motor_clumsiness_score != null ? (d.vel_oscilacion_index || d.motor_clumsiness_score * 100).toFixed(0) + '/100' : '—';
-        const meticulousness = d.economia_cognitiva || d.meticulousness_score != null ? (d.economia_cognitiva || d.meticulousness_score * 100).toFixed(0) + '/100' : '—';
+        const meticulousness = d.ratio_acciones_util || d.meticulousness_score != null ? (d.ratio_acciones_util || d.meticulousness_score * 100).toFixed(0) + '/100' : '—';
         const planEff = d.eficiencia_trayectoria || d.plan_efficiency != null ? (d.eficiencia_trayectoria || d.plan_efficiency * 100).toFixed(1) + '%' : '—';
-        const neatness = d.eficacia_objetivo || d.neatness_score != null ? (d.eficacia_objetivo || d.neatness_score * 100).toFixed(0) + '/100' : '—';
+        const neatness = d.ratio_completados || d.neatness_score != null ? (d.ratio_completados || d.neatness_score * 100).toFixed(0) + '/100' : '—';
         const startDelay = d.time_to_first_action_ms != null ? d.time_to_first_action_ms + 'ms' : '—';
 
         // Color coding
         const clumColor = d.vel_oscilacion_index || d.motor_clumsiness_score != null ? (d.vel_oscilacion_index || d.motor_clumsiness_score > 0.5 ? 'var(--danger)' : d.vel_oscilacion_index || d.motor_clumsiness_score > 0.3 ? 'var(--warn)' : 'var(--success)') : '';
-        const metColor = d.economia_cognitiva || d.meticulousness_score != null ? (d.economia_cognitiva || d.meticulousness_score > 0.7 ? 'var(--success)' : d.economia_cognitiva || d.meticulousness_score > 0.4 ? 'var(--warn)' : 'var(--danger)') : '';
+        const metColor = d.ratio_acciones_util || d.meticulousness_score != null ? (d.ratio_acciones_util || d.meticulousness_score > 0.7 ? 'var(--success)' : d.ratio_acciones_util || d.meticulousness_score > 0.4 ? 'var(--warn)' : 'var(--danger)') : '';
 
         const tr = document.createElement('tr');
         tr.innerHTML = DOMPurify.sanitize('<td>' + date + '</td>' +
@@ -583,9 +583,9 @@ function renderMotorProfile(metrics) {
     const avgRT = safeAvg(motorData.map(d => d.mean_rt_ms));
     const avgTremor = safeAvg(motorData.map(d => d.jitter_reposo_px || d.tremor_avg_jitter || d.tremor_avg));
     const avgClumsiness = safeAvg(motorData.map(d => d.vel_oscilacion_index || d.motor_clumsiness_score));
-    const avgMeticulousness = safeAvg(motorData.map(d => d.economia_cognitiva || d.meticulousness_score));
+    const avgMeticulousness = safeAvg(motorData.map(d => d.ratio_acciones_util || d.meticulousness_score));
     const avgPlanEff = safeAvg(motorData.map(d => d.eficiencia_trayectoria || d.plan_efficiency));
-    const avgNeatness = safeAvg(motorData.map(d => d.eficacia_objetivo || d.neatness_score));
+    const avgNeatness = safeAvg(motorData.map(d => d.ratio_completados || d.neatness_score));
     const avgDirChanges = safeAvg(motorData.map(d => d.direction_changes));
     const avgStartDelay = safeAvg(motorData.map(d => d.time_to_first_action_ms));
     const avgMovEff = safeAvg(motorData.map(d => d.eficiencia_trayectoria || d.movement_efficiency));

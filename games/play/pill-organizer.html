@@ -1738,53 +1738,43 @@
                                 });
                                 return { total: mvs.length, temporal_errors: temporal };
                             })(),
-                            // --- SIGNAL: Distribucion de errores por tercio (MEM1 + A1) ---
-                            errors_by_third: (function(){
+                            // errores y correctos por tercio temporal del nivel
+                            errores_por_tercio: (function(){
                                 var mvs = sessionState.movements;
                                 if (mvs.length < 3) return null;
                                 var t0 = sessionState.levelStartTime || sessionState.startTime;
                                 var tEnd = sessionState.endTime || Date.now();
                                 var dur = tEnd - t0;
-                                var t1 = t0 + dur/3;
-                                var t2 = t0 + 2*dur/3;
-                                var thirds = [0,0,0];
-                                var correct_thirds = [0,0,0];
+                                var t1 = t0 + dur/3, t2 = t0 + 2*dur/3;
+                                var err = [0,0,0], ok = [0,0,0];
                                 mvs.forEach(function(m){
                                     var ts = new Date(m.timestamp).getTime();
-                                    var idx = ts < t1 ? 0 : ts < t2 ? 1 : 2;
-                                    if (!m.isCorrect) thirds[idx]++;
-                                    else correct_thirds[idx]++;
+                                    var i = ts < t1 ? 0 : ts < t2 ? 1 : 2;
+                                    if (!m.isCorrect) err[i]++; else ok[i]++;
                                 });
-                                return {
-                                    errors: thirds,
-                                    correct: correct_thirds,
-                                    pattern: thirds[0]>thirds[2]?'inicio':thirds[2]>thirds[0]?'final':'uniforme'
-                                };
+                                return { err_t1: err[0], err_t2: err[1], err_t3: err[2],
+                                         ok_t1: ok[0],  ok_t2: ok[1],  ok_t3: ok[2] };
                             })(),
-                            // --- SIGNAL: Completado prematuro (automonitoreo) ---
-                            completado_prematuro: (function(){
-                                if (!sessionState.completionTimestamp) return false;
-                                var movesAfter = sessionState.movements.filter(function(m){
+                            // pct de completitud cuando apretó el botón + movimientos post-boton
+                            pct_completitud_al_apretar_boton: (function(){
+                                if (!sessionState.completionTimestamp) return null;
+                                return expected > 0
+                                    ? Math.round((sessionState.movesAtCompletion||0) / expected * 100)
+                                    : null;
+                            })(),
+                            movimientos_post_boton: (function(){
+                                if (!sessionState.completionTimestamp) return 0;
+                                return sessionState.movements.filter(function(m){
                                     return new Date(m.timestamp).getTime() > sessionState.completionTimestamp;
                                 }).length;
-                                var completionPct = expected > 0
-                                    ? Math.round(sessionState.movesAtCompletion / expected * 100)
-                                    : 100;
-                                return {
-                                    apretado_con_pct: completionPct,
-                                    movimientos_post_completado: movesAfter,
-                                    prematuro: completionPct < 90
-                                };
                             })(),
-                            // --- SIGNAL: Correcciones activas (coloca y recoge) ---
-                            correcciones_activas: (function(){
+                            // error seguido de correcto mismo medicamento (par consecutivo)
+                            error_seguido_correcto_mismo_med: (function(){
                                 var mvs = sessionState.movements;
-                                // Un error seguido de un correcto del mismo med = correccion activa
                                 var count = 0;
                                 for (var i = 1; i < mvs.length; i++) {
-                                    if (!mvs[i-1].isCorrect && mvs[i].isCorrect && mvs[i].med === mvs[i-1].med) {
-                                        count++;
-                                    }
+                                    if (!mvs[i-1].isCorrect && mvs[i].isCorrect
+                                        && mvs[i].med === mvs[i-1].med) count++;
                                 }
                                 return count;
                             })()

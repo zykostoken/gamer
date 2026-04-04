@@ -180,9 +180,45 @@ function startMode(){if(typeof showPreGameChat==='function'&&!window._pgd){windo
 function toast(m,t){const c=document.getElementById('toasts'),d=document.createElement('div');d.className='toast toast-'+(t||'info');d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),2500)}
 
 /* ===== CLASSIFY ===== */
-function startClassify(){STATE.phase='playing';const dk='level_'+STATE.level,diff=(PACK.difficulty_scaling||{})[dk]||{items_per_round:15,categories_visible:5};let cats=[...PACK.categories];if(diff.categories_visible&&diff.categories_visible<cats.length)cats=shuffle(cats).slice(0,diff.categories_visible);const catIds=new Set(cats.map(c=>c.id));let items=shuffle(PACK.items.filter(i=>catIds.has(i.category))).slice(0,Math.min(diff.items_per_round||15,PACK.items.length));STATE.currentItems=items;STATE.totalItems=items.length;
+function getDiff(){const dk='level_'+STATE.level;return Object.assign({items_per_round:15,categories_visible:5,time_limit:null,hints_available:true,distractors:false,similarity_pairs:false,calculations:false,reasoning_missions:false},(PACK.difficulty_scaling||{})[dk]||(PACK.difficulty_scaling||{})['level_'+Math.max(1,...Object.keys(PACK.difficulty_scaling||{}).map(k=>parseInt(k.replace('level_','')))))||{});}
+
+function getItemsForLevel(diff){
+  // Filtrar items por difficulty maxima segun nivel
+  const maxDiff=STATE.level<=2?2:STATE.level<=4?3:STATE.level<=6?4:5;
+  let pool=PACK.items.filter(i=>(i.difficulty||1)<=maxDiff);
+  // Limitar categorias visibles
+  let cats=[...PACK.categories];
+  if(diff.categories_visible&&diff.categories_visible<cats.length)cats=shuffle(cats).slice(0,diff.categories_visible);
+  const catIds=new Set(cats.map(c=>c.id));
+  pool=pool.filter(i=>catIds.has(i.category));
+  // Agregar distractores (items confusables de otras categorias) en niveles altos
+  if(diff.distractors){
+    const confusables=PACK.items.filter(i=>i.confusable_with&&(i.difficulty||1)<=maxDiff&&!pool.find(p=>p.id===i.id));
+    pool=[...pool,...shuffle(confusables).slice(0,Math.min(4,confusables.length))];
+  }
+  return {items:shuffle(pool).slice(0,Math.min(diff.items_per_round||15,pool.length)),cats:cats};
+}
+
+function startClassify(){STATE.phase='playing';const diff=getDiff();const {items,cats}=getItemsForLevel(diff);STATE.currentItems=items;STATE.totalItems=items.length;
 // ALL items in one shuffled block — no zones, no grouping, no hints
-const allItems=shuffle([...items]).map(it=>{const pr=it.price?'$'+it.price.toLocaleString('es-AR'):(it.price_range?'$'+it.price_range[0].toLocaleString('es-AR'):'');return`<div class="item" draggable="true" data-id="${it.id}" data-cat="${it.category}"><span class="item-em">${it.emoji}</span><span class="item-nm">${it.name}</span>${pr?'<span class="item-price">'+pr+'</span>':''}</div>`}).join('');
+const _diff=getDiff();
+const allItems=shuffle([...items]).map(it=>{
+  const pr=it.price?'$'+it.price.toLocaleString('es-AR'):(it.price_range?'$'+it.price_range[0].toLocaleString('es-AR'):'');
+  const hint=(_diff.hints_available&&it.hint)?`<span class="item-hint" style="display:block;font-size:.65rem;color:var(--dim);margin-top:2px">${it.hint}</span>`:'';
+  const confNote=(_diff.similarity_pairs&&it.similarity_note)?`<span class="item-hint" style="display:block;font-size:.62rem;color:var(--warn);margin-top:2px">${it.similarity_note}</span>`:'';
+  return`<div class="item" draggable="true" data-id="${it.id}" data-cat="${it.category}"><span class="item-em">${it.emoji}</span><span class="item-nm">${it.name}</span>${pr?'<span class="item-price">'+pr+'</span>':''}${hint}${confNote}</div>`;
+}).join('');
+// Timer por nivel
+if(_diff.time_limit){
+  let tLeft=_diff.time_limit;
+  STATE._levelTimer=setInterval(function(){
+    tLeft--;
+    const pct=tLeft/_diff.time_limit*100;
+    const bar=document.getElementById('level-timer-bar');
+    if(bar){bar.style.width=pct+'%';bar.style.background=pct<25?'var(--err)':pct<50?'var(--warn)':'var(--ok)';}
+    if(tLeft<=0){clearInterval(STATE._levelTimer);toast('Tiempo!','err');setTimeout(showResults,800);}
+  },1000);
+}
 document.getElementById('game').innerHTML=`<div class="mostrador"><div class="mostrador-title"> Mostrador — todo mezclado — <span class="count"><span id="remaining">${items.length}</span> por ubicar</span></div><div class="items-row">${allItems}</div></div><div class="estantes" id="estantes"></div>`;
 const ed=document.getElementById('estantes');shuffle([...cats]).forEach(cat=>{const el=document.createElement('div');el.className='estante';el.dataset.cat=cat.id;el.innerHTML=`<div class="estante-hdr"><span class="estante-em">${cat.emoji}</span><span class="estante-nm">${cat.label}</span><span class="estante-count" id="cnt-${cat.id}">0</span></div><div class="estante-items" id="placed-${cat.id}"></div>`;el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag-over')});el.addEventListener('dragleave',()=>el.classList.remove('drag-over'));el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('drag-over');handleDrop(e.dataTransfer.getData('text/plain'),cat.id,document.querySelector('.item[data-id="'+e.dataTransfer.getData('text/plain')+'"]'))});ed.appendChild(el)});
 document.querySelectorAll('.item[draggable]').forEach(el=>{el.addEventListener('dragstart',e=>{el.classList.add('dragging');e.dataTransfer.setData('text/plain',el.dataset.id)});el.addEventListener('dragend',()=>el.classList.remove('dragging'));let tc=null;el.addEventListener('touchstart',e=>{el.classList.add('dragging');tc=el.cloneNode(true);tc.style.cssText='position:fixed;z-index:10000;pointer-events:none;opacity:.8;transform:scale(1.1)';tc.style.left=(e.touches[0].clientX-50)+'px';tc.style.top=(e.touches[0].clientY-50)+'px';document.body.appendChild(tc)},{passive:true});el.addEventListener('touchmove',e=>{e.preventDefault();if(tc){tc.style.left=(e.touches[0].clientX-50)+'px';tc.style.top=(e.touches[0].clientY-50)+'px'}document.querySelectorAll('.estante').forEach(s=>{const r=s.getBoundingClientRect();s.classList.toggle('drag-over',e.touches[0].clientX>=r.left&&e.touches[0].clientX<=r.right&&e.touches[0].clientY>=r.top&&e.touches[0].clientY<=r.bottom)})},{passive:false});el.addEventListener('touchend',e=>{el.classList.remove('dragging');if(tc){tc.remove();tc=null}const t=e.changedTouches[0];document.querySelectorAll('.estante').forEach(s=>{s.classList.remove('drag-over');const r=s.getBoundingClientRect();if(t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom)handleDrop(el.dataset.id,s.dataset.cat,el)})})});
@@ -242,11 +278,11 @@ const avgDelib=STATE.kitLog.length>1?Math.round(STATE.kitLog.slice(1).reduce((a,
 ZYKOS.endSession({
   errores_omision: Math.max(0, PACK.items.length - ids.length),
   errores_comision: 0,
-  economia_cognitiva: ids.length>0 ? Math.min(1, ids.length/Math.max(1,PACK.items.length)) : 0,
-  eficacia_objetivo: catsCov.size/Math.max(1,PACK.categories.length),
+  ratio_acciones_util: ids.length>0 ? Math.min(1, ids.length/Math.max(1,PACK.items.length)) : 0,
+  ratio_completados: catsCov.size/Math.max(1,PACK.categories.length),
   first_action_latency_ms: Math.round(STATE.kitFirstAction)||null,
   hesitaciones_count: STATE.kitDeliberationPauses,
-  inhibicion_motor: STATE.kitRemovals,
+  count_drags_abortados: STATE.kitRemovals,
   session_duration_ms: elapsed*1000,
   _raw_kit: {scenario:sc.title,budget:STATE.kitBudget,spent:STATE.kitSpent,
     exceeded:over,items_added:adds.length,removals:STATE.kitRemovals,
@@ -595,7 +631,7 @@ if(typeof ZYKOS!=='undefined'&&ZYKOS.isActive()){
 ZYKOS.endSession({
   errores_comision: STATE.errors,
   errores_omision: STATE.totalItems - STATE.correct - STATE.errors,
-  economia_cognitiva: STATE.correct/Math.max(1,STATE.totalItems),
+  ratio_acciones_util: STATE.correct/Math.max(1,STATE.totalItems),
   rt_mean_ms: avgRT||null,
   perseveracion_count: pers,
   session_duration_ms: Math.round(performance.now()-STATE.startTime),
@@ -605,7 +641,36 @@ ZYKOS.endSession({
     moves:STATE.moves.slice(-50)}
 });
 }
-document.getElementById('game').innerHTML=`<div class="results"><h2>${acc>=80?' ¡Excelente!':acc>=60?' ¡Bien!':' Seguí practicando'}</h2><div class="big-score">${acc}%</div><p style="color:var(--dim)">Precisión · Nivel ${STATE.level}</p><div class="results-grid"><div class="res-card"><div class="rv" style="color:var(--ok)">${STATE.correct}</div><div class="rl">Correctos</div></div><div class="res-card"><div class="rv" style="color:var(--err)">${STATE.errors}</div><div class="rl">Errores</div></div><div class="res-card"><div class="rv">${el}s</div><div class="rl">Tiempo</div></div><div class="res-card"><div class="rv">${avgRT}ms</div><div class="rl">RT promedio</div></div><div class="res-card"><div class="rv" style="color:var(--accent)">${STATE.score}</div><div class="rl">Puntos</div></div><div class="res-card"><div class="rv">${pers}</div><div class="rl">Perseveraciones</div></div></div><div style="margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><button class="btn btn-primary" onclick="startMode()"> De nuevo</button><button class="btn btn-ghost" onclick="showIntro()">️ Menú</button></div><div style="margin-top:24px;padding:16px;background:var(--surface);border-radius:12px;text-align:left;max-width:600px;margin:auto;border:1px solid var(--border)">${mouseHTML()}</div></div>`}
+// Progresion automatica de nivel
+const maxLevel=Object.keys(PACK.difficulty_scaling||{}).length||7;
+const canAdvance=acc>=75&&STATE.level<maxLevel;
+const nextLevelBtn=canAdvance
+  ?`<button class="btn btn-primary" onclick="STATE.level++;startMode()">Nivel ${STATE.level+1} →</button>`
+  :'';
+const repeatBtn=`<button class="${canAdvance?'btn btn-ghost':'btn btn-primary'}" onclick="startMode()">Repetir nivel ${STATE.level}</button>`;
+const levelMsg=canAdvance
+  ?`<div style="background:rgba(34,197,94,.1);border:1px solid var(--ok);border-radius:10px;padding:10px 16px;font-size:.82rem;color:var(--ok);margin-bottom:16px">Nivel ${STATE.level+1} desbloqueado con ${acc}% de precision</div>`
+  :acc<60?`<div style="background:rgba(239,68,68,.05);border:1px solid var(--err);border-radius:10px;padding:10px 16px;font-size:.82rem;color:var(--err);margin-bottom:16px">Necesitas 75%+ para avanzar. ${acc}% esta vez.</div>`:'';
+
+document.getElementById('game').innerHTML=`<div class="results">
+<h2>${acc>=80?'Excelente':acc>=60?'Bien':'Seguí practicando'}</h2>
+<div class="big-score">${acc}%</div>
+<p style="color:var(--dim)">Precision · Nivel ${STATE.level}</p>
+${levelMsg}
+<div class="results-grid">
+  <div class="res-card"><div class="rv" style="color:var(--ok)">${STATE.correct}</div><div class="rl">Correctos</div></div>
+  <div class="res-card"><div class="rv" style="color:var(--err)">${STATE.errors}</div><div class="rl">Errores</div></div>
+  <div class="res-card"><div class="rv">${el}s</div><div class="rl">Tiempo</div></div>
+  <div class="res-card"><div class="rv">${avgRT}ms</div><div class="rl">RT promedio</div></div>
+  <div class="res-card"><div class="rv" style="color:var(--accent)">${STATE.score}</div><div class="rl">Puntos</div></div>
+  <div class="res-card"><div class="rv">${pers}</div><div class="rl">Persev.</div></div>
+</div>
+<div style="margin-top:24px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+  ${nextLevelBtn}
+  ${repeatBtn}
+  <button class="btn btn-ghost btn-sm" onclick="showIntro()">Menu</button>
+</div>
+</div>`}
 
 
 
