@@ -29,19 +29,30 @@
 var METRIC_DICTIONARY = {
 
     // === TREMOR (Motor - Extrapiramidal) ===
-    jitter_reposo_px:       { domain:'MOTOR', construct:'Jitter de reposo (micro-movimiento en quietud)', unit:'px', range:[0,50], desc:'Jitter basal con input quieto. Correlato: parkinsonismo, ansiedad basal.' },
+    // PROTOCOLO: tremor_reposo_px = jitter_reposo_px (alias clínico del protocolo ZYKOS)
+    // El protocolo clínico usa tremor_* para comunicación con el clínico;
+    // el código usa jitter_* para evitar inferencia diagnóstica prematura.
+    // La equivalencia está documentada en el Protocolo Clínico v1.
+    jitter_reposo_px:       { domain:'MOTOR', construct:'Jitter de reposo', unit:'px', range:[0,50],
+        desc:'Jitter basal con input quieto >500ms. Protocolo: tremor_reposo_px. Correlato: parkinsonismo, ansiedad basal.' },
     jitter_inicio_px:       { domain:'MOTOR', construct:'Jitter de inicio (irregularidad al iniciar movimiento)', unit:'px', range:[0,50], desc:'Jitter al iniciar movimiento hacia target.' },
     jitter_terminal_px:     { domain:'MOTOR', construct:'Jitter terminal (irregularidad al aproximar target)', unit:'px', range:[0,50], desc:'Jitter al llegar al target. Correlato: cerebeloso.' },
-    precision_deposito_px:      { domain:'MOTOR', construct:'Precisión de depósito (error de punto final)', unit:'px', range:[0,200], desc:'Distancia media del click/touch al centro del target.' },
+    precision_deposito_px:      { domain:'MOTOR', construct:'Precisión de depósito (dismetria_mean_px)', unit:'px', range:[0,200],
+        desc:'Protocolo M3: dismetria_mean_px. Distancia media del click/touch al centro del target.' },
 
     // === VELOCIDAD MOTORA ===
     vel_peak_mean:          { domain:'MOTOR', construct:'Velocidad pico', unit:'px/ms', range:[0,5], desc:'Velocidad pico media del cursor durante movimientos.' },
     vel_peak_sd:            { domain:'MOTOR', construct:'Variabilidad velocidad pico', unit:'px/ms', range:[0,3], desc:'SD de velocidad pico.' },
-    vel_cv:                 { domain:'MOTOR', construct:'Coeficiente variación velocidad', unit:'ratio', range:[0,2], desc:'CV de velocidad. Alto = irregular.' },
-    vel_uniformidad_index:          { domain:'MOTOR', construct:'Uniformidad de velocidad (1 - CV velocidad)', unit:'index', range:[0,1], desc:'1 - vel_cv. Alto = movimiento rígido, uniforme.' },
-    vel_oscilacion_index:         { domain:'MOTOR', construct:'Oscilación rítmica de velocidad', unit:'index', range:[0,1], desc:'Oscilaciones de velocidad durante movimiento. Correlato: extrapiramidal.' },
-    vel_caida_brusca_ratio:      { domain:'MOTOR', construct:'Caídas bruscas de aceleración (ratio)', unit:'ratio', range:[0,10], desc:'Caídas bruscas de aceleración. Correlato: espasticidad.' },
-    vel_perfil_abrupto:     { domain:'MOTOR', construct:'Perfil abrupto de velocidad (derivado de caídas)', unit:'index', range:[0,1], desc:'Derivado de clasp_knife. 0=normal, 1=espástico.' },
+    vel_cv:                 { domain:'MOTOR', construct:'CV velocidad (M4)', unit:'ratio', range:[0,2],
+        desc:'Protocolo M4: base de rigidez_index (1-vel_cv). Alto=movimiento rígido sin modulación.' },
+    vel_uniformidad_index:          { domain:'MOTOR', construct:'Índice de uniformidad (rigidez_index)', unit:'index', range:[0,1],
+        desc:'Protocolo M4: rigidez_index = 1 - vel_cv. Alto=pobreza de modulación rítmica.' },
+    vel_oscilacion_index:         { domain:'MOTOR', construct:'Oscilaciones rítmicas (cogwheel_index)', unit:'index', range:[0,1],
+        desc:'Protocolo M4: cogwheel_index. Signo de rueda dentada digital. Ref: Jankovic 2008.' },
+    vel_caida_brusca_ratio:      { domain:'MOTOR', construct:'Caída brusca de aceleración (clasp_knife_ratio)', unit:'ratio', range:[0,10],
+        desc:'Protocolo M4: clasp_knife_ratio. Caídas bruscas de aceleración; indicador de espasticidad o rigidez severa.' },
+    vel_perfil_abrupto:     { domain:'MOTOR', construct:'Perfil abrupto normalizado (espasticidad_index)', unit:'index', range:[0,1],
+        desc:'Protocolo M4: espasticidad_index. Valor normalizado de la caída de tensión motora. 0=normal, 1=espástico.' },
 
     // === TRAYECTORIA / PRAXIS ===
     eficiencia_trayectoria: { domain:'PRAXIS', construct:'Eficiencia de trayectoria', unit:'ratio', range:[0,1], desc:'Path recto / path real. 1=perfecto.' },
@@ -55,17 +66,32 @@ var METRIC_DICTIONARY = {
 
     // === SECUENCIA / PLANIFICACIÓN ===
     secuencia_correcta_pct: { domain:'EJECUTIVO', construct:'Secuenciación', unit:'pct', range:[0,100], desc:'% de acciones en orden correcto.' },
-    ratio_completados:      { domain:'EJECUTIVO', construct:'Completados sobre esperados', unit:'ratio', range:[0,1], desc:'Objetivos completados / esperados.' },
+    ratio_completados:      { domain:'EJECUTIVO', construct:'Eficacia de objetivo (eficacia_objetivo)', unit:'ratio', range:[0,1],
+        desc:'Protocolo E2: eficacia_objetivo. Objetivos logrados / esperados.' },
     eficacia_plan_propio:   { domain:'EJECUTIVO', construct:'Economía de plan', unit:'ratio', range:[0,1], desc:'Acciones útiles / acciones totales.' },
     plan_failed_attempts:   { domain:'EJECUTIVO', construct:'Intentos fallidos', unit:'count', range:[0,50], desc:'Planes iniciados pero no completados.' },
 
     // === TIEMPO DE REACCIÓN / ATENCIÓN ===
     rt_mean_ms:             { domain:'ATENCION', construct:'Tiempo de reacción medio', unit:'ms', range:[100,5000], desc:'RT medio sobre todos los estímulos respondidos.' },
     rt_sd_ms:               { domain:'ATENCION', construct:'Variabilidad RT', unit:'ms', range:[0,2000], desc:'SD del RT. Alto = inconsistente.' },
-    rt_cv:                  { domain:'ATENCION', construct:'Coeficiente variación RT', unit:'ratio', range:[0,2], desc:'CV del RT. Estándar: <0.25 bueno.' },
-    decaimiento_mitades: { domain:'ATENCION', construct:'Decaimiento por mitades (RT 2da/1ra mitad)', unit:'ratio', range:[0.5,3], desc:'RT 2da mitad / RT 1ra mitad. >1 = fatiga.' },
+    rt_cv:                  { domain:'ATENCION', construct:'Coeficiente de variación RT (A1)', unit:'ratio', range:[0,2],
+        desc:'Protocolo A1. rt_cv > 0.25 sugiere irregularidad atencional. TDAH correlación g=0.76.' },
+    iiv_consecutiva:        { domain:'ATENCION', construct:'Variabilidad intraindividual consecutiva (IIV)', unit:'ms', range:[0,500],
+        desc:'Protocolo A1. SD de las diferencias entre RT de ensayos consecutivos. Sensible a fluctuaciones atencionales.' },
+    decaimiento_mitades: { domain:'ATENCION', construct:'Decaimiento de vigilancia (decaimiento_vigilancia)', unit:'ratio', range:[0.5,3],
+        desc:'Protocolo A1: decaimiento_vigilancia. RT 2da mitad / RT 1ra mitad. >1 = fatiga sostenida.' },
+    iiv_consecutiva:      { domain:'ATENCION', construct:'Variabilidad intraindividual consecutiva', unit:'ms', range:[0,500],
+        desc:'Protocolo A1: iiv_consecutiva. SD de las diferencias entre ensayos consecutivos. Sensible a fluctuaciones atencionales.' },
 
     // Fatigabilidad y distribucion temporal — tercios, transversal a todos los juegos
+    // A2 Fatiga — protocolo clínico v1 (calculados en análisis diferido SQL)
+    fatiga_motor:         { domain:'FATIGABILIDAD', construct:'Fatiga motora', unit:'ratio', range:[0,5],
+        desc:'Protocolo A2. jitter_terminal / jitter_reposo. >1.5 = fatiga motora significativa.' },
+    fatiga_precision:     { domain:'FATIGABILIDAD', construct:'Fatiga de precisión', unit:'ratio', range:[0,5],
+        desc:'Protocolo A2. precision_deposito_px T3 / T1. Degradación por tiempo de exposición.' },
+    fatiga_global:        { domain:'FATIGABILIDAD', construct:'Fatiga global (media ponderada)', unit:'ratio', range:[0,5],
+        desc:'Protocolo A2. Media ponderada de ratios fatiga_motor + fatiga_precision + RT.' },
+
     eficacia_tercio_1:    { domain:'FATIGABILIDAD', construct:'Eficacia tercio inicial', unit:'ratio', range:[0,1], desc:'Correctos/total en el primer tercio temporal de la sesion.' },
     eficacia_tercio_2:    { domain:'FATIGABILIDAD', construct:'Eficacia tercio medio', unit:'ratio', range:[0,1], desc:'Correctos/total en el segundo tercio temporal de la sesion.' },
     eficacia_tercio_3:    { domain:'FATIGABILIDAD', construct:'Eficacia tercio final', unit:'ratio', range:[0,1], desc:'Correctos/total en el ultimo tercio temporal de la sesion.' },
@@ -88,8 +114,10 @@ var METRIC_DICTIONARY = {
 
     // === CONTROL EJECUTIVO ===
     impulsividad_ratio:     { domain:'INHIBICION', construct:'Impulsividad', unit:'ratio', range:[0,1], desc:'Ratio de acciones rápidas (<150ms) sin pausa previa.' },
-    count_drags_abortados:       { domain:'INHIBICION', construct:'Drags iniciados y no completados', unit:'ratio', range:[0,1], desc:'Capacidad de frenar acción ya iniciada.' },
-    ratio_acciones_util:     { domain:'EJECUTIVO', construct:'Acciones utiles sobre acciones totales', unit:'ratio', range:[0,1], desc:'Acciones mínimas necesarias / acciones reales. 1=óptimo.' },
+    count_drags_abortados:       { domain:'INHIBICION', construct:'Inhibición motora (inhibicion_motor)', unit:'count', range:[0,200],
+        desc:'Protocolo E1: inhibicion_motor. Movimientos iniciados y abortados antes del click.' },
+    ratio_acciones_util:     { domain:'EJECUTIVO', construct:'Economía cognitiva (economia_cognitiva)', unit:'ratio', range:[0,1],
+        desc:'Protocolo E2: economia_cognitiva. Acciones útiles / total. Mide eficiencia ejecutiva.' },
 
     // === INSTRUCCIONES / COMPRENSIÓN ===
     instruction_time_ms:    { domain:'COMPRENSION', construct:'Tiempo de lectura', unit:'ms', range:[0,60000], desc:'Tiempo total leyendo instrucciones.' },
@@ -97,6 +125,14 @@ var METRIC_DICTIONARY = {
     first_action_latency_ms:{ domain:'EJECUTIVO', construct:'Latencia de inicio', unit:'ms', range:[0,30000], desc:'Tiempo desde que aparece el juego hasta 1ra acción.' },
 
     // === META / SESIÓN ===
+    // AFEC — biomarcadores afectivos (protocolo v1, calculados en análisis diferido)
+    engagement_decay:     { domain:'AFEC', construct:'Decaimiento de engagement inter-sesiones', unit:'ratio', range:[-2,2],
+        desc:'Protocolo AFEC1. Variación de duración sesión N vs N-1. Negativo = retracción afectiva.' },
+    color_hex:            { domain:'AFEC', construct:'Color elegido en pre-game (proyectivo)', unit:'hex', range:[0,0],
+        desc:'Protocolo AFEC2. Tono cromático en el mood check-in pre-juego. Análisis proyectivo.' },
+    color_congruencia:    { domain:'AFEC', construct:'Congruencia estado afectivo-rendimiento', unit:'ratio', range:[-1,1],
+        desc:'Protocolo AFEC2. Correlación entre el color elegido y el rendimiento real de la sesión.' },
+
     session_duration_ms:    { domain:'META', construct:'Duración sesión', unit:'ms', range:[0,3600000], desc:'Duración total de la sesión de juego.' },
     total_clicks:           { domain:'META', construct:'Total clicks', unit:'count', range:[0,10000], desc:'Total de clicks/taps en la sesión.' },
     total_actions:          { domain:'META', construct:'Total acciones', unit:'count', range:[0,10000], desc:'Total de acciones significativas.' },
@@ -515,7 +551,13 @@ var ZYKOS = {
                           if (r.error) console.warn('[patterns]', r.error.message);
                       }).catch(function(){});
 
-                    // 2. Timeline de humor facial (solo si agent-media estuvo activo)
+                    // 2. Fatiga A2 del protocolo clínico (cómputo diferido)
+                    sb.rpc('zykos_compute_fatiga', { p_session_id: payload.session_id })
+                      .then(function(r){
+                          if (r.error) console.warn('[fatiga-A2]', r.error.message);
+                      }).catch(function(){});
+
+                    // 3. Timeline de humor facial (solo si agent-media estuvo activo)
                     var humTL  = metrics['_raw_humor_timeline'];
                     var humPE  = metrics['_raw_performance_events'];
                     if (humTL && humTL.length > 0) {

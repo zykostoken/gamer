@@ -173,7 +173,19 @@ var agent = {
         var rtMean = mean(rts);
         var rtSd = sd(rts);
         var rtCv = rtMean > 0 ? rtSd / rtMean : 0;
-        
+
+        // IIV consecutiva (Protocolo A1: iiv_consecutiva)
+        // SD de las diferencias absolutas entre RTs consecutivos
+        // Más sensible que rt_cv a las fluctuaciones atencionales episódicas
+        var iivCons = null;
+        if (rts.length >= 4) {
+            var diffs = [];
+            for (var i = 1; i < rts.length; i++) {
+                diffs.push(Math.abs(rts[i] - rts[i-1]));
+            }
+            iivCons = +(sd(diffs).toFixed(1));
+        }
+
         // Vigilance decrement: compare first half vs second half RTs
         var decaimiento = 1;
         if (rts.length >= 6) {
@@ -192,6 +204,7 @@ var agent = {
             rt_mean_ms:               rts.length > 0 ? +(rtMean.toFixed(1)) : null,
             rt_sd_ms:                 rts.length > 0 ? +(rtSd.toFixed(1)) : null,
             rt_cv:                    rts.length > 0 ? +(rtCv.toFixed(3)) : null,
+            iiv_consecutiva:          iivCons,
             decaimiento_vigilancia:   +(decaimiento.toFixed(3)),
             hesitaciones_count:       state.hesitations.length,
             hesitacion_mean_ms:       state.hesitations.length > 0 
