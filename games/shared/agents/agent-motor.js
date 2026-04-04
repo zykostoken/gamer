@@ -1,8 +1,8 @@
 // ================================================================
-// agent-tremor.js — PIRATE AGENT: Motor/Tremor Capture
+// agent-motor.js — PIRATE AGENT: Captura motora (jitter, velocidad, trayectoria)
 // (c) 2025-2026 Gonzalo Perez Cortizo. Proprietary. See LICENSE.
 // 
-// Roba métricas motoras del stream de mousemove/touchmove.
+// Captura irregularidad motora, velocidad y precision desde mousemove/touchmove/click.
 // No le pide nada al juego. Solo observa cómo se mueve el dedo/mouse.
 //
 // Métricas que produce (nombres canónicos del METRIC_DICTIONARY):
@@ -264,11 +264,11 @@ var agent = {
 
 // Auto-register with engine
 if (typeof ZYKOS !== 'undefined') {
-    ZYKOS.registerAgent('tremor', agent);
+    ZYKOS.registerAgent('motor', agent);
 } else {
     // Engine not loaded yet, wait
     document.addEventListener('DOMContentLoaded', function() {
-        if (typeof ZYKOS !== 'undefined') ZYKOS.registerAgent('tremor', agent);
+        if (typeof ZYKOS !== 'undefined') ZYKOS.registerAgent('motor', agent);
     });
 }
 

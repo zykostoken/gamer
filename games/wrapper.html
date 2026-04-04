@@ -35,14 +35,14 @@ iframe{width:100%;height:100%;border:none}
 //
 // MÉTRICAS CAPTURADAS (pasivas, desde eventos DOM):
 // ─── MOTOR ───
-// tremor_inicio: jitter de posición en los primeros 2s de quietud
-// tremor_reposo: jitter promedio durante pausas >500ms
-// tremor_terminal: jitter al aproximarse al target (últimos 100ms pre-click)
-// dismetria_px: distancia del click al centro del target más cercano
+// jitter_inicio_px: jitter en los primeros 2s de movimiento
+// jitter_reposo_px: jitter durante pausas >500ms
+// jitter_terminal_px: jitter al aproximarse al target (ultimos 100ms pre-click)
+// precision_deposito_px: distancia del click al centro del target
 // path_efficiency: distancia recorrida / distancia directa punto a punto
 // velocidad_cursor: px/ms promedio de movimiento
-// aceleracion_cambios: cambios abruptos de aceleración (cogwheel-like)
-// clasp_knife: ratio velocidad inicio/fin de un movimiento (espasticidad)
+// vel_oscilacion_index: cambios abruptos de aceleracion
+// vel_caida_brusca_ratio: ratio velocidad inicio/fin de movimiento
 //
 // ─── TEMPORAL ───
 // rt_ms: tiempo desde aparición de estímulo hasta respuesta
@@ -53,7 +53,7 @@ iframe{width:100%;height:100%;border:none}
 // instruction_read_time_ms: tiempo en pantalla de instrucciones
 //
 // ─── ATENCIONAL ───
-// decaimiento_vigilancia: ratio RT 2da mitad / 1ra mitad
+// decaimiento_mitades: ratio RT 2da mitad / 1ra mitad
 // fatiga_index: ratio errores 2da mitad / 1ra mitad
 // scrollback_count: veces que el usuario vuelve a leer instrucciones
 // tab_switches: veces que cambió de pestaña durante el juego
@@ -79,7 +79,7 @@ iframe{width:100%;height:100%;border:none}
 // ======================== CONFIG ========================
 var SAMPLE_RATE_MS = 16;      // ~60fps for mouse tracking
 var HESITATION_THRESHOLD = 300; // ms of no movement = hesitation
-var TREMOR_WINDOW_MS = 2000;   // initial tremor measurement window
+var JITTER_WINDOW_MS = 2000;   // ventana de medicion de jitter inicial
 var INACTIVITY_THRESHOLD = 5000;// ms without any event = inactivity
 var FLUSH_INTERVAL = 30000;    // auto-flush events every 30s
 
@@ -99,7 +99,7 @@ var W = {
     
     // Mouse/touch tracking
     lastX: 0, lastY: 0, lastMoveTime: 0,
-    positions: [],           // rolling window for tremor calc
+    positions: [],           // ventana para calculo de jitter
     movements: [],           // [{t, x, y, dx, dy, speed, accel}]
     
     // Click tracking
@@ -232,7 +232,7 @@ function attachCapture(frame) {
             
             var speed = dt > 0 ? Math.sqrt(dx*dx + dy*dy) / dt : 0;
             
-            // Track position for tremor
+            // Track position for jitter
             W.positions.push({t: now, x: e.clientX, y: e.clientY});
             if (W.positions.length > 200) W.positions.shift(); // rolling window
             
@@ -430,14 +430,14 @@ async function computeAndSave() {
     var clks = W.clicks;
     
     // ─── TREMOR ───
-    // Initial tremor: jitter in first 2 seconds
-    var tremorInicio = computeTremor(W.positions.filter(function(p) { return p.t - W.sessionStart < TREMOR_WINDOW_MS; }));
-    // Resting tremor: jitter during low-speed periods
+    // Jitter inicial: primeros 2 segundos
+    var jitter_inicio = computeJitter(W.positions.filter(function(p) { return p.t - W.sessionStart < JITTER_WINDOW_MS; }));
+    // Jitter en reposo: periodos de baja velocidad
     var restPositions = W.positions.filter(function(p) {
         var mv = mvs.find(function(m) { return Math.abs(m.t - p.t) < 50; });
         return mv && mv.speed < 0.1;
     });
-    var tremorReposo = computeTremor(restPositions);
+    var jitter_reposo = computeJitter(restPositions);
     
     // ─── DISMETRÍA ───
     var clickDistances = clks.map(function(c) {
@@ -512,9 +512,9 @@ async function computeAndSave() {
         total_movements: mvs.length,
         
         // Motor
-        tremor_inicio: Math.round(tremorInicio * 1000) / 1000,
-        tremor_reposo: Math.round(tremorReposo * 1000) / 1000,
-        dismetria_mean_px: Math.round(meanDismetria * 10) / 10,
+        jitter_inicio_px: Math.round(jitter_inicio * 1000) / 1000,
+        jitter_reposo_px: Math.round(jitter_reposo * 1000) / 1000,
+        precision_deposito_px: Math.round(meanDismetria * 10) / 10,
         path_efficiency: Math.round(avgPathEff * 1000) / 1000,
         velocidad_cursor_px_ms: Math.round(avgSpeed * 1000) / 1000,
         aceleracion_cambios: accelChanges,
@@ -527,7 +527,7 @@ async function computeAndSave() {
         
         // Atencional
         tab_switches: W.tabSwitches,
-        decaimiento_vigilancia: Math.round(vigilanceDecrement * 100) / 100,
+        decaimiento_mitades: Math.round(vigilanceDecrement * 100) / 100,
         
         // Conductual
         perseveraciones: W.perseverations,
@@ -562,7 +562,7 @@ async function computeAndSave() {
 }
 
 // ======================== TREMOR COMPUTATION ========================
-function computeTremor(positions) {
+function computeJitter(positions) {
     if (positions.length < 5) return 0;
     // Tremor = standard deviation of position deltas
     var deltas = [];
