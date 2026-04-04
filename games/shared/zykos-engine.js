@@ -272,6 +272,11 @@ var METRIC_DICTIONARY = {
     mic_speech_episodes:          { domain:'MEDIA', unit:'count',  range:[0,200],    desc:'Episodios de vocalización del paciente.' },
     mic_external_noise_count:     { domain:'MEDIA', unit:'count',  range:[0,500],    desc:'Picos de ruido externo >70dB. Proxy de distractores ambientales.' },
 
+    // MEDIA — Consentimiento y capacidad de hardware
+    consent_cam:                  { domain:'MEDIA', unit:'bool',  range:[0,1],      desc:'1 si el usuario consintió uso de cámara para esta sesión.' },
+    consent_mic:                  { domain:'MEDIA', unit:'bool',  range:[0,1],      desc:'1 si el usuario consintió uso de micrófono para esta sesión.' },
+    media_hw_tier:                { domain:'MEDIA', unit:'enum',  range:['none','mic_only','low','full'], desc:'Tier de capacidad de hardware: full (cam+mic), low (cam 2fps), mic_only, none.' },
+
     // Contexto de sesión — imprescindible para interpretar cualquier métrica conductual.
     // Sesión 1 de un paciente nuevo ≠ sesión 15 de un paciente establecido.
     // La expansividad (salirse, explorar) en sesión 1 puede ser un indicador
