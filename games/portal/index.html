@@ -18,6 +18,9 @@ header { background:var(--surface); border-bottom:1px solid var(--border); paddi
 .sessions-badge.low { background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.2); color:var(--danger); }
 .logout-btn { background:none; border:1px solid var(--border); color:var(--dim); padding:6px 14px; border-radius:8px; cursor:pointer; font-size:0.8rem; }
 .logout-btn:hover { border-color:var(--danger); color:var(--danger); }
+.recalib-btn { background:none; border:1px solid rgba(0,212,255,0.3); color:rgba(0,212,255,0.7); padding:6px 14px; border-radius:8px; cursor:pointer; font-size:0.8rem; transition:all .2s; }
+.recalib-btn:hover { border-color:var(--neon); color:var(--neon); background:rgba(0,212,255,0.06); }
+.recalib-btn.active { border-color:#22c55e; color:#22c55e; background:rgba(34,197,94,0.08); }
 .container { max-width:1100px; margin:0 auto; padding:24px 16px; }
 .welcome { margin-bottom:24px; }
 .welcome h1 { font-size:1.4rem; font-weight:700; margin-bottom:4px; }
@@ -44,6 +47,7 @@ header { background:var(--surface); border-bottom:1px solid var(--border); paddi
     <div class="user-bar">
       <span id="user-name" style="color:var(--dim)"></span>
       <span class="sessions-badge" id="sessions-badge">-- sesiones</span>
+      <button class="recalib-btn" id="btn-recalib" onclick="showRecalibModal()" title="Recalibrar dispositivo">Recalibrar</button>
       <button class="logout-btn" onclick="doLogout()">Salir</button>
     </div>
   </div>
@@ -334,8 +338,6 @@ async function init() {
 
 
     showZykosConsent(function() {
-      // Paso 2: consentimiento de biomarcadores (cam/mic)
-      // Se muestra una sola vez — si ya fue respondido, pasa directo
       showMediaConsent(function() {
         renderGames(data.role === 'superadmin' ? 999 : data.sessions_remaining);
       });
@@ -344,6 +346,174 @@ async function init() {
 }
 
 init();
+
+// ================================================================
+// RECALIBRACIÓN DE DISPOSITIVO — accesible desde el header en todo momento
+// Casos de uso:
+//   - Se rompió el mouse, cambió a otro
+//   - Pasó de desktop a touch (celu sin batería → otro dispositivo)
+//   - Cambió la latencia del hardware durante la sesión
+//   - Quiere verificar que el sensor está calibrado antes de jugar
+// ================================================================
+function showRecalibModal() {
+  // Si ya hay un modal abierto, cerrarlo
+  var existing = document.getElementById('recalib-overlay');
+  if (existing) { existing.remove(); return; }
+
+  var overlay = document.createElement('div');
+  overlay.id = 'recalib-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;padding:16px;';
+
+  // Leer calibración actual si existe
+  var currentCal = null;
+  try { currentCal = JSON.parse(localStorage.getItem('zykos_hw_profile') || 'null'); } catch(e){}
+
+  var currentInfo = currentCal
+    ? '<div style="background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.15);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.75rem;color:#94a3b8;line-height:1.7;">' +
+      'Calibracion actual: ' + (currentCal.input_type || '?') + ' · ' +
+      'Jitter base: ' + (currentCal.hw_idle_jitter_px || '?') + 'px · ' +
+      'Latencia: ' + (currentCal.hw_latency_ms || '?') + 'ms · ' +
+      'Fecha: ' + (currentCal.calibrated_at ? currentCal.calibrated_at.slice(0,10) : '?') +
+      '</div>'
+    : '<div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.75rem;color:#f59e0b;">Sin calibracion guardada para este dispositivo.</div>';
+
+  overlay.innerHTML =
+    '<div style="background:#111827;border:1px solid rgba(0,212,255,0.2);border-radius:16px;padding:28px;max-width:440px;width:100%;color:#e2e8f0;font-family:system-ui,sans-serif;">' +
+      '<h3 style="font-size:1rem;font-weight:600;margin-bottom:6px;color:#00d4ff;">Recalibrar dispositivo</h3>' +
+      '<p style="font-size:0.8rem;color:#94a3b8;line-height:1.6;margin-bottom:14px;">' +
+        'Recalibrá si cambiaste de mouse, teclado o dispositivo, o si noti&aacute;s que las m&eacute;tricas motoras no corresponden con tu hardware actual.' +
+      '</p>' +
+      currentInfo +
+      '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">' +
+        '<button id="recalib-run" style="padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#00d4ff,#0099cc);color:#000;font-weight:700;font-size:0.9rem;cursor:pointer;">Calibrar ahora</button>' +
+        '<button id="recalib-reset" style="padding:10px;border:1px solid rgba(245,158,11,0.3);border-radius:10px;background:transparent;color:#f59e0b;font-size:0.8rem;cursor:pointer;">Borrar calibracion guardada</button>' +
+        '<button id="recalib-close" style="padding:10px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:transparent;color:#6b7280;font-size:0.8rem;cursor:pointer;">Cerrar</button>' +
+      '</div>' +
+      '<div id="recalib-status" style="font-size:0.75rem;color:#94a3b8;min-height:20px;text-align:center;"></div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('recalib-close').onclick = function() { overlay.remove(); };
+
+  document.getElementById('recalib-reset').onclick = function() {
+    localStorage.removeItem('zykos_hw_profile');
+    localStorage.removeItem('zykos_calibration_done');
+    document.getElementById('recalib-status').textContent = 'Calibracion borrada. La proxima sesion iniciara sin calibracion previa.';
+    document.getElementById('recalib-status').style.color = '#f59e0b';
+    document.getElementById('btn-recalib').className = 'recalib-btn';
+    setTimeout(function() { overlay.remove(); }, 1800);
+  };
+
+  document.getElementById('recalib-run').onclick = function() {
+    var btn = document.getElementById('recalib-run');
+    var status = document.getElementById('recalib-status');
+    btn.disabled = true;
+    btn.textContent = 'Calibrando...';
+    btn.style.opacity = '0.6';
+    status.style.color = '#00d4ff';
+    status.textContent = 'Midiendo jitter del dispositivo...';
+
+    // Usar input-calibration.js si está disponible, sino calibración directa
+    if (typeof InputCalibration !== 'undefined' && InputCalibration.runCalibration) {
+      InputCalibration.runCalibration(function(profile) {
+        onCalibrationComplete(profile, btn, status, overlay);
+      });
+    } else {
+      // Calibración directa inline — mide jitter y latencia del input
+      runInlineCalibration(function(profile) {
+        onCalibrationComplete(profile, btn, status, overlay);
+      });
+    }
+  };
+}
+
+function onCalibrationComplete(profile, btn, status, overlay) {
+  if (!profile) {
+    status.textContent = 'Error en la calibracion. Intenta de nuevo.';
+    status.style.color = '#ef4444';
+    btn.disabled = false;
+    btn.textContent = 'Calibrar ahora';
+    btn.style.opacity = '1';
+    return;
+  }
+  profile.calibrated_at = new Date().toISOString();
+  profile.recalibrated_manually = true;
+  localStorage.setItem('zykos_hw_profile', JSON.stringify(profile));
+  localStorage.setItem('zykos_calibration_done', '1');
+  status.textContent = 'Listo. Jitter: ' + (profile.hw_idle_jitter_px||0) + 'px · Latencia: ' + (profile.hw_latency_ms||0) + 'ms';
+  status.style.color = '#22c55e';
+  document.getElementById('btn-recalib').className = 'recalib-btn active';
+  setTimeout(function() { overlay.remove(); }, 2200);
+}
+
+// Calibración inline liviana — no depende de input-calibration.js
+// Mide jitter de mousemove en reposo y estima latencia de input
+function runInlineCalibration(callback) {
+  var samples = [];
+  var lastX = null, lastY = null;
+  var startTs = performance.now();
+  var DURATION_MS = 1500;
+  var inputType = ('ontouchstart' in window) ? 'touch' : 'mouse';
+
+  var handler = function(e) {
+    var x = e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX) || 0;
+    var y = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || 0;
+    if (lastX !== null) {
+      var d = Math.sqrt(Math.pow(x - lastX, 2) + Math.pow(y - lastY, 2));
+      samples.push(d);
+    }
+    lastX = x; lastY = y;
+  };
+
+  document.addEventListener('mousemove', handler, { passive: true });
+  document.addEventListener('touchmove', handler, { passive: true });
+
+  setTimeout(function() {
+    document.removeEventListener('mousemove', handler);
+    document.removeEventListener('touchmove', handler);
+
+    var jitter = 0;
+    if (samples.length > 3) {
+      var mn = samples.reduce(function(a,b){return a+b;},0) / samples.length;
+      jitter = +mn.toFixed(2);
+    }
+
+    // Latencia: mide delay entre mousedown y primer mousemove
+    var latMs = 0;
+    var tdown = null;
+    var latHandler = function(e) {
+      if (e.type === 'mousedown' || e.type === 'touchstart') tdown = performance.now();
+      if ((e.type === 'mousemove' || e.type === 'touchmove') && tdown) {
+        latMs = Math.round(performance.now() - tdown);
+        document.removeEventListener('mousedown', latHandler);
+        document.removeEventListener('mousemove', latHandler);
+        document.removeEventListener('touchstart', latHandler);
+        document.removeEventListener('touchmove', latHandler);
+      }
+    };
+    document.addEventListener('mousedown', latHandler);
+    document.addEventListener('mousemove', latHandler);
+    document.addEventListener('touchstart', latHandler, { passive: true });
+    document.addEventListener('touchmove', latHandler, { passive: true });
+
+    // Dar 1s para que el usuario haga un click/tap y medir latencia
+    setTimeout(function() {
+      document.removeEventListener('mousedown', latHandler);
+      document.removeEventListener('mousemove', latHandler);
+      document.removeEventListener('touchstart', latHandler);
+      document.removeEventListener('touchmove', latHandler);
+      callback({
+        hw_idle_jitter_px: jitter,
+        hw_latency_ms:     latMs || 16,
+        input_type:        inputType,
+        samples_count:     samples.length
+      });
+    }, 1000);
+
+  }, DURATION_MS);
+}
+
 </script>
 <script src="/js/track.js"></script>
 <!-- Agentes de biomarcadores media — inicializados desde el portal, no desde los juegos -->
