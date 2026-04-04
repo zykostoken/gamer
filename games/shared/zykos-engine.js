@@ -103,7 +103,67 @@ var METRIC_DICTIONARY = {
 
     // === HARDWARE CORRECTION ===
     hw_idle_jitter_px:      { domain:'HARDWARE', construct:'Jitter basal del dispositivo', unit:'px', range:[0,20], desc:'Ruido del input device en reposo.' },
-    hw_latency_ms:          { domain:'HARDWARE', construct:'Latencia del dispositivo', unit:'ms', range:[0,100], desc:'Delay inherente del input device.' }
+    hw_latency_ms:          { domain:'HARDWARE', unit:'ms', range:[0,100], desc:'Delay inherente del input device.' },
+    // ── MEMORIA ──────────────────────────────────────────────────────────────
+    evocacion_libre_count:        { domain:'MEMORIA', unit:'count', range:[0,20],    desc:'Items recordados sin ayuda en fase de evocacion libre.' },
+    evocacion_indiciada_count:    { domain:'MEMORIA', unit:'count', range:[0,20],    desc:'Items recordados con pista semantica o perceptual.' },
+    intrusiones_count:            { domain:'MEMORIA', unit:'count', range:[0,50],    desc:'Items reportados que no estaban en el set original.' },
+    orden_correcto_pct:           { domain:'MEMORIA', unit:'pct',   range:[0,100],   desc:'% de items recordados en la posicion serial correcta.' },
+    tiempo_encoding_ms:           { domain:'MEMORIA', unit:'ms',    range:[0,60000], desc:'Tiempo total mirando el material antes de la fase de evocacion.' },
+    reconocimiento_correcto_pct:  { domain:'MEMORIA', unit:'pct',   range:[0,100],   desc:'Hits en fase de reconocimiento multiple choice.' },
+    falsos_positivos_count:       { domain:'MEMORIA', unit:'count', range:[0,50],    desc:'Items reconocidos como presentes que no estaban.' },
+    curva_posicion_serial:        { domain:'MEMORIA', unit:'json',  range:null,      desc:'Array de [pos, recordado] para analisis de primacia/recencia.' },
+
+    // ── CALCULO ───────────────────────────────────────────────────────────────
+    calculo_correcto_count:       { domain:'CALCULO', unit:'count', range:[0,50],    desc:'Respuestas numericas dentro del rango aceptable.' },
+    calculo_error_absoluto_medio: { domain:'CALCULO', unit:'units', range:[0,10000], desc:'Error absoluto medio entre respuesta del sujeto y valor correcto.' },
+    calculo_tiempo_mean_ms:       { domain:'CALCULO', unit:'ms',    range:[0,120000],desc:'Tiempo medio por problema de calculo.' },
+    presupuesto_pct_usado:        { domain:'CALCULO', unit:'pct',   range:[0,200],   desc:'% del presupuesto disponible que utilizó. >100 = excedido.' },
+    presupuesto_excedido:         { domain:'CALCULO', unit:'bool',  range:[0,1],     desc:'1 si gastó más del presupuesto disponible.' },
+    calculo_error_pct:            { domain:'CALCULO', unit:'pct',   range:[0,100],   desc:'Error relativo medio (abs(respuesta-correcto)/correcto * 100).' },
+    envases_necesarios_correcto:  { domain:'CALCULO', unit:'bool',  range:[0,1],     desc:'Calculó correctamente la cantidad de envases para el periodo.' },
+
+    // ── COMPRENSION ───────────────────────────────────────────────────────────
+    consigna_repeticiones_count:  { domain:'COMPRENSION', unit:'count', range:[0,20],    desc:'Veces que el sujeto solicitó repetir la consigna (audio o texto).' },
+    tiempo_primer_click_post_audio_ms: { domain:'COMPRENSION', unit:'ms', range:[0,30000], desc:'RT desde fin del audio de consigna hasta primera accion.' },
+    relecturas_consigna_count:    { domain:'COMPRENSION', unit:'count', range:[0,20],    desc:'Scrollbacks en zona de instrucciones durante el juego.' },
+    comprension_score:            { domain:'COMPRENSION', unit:'pct',   range:[0,100],   desc:'Score compuesto de precision en tareas que requieren leer/oír consigna.' },
+
+    // ── MEMORIA DE TRABAJO ────────────────────────────────────────────────────
+    span_items:                   { domain:'MEMORIA_TRABAJO', unit:'count', range:[0,15],   desc:'Cantidad maxima de items manejados simultaneamente sin error.' },
+    actualizacion_correcta_pct:   { domain:'MEMORIA_TRABAJO', unit:'pct',   range:[0,100],  desc:'% de actualizaciones correctas en tareas n-back o equivalente.' },
+    interferencia_ratio:          { domain:'MEMORIA_TRABAJO', unit:'ratio', range:[0,3],    desc:'RT en condicion de interferencia / RT en condicion limpia.' },
+
+    // ── PLANIFICACION ─────────────────────────────────────────────────────────
+    tiempo_planificacion_ms:      { domain:'PLANIFICACION', unit:'ms',    range:[0,60000], desc:'Tiempo antes del primer movimiento (inspeccion del problema).' },
+    pasos_en_orden_pct:           { domain:'PLANIFICACION', unit:'pct',   range:[0,100],   desc:'% de pasos ejecutados en la secuencia optima.' },
+    backtrack_count:              { domain:'PLANIFICACION', unit:'count', range:[0,50],    desc:'Veces que volvio atras en la secuencia de pasos.' },
+    plan_abandonado_count:        { domain:'PLANIFICACION', unit:'count', range:[0,20],    desc:'Planes iniciados y abandonados antes de completarse.' },
+    estrategia_global:            { domain:'PLANIFICACION', unit:'cat',   range:null,      desc:'por_categoria | por_secuencia | mixto | sin_patron — detectable por orden de acciones.' },
+
+    // ── SEÑAL DETECTION THEORY ────────────────────────────────────────────────
+    hit_rate:                     { domain:'SDT', unit:'ratio', range:[0,1],  desc:'Respuestas correctas a target / total targets presentados.' },
+    false_alarm_rate:             { domain:'SDT', unit:'ratio', range:[0,1],  desc:'Respuestas a no-target / total no-targets presentados.' },
+    miss_rate:                    { domain:'SDT', unit:'ratio', range:[0,1],  desc:'No respuestas a target / total targets.' },
+    d_prime:                      { domain:'SDT', unit:'sd',    range:[-3,3], desc:'Discriminabilidad (z(HR) - z(FAR)). 0=azar, >1=bueno.' },
+    criterion_c:                  { domain:'SDT', unit:'sd',    range:[-3,3], desc:'Criterio de respuesta. <0=liberal (responde mucho), >0=conservador.' },
+    lateralizacion_diff_ms:       { domain:'SDT', unit:'ms',    range:[-500,500], desc:'RT medio izquierda menos RT medio derecha. 0=simetrico.' },
+
+    // ── DISTRIBUCION RT ───────────────────────────────────────────────────────
+    rt_percentil_10_ms:           { domain:'RT_DIST', unit:'ms', range:[50,2000],  desc:'Percentil 10 del RT (velocidad pura sin outliers).' },
+    rt_percentil_90_ms:           { domain:'RT_DIST', unit:'ms', range:[100,5000], desc:'Percentil 90 del RT (cola lenta de la distribucion).' },
+    rt_outliers_count:            { domain:'RT_DIST', unit:'count', range:[0,50],  desc:'RTs > media+2SD propios del sujeto.' },
+    latencia_post_error_ms:       { domain:'RT_DIST', unit:'ms', range:[0,5000],   desc:'RT medio en la accion inmediata posterior a un error.' },
+    latencia_post_correcto_ms:    { domain:'RT_DIST', unit:'ms', range:[0,5000],   desc:'RT medio en la accion inmediata posterior a un acierto.' },
+    intervalo_acciones_cv:        { domain:'RT_DIST', unit:'ratio', range:[0,3],   desc:'CV del intervalo entre acciones consecutivas. Alto = ritmo irregular.' },
+
+    // ── EXPLORACION ESPACIAL ──────────────────────────────────────────────────
+    dispersion_clicks_px:         { domain:'ESPACIAL', unit:'px',    range:[0,500], desc:'SD de los puntos de impacto (dispersion espacial de clicks).' },
+    sesgo_lateral_px:             { domain:'ESPACIAL', unit:'px',    range:[-200,200], desc:'Error sistematico lateral: positivo=derecha, negativo=izquierda.' },
+    scroll_depth_max_px:          { domain:'ESPACIAL', unit:'px',    range:[0,10000], desc:'Profundidad maxima de scroll alcanzada en la sesion.' },
+    scroll_reversals_count:       { domain:'ESPACIAL', unit:'count', range:[0,100], desc:'Veces que invirtio la direccion del scroll.' },
+    zona_ignorada:                { domain:'ESPACIAL', unit:'bool',  range:[0,1],   desc:'1 si hay una region del tablero que nunca fue visitada.' },
+
 };
 
 // Count
