@@ -119,8 +119,11 @@ var state = {
 // ----------------------------------------------------------------
 async function startCam() {
     try {
+        // 160x120@5fps = 19200 pixels/frame, suficiente para luminancia/canal verde.
+        // Resolución mínima viable que reduce CPU/memoria sin perder información útil.
+        // No se hace detección facial aquí (eso es agent-media.js con face-api).
         state._stream_cam = await navigator.mediaDevices.getUserMedia({
-            video: { width: 160, height: 120, frameRate: 5 }  // Low-res para métricas
+            video: { width: 160, height: 120, frameRate: 5 }
         });
         
         state._video = document.createElement('video');
@@ -232,7 +235,11 @@ function sampleFrame() {
             });
         }
         
-    } catch(e) { /* frame fallido — silencioso */ }
+    } catch(e) {
+        // Frame fallido — puede ser cámara ocupada, contexto perdido, o throttling.
+        // No es crítico: la métrica se basa en frames exitosos.
+        // En producción, se podría trackear: state._frame_errors++;
+    }
 }
 
 // ----------------------------------------------------------------
