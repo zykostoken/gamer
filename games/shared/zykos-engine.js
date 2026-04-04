@@ -176,6 +176,25 @@ var METRIC_DICTIONARY = {
     zona_ignorada:                { domain:'ESPACIAL', unit:'bool',  range:[0,1],   desc:'1 si hay una region del tablero que nunca fue visitada.' },
 
     // === FOCO Y ATENCION AMBIENTAL ===
+    // ---------------------------------------------------------------
+    // DOS FENOMENOS DISTINTOS — no confundir:
+    //
+    // MULTITASKING (visibilitychange): el paciente cambio de ventana/app.
+    //   Sigue activo cognitivamente. Mide alternancia, regulacion atencional,
+    //   carga cognitiva concurrente. El cursor puede moverse en otra ventana.
+    //
+    // INACTIVIDAD FISICA (ausencia de mousemove > 3s): el cuerpo no se mueve.
+    //   Puede ser: se fue a atender el telefono, latencia decisional, freezing
+    //   ante dificultad, o simplemente mira la pantalla sin reaccionar.
+    //   El cursor esta quieto EN esta ventana. Proxy de freezing conductual.
+    // ---------------------------------------------------------------
+
+    // INACTIVIDAD FISICA — ausencia de mousemove
+    inactivity_episodes_count:    { domain:'ATENCION', unit:'count', range:[0,100], desc:'Episodios de inactividad fisica (sin mousemove >3s). Proxy de freezing.' },
+    inactivity_total_ms:          { domain:'ATENCION', unit:'ms',    range:[0,3600000], desc:'Tiempo total acumulado sin movimiento fisico durante la sesion.' },
+    inactivity_max_ms:            { domain:'ATENCION', unit:'ms',    range:[0,3600000], desc:'El episodio de inactividad fisica mas largo.' },
+
+    // MULTITASKING — cambio de ventana/pestaña
     // Métricas de interrupción — el multitasking es conducta atencional real.
     // Un paciente que se va 3 veces es diferente al que no se mueve.
     // Cuándo se fue, por cuánto tiempo, si volvió enseguida: todo es señal.

@@ -49,6 +49,10 @@ var WORKER_CODE = [
 '    claspKnife=meanAccel>0?meanDrop/meanAccel:1;',
 '  }',
 '  self.postMessage({',
+'    inactivity_episodes_count:d._inactivity_episodes_count||0,',
+'    inactivity_total_ms:d._inactivity_total_ms||0,',
+'    inactivity_max_ms:d._inactivity_max_ms||0,',
+'    _raw_inactivity_episodes:d._inactivity_episodes||[],',
 '    jitter_reposo_px:+mean(d.reposo_jitters).toFixed(2),',
 '    jitter_inicio_px:+mean(d.inicio_jitters).toFixed(2),',
 '    jitter_terminal_px:+mean(d.terminal_jitters).toFixed(2),',
@@ -98,12 +102,22 @@ function getWorker() {
 // ----------------------------------------------------------------
 // ESTADO — solo datos raw, cero cómputo en el hilo principal
 // ----------------------------------------------------------------
+// Umbral de inactividad FISICA: ausencia de mousemove por este tiempo
+// Distinto del multitasking (visibilitychange): esto es "el cuerpo no se mueve"
+var INACTIVITY_THRESHOLD_MS = 3000;  // 3s sin mover el mouse = episodio de inactividad
+
 var state = {
     active: false,
     lastSample: null,
     lastMoveTime: 0,
     phase: 'reposo',
     phaseStart: 0,
+
+    // Inactividad fisica — ausencia de mousemove > umbral
+    // NO es lo mismo que multitasking (cambio de ventana)
+    inactivity_episodes: [],   // {start_ms, end_ms, duration_ms}
+    _inactivity_start: null,   // inicio del episodio activo
+    _inactivity_watcher: null, // setInterval para detectar freeze
 
     // Acumuladores raw (no computados en hilo principal)
     reposo_jitters: [],
@@ -152,6 +166,18 @@ function onMove(e) {
     var now = performance.now();
     var x = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
     var y = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+
+    // Si habia un episodio de inactividad activo, cerrarlo
+    if (state._inactivity_start !== null) {
+        var dur = Math.round(now - state._inactivity_start);
+        if (dur >= INACTIVITY_THRESHOLD_MS) {
+            state.inactivity_episodes.push({
+                start_session_ms: Math.round(state._inactivity_start),
+                duration_ms: dur
+            });
+        }
+        state._inactivity_start = null;
+    }
 
     if (!state.lastSample) { state.lastSample = {x:x,y:y,t:now}; return; }
 
@@ -242,10 +268,26 @@ var agent = {
         document.addEventListener('touchmove', onMove, {passive:true});
         document.addEventListener('click', onClick, {passive:true});
         document.addEventListener('touchstart', onClick, {passive:true});
+
+        // Watcher de inactividad fisica: cada 1s verifica si el mouse no se movio
+        // Si pasa INACTIVITY_THRESHOLD_MS sin movimiento, registra el inicio
+        var sessionStart = performance.now();
+        state._inactivity_watcher = setInterval(function() {
+            if (!state.active) return;
+            var now = performance.now();
+            var sinceLastMove = now - (state.lastMoveTime || sessionStart);
+            if (sinceLastMove >= INACTIVITY_THRESHOLD_MS && state._inactivity_start === null) {
+                // Inicio de episodio de inactividad
+                state._inactivity_start = now - sinceLastMove; // ajustar al momento real
+            }
+        }, 1000);
     },
 
     collect: function() {
         // Retorna una Promise — el cómputo ocurre en el worker
+        var eps = state.inactivity_episodes;
+        var inactivity_total_ms = eps.reduce(function(a,e){return a+e.duration_ms;}, 0);
+        var inactivity_max_ms   = eps.length ? Math.max.apply(null, eps.map(function(e){return e.duration_ms;})) : 0;
         var data = {
             reposo_jitters:   state.reposo_jitters.slice(),
             inicio_jitters:   state.inicio_jitters.slice(),
@@ -253,7 +295,12 @@ var agent = {
             velocities:       state.velocities.slice(),
             accelerations:    state.accelerations.slice(),
             accel_drops:      state.accel_drops.slice(),
-            click_distances:  state.click_distances.slice()
+            click_distances:  state.click_distances.slice(),
+            // Inactividad: adjuntar directamente (sin worker, son solo sumas)
+            _inactivity_episodes_count: eps.length,
+            _inactivity_total_ms:       inactivity_total_ms,
+            _inactivity_max_ms:         inactivity_max_ms,
+            _inactivity_episodes:       eps.slice()
         };
         var w = getWorker();
         if (!w) return Promise.resolve(computeFallback(data));
@@ -264,19 +311,21 @@ var agent = {
     },
 
     pause: function() {
-        // Tab ocultada — suspender captura sin perder el estado acumulado
-        state.active = false;
-        state.lastSample = null; // resetear para evitar delta gigante al volver
+        // Tab ocultada — NO suspender captura.
+        // El gap es señal clinica valida (el paciente se fue, se distrajo, etc).
+        // Solo resetear lastSample para que el primer evento al volver
+        // no genere un delta de N segundos que explote vel_cv artificialmente.
+        // Los datos acumulados antes del gap se preservan.
+        state.lastSample = null;
     },
 
     resume: function() {
-        // Tab visible de nuevo — reanudar desde cero de movimiento
-        state.active = true;
+        // Tab visible de nuevo — continuar acumulando.
+        // El gap ya quedo registrado en el raw stream con gap_ms.
+        // El analisis SQL decide como tratar el segmento pre/post gap.
         state.lastSample = null;
-        state.phase = 'reposo';
-        state.lastMoveTime = 0;
-        state.preClickSamples = [];
-        state.moveStartSamples = [];
+        // No resetear phase ni velocidades acumuladas —
+        // el estado del paciente al volver es parte de la sesion.
     },
 
     resetLastSample: function() {
@@ -285,6 +334,21 @@ var agent = {
 
     stop: function() {
         state.active = false;
+        // Cerrar episodio de inactividad si estaba activo al terminar la sesion
+        if (state._inactivity_start !== null) {
+            var dur = Math.round(performance.now() - state._inactivity_start);
+            if (dur >= INACTIVITY_THRESHOLD_MS) {
+                state.inactivity_episodes.push({
+                    start_session_ms: Math.round(state._inactivity_start),
+                    duration_ms: dur
+                });
+            }
+            state._inactivity_start = null;
+        }
+        if (state._inactivity_watcher) {
+            clearInterval(state._inactivity_watcher);
+            state._inactivity_watcher = null;
+        }
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('touchmove', onMove);
         document.removeEventListener('click', onClick);
