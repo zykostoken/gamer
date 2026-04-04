@@ -263,6 +263,26 @@ var agent = {
         });
     },
 
+    pause: function() {
+        // Tab ocultada — suspender captura sin perder el estado acumulado
+        state.active = false;
+        state.lastSample = null; // resetear para evitar delta gigante al volver
+    },
+
+    resume: function() {
+        // Tab visible de nuevo — reanudar desde cero de movimiento
+        state.active = true;
+        state.lastSample = null;
+        state.phase = 'reposo';
+        state.lastMoveTime = 0;
+        state.preClickSamples = [];
+        state.moveStartSamples = [];
+    },
+
+    resetLastSample: function() {
+        state.lastSample = null;
+    },
+
     stop: function() {
         state.active = false;
         document.removeEventListener('mousemove', onMove);

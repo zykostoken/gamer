@@ -425,16 +425,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
 window.addEventListener('beforeunload', function() {
     if (!ZYKOS.isActive()) return;
-    // beforeunload no puede esperar Promises ni Web Workers.
-    // Guardamos el raw stream via sendBeacon (sincrono, sobrevive al cierre).
-    // El analisis matematico ocurre en Supabase sobre el material guardado.
-    // Principio: el motor matematico no existe para el frontend — el analisis es siempre diferido.
+    // CRITICO: beforeunload no puede await Promises ni esperar Web Workers.
+    // El worker de agent-motor tiene datos que no se computaron todavia.
+    // Estrategia: guardar el raw stream sincrono via sendBeacon.
+    // El compute diferido queda como tarea pendiente en Supabase.
+    // Ademas: terminar los agentes en modo sync (sin collect(), solo stop())
+    // para que al menos el raw_stream quede guardado.
     try {
-        var sb = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
+        // Parar agentes sin collect (no podemos await el worker)
+        Object.keys(_agents).forEach(function(name) {
+            try { _agents[name].stop(); } catch(e) {}
+        });
+
         var dni = ZYKOS.meta ? ZYKOS.meta.patient_dni : null;
         var slug = ZYKOS.meta ? ZYKOS.meta.game_slug : 'unknown';
-        if (sb && dni && _rawStream && _rawStream.length > 0) {
-            // sendBeacon: fire-and-forget, sobrevive al cierre del contexto
+        var duration = Math.round(performance.now() - _sessionStart);
+
+        if (dni && _rawStream && _rawStream.length > 0) {
             var payload = JSON.stringify({
                 patient_dni: dni,
                 game_slug: slug,
@@ -442,24 +449,62 @@ window.addEventListener('beforeunload', function() {
                 metric_type: 'raw_stream_unload',
                 metric_value: _rawStream.length,
                 metric_data: {
-                    raw_events: _rawStream.slice(-200), // ultimos 200 eventos
-                    duration_ms: Math.round(performance.now() - _sessionStart),
-                    unload_reason: 'beforeunload'
+                    raw_events: _rawStream.slice(-300),
+                    duration_ms: duration,
+                    unload_reason: 'beforeunload',
+                    // Flag para que SQL sepa que estas metricas son incompletas
+                    compute_pending: true
                 }
             });
-            navigator.sendBeacon(
-                'https://aypljitzifwjosjkqsuu.supabase.co/rest/v1/zykos_raw_stream',
-                new Blob([payload], { type: 'application/json' })
-            );
+            // sendBeacon: sincrono, sobrevive al cierre del contexto JS
+            var url = 'https://aypljitzifwjosjkqsuu.supabase.co/rest/v1/zykos_raw_stream';
+            navigator.sendBeacon(url, new Blob([payload], { type: 'application/json' }));
         }
-    } catch(e) { /* silencioso — estamos en cierre */ }
+    } catch(e) { /* silencioso — contexto en cierre */ }
     _sessionId = null;
 });
 
-// Visibility change — track tab switches
+// Visibility change — pausar/reanudar agentes al cambiar de ventana
+// Problema: cuando el usuario alterna ventanas, el browser congela el hilo.
+// Los timestamps siguen corriendo pero no hay eventos mousemove.
+// Al volver, el primer sample tiene un gap enorme que contamina vel_cv y rt_mean_ms.
+// Solucion: pausar los agentes en hidden, reanudar en visible.
+// El gap queda marcado en el stream para que el analisis SQL lo descarte.
+var _visibilityGapStart = null;
+
 document.addEventListener('visibilitychange', function() {
-    if (ZYKOS.isActive()) {
-        ZYKOS._pushRaw(document.hidden ? 'tab_hidden' : 'tab_visible', {});
+    if (!ZYKOS.isActive()) return;
+
+    if (document.hidden) {
+        // Tab ocultada — pausar todos los agentes
+        _visibilityGapStart = performance.now();
+        Object.keys(_agents).forEach(function(name) {
+            try {
+                if (_agents[name].pause) _agents[name].pause();
+            } catch(e) {}
+        });
+        ZYKOS._pushRaw('tab_hidden', {
+            t: Date.now(),
+            session_ms: Math.round(performance.now() - _sessionStart)
+        });
+    } else {
+        // Tab visible de nuevo — reanudar y registrar gap
+        var gapMs = _visibilityGapStart ? Math.round(performance.now() - _visibilityGapStart) : 0;
+        _visibilityGapStart = null;
+        // Registrar el gap para que el analisis SQL pueda descartar
+        // metricas calculadas sobre segmentos que incluyen este gap
+        ZYKOS._pushRaw('tab_visible', {
+            t: Date.now(),
+            gap_ms: gapMs,
+            session_ms: Math.round(performance.now() - _sessionStart)
+        });
+        // Reanudar agentes — resetear lastSample para evitar delta enorme
+        Object.keys(_agents).forEach(function(name) {
+            try {
+                if (_agents[name].resume) _agents[name].resume();
+                else if (_agents[name].resetLastSample) _agents[name].resetLastSample();
+            } catch(e) {}
+        });
     }
 });
 

@@ -206,6 +206,19 @@ var agent = {
         };
     },
     
+    pause: function() {
+        // Suspender captura de RT — resetear lastActionTime para evitar
+        // hesitaciones falsas causadas por el gap de visibilidad
+        state.active = false;
+        state.lastActionTime = 0;
+        state.pendingStimuli = []; // limpiar estimulos pendientes del gap
+    },
+
+    resume: function() {
+        state.active = true;
+        state.lastActionTime = performance.now(); // nuevo origen de tiempo
+    },
+
     stop: function() {
         state.active = false;
         if (state.observer) { state.observer.disconnect(); state.observer = null; }
