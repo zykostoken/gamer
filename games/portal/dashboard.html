@@ -201,6 +201,18 @@
             </div>
         </div>
 
+        <!-- CONCOMITANCIAS -->
+        <div id="concomitants-section" style="display:none;margin-top:18px;">
+            <div class="chart-card">
+                <h3 style="margin-bottom:12px;">[D] Variaciones concomitantes</h3>
+                <p style="color:var(--muted);font-size:0.78rem;margin-bottom:14px;">
+                    Pares de metricas que oscilan juntas a lo largo de las sesiones.
+                    El clinico interpreta la relacion — el sistema solo mide la covariacion.
+                </p>
+                <div id="concomitants-body"></div>
+            </div>
+        </div>
+
         <!-- MOTOR & CLINICAL METRICS PANEL -->
         <div class="charts-grid" style="margin-top:18px;">
             <div class="chart-card" style="grid-column:1/-1;">
@@ -305,7 +317,10 @@ async function loadDashboard() {
 
         // Cargar timeseries si hay filtro de paciente activo
         const dniActivo = document.getElementById('filter-patient').value;
-        if (dniActivo) loadTimeseries(dniActivo);
+        if (dniActivo) {
+            loadTimeseries(dniActivo);
+            loadConcomitants(dniActivo);
+        }
 
         document.getElementById('loading').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
@@ -776,6 +791,88 @@ async function loadTimeseries(dni) {
 
     } catch(e) {
         console.warn('[timeseries] Error:', e.message);
+    }
+}
+
+// ========== CONCOMITANCIAS ==========
+async function loadConcomitants(dni) {
+    const section = document.getElementById('concomitants-section');
+    const body = document.getElementById('concomitants-body');
+    if (!section || !body) return;
+
+    try {
+        const sb = getSupabaseClient();
+
+        // Oscilaciones por metrica
+        const { data: osc } = await sb.rpc('zykos_get_oscillations', {
+            p_dni: dni, p_days_back: 90
+        });
+
+        // Concomitancias
+        const { data: conc } = await sb.rpc('zykos_get_concomitants', {
+            p_dni: dni, p_days_back: 90, p_min_correlation: 0.7
+        });
+
+        if ((!osc || osc.length === 0) && (!conc || conc.length === 0)) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+
+        const MAG_COLOR = {
+            'grande':   'var(--danger)',
+            'moderada': 'var(--warn)',
+            'leve':     'var(--muted)',
+            'minima':   'var(--muted)'
+        };
+
+        let html = '';
+
+        // Oscilaciones grandes
+        const grandes = (osc || []).filter(function(o) { return o.magnitud === 'grande'; });
+        if (grandes.length > 0) {
+            html += '<div style="margin-bottom:16px;">';
+            html += '<div style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Cambios grandes entre sesiones consecutivas</div>';
+            html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+            grandes.forEach(function(o) {
+                const arrow = o.direccion === 'sube' ? '↑' : '↓';
+                const color = MAG_COLOR[o.magnitud];
+                html += '<div style="padding:6px 12px;border-radius:8px;border:1px solid ' + color + ';font-size:0.75rem;">';
+                html += '<span style="color:' + color + ';font-weight:600;">' + arrow + ' ' + o.metrica + '</span>';
+                html += '<span style="color:var(--muted);"> S' + o.sesion_desde + '→S' + o.sesion_hasta;
+                html += ' (' + (o.delta_z > 0 ? '+' : '') + o.delta_z.toFixed(2) + ' SD)</span>';
+                html += '</div>';
+            });
+            html += '</div></div>';
+        }
+
+        // Concomitancias
+        if (conc && conc.length > 0) {
+            html += '<div>';
+            html += '<div style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Variaciones concomitantes (r ≥ 0.7)</div>';
+            const seen = new Set();
+            conc.forEach(function(c) {
+                const key = [c.metrica_a, c.metrica_b].sort().join('|');
+                if (seen.has(key)) return;
+                seen.add(key);
+                const rAbs = Math.abs(c.correlacion);
+                const rColor = rAbs >= 0.95 ? 'var(--ok)' : rAbs >= 0.8 ? 'var(--warn)' : 'var(--muted)';
+                const tipoIcon = c.tipo === 'directa' ? '↕' : '↕';
+                html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);">';
+                html += '<span style="font-size:0.8rem;font-weight:500;color:var(--text);min-width:120px;">' + c.metrica_a + '</span>';
+                html += '<span style="color:' + rColor + ';font-weight:700;font-size:0.85rem;">r=' + c.correlacion.toFixed(2) + '</span>';
+                html += '<span style="font-size:0.8rem;color:var(--muted);">' + c.interpretacion + '</span>';
+                html += '<span style="font-size:0.7rem;color:var(--muted);margin-left:auto;">n=' + c.n_sesiones + '</span>';
+                html += '</div>';
+            });
+            html += '</div>';
+        }
+
+        body.innerHTML = html;
+
+    } catch(e) {
+        console.warn('[concomitants]', e.message);
     }
 }
 
