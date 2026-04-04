@@ -204,6 +204,41 @@ var METRIC_DICTIONARY = {
     focus_away_pct:               { domain:'ATENCION', unit:'ratio', range:[0,1],   desc:'Fraccion del tiempo total de sesion fuera de foco.' },
     tab_switches_count:           { domain:'ATENCION', unit:'count', range:[0,50],  desc:'Cambios de pestana/ventana. Alias de focus_interruptions_count.' },
 
+    // ---------------------------------------------------------------
+    // DOMINIO MEDIA — cámara + micrófono (opt-in explícito)
+    // Procesamiento 100% en browser. Cero frames al servidor.
+    // Action Units: descripciones musculares observables, sin etiquetas diagnósticas.
+    // valor null si el usuario no consintió o el dispositivo no está disponible.
+    // ---------------------------------------------------------------
+
+    // PRESENCIA Y ATENCIÓN VISUAL
+    cam_face_present_pct:         { domain:'MEDIA', unit:'ratio',  range:[0,1],      desc:'Fraccion del tiempo con cara detectada en el frame.' },
+    cam_face_absent_episodes:     { domain:'MEDIA', unit:'count',  range:[0,100],    desc:'Veces que la cara desapareció del encuadre.' },
+    cam_face_freeze_episodes:     { domain:'MEDIA', unit:'count',  range:[0,50],     desc:'Cara presente + landmarks inmóviles >3s. Proxy de rigidez/ausencia.' },
+    cam_face_freeze_max_ms:       { domain:'MEDIA', unit:'ms',     range:[0,300000], desc:'Freeze más largo. >10s + sin mic = candidato a ausencia epiléptica.' },
+
+    // ACTION UNITS — contracciones musculares faciales observables (Ekman FACS)
+    cam_AU4_episodes:             { domain:'MEDIA', unit:'count',  range:[0,500],    desc:'AU4: corrugador superciliar activo (ceño fruncido).' },
+    cam_AU4_duration_ms:          { domain:'MEDIA', unit:'ms',     range:[0,3600000],desc:'Tiempo total con AU4 activo en la sesión.' },
+    cam_AU9_episodes:             { domain:'MEDIA', unit:'count',  range:[0,200],    desc:'AU9: elevación ala nariz + arruga nasal.' },
+    cam_AU23_AU24_episodes:       { domain:'MEDIA', unit:'count',  range:[0,200],    desc:'AU23+AU24: orbicular labios contraído — boca cerrada apretada.' },
+    cam_AU23_sustained_ms:        { domain:'MEDIA', unit:'ms',     range:[0,60000],  desc:'Duración máxima de tensión labial sostenida.' },
+
+    // PARPADEO
+    cam_blink_rate_mean:          { domain:'MEDIA', unit:'n/min',  range:[0,60],     desc:'Parpadeos por minuto. Normal 15-20. Bajo=hiperfoco/disociacion. Alto=fatiga.' },
+    cam_blink_rate_cv:            { domain:'MEDIA', unit:'ratio',  range:[0,3],      desc:'Variabilidad del parpadeo. Alto=irregular.' },
+    cam_blink_burst_count:        { domain:'MEDIA', unit:'count',  range:[0,100],    desc:'Ráfagas >3 parpadeos en <2s. Proxy de tic ocular o stress agudo.' },
+
+    // SONRISA — Duchenne vs social
+    cam_duchenne_smile_pct:       { domain:'MEDIA', unit:'ratio',  range:[0,1],      desc:'AU6+AU12 simultáneos — sonrisa genuina (Duchenne).' },
+    cam_social_smile_pct:         { domain:'MEDIA', unit:'ratio',  range:[0,1],      desc:'AU12 sin AU6 — sonrisa voluntaria sin elevación de mejillas.' },
+
+    // MICRÓFONO — ambiente sonoro (sin grabar, solo nivel)
+    mic_ambient_db_mean:          { domain:'MEDIA', unit:'dB',     range:[0,120],    desc:'Nivel sonoro ambiental medio. Informa sobre contexto de la sesión.' },
+    mic_ambient_db_cv:            { domain:'MEDIA', unit:'ratio',  range:[0,3],      desc:'Variabilidad sonora. Alto=entorno ruidoso o variable.' },
+    mic_speech_episodes:          { domain:'MEDIA', unit:'count',  range:[0,200],    desc:'Episodios de vocalización del paciente.' },
+    mic_external_noise_count:     { domain:'MEDIA', unit:'count',  range:[0,500],    desc:'Picos de ruido externo >70dB. Proxy de distractores ambientales.' },
+
     // Contexto de sesión — imprescindible para interpretar cualquier métrica conductual.
     // Sesión 1 de un paciente nuevo ≠ sesión 15 de un paciente establecido.
     // La expansividad (salirse, explorar) en sesión 1 puede ser un indicador
