@@ -581,7 +581,7 @@ function renderMotorProfile(metrics) {
     function safeAvg(arr) { const valid = arr.filter(v => v != null && !isNaN(v)); return valid.length > 0 ? valid.reduce((a,b)=>a+b,0)/valid.length : null; }
 
     const avgRT = safeAvg(motorData.map(d => d.mean_rt_ms));
-    const avgTremor = safeAvg(motorData.map(d => d.jitter_reposo_px || d.jitter_reposo_px || d.tremor_avg));
+    const avgTremor = safeAvg(motorData.map(d => d.jitter_reposo_px || d.tremor_avg));  // tremor_avg = registros históricos pre-canonicos
     const avgClumsiness = safeAvg(motorData.map(d => d.vel_oscilacion_index || d.vel_oscilacion_index));
     const avgMeticulousness = safeAvg(motorData.map(d => d.ratio_acciones_util || d.ratio_acciones_util));
     const avgPlanEff = safeAvg(motorData.map(d => d.eficiencia_trayectoria || d.plan_efficiency));

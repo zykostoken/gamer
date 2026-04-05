@@ -1384,7 +1384,7 @@
         decaimiento_vigilancia = m1 > 0 ? Math.round(m2/m1*100)/100 : null;
       }
 
-      var _lmMetricResult = await lmSupa.from('zykos_game_metrics').insert({
+      var _lmPayload = {
         patient_dni: lmPatientDni,
         game_slug: 'lawn-mower',
         metric_type: 'session_summary',
@@ -1483,7 +1483,11 @@
           task_switch_count: isPart3 ? taskSwitchCount : undefined,
           cognitive_load_level: isPart3 ? (childActive ? 'triple' : 'dual') : 'single'
         }
-      });
+      };
+      if (typeof ZykosEvidence !== 'undefined') {
+          _lmPayload = await ZykosEvidence.prepare(_lmPayload);
+      }
+      var _lmMetricResult = await lmSupa.from('zykos_game_metrics').insert(_lmPayload);
       if (_lmMetricResult.error) console.error('[lawn-mower] session_summary FAILED:', _lmMetricResult.error.message);
       else console.log('[lawn-mower] session_summary saved OK');
 
@@ -1506,7 +1510,11 @@
         }));
         // Batch insert (max 50 to avoid payload limits)
         for (let b = 0; b < rtRecords.length; b += 50) {
-          await lmSupa.from('zykos_game_metrics').insert(rtRecords.slice(b, b + 50));
+          var _lmRtBatch = rtRecords.slice(b, b + 50);
+          if (typeof ZykosEvidence !== 'undefined' && _lmRtBatch.length > 0) {
+              _lmRtBatch[0] = await ZykosEvidence.prepare(_lmRtBatch[0]);
+          }
+          await lmSupa.from('zykos_game_metrics').insert(_lmRtBatch);
         }
       }
 
@@ -1526,7 +1534,11 @@
           }
         }));
         for (let b = 0; b < pathRecords.length; b += 50) {
-          await lmSupa.from('zykos_game_metrics').insert(pathRecords.slice(b, b + 50));
+          var _lmPathBatch = pathRecords.slice(b, b + 50);
+          if (typeof ZykosEvidence !== 'undefined' && _lmPathBatch.length > 0) {
+              _lmPathBatch[0] = await ZykosEvidence.prepare(_lmPathBatch[0]);
+          }
+          await lmSupa.from('zykos_game_metrics').insert(_lmPathBatch);
         }
       }
 

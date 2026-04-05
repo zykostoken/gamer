@@ -1247,7 +1247,7 @@ function endLevel() {
         duration_seconds: Math.round(duration),
         precision_deposito_px: Math.round(meanDismetria * 10) / 10,
         precision_deposito_sd_px: Math.round(precisionSD * 10) / 10,
-        tremor_index: Math.round(tremorIndex * 1000) / 1000,
+        jitter_reposo_px: Math.round(tremorIndex * 1000) / 1000,
         avg_double_click_ms: Math.round(avgDoubleClickTime),
         rt_left_ms: Math.round(rtLeft),
         rt_right_ms: Math.round(rtRight),
@@ -1325,7 +1325,7 @@ function showResults(m, lv) {
         '<div class="metric-card"><div class="mv">' + m.perseverations + '</div><div class="ml">Perseveraciones</div></div>' +
         '<div class="metric-card"><div class="mv">' + m.score + '</div><div class="ml">Puntuación</div></div>' +
         '<div class="metric-card"><div class="mv">' + m.precision_deposito_px + '</div><div class="ml">Precisión depósito (px)</div></div>' +
-        '<div class="metric-card"><div class="mv">' + m.tremor_index + '</div><div class="ml">Índice Tremor</div></div>' +
+        '<div class="metric-card"><div class="mv">' + m.jitter_reposo_px + '</div><div class="ml">Jitter reposo</div></div>' +
         (m.lateral_differential_ms > 0 ? '<div class="metric-card"><div class="mv">' + m.lateral_differential_ms + '</div><div class="ml">Dif. Lateral (ms)</div></div>' : '') +
         '</div>' +
         '<div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap">' +
@@ -1351,6 +1351,11 @@ function retryLevel() {
 }
 
 function nextLevel() {
+    // Bloqueo demo: no pasar del nivel máximo permitido
+    if (window._DEMO_MAX_LEVEL && STATE.level + 1 >= window._DEMO_MAX_LEVEL) {
+        window.location.href = window._DEMO_RETURN || '/demo/';
+        return;
+    }
     document.getElementById('results-screen').style.display = 'none';
     var arena = document.getElementById('arena');
     var stims = arena.querySelectorAll('.stimulus');
