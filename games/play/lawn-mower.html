@@ -4888,6 +4888,11 @@
     celebCanvas.classList.add('hidden');
     const next = getNextLevel(currentLevel);
     if (next) {
+      // Bloqueo demo: no pasar del nivel máximo permitido
+      if (window._DEMO_MODE && next > window._DEMO_MAX_LEVEL) {
+        window.location.href = window._DEMO_RETURN || '/demo/';
+        return;
+      }
       startLevel(next);
     }
   });

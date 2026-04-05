@@ -139,36 +139,56 @@ function showMediaConsent(onComplete) {
     overlay.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;padding:16px;';
 
     overlay.innerHTML =
-        '<div style="background:#111827;border:1px solid rgba(0,212,255,0.2);border-radius:16px;padding:28px;max-width:480px;width:100%;color:#e2e8f0;font-family:system-ui,sans-serif;">' +
-            '<h3 style="font-size:1rem;font-weight:600;margin-bottom:6px;color:#00d4ff;">Biomarcadores opcionales</h3>' +
-            '<p style="font-size:0.8rem;color:#94a3b8;line-height:1.6;margin-bottom:20px;">' +
-                'ZYKOS GAMER puede capturar expresiones faciales y audio ambiental para enriquecer el perfil cognitivo. ' +
-                'Todo el procesamiento ocurre <strong style="color:#e2e8f0;">en tu dispositivo</strong> — ningún video ni audio se envía al servidor. ' +
-                'Solo se guardan métricas numéricas computadas localmente.' +
+        '<div style="background:#111827;border:1px solid rgba(0,212,255,0.2);border-radius:16px;padding:28px;max-width:500px;width:100%;color:#e2e8f0;font-family:system-ui,sans-serif;">' +
+            '<h3 style="font-size:1rem;font-weight:600;margin-bottom:10px;color:#00d4ff;">Captura conductual opcional</h3>' +
+
+            // Qué SE guarda — explícito y concreto
+            '<div style="background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.15);border-radius:8px;padding:12px 14px;margin-bottom:12px;">' +
+                '<div style="font-size:0.72rem;font-weight:600;color:#00d4ff;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">Qué se guarda</div>' +
+                '<p style="font-size:0.78rem;color:#cbd5e1;line-height:1.6;margin:0;">' +
+                    'Solo métricas numéricas: por ejemplo, si ceñís el ceño, se guarda la <strong style="color:#e2e8f0;">duración en milisegundos</strong> de ese gesto y su contexto en la sesión. ' +
+                    'Nada más. Sin fotos, sin video, sin grabación de voz.' +
+                '</p>' +
+            '</div>' +
+
+            // Qué NO sale del dispositivo
+            '<div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:8px;padding:12px 14px;margin-bottom:16px;">' +
+                '<div style="font-size:0.72rem;font-weight:600;color:#22c55e;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">Qué no sale de tu dispositivo</div>' +
+                '<p style="font-size:0.78rem;color:#cbd5e1;line-height:1.6;margin:0;">' +
+                    'El video de tu cámara y el audio del micrófono <strong style="color:#e2e8f0;">nunca se transmiten ni almacenan</strong>. ' +
+                    'El análisis ocurre en tu dispositivo, en tiempo real, y el stream se descarta inmediatamente. ' +
+                    'Tu profesional de salud ve los números resultantes, no las imágenes.' +
+                '</p>' +
+            '</div>' +
+
+            '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">' +
+                '<label style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:pointer;">' +
+                    '<input type="checkbox" id="consent-cam" style="width:16px;height:16px;accent-color:#00d4ff;flex-shrink:0;">' +
+                    '<div>' +
+                        '<div style="font-size:0.84rem;font-weight:500;">Cámara</div>' +
+                        '<div style="font-size:0.71rem;color:#94a3b8;margin-top:2px;">Gestos faciales: ceño, sonrisa, parpadeo, freeze — solo duraciones y frecuencias</div>' +
+                    '</div>' +
+                '</label>' +
+                '<label style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:pointer;">' +
+                    '<input type="checkbox" id="consent-mic" style="width:16px;height:16px;accent-color:#00d4ff;flex-shrink:0;">' +
+                    '<div>' +
+                        '<div style="font-size:0.84rem;font-weight:500;">Micrófono</div>' +
+                        '<div style="font-size:0.71rem;color:#94a3b8;margin-top:2px;">Nivel de ruido ambiental en dB — sin grabar, sin transcribir ninguna palabra</div>' +
+                    '</div>' +
+                '</label>' +
+            '</div>' +
+
+            '<p style="font-size:0.74rem;color:#6b7280;margin-bottom:14px;line-height:1.5;">' +
+                'Si no querés activar ninguna opción, los juegos funcionan igual. ' +
+                'Tu profesional tendrá menos contexto ambiental, pero todas las métricas cognitivas se capturan de todas formas.' +
             '</p>' +
-            '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">' +
-                '<label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:pointer;">' +
-                    '<input type="checkbox" id="consent-cam" style="width:16px;height:16px;accent-color:#00d4ff;">' +
-                    '<div>' +
-                        '<div style="font-size:0.85rem;font-weight:500;">Cámara — expresiones faciales</div>' +
-                        '<div style="font-size:0.72rem;color:#94a3b8;">Action Units (Ekman 1978), sonrisa genuina, ceño fruncido, parpadeo</div>' +
-                    '</div>' +
-                '</label>' +
-                '<label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:pointer;">' +
-                    '<input type="checkbox" id="consent-mic" style="width:16px;height:16px;accent-color:#00d4ff;">' +
-                    '<div>' +
-                        '<div style="font-size:0.85rem;font-weight:500;">Micrófono — contexto sonoro</div>' +
-                        '<div style="font-size:0.72rem;color:#94a3b8;">Nivel ambiental en dB, episodios de voz — sin grabar, sin transcribir</div>' +
-                    '</div>' +
-                '</label>' +
-            '</div>' +
+
             '<div style="display:flex;gap:10px;">' +
-                '<button id="media-consent-accept" style="flex:1;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#00d4ff,#0099cc);color:#000;font-weight:700;font-size:0.9rem;cursor:pointer;">Confirmar selección</button>' +
-                '<button id="media-consent-skip" style="padding:13px 18px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:transparent;color:#94a3b8;font-size:0.85rem;cursor:pointer;">Sin biomarcadores</button>' +
+                '<button id="media-consent-accept" style="flex:1;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#00d4ff,#0099cc);color:#000;font-weight:700;font-size:0.9rem;cursor:pointer;">Confirmar</button>' +
+                '<button id="media-consent-skip" style="padding:13px 18px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:transparent;color:#94a3b8;font-size:0.85rem;cursor:pointer;">Sin cámara ni mic</button>' +
             '</div>' +
-            '<p style="font-size:0.68rem;color:#4b5563;margin-top:12px;line-height:1.5;">' +
-                'Podés cambiar esta preferencia en cualquier momento desde tu perfil. ' +
-                'El consentimiento se registra con timestamp y se puede revocar.' +
+            '<p style="font-size:0.66rem;color:#374151;margin-top:10px;line-height:1.5;text-align:center;">' +
+                'Podés cambiar esta preferencia desde tu perfil en cualquier momento.' +
             '</p>' +
         '</div>';
 

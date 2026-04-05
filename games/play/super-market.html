@@ -1116,33 +1116,38 @@ async function saveSupermarketResult(metrics) {
     try {
         var supabaseClient = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
         if (!supabaseClient) { console.warn('[super-market] No Supabase client'); return; }
-
-        // patient_id comes from URL — portal now sends numeric id
-        // DNI is the universal identifier
         var dni = patientId !== null ? patientId : null;
         if (!dni) { console.warn('[super-market] No DNI, skipping save'); return; }
 
-        var insertResult = await supabaseClient.from('zykos_game_metrics').insert({
-            patient_id: null,
-            patient_dni: dni,
-            game_slug: 'super-market',
-            metric_type: 'session_summary',
-            metric_value: metrics.score,
+        // Métricas canónicas del METRIC_DICTIONARY
+        var payload = {
+            patient_id:   null,
+            patient_dni:  dni,
+            game_slug:    'super-market',
+            metric_type:  'session_summary',
+            metric_value: metrics.score || 0,
             metric_data: {
-                ...metrics,
-                game_name: 'Desafio Milanesas',
-                mean_rt_ms: metrics.avg_hesitation_ms,
-                commission_errors: metrics.errors_got ? metrics.errors_got.length : 0,
-                movement_efficiency: metrics.scan_score || null,
+                // SDT y comprensión
+                errores_comision:   metrics.errors_got ? metrics.errors_got.length : 0,
+                errores_omision:    metrics.missed_items || 0,
+                economia_cognitiva: metrics.scan_score || null,
+                // Timing
+                hesitaciones_count: metrics.hesitation_count || 0,
+                rt_mean_ms:         metrics.avg_hesitation_ms || null,
+                session_duration_ms: Date.now() - startTime,
+                // Contexto
+                game_name:    'Desafio Milanesas',
+                completed:    true,
                 input_device: (navigator.maxTouchPoints > 0 && 'ontouchstart' in window) ? 'touch' : 'mouse',
-                completed: true,
-                duration_ms: Date.now() - startTime,
                 session_date: new Date().toISOString()
             }
-        });
+        };
+        if (typeof ZykosEvidence !== 'undefined') {
+            payload = await ZykosEvidence.prepare(payload);
+        }
+        var insertResult = await supabaseClient.from('zykos_game_metrics').insert(payload);
         if (insertResult.error) { console.error('[super-market] DB error:', insertResult.error.message); }
         else { console.log('[super-market] Metrics saved OK'); }
-
     } catch (err) { console.error('[super-market] Save error:', err); }
 }
 
@@ -1191,5 +1196,9 @@ if (typeof registerAutoSave === 'function') {
 <script src="/games/shared/agents/agent-context.js"></script>
 <script src="/games/shared/agents/agent-scroll.js"></script>
 <script src="/games/shared/agents/agent-focus.js"></script>
+    <!-- Agentes de biomarcadores — consentimiento en portal, ejecucion aqui -->
+    <script src="/games/shared/agents/agent-og-media.js"></script>
+    <script src="/games/shared/agents/agent-media.js"></script>
+    <script src="/games/shared/media-init.js"></script>
 </body>
 </html>

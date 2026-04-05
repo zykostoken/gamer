@@ -703,7 +703,7 @@ async function saveResults(metrics) {
         // Save to zykos_game_metrics — V3 fix: removed patient_id (invalid column), proper await
         const patientDni = (gameState.patientId && gameState.patientId !== null) ? gameState.patientId : null;
         if (patientDni) {
-            var saveResult = await sb.from('zykos_game_metrics').insert({
+            var flPayload = {
                 patient_dni: patientDni,
                 game_slug: 'fridge-logic',
                 metric_type: 'session_summary',
@@ -715,19 +715,15 @@ async function saveResults(metrics) {
                     duration_ms: Date.now() - gameState.startTime,
                     session_date: new Date().toISOString()
                 }
-            });
+            };
+            if (typeof ZykosEvidence !== 'undefined') {
+                flPayload = await ZykosEvidence.prepare(flPayload);
+            }
+            var saveResult = await sb.from('zykos_game_metrics').insert(flPayload);
             if (saveResult.error) console.error('[fridge-logic] save FAILED:', saveResult.error.message);
             else console.log('[fridge-logic] saved OK');
 
-            // Save full biometric data to Supabase Storage bucket 'biometricas'
-            fetch('/api/biometricas', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    patient_id: gameState.patientId,
-                    session_id: 'fridge-' + Date.now(),
-                    game_slug: 'fridge-logic',
-                    biometric_data: { ...metrics, game_name: 'Heladera Inteligente' }
+            // /api/biometricas eliminado — endpoint no existe en el stack
                 })
             }).catch(e => console.warn('[fridge-logic] Bucket save fail:', e.message));
         }
@@ -782,5 +778,9 @@ if (typeof registerAutoSave === 'function') {
 <script src="/games/shared/agents/agent-context.js"></script>
 <script src="/games/shared/agents/agent-scroll.js"></script>
 <script src="/games/shared/agents/agent-focus.js"></script>
+    <!-- Agentes de biomarcadores — consentimiento en portal, ejecucion aqui -->
+    <script src="/games/shared/agents/agent-og-media.js"></script>
+    <script src="/games/shared/agents/agent-media.js"></script>
+    <script src="/games/shared/media-init.js"></script>
 </body>
 </html>
