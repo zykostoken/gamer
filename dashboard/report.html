@@ -76,20 +76,27 @@ async function init() {
   var token = localStorage.getItem('zykos_token');
   if (!token) { window.location.href = '/auth/'; return; }
 
-  // Usar RPC que valida token Y devuelve pacientes en una sola llamada
-  // Evita el problema de RLS con SELECT directo sobre zykos_users
-  var r = await sb.rpc('zykos_get_patients', {p_token: token});
+  // Validar sesion
+  var r = await sb.rpc('zykos_validate_session', {p_token: token});
   if (!r.data || !r.data.ok) { window.location.href = '/auth/'; return; }
 
-  var patients = r.data.patients || [];
+  // Obtener pacientes
+  var patients = [];
+  if (r.data.role === 'superadmin' || r.data.role === 'admin') {
+    var pRes = await sb.from('zykos_patients').select('id,dni,full_name').order('dni');
+    patients = pRes.data || [];
+  } else {
+    var pRes = await sb.from('zykos_patients').select('id,dni,full_name').eq('dni', r.data.dni);
+    patients = pRes.data || [];
+  }
 
   if (patients.length >= 1) {
     // Mostrar selector con pacientes disponibles
     var sel = document.getElementById('sel-patient');
     patients.forEach(function(p){
       var o = document.createElement('option');
-      var label = p.display_name && p.display_name !== p.dni
-        ? p.display_name + ' (' + p.dni + ')'
+      var label = p.full_name && p.full_name !== p.dni
+        ? p.full_name + ' (' + p.dni + ')'
         : 'Paciente ' + p.dni;
       o.value = p.dni;
       o.textContent = label;
