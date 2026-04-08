@@ -1395,30 +1395,30 @@
           grass_cut: grassCut, total_grass: totalGrass,
           accuracy_pct: totalGrass > 0 ? Math.round(grassCut/totalGrass*100*10)/10 : 0,
           // --- Attention & Speed (feeds dominio Atencion) ---
-          mean_rt_ms: cm.mean_reaction_time_ms,
+          rt_mean_ms: cm.mean_reaction_time_ms,
           rt_variability_sd: cm.rt_variability_sd,
           rt_cv: rt_cv,
-          time_to_first_action_ms: cm.time_to_first_action_ms,
+          first_click_latency_ms: cm.time_to_first_action_ms,
           hesitation_count: cm.long_pauses_count,
           avg_pause_ms: cm.avg_pause_duration_ms,
-          fatiga_index: fatiga_index,
+          fatigue_index_rt: fatiga_index,
           rt_1st_half_ms: rt_1st_half,
           rt_2nd_half_ms: rt_2nd_half,
-          decaimiento_vigilancia: decaimiento_vigilancia,
+          fatigue_index: decaimiento_vigilancia,
           // --- Executive Function (feeds dominio Ejecutiva) ---
-          planificacion_ratio: pm.plan_efficiency,
+          planning_ratio: pm.plan_efficiency,
           movement_efficiency: cm.movement_efficiency,
           path_efficiency: cm.path_efficiency,
           ratio_completados: pm.neatness?.score,
           neatness_pattern: pm.neatness?.pattern_type,
-          coverage_strategy: coverage_strategy,
+          systematic_scan_ratio_label: coverage_strategy,
           ideal_path_length: pm.ideal_path_length,
           actual_path_length: pm.actual_path_length,
           // --- Inhibition / Error Pattern (feeds dominio Ejecutiva) ---
-          errores_comision: cm.commission_errors,
-          errores_omision: cm.omission_errors,
+          commission_errors: cm.commission_errors,
+          omission_errors: cm.omission_errors,
           flowers_hit: flowersHit, pool_hits: poolHits,
-          impulsividad_ratio: cm.impulsivity_ratio,
+          commission_omission_ratio: cm.impulsivity_ratio,
           com_om_ratio: com_om_ratio,
           post_error_strategy: post_error_strategy,
           self_correction_ratio: clinicalMetrics.totalMoves > 0
@@ -1427,9 +1427,9 @@
           // --- Motor (feeds dominio Coordinacion) ---
           tremor_event_count: mm.tremor_event_count,
           jitter_reposo_px: mm.jitter_reposo_px,
-          tremor_max_jitter: mm.tremor_max_jitter,
+          tremor_terminal: mm.tremor_max_jitter,
           overshoot_count: mm.overshoot_count,
-          dysmetria_ratio: mm.dysmetria_ratio,
+          dysmetria_index: mm.dysmetria_ratio,
           direction_changes: mm.direction_changes,
           rapid_reversals: mm.rapid_reversals,
           vel_oscilacion_index: mm.vel_oscilacion_index,
@@ -1439,6 +1439,33 @@
           max_inter_objective_delay_ms: pm.max_inter_objective_delay_ms,
           inter_objective_variability_sd: pm.inter_objective_variability_sd,
           // --- Clinical flags (auto-generated) ---
+
+          // --- Quantum Energético y Tercios (diccionario canónico #99-103) ---
+          efficacy_third_1: (function(){
+            var t = rts.slice(0, Math.floor(rts.length/3));
+            var acc1 = t.length > 0 ? (totalGrass > 0 ? Math.round(grassCut/totalGrass*100)/100 : 0) : 0;
+            var rt1 = t.length > 0 ? Math.round(t.reduce(function(a,b){return a+b;},0)/t.length) : null;
+            return rt1 ? Math.round((acc1 * (1 - Math.min(1, rt1/3000))) * 100)/100 : acc1;
+          })(),
+          efficacy_third_2: (function(){
+            var t = rts.slice(Math.floor(rts.length/3), Math.floor(rts.length*2/3));
+            var acc2 = t.length > 0 ? (totalGrass > 0 ? Math.round(grassCut/totalGrass*100)/100 : 0) : 0;
+            var rt2 = t.length > 0 ? Math.round(t.reduce(function(a,b){return a+b;},0)/t.length) : null;
+            return rt2 ? Math.round((acc2 * (1 - Math.min(1, rt2/3000))) * 100)/100 : acc2;
+          })(),
+          efficacy_third_3: (function(){
+            var t = rts.slice(Math.floor(rts.length*2/3));
+            var acc3 = t.length > 0 ? (totalGrass > 0 ? Math.round(grassCut/totalGrass*100)/100 : 0) : 0;
+            var rt3 = t.length > 0 ? Math.round(t.reduce(function(a,b){return a+b;},0)/t.length) : null;
+            return rt3 ? Math.round((acc3 * (1 - Math.min(1, rt3/3000))) * 100)/100 : acc3;
+          })(),
+          quantum_energetico: (function(){
+            var rt_norm = cm.mean_reaction_time_ms > 0 ? Math.min(1, 500/cm.mean_reaction_time_ms) : 0;
+            var completion = totalGrass > 0 ? grassCut/totalGrass : 0;
+            var fatigue_norm = Math.min(1, fatiga_index || 1);
+            return Math.round(rt_norm * completion * (1 - Math.max(0, fatigue_norm - 1)) * 100)/100;
+          })(),
+          mood_pre_game: typeof lmMoodColor !== 'undefined' ? lmMoodColor : null,
           clinical_flags: lmGenerateClinicalFlags(cm, mm, pm, rt_cv, fatiga_index, com_om_ratio, post_error_strategy),
           // --- NEW: Planning paradigm signals (PSYKOS_FENOTIPADO Part 4) ---
           cable_stucks: cableStucks,
