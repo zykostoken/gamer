@@ -426,7 +426,7 @@ function renderCharts(sessions, gameMap) {
 // ========== MOOD COLORS ==========
 function renderMoodColors(moods) {
     const container = document.getElementById('mood-colors-container');
-    const colorMoods = moods.filter(m => m.entry_type === 'post_game_color' && m.data && m.data.color);
+    const colorMoods = moods.filter(m => (m.entry_type === 'color_eleccion' || m.entry_type === 'post_game_color') && (m.color_hex || (m.data && m.data.color)));
     
     if (colorMoods.length === 0) {
         container.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;text-align:center;">Sin datos de color aún</p>';
@@ -436,7 +436,7 @@ function renderMoodColors(moods) {
     // Count frequency
     const freq = {};
     colorMoods.forEach(m => {
-        const c = m.data.color;
+        const c = m.color_hex || (m.data && m.data.color) || m.color_id;
         freq[c] = (freq[c] || 0) + 1;
     });
     
@@ -445,7 +445,7 @@ function renderMoodColors(moods) {
     sorted.forEach(([color, count]) => {
         const h = Math.max(20, Math.min(60, count * 15));
         html += '<div style="text-align:center;">' +
-            '<div style="width:36px;height:' + h + 'px;border-radius:8px;background:' + color + ';border:2px solid rgba(255,255,255,0.15);margin:0 auto 4px;"></div>' +
+            '<div style="width:36px;height:' + h + 'px;border-radius:8px;background:' + (color.startsWith('#') ? color : '#888') + ';border:2px solid rgba(255,255,255,0.15);margin:0 auto 4px;"></div>' +
             '<span style="font-size:0.65rem;color:var(--muted);">' + count + '</span></div>';
     });
     html += '</div>';
@@ -535,13 +535,13 @@ function renderClinicalMetrics(metrics, patients) {
         const level = d.level || '—';
 
         // Motor metrics
-        const tremor = d.jitter_reposo_px != null ? d.jitter_reposo_px.toFixed(2) : (d.jitter_reposo_px != null ? d.jitter_reposo_px.toFixed(2) : "—");
+        const tremor = d.jitter_reposo_px != null ? d.jitter_reposo_px.toFixed(2) : "—";
         const dysmetria = d.dysmetria_overshoot_count != null ? d.dysmetria_overshoot_count : '—';
         const clumsiness = d.vel_oscilacion_index || d.vel_oscilacion_index != null ? (d.vel_oscilacion_index || d.vel_oscilacion_index * 100).toFixed(0) + '/100' : '—';
         const meticulousness = d.ratio_acciones_util || d.ratio_acciones_util != null ? (d.ratio_acciones_util || d.ratio_acciones_util * 100).toFixed(0) + '/100' : '—';
         const planEff = d.eficiencia_trayectoria || d.plan_efficiency != null ? (d.eficiencia_trayectoria || d.plan_efficiency * 100).toFixed(1) + '%' : '—';
         const neatness = d.ratio_completados || d.ratio_completados != null ? (d.ratio_completados || d.ratio_completados * 100).toFixed(0) + '/100' : '—';
-        const startDelay = d.time_to_first_action_ms != null ? d.time_to_first_action_ms + 'ms' : '—';
+        const startDelay = (d.first_click_latency_ms || d.time_to_first_action_ms) != null ? (d.first_click_latency_ms || d.time_to_first_action_ms) + 'ms' : '—';
 
         // Color coding
         const clumColor = d.vel_oscilacion_index || d.vel_oscilacion_index != null ? (d.vel_oscilacion_index || d.vel_oscilacion_index > 0.5 ? 'var(--danger)' : d.vel_oscilacion_index || d.vel_oscilacion_index > 0.3 ? 'var(--warn)' : 'var(--success)') : '';
@@ -580,18 +580,18 @@ function renderMotorProfile(metrics) {
 
     function safeAvg(arr) { const valid = arr.filter(v => v != null && !isNaN(v)); return valid.length > 0 ? valid.reduce((a,b)=>a+b,0)/valid.length : null; }
 
-    const avgRT = safeAvg(motorData.map(d => d.mean_rt_ms));
+    const avgRT = safeAvg(motorData.map(d => d.rt_mean_ms || d.mean_rt_ms));
     const avgTremor = safeAvg(motorData.map(d => d.jitter_reposo_px || d.tremor_avg));  // tremor_avg = registros históricos pre-canonicos
     const avgClumsiness = safeAvg(motorData.map(d => d.vel_oscilacion_index || d.vel_oscilacion_index));
     const avgMeticulousness = safeAvg(motorData.map(d => d.ratio_acciones_util || d.ratio_acciones_util));
     const avgPlanEff = safeAvg(motorData.map(d => d.eficiencia_trayectoria || d.plan_efficiency));
     const avgNeatness = safeAvg(motorData.map(d => d.ratio_completados || d.ratio_completados));
     const avgDirChanges = safeAvg(motorData.map(d => d.direction_changes));
-    const avgStartDelay = safeAvg(motorData.map(d => d.time_to_first_action_ms));
+    const avgStartDelay = safeAvg(motorData.map(d => d.first_click_latency_ms || d.time_to_first_action_ms));
     const avgMovEff = safeAvg(motorData.map(d => d.eficiencia_trayectoria || d.movement_efficiency));
     const avgPathEff = safeAvg(motorData.map(d => d.eficiencia_trayectoria || d.path_efficiency));
     const totalResets = motorData.reduce((s, d) => s + (d.resets || 0), 0);
-    const avgImpulsivity = safeAvg(motorData.map(d => d.impulsividad_ratio || d.impulsivity_ratio));
+    const avgImpulsivity = safeAvg(motorData.map(d => d.commission_omission_ratio || d.impulsividad_ratio || d.impulsivity_ratio));
 
     function metricCard(label, value, color) {
         return '<div style="background:var(--card);border-radius:10px;padding:12px;text-align:center;">' +
