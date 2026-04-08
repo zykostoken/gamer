@@ -1014,16 +1014,7 @@ function finishGame() {
                 '<div style="font-size:0.7rem; color:rgba(255,255,255,0.3); margin-top:8px;">Recorrido: ' + gondolaVisitOrder.join(' → ') + '</div>' +
             '</div>' +
 
-            // Clinical flags
-            (clinicalFlags.length > 0 ?
-                '<div style="margin-top: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 16px;">' +
-                    '<div style="font-weight: 700; font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px;">[D] Indicadores clínicos</div>' +
-                    clinicalFlags.map(function(f) {
-                        var icon = f.severity === 'positive' ? '' : f.severity === 'high' ? '' : f.severity === 'moderate' ? '' : '';
-                        return '<div style="font-size: 0.75rem; padding: 3px 0; color: rgba(255,255,255,0.5);">' + icon + ' <strong>' + f.flag + '</strong> — ' + f.desc + '</div>';
-                    }).join('') +
-                '</div>'
-            : '') +
+
 
             // Buttons
             '<div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">' +
@@ -1033,7 +1024,7 @@ function finishGame() {
         '</div>';
 
     // ---- SUPABASE SAVE ----
-    saveSupermarketResult({
+    await saveSupermarketResult({
         patient_id: patientId,
         score: score,
         tier: tierLabel,
