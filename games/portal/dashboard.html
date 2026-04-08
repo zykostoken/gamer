@@ -51,6 +51,16 @@
         .metric-chip { background: var(--card); border-radius: 8px; padding: 10px; text-align: center; }
         .metric-chip .mc-val { font-size: 1.2rem; font-weight: 700; }
         .metric-chip .mc-lbl { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+
+        /* Panel analisis clinico */
+        .clinical-panel { background: linear-gradient(135deg, #0f2027 0%, #1a2a3a 100%); border: 1px solid rgba(56,189,248,0.25); border-radius: 14px; padding: 22px 24px; margin-bottom: 20px; position: relative; }
+        .clinical-panel .cp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .clinical-panel .cp-badge { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #38bdf8; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2); padding: 3px 9px; border-radius: 20px; }
+        .clinical-panel .cp-game { font-size: 0.72rem; color: var(--muted); }
+        .clinical-panel .cp-date { font-size: 0.68rem; color: var(--muted); margin-left: auto; }
+        .clinical-panel .cp-text { font-size: 0.88rem; line-height: 1.7; color: var(--text); white-space: pre-wrap; }
+        .clinical-panel .cp-disclaimer { font-size: 0.65rem; color: var(--muted); margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px; }
+        .clinical-panel-empty { background: var(--surface); border: 1px dashed rgba(255,255,255,0.08); border-radius: 14px; padding: 20px 24px; margin-bottom: 20px; text-align: center; color: var(--muted); font-size: 0.82rem; }
         @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } .stats-row { grid-template-columns: repeat(2, 1fr); } }
     </style>
 </head>
@@ -89,6 +99,9 @@
     </div>
 
     <div id="dashboard" style="display:none;">
+
+        <!-- ANALISIS CLINICO POST-SESION (generado por subagente IA) -->
+        <div id="clinical-analysis-section"></div>
 
         <!-- STATS -->
         <div class="stats-row">
@@ -262,6 +275,9 @@ async function loadDashboard() {
         renderChartsMain(mdata);
         renderMotorProfile(mdata);
         renderMetricsTable(mdata);
+
+        // Cargar analisis clinico IA
+        loadClinicalAnalysis(patientFilter || null, gameFilter || null);
 
         if (patientFilter) {
             loadTimeseries(patientFilter);
@@ -608,6 +624,57 @@ async function loadConcomitants(dni) {
         }
         body.innerHTML = html;
     } catch(e) { console.warn('[concomitants]',e.message); }
+}
+
+
+// ========== ANALISIS CLINICO POST-SESION ==========
+async function loadClinicalAnalysis(patientDni, gameFilter) {
+    const section = document.getElementById('clinical-analysis-section');
+    if (!section) return;
+
+    try {
+        let q = sb.from('zykos_game_metrics')
+            .select('*')
+            .eq('metric_type', 'clinical_analysis')
+            .order('created_at', { ascending: false })
+            .limit(5);
+        if (patientDni) q = q.eq('patient_dni', patientDni);
+        if (gameFilter) q = q.eq('game_slug', gameFilter);
+        
+        const { data } = await q;
+
+        if (!data || data.length === 0) {
+            section.innerHTML = '<div class="clinical-panel-empty">Sin analisis clinico generado aun. Se genera automaticamente post-sesion cuando el subagente esta activo.</div>';
+            return;
+        }
+
+        let html = '';
+        data.forEach(function(row) {
+            const d = row.metric_data || {};
+            const texto = d.analisis_texto || '';
+            const fecha = row.created_at ? new Date(row.created_at).toLocaleString('es-AR', {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+            const juego = row.game_slug || '';
+            const n_ses = d.n_sesiones_historial || '';
+            const mood = d.mood_color || null;
+            
+            html += '<div class="clinical-panel">' +
+                '<div class="cp-header">' +
+                '<span class="cp-badge">Analisis post-sesion</span>' +
+                (juego ? '<span class="cp-game">' + juego + '</span>' : '') +
+                (mood ? '<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:' + (mood.startsWith('#') ? mood : '#888') + ';border:1px solid rgba(255,255,255,0.2);"></span>' : '') +
+                '<span class="cp-date">' + fecha + (n_ses ? ' · sesion ' + n_ses : '') + '</span>' +
+                '</div>' +
+                '<div class="cp-text">' + DOMPurify.sanitize(texto) + '</div>' +
+                '<div class="cp-disclaimer">Datos observacionales sin interpretacion clinica. El profesional de salud interpreta en contexto del paciente. ZYKOS GAMER no diagnostica.</div>' +
+                '</div>';
+        });
+
+        section.innerHTML = html;
+
+    } catch(e) {
+        console.warn('[clinical-analysis]', e.message);
+        section.innerHTML = '';
+    }
 }
 
 // ========== INIT ==========
