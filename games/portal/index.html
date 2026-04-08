@@ -256,6 +256,8 @@ async function init() {
     userData = data;
     // DNI obligatorio — persistir para juegos
     localStorage.setItem('zykos_patient_dni', data.dni);
+    window.ZYKOS_DNI = data.dni;
+    setTimeout(function() { try { if (typeof ZYKOS !== 'undefined' && ZYKOS.startSession) ZYKOS.startSession({patient_dni: data.dni, game_slug: 'portal'}); if (typeof BIOMET !== 'undefined' && BIOMET.init) BIOMET.init({patientId: data.dni, gameSlug: 'portal'}); console.log('[portal] agentes iniciados para DNI', data.dni); } catch(e) { console.warn('[portal] agentes:', e.message); } }, 300);
     document.getElementById('greeting').textContent = 'Hola, ' + (data.display_name || 'Jugador');
     document.getElementById('user-name').textContent = 'ID ' + data.dni + ' | ' + data.email;
 
@@ -511,5 +513,16 @@ function runInlineCalibration(callback) {
 <!-- Agentes de biomarcadores media — inicializados desde el portal, no desde los juegos -->
 <script src="/games/shared/agents/agent-og-media.js"></script>
 <script src="/games/shared/agents/agent-media.js"></script>
+    <!-- ZYKOS ENGINE + AGENTES PIRATAS -->
+    <script src="/games/shared/zykos-engine.js"></script>
+    <script src="/games/shared/biomet.js"></script>
+    <script src="/games/shared/agents/agent-motor.js"></script>
+    <script src="/games/shared/agents/agent-rt.js"></script>
+    <script src="/games/shared/agents/agent-focus.js"></script>
+    <script src="/games/shared/agents/agent-context.js"></script>
+    <script src="/games/shared/agents/agent-inhibition.js"></script>
+    <script src="/games/shared/agents/agent-presence.js"></script>
+    <script src="/games/shared/agents/agent-og-media.js"></script>
+    <script src="/games/shared/agents/agent-media.js"></script>
 </body>
 </html>
