@@ -71,7 +71,6 @@ var METRIC_DICTIONARY = {
     secuencia_correcta_pct: { domain:'EJECUTIVO', construct:'Secuenciación', unit:'pct', range:[0,100], desc:'% de acciones en orden correcto.' },
     ratio_completados:      { domain:'EJECUTIVO', construct:'Eficacia de objetivo (eficacia_objetivo)', unit:'ratio', range:[0,1],
         desc:'Protocolo E2: eficacia_objetivo. Objetivos logrados / esperados.' },
-    eficacia_plan_propio:   { domain:'EJECUTIVO', construct:'Economía de plan', unit:'ratio', range:[0,1], desc:'Acciones útiles / acciones totales.' },
     plan_failed_attempts:   { domain:'EJECUTIVO', construct:'Intentos fallidos', unit:'count', range:[0,50], desc:'Planes iniciados pero no completados.' },
 
     // === TIEMPO DE REACCIÓN / ATENCIÓN ===
@@ -81,10 +80,8 @@ var METRIC_DICTIONARY = {
         desc:'Protocolo A1. rt_cv > 0.25 sugiere irregularidad atencional. TDAH correlación g=0.76.' },
     iiv_consecutiva:        { domain:'ATENCION', construct:'Variabilidad intraindividual consecutiva (IIV)', unit:'ms', range:[0,500],
         desc:'Protocolo A1. SD de las diferencias entre RT de ensayos consecutivos. Sensible a fluctuaciones atencionales.' },
-    decaimiento_mitades: { domain:'ATENCION', construct:'Decaimiento de vigilancia (decaimiento_vigilancia)', unit:'ratio', range:[0.5,3],
-        desc:'Protocolo A1: decaimiento_vigilancia. RT 2da mitad / RT 1ra mitad. >1 = fatiga sostenida.' },
-    iiv_consecutiva:      { domain:'ATENCION', construct:'Variabilidad intraindividual consecutiva', unit:'ms', range:[0,500],
-        desc:'Protocolo A1: iiv_consecutiva. SD de las diferencias entre ensayos consecutivos. Sensible a fluctuaciones atencionales.' },
+    decaimiento_vigilancia: { domain:'ATENCION', construct:'Decaimiento de vigilancia', unit:'ratio', range:[0.5,3],
+        desc:'Protocolo A1: RT 2da mitad / RT 1ra mitad. >1 = fatiga de vigilancia sostenida. Calculado post-hoc.' },
 
     // Fatigabilidad y distribucion temporal — tercios, transversal a todos los juegos
     // A2 Fatiga — protocolo clínico v1 (calculados en análisis diferido SQL)
@@ -179,7 +176,6 @@ var METRIC_DICTIONARY = {
     // ── MEMORIA DE TRABAJO ────────────────────────────────────────────────────
     span_items:                   { domain:'MEMORIA_TRABAJO', unit:'count', range:[0,15],   desc:'Cantidad maxima de items manejados simultaneamente sin error.' },
     actualizacion_correcta_pct:   { domain:'MEMORIA_TRABAJO', unit:'pct',   range:[0,100],  desc:'% de actualizaciones correctas en tareas n-back o equivalente.' },
-    interferencia_ratio:          { domain:'MEMORIA_TRABAJO', unit:'ratio', range:[0,3],    desc:'RT en condicion de interferencia / RT en condicion limpia.' },
 
     // ── PLANIFICACION ─────────────────────────────────────────────────────────
     tiempo_planificacion_ms:      { domain:'PLANIFICACION', unit:'ms',    range:[0,60000], desc:'Tiempo antes del primer movimiento (inspeccion del problema).' },
@@ -244,113 +240,77 @@ var METRIC_DICTIONARY = {
     tab_switches_count:           { domain:'ATENCION', unit:'count', range:[0,50],  desc:'Cambios de pestana/ventana. Alias de focus_interruptions_count.' },
 
     // ---------------------------------------------------------------
-    // DOMINIO MEDIA — cámara + micrófono (opt-in explícito)
-    // Procesamiento 100% en browser. Cero frames al servidor.
+    // DOMINIO IDENTIDAD — biometría legal cam+mic (opt-in explícito)
+    // Identidad del paciente real frente a la cámara. Defensa legal.
+    // Valor null si el usuario no consintió o el dispositivo no está disponible.
+    // Doctrina V4 M16: Cam/mic = identidad legal + FACS + cruce contextual, NO cognitivo.
+    // ---------------------------------------------------------------
+    identity_face_present_pct:    { domain:'IDENTIDAD', unit:'ratio', range:[0,1],
+        desc:'Fraccion del tiempo con cara detectada en el frame. Lit: presencia fisica del paciente.' },
+    identity_face_enrolled:       { domain:'IDENTIDAD', unit:'bool',  range:[0,1],
+        desc:'1 si se registró un embedding facial de enrollment al inicio de la sesion.' },
+    identity_session_verified:    { domain:'IDENTIDAD', unit:'bool',  range:[0,1],
+        desc:'1 si la cara detectada coincide con el enrollment a lo largo de la sesion.' },
+    identity_anomaly_count:       { domain:'IDENTIDAD', unit:'count', range:[0,100],
+        desc:'Episodios donde el match de identidad cayó por debajo del umbral. Alerta de suplantacion.' },
+    identity_voice_episodes:      { domain:'IDENTIDAD', unit:'count', range:[0,200],
+        desc:'Episodios de vocalizacion detectados por el mic. Proxy de presencia activa.' },
+
+    // ---------------------------------------------------------------
+    // DOMINIO FACS — expresion facial (face-api, opt-in explícito)
     // Action Units: descripciones musculares observables, sin etiquetas diagnósticas.
-    // valor null si el usuario no consintió o el dispositivo no está disponible.
+    // Lit: Ekman & Friesen (1978), Duchenne (1862), Gross (2002), Cohn & Ekman (2005).
+    // El sistema mide. El clínico interpreta.
     // ---------------------------------------------------------------
 
-    // PRESENCIA Y ATENCIÓN VISUAL
-    cam_face_present_pct:         { domain:'MEDIA', unit:'ratio',  range:[0,1],      desc:'Fraccion del tiempo con cara detectada en el frame.' },
-    cam_face_absent_episodes:     { domain:'MEDIA', unit:'count',  range:[0,100],    desc:'Veces que la cara desapareció del encuadre.' },
-    cam_face_freeze_episodes:     { domain:'MEDIA', unit:'count',  range:[0,50],     desc:'Cara presente + landmarks inmóviles >3s. Proxy de rigidez/ausencia.' },
-    cam_face_freeze_max_ms:       { domain:'MEDIA', unit:'ms',     range:[0,300000], desc:'Freeze más largo. >10s + sin mic = candidato a ausencia epiléptica.' },
-
-    // EXPRESIÓN FACIAL — fenómenos observables con validación empírica FACS
-    // Referencias: Ekman & Friesen (1978), Duchenne (1862), Gross (2002),
-    // Nijenhuis (2004), literatura de neuroftalmología y psicofisiología.
-    // Los nombres describen el fenómeno observable, no un diagnóstico.
-    // Las asociaciones clínicas son de la literatura publicada.
-
     // Ceño y tensión facial superior
-    cam_brow_furrow_episodes:     { domain:'MEDIA', unit:'count',  range:[0,500],
+    facs_brow_furrow_episodes:    { domain:'FACS', unit:'count',  range:[0,500],
         desc:'AU4 corrugador superciliar activo. Lit: esfuerzo cognitivo, frustración, dolor (Ekman 1978).' },
-    cam_brow_furrow_ms:           { domain:'MEDIA', unit:'ms',     range:[0,3600000],
+    facs_brow_furrow_ms:          { domain:'FACS', unit:'ms',     range:[0,3600000],
         desc:'Tiempo total con ceño fruncido. Indicador de carga emocional o cognitiva acumulada.' },
 
     // Tensión nasal
-    cam_nose_wrinkle_episodes:    { domain:'MEDIA', unit:'count',  range:[0,200],
+    facs_nose_wrinkle_episodes:   { domain:'FACS', unit:'count',  range:[0,200],
         desc:'AU9 elevador ala nariz + arruga nasal. Lit: expresión aversiva (Ekman 1978).' },
 
     // Compresión labial
-    cam_lip_compression_episodes: { domain:'MEDIA', unit:'count',  range:[0,200],
+    facs_lip_compression_episodes:{ domain:'FACS', unit:'count',  range:[0,200],
         desc:'AU23+AU24 orbicular labios. Lit: supresión emocional, control inhibitorio (Gross 2002).' },
-    cam_lip_compression_max_ms:   { domain:'MEDIA', unit:'ms',     range:[0,60000],
+    facs_lip_compression_max_ms:  { domain:'FACS', unit:'ms',     range:[0,60000],
         desc:'Tensión labial máxima sostenida en un episodio.' },
 
     // Parpadeo — ampliamente validado en neuroftalmología
-    cam_blink_rate_mean:          { domain:'MEDIA', unit:'n/min',  range:[0,60],
+    facs_blink_rate_mean:         { domain:'FACS', unit:'n/min',  range:[0,60],
         desc:'Parpadeos/min. Norma: 15-20. Bajo: hiperfoco, Parkinson. Alto: fatiga, stress (lit. neuroftalmología).' },
-    cam_blink_rate_cv:            { domain:'MEDIA', unit:'ratio',  range:[0,3],
+    facs_blink_rate_cv:           { domain:'FACS', unit:'ratio',  range:[0,3],
         desc:'Variabilidad del parpadeo. Alto CV indica parpadeo irregular.' },
-    cam_blink_burst_count:        { domain:'MEDIA', unit:'count',  range:[0,100],
+    facs_blink_burst_count:       { domain:'FACS', unit:'count',  range:[0,100],
         desc:'Ráfagas >3 parpadeos en <2s. Lit: tic ocular, stress agudo.' },
 
     // Sonrisa — Duchenne (1862) validado fisiológicamente
-    cam_genuine_smile_pct:        { domain:'MEDIA', unit:'ratio',  range:[0,1],
+    facs_genuine_smile_pct:       { domain:'FACS', unit:'ratio',  range:[0,1],
         desc:'AU6+AU12 simultáneos — sonrisa de Duchenne. Lit: afecto positivo genuino, correlato parasimpático.' },
-    cam_social_smile_pct:         { domain:'MEDIA', unit:'ratio',  range:[0,1],
+    facs_social_smile_pct:        { domain:'FACS', unit:'ratio',  range:[0,1],
         desc:'AU12 sin AU6 — sonrisa voluntaria. Lit: regulación social, diferente correlato fisiológico.' },
 
-    // CORRELACIÓN AFECTO-RENDIMIENTO — cruce humor facial × eficacia del juego
+    // CORRELACIÓN AFECTO-RENDIMIENTO — cruce FACS × eficacia del juego (M16)
     // Requiere tanto agent-media como que los juegos reporten aciertos/errores
     // via ZykosMediaAgent.reportGameEvent('hit'|'error')
     // Lit: Russell (1980) modelo circumplejo, Cohn & Ekman (2005) AU temporal dynamics
-    affect_smile_during_hits_pct:  { domain:'MEDIA', unit:'ratio', range:[0,1],
+    affect_smile_during_hits_pct:  { domain:'FACS', unit:'ratio', range:[0,1],
         desc:'Fraccion de aciertos con sonrisa genuina activa. Alto=afecto positivo reactivo al exito.' },
-    affect_brow_during_errors_pct: { domain:'MEDIA', unit:'ratio', range:[0,1],
+    affect_brow_during_errors_pct: { domain:'FACS', unit:'ratio', range:[0,1],
         desc:'Fraccion de errores con ceño fruncido activo. Alto=esfuerzo/frustración reactiva al error.' },
-    affect_lip_during_errors_pct:  { domain:'MEDIA', unit:'ratio', range:[0,1],
+    affect_lip_during_errors_pct:  { domain:'FACS', unit:'ratio', range:[0,1],
         desc:'Fraccion de errores con boca apretada. Alto=supresion emocional post-error (Gross 2002).' },
-    affect_reactivity:             { domain:'MEDIA', unit:'ratio', range:[-1,1],
+    affect_reactivity:             { domain:'FACS', unit:'ratio', range:[-1,1],
         desc:'>0.3=afecto reactivo al rendimiento. ~0=afecto plano/disociado. <-0.1=patron atipico.' },
-
-    // MICRÓFONO — ambiente sonoro (sin grabar, solo nivel)
-    mic_ambient_db_mean:          { domain:'MEDIA', unit:'dB',     range:[0,120],    desc:'Nivel sonoro ambiental medio. Informa sobre contexto de la sesión.' },
-    mic_ambient_db_cv:            { domain:'MEDIA', unit:'ratio',  range:[0,3],      desc:'Variabilidad sonora. Alto=entorno ruidoso o variable.' },
-    mic_speech_episodes:          { domain:'MEDIA', unit:'count',  range:[0,200],    desc:'Episodios de vocalización del paciente.' },
-    mic_external_noise_count:     { domain:'MEDIA', unit:'count',  range:[0,500],    desc:'Picos de ruido externo >70dB. Proxy de distractores ambientales.' },
 
     // ---------------------------------------------------------------
     // DOMINIO OG_MEDIA — Original Graphics Media (capa fundacional cam+mic)
-    // Sin face-api. Vanilla JS. Bajo CPU. Base sobre la que MEDIA extiende.
+    // Sin face-api. Vanilla JS. Bajo CPU. Base sobre la que FACS extiende.
     // Captura: presencia, luminancia, canal verde (proxy PPG), audio.
     // Lit: Verkruysse (2008), Poh (2010), De Haan (2013), Mcduff (2014)
-    // ---------------------------------------------------------------
-    og_cam_present:               { domain:'OG_MEDIA', unit:'bool',  range:[0,1],
-        desc:'1 si la camara estuvo activa en la sesion.' },
-    og_cam_presence_pct:          { domain:'OG_MEDIA', unit:'ratio', range:[0,1],
-        desc:'Fraccion del tiempo con contenido visual significativo en el frame.' },
-    og_cam_blackout_count:        { domain:'OG_MEDIA', unit:'count', range:[0,100],
-        desc:'Episodios sin contenido visual. Proxy de ausencia fisica o camara tapada.' },
-    og_cam_blackout_max_ms:       { domain:'OG_MEDIA', unit:'ms',    range:[0,600000],
-        desc:'Blackout mas largo. Lit: correlato de ausencia fisica o atencional.' },
-    og_cam_luminance_mean:        { domain:'OG_MEDIA', unit:'0-255', range:[0,255],
-        desc:'Luminancia media del frame. Informa sobre condiciones de iluminacion.' },
-    og_cam_luminance_cv:          { domain:'OG_MEDIA', unit:'ratio', range:[0,3],
-        desc:'Variabilidad de luminancia. Alto=cambios de luz o movimiento frecuente.' },
-    og_cam_green_channel_mean:    { domain:'OG_MEDIA', unit:'0-255', range:[0,255],
-        desc:'Canal verde medio. Proxy PPG para HR remoto (Verkruysse 2008, Poh 2010).' },
-    og_cam_green_cv:              { domain:'OG_MEDIA', unit:'ratio', range:[0,3],
-        desc:'Variabilidad canal verde. Correlato de pulso cardiaco rPPG (De Haan 2013).' },
-    og_mic_present:               { domain:'OG_MEDIA', unit:'bool',  range:[0,1],
-        desc:'1 si el microfono estuvo activo.' },
-    og_mic_db_mean:               { domain:'OG_MEDIA', unit:'dB',    range:[0,100],
-        desc:'Volumen ambiental medio. Contexto acustico de la sesion.' },
-    og_mic_db_cv:                 { domain:'OG_MEDIA', unit:'ratio', range:[0,3],
-        desc:'Variabilidad de volumen. Alto=entorno ruidoso o variable.' },
-    og_mic_silence_pct:           { domain:'OG_MEDIA', unit:'ratio', range:[0,1],
-        desc:'Fraccion del tiempo en silencio (<30dB). Alto=entorno controlado.' },
-    og_mic_speech_episodes:       { domain:'OG_MEDIA', unit:'count', range:[0,500],
-        desc:'Episodios de vocalizacion (>50dB). Lit: Cummins (2015) speech biomarkers.' },
-    og_mic_peak_db:               { domain:'OG_MEDIA', unit:'dB',    range:[0,100],
-        desc:'Pico maximo de audio. Indica ruido externo extremo o vocalizacion fuerte.' },
-
-    // ---------------------------------------------------------------
-    // DOMINIO OG_MEDIA — Original Graphics Media (capa fundacional)
-    // Vanilla JS, sin dependencias. Bajo CPU. Hardware hospitalario.
-    // Captura presencia, luminancia, canal verde (proxy PPG), audio.
-    // Lit: Verkruysse (2008), Poh (2010), De Haan & Jeanne (2013)
     // ---------------------------------------------------------------
     og_cam_present:               { domain:'OG_MEDIA', unit:'bool',   range:[0,1],      desc:'1 si la camara estuvo activa en la sesion.' },
     og_cam_presence_pct:          { domain:'OG_MEDIA', unit:'ratio',  range:[0,1],      desc:'Fraccion del tiempo con contenido visual en el frame.' },
@@ -366,6 +326,26 @@ var METRIC_DICTIONARY = {
     og_mic_silence_pct:           { domain:'OG_MEDIA', unit:'ratio',  range:[0,1],      desc:'Fraccion del tiempo en silencio (<30dB). Entorno controlado.' },
     og_mic_speech_episodes:       { domain:'OG_MEDIA', unit:'count',  range:[0,500],    desc:'Episodios de vocalizacion (>50dB). Lit: Cummins (2015).' },
     og_mic_peak_db:               { domain:'OG_MEDIA', unit:'dB',     range:[0,100],    desc:'Pico maximo de audio. Ruido externo extremo o vocalizacion intensa.' },
+
+    // ---------------------------------------------------------------
+    // DOMINIO PLATAFORMA — conducta del paciente en el portal (M15)
+    // Métricas a nivel portal, no propias al juego individual.
+    // Fuente: platform_dom (corsario del portal).
+    // ---------------------------------------------------------------
+    portal_tiempo_seleccion_ms:       { domain:'PLATAFORMA', unit:'ms',    range:[0,3600000],
+        desc:'Tiempo desde que el portal se abre hasta que el paciente selecciona un juego.' },
+    portal_backtrack_count:           { domain:'PLATAFORMA', unit:'count', range:[0,50],
+        desc:'Veces que el paciente volvió al portal desde un juego sin completarlo.' },
+    portal_hover_count:               { domain:'PLATAFORMA', unit:'count', range:[0,200],
+        desc:'Cantidad de hover sobre iconos de juego antes de seleccionar. Proxy de indecision.' },
+    platform_dias_desde_ultima_sesion:{ domain:'PLATAFORMA', unit:'count', range:[0,9999],
+        desc:'Días transcurridos desde la sesion anterior del paciente en la plataforma.' },
+    platform_racha_consecutiva:       { domain:'PLATAFORMA', unit:'count', range:[0,365],
+        desc:'Días consecutivos con al menos una sesion completada.' },
+    platform_sesiones_total:          { domain:'PLATAFORMA', unit:'count', range:[0,9999],
+        desc:'Total de sesiones completadas por el paciente en la plataforma.' },
+    platform_variedad_juegos:         { domain:'PLATAFORMA', unit:'count', range:[0,12],
+        desc:'Cantidad de juegos distintos jugados por el paciente. 12 = set completo.' },
 
     // Contexto de sesión — imprescindible para interpretar cualquier métrica conductual.
     // Sesión 1 de un paciente nuevo ≠ sesión 15 de un paciente establecido.
