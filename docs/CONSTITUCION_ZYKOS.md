@@ -1,6 +1,6 @@
 # CONSTITUCION DE ZYKOS GAMER
 ## Documento Fundacional — Arquitectura, Principios y Ley Canonica
-**Version:** 3.0 — Promulgada 8 Abril 2026
+**Version:** 4.0 — Promulgada 11 Abril 2026 (actualizada desde V3 del 8 Abril 2026)
 **Autor:** Dr. Gonzalo J. Perez Cortizo
 **Repo:** Psykostoken/gamer (privado) | Dominio: zykos.ar | Supabase: aypljitzifwjosjkqsuu
 
@@ -72,42 +72,75 @@ DASHBOARD (games/portal/dashboard.html)
 
 ---
 
-## ARTICULO 3 — DICCIONARIO CANONICO V2 (103 METRICAS)
+## ARTICULO 3 — DICCIONARIO CANONICO V4 (174 METRICAS)
 
-Fuente de verdad: `games/shared/zykos-engine.js` → `METRIC_DICTIONARY`
-Documento completo: `docs/METRIC_DICTIONARY_V2.md`
+Fuente de verdad: `engines/METRIC_DICTIONARY_V4.json`
+Referencia en runtime: `games/shared/zykos-engine.js` → `METRIC_DICTIONARY`
+
+### Doctrina V4 adicional a los principios 1.1-1.7
+
+**3.1 Semiologia digital continua.** NO bateria neuropsicologica. Los juegos capturan flujo conductual, no ensayos discretos de evaluacion.
+
+**3.2 Captura cruda primaria.** Toda metrica relevante se captura en `zykos_raw_stream`. El analisis es siempre post-hoc en `zykos-post-session-analyzer`. El juego no calcula — registra.
+
+**3.3 Temporalidad Q1-Q4 + H1-H2.** Las metricas con `temporal: true` en el diccionario tienen variantes calculadas post-hoc con sufijo `_Q1`, `_Q2`, `_Q3`, `_Q4`, `_H1`, `_H2`. El juego captura el evento con timestamp. El analizador calcula la banda.
+
+**3.4 Cam/mic = identidad legal + FACS + cruce contextual. NUNCA cognitivo.** Tres dominios separados:
+- `IDENTIDAD`: verificacion de autoria de la sesion (biometria legal)
+- `FACS`: fenomenos faciales observables (Action Units). Cruce con rendimiento
+- `OG_MEDIA`: seniales raw de camara/microfono (luminancia, canal verde rPPG, audio)
+
+**3.5 Baseline individual.** Minimo 5-10 sesiones antes de calcular Z-scores intra-sujeto. Cero cutoffs externos hardcodeados en el juego o el engine.
 
 ### Dominios (alineados con MATRICS MCCB — FDA gold standard)
 
 | # | Dominio ZYKOS | Equivalente MATRICS | ICC | Metricas |
 |---|---|---|---|---|
-| 1 | ATENCION_VELOCIDAD | Speed of Processing + Vigilance | 0.70-0.90 | 18 |
-| 2 | FUNCION_EJECUTIVA | Reasoning & Problem Solving | 0.40-0.75 | 17 |
-| 3 | COORDINACION_MOTORA | Cogstate Finger Tapping | 0.75-0.85 | 19 |
-| 4 | MEMORIA_APRENDIZAJE | Working Memory + Verbal/Visual Learning | 0.40-0.75 | 16 |
-| 5 | COMPRENSION_SEMANTICA | Extension CJI | pendiente | 6 |
-| 6 | REGULACION_AFECTIVA | Social Cognition (extendido) | variable | 11 |
-| 7 | CONDUCTA_NAVEGACION | Extension CJI — data pasiva portal | pendiente | 6 |
-| + | QUANTUM / EFICACIA TERCIOS | Transversal | — | 5 |
-| + | INFRAESTRUCTURA | Metadata normalizacion | — | 5 |
+| 1 | ATENCION | Speed of Processing + Vigilance | 0.70-0.90 | 13 |
+| 2 | EJECUTIVO | Reasoning & Problem Solving | 0.40-0.75 | 12 |
+| 3 | MOTOR | Cogstate Finger Tapping | 0.75-0.85 | 11 |
+| 4 | MEMORIA | Verbal & Visual Learning | 0.40-0.75 | 14 |
+| 5 | CALCULO | NIH Toolbox Pattern Comparison | 0.50-0.70 | 11 |
+| 6 | COMPRENSION | Extension ZYKOS | pendiente | 6 |
+| 7 | FATIGABILIDAD | Transversal | 0.60-0.80 | 13 |
+| 8 | SDT | CPT-IP (d-prime) | 0.70-0.85 | 6 |
+| 9 | PLANIFICACION | Tower of London | 0.50-0.70 | 5 |
+| 10 | MEMORIA_TRABAJO | Working Memory WAIS-IV | 0.50-0.70 | 3 |
+| 11 | INHIBICION | Reasoning & Problem Solving | 0.55-0.75 | 3 |
+| 12 | PRAXIS | Cogstate Detection | 0.65-0.80 | 3 |
+| 13 | RT_DIST | Simple/Choice RT | 0.75-0.90 | 6 |
+| 14 | ESPACIAL | BVMT-R / Visual Learning | 0.55-0.75 | 8 |
+| 15 | AFEC | Social Cognition (MSCEIT) | variable | 7 |
+| 16 | FACS | FACS (Ekman & Friesen 1978) | variable | 14 |
+| 17 | IDENTIDAD | Biometria legal | N/A | 5 |
+| 18 | PRESENCIA | Engagement (Kaliouby 2005) | variable | 6 |
+| 19 | OG_MEDIA | rPPG (Verkruysse 2008) | variable | 14 |
+| 20 | PLATAFORMA | Extension ZYKOS (conducta portal) | pendiente | 7 |
+| 21 | META | Metadata normalizacion | N/A | 5 |
+| 22 | HARDWARE | Hardware correction baseline | N/A | 2 |
 
-### Metricas prohibidas (NUNCA en codigo activo)
-`tremor_avg_jitter`, `tremor_reposo_px`, `motor_clumsiness_score`, `meticulousness_score`, `neatness_score`, `dismetria_mean_px`, `rigidez_index`, `espasticidad_index`, `mean_rt_ms` (usar `rt_mean_ms`), `hesitation_count` como `long_pauses_count`, `clinical_flags` hardcodeados en el juego.
+### Metricas prohibidas (NUNCA en codigo activo, NUNCA en el diccionario)
+`tremor_avg_jitter`, `tremor_reposo_px`, `rigidez_index`, `espasticidad_index`, `cogwheel_index`, `clasp_knife_ratio`, `interferencia_ratio`, `economia_cognitiva`, `eficacia_plan_propio`, `decaimiento_mitades`.
 
-### Composites clinicos (calculados por subagente post-sesion, NO por el juego)
+Los fenomenos que estos nombres intentaban capturar se miden con nombres descriptivos del fenomeno observable: `vel_uniformidad_index`, `vel_oscilacion_index`, `vel_caida_brusca_ratio`, `vel_perfil_abrupto`, `decaimiento_vigilancia`, `wm_interferencia_ratio`, `ratio_acciones_util`.
+
+### Composites clinicos V4 (calculados por zykos-post-session-analyzer, NO por el juego)
 ```
-Composite_ATENCION  = 0.30×Z(rt_mean_ms) + 0.25×Z(rt_cv) + 0.20×Z(hesitation_total)
-                    + 0.15×Z(avg_action_interval_ms) + 0.10×Z(fatigue_index)
+Composite_ATENCION  = 0.30×Z(rt_mean_ms) + 0.25×Z(rt_cv) + 0.20×Z(hesitaciones_count)
+                    + 0.15×Z(iiv_consecutiva) + 0.10×Z(fatiga_global)
 
-Composite_EJECUTIVO = 0.25×Z(commission_errors) + 0.20×Z(omission_errors)
-                    + 0.15×Z(self_correction_ratio) + 0.15×Z(cognitive_flexibility_index)
-                    + 0.15×Z(planning_ratio) + 0.10×Z(perseveration_ratio)
+Composite_EJECUTIVO = 0.25×Z(errores_comision) + 0.20×Z(errores_omision)
+                    + 0.15×Z(automonitoreo_pct) + 0.15×Z(ratio_acciones_util)
+                    + 0.15×Z(pasos_en_orden_pct) + 0.10×Z(perseveracion_count)
 
-Composite_MOTOR     = 0.40×Z(tremor_session_index) + 0.30×Z(movement_efficiency)
-                    + 0.15×Z(speed_variability) + 0.15×Z(movement_duration_p90)
+Composite_MOTOR     = 0.40×Z(jitter_terminal_px) + 0.30×Z(vel_cv)
+                    + 0.15×Z(eficiencia_trayectoria) + 0.15×Z(precision_deposito_px)
 
-Composite_MEMORIA   = 0.30×Z(memory_span) + 0.25×Z(essentials_got_pct)
-                    + 0.25×Z(d_prime) + 0.20×Z(recipe_recall_correct)
+Composite_MEMORIA   = 0.30×Z(evocacion_libre_count) + 0.25×Z(registro_index)
+                    + 0.25×Z(d_prime) + 0.20×Z(consolidacion_pct)
+
+Composite_CALCULO   = 0.35×Z(calculo_correcto_count) + 0.25×Z(calculo_error_pct)
+                    + 0.25×Z(estimacion_cercana_pct) + 0.15×Z(razonamiento_proporcional_pct)
 ```
 Normalizacion: T = 50 + 10 × composite_z
 
@@ -132,7 +165,7 @@ Normalizacion: T = 50 + 10 × composite_z
 RCI = (X_actual - X_baseline - Efecto_Practica) / (SEM × sqrt(2))
 SEM = SD_baseline × sqrt(1 - reliability)
 
-Reliability por dominio: RT=0.85, Accuracy=0.65, d-prime=0.80, Tremor=0.75, Composites=0.85-0.90
+Reliability por dominio: RT=0.85, Accuracy=0.65, d-prime=0.80, Motor(jitter)=0.75, Composites=0.85-0.90
 Interpretacion: RCI > +1.96 = Mejora REAL | RCI < -1.96 = Empeoramiento REAL
 ```
 
