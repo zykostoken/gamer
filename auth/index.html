@@ -225,7 +225,7 @@ async function doLogin() {
     // Set DNI for game metric linking
     if (data.dni) localStorage.setItem('zykos_patient_dni', data.dni);
 
-    // Redirect to game portal
+    // Redirect al portal — el consentimiento AV se maneja en el portal
     window.location.href = '/games/portal/';
   } catch(e) {
     showError('login-error', 'Error: ' + e.message);

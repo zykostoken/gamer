@@ -75,21 +75,44 @@ var sb = getSupabaseClient();
 async function init() {
   var token = localStorage.getItem('zykos_token');
   if (!token) { window.location.href = '/auth/'; return; }
+
+  // Validar sesion
   var r = await sb.rpc('zykos_validate_session', {p_token: token});
   if (!r.data || !r.data.ok) { window.location.href = '/auth/'; return; }
-  var user = r.data;
-  if (user.role === 'superadmin') {
-    var {data: patients} = await sb.from('zykos_users').select('dni,display_name').neq('dni', null).order('display_name');
+
+  // Obtener pacientes
+  var patients = [];
+  if (r.data.role === 'superadmin' || r.data.role === 'admin') {
+    var pRes = await sb.from('zykos_patients').select('id,dni,full_name').order('dni');
+    patients = pRes.data || [];
+  } else {
+    var pRes = await sb.from('zykos_patients').select('id,dni,full_name').eq('dni', r.data.dni);
+    patients = pRes.data || [];
+  }
+
+  if (patients.length >= 1) {
+    // Mostrar selector con pacientes disponibles
     var sel = document.getElementById('sel-patient');
-    (patients||[]).forEach(function(p){
+    patients.forEach(function(p){
       var o = document.createElement('option');
-      o.value = p.dni; o.textContent = (p.display_name||p.dni) + ' (' + p.dni + ')';
+      var label = p.full_name && p.full_name !== p.dni
+        ? p.full_name + ' (' + p.dni + ')'
+        : 'Paciente ' + p.dni;
+      o.value = p.dni;
+      o.textContent = label;
       sel.appendChild(o);
     });
+    // Si hay exactamente un paciente, seleccionarlo y cargar automáticamente
+    if (patients.length === 1) {
+      sel.value = patients[0].dni;
+      loadData(patients[0].dni);
+    }
+  } else if (false && patients.length === 0) {
+    // Usuario único — cargar directo sin mostrar selector
+    document.querySelector('.controls').style.display = 'none';
+    loadData(patients[0].dni);
   } else {
-    var dni = localStorage.getItem('zykos_patient_dni');
-    if (dni) { loadData(dni); document.querySelector('.controls').style.display='none'; }
-    else window.location.href = '/games/portal/';
+    window.location.href = '/games/portal/';
   }
 }
 

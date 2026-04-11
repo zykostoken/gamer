@@ -28,20 +28,34 @@
 // ================================================================
 var METRIC_DICTIONARY = {
 
-    // === TREMOR (Motor - Extrapiramidal) ===
-    jitter_reposo_px:       { domain:'MOTOR', construct:'Jitter de reposo (micro-movimiento en quietud)', unit:'px', range:[0,50], desc:'Jitter basal con input quieto. Correlato: parkinsonismo, ansiedad basal.' },
-    jitter_inicio_px:       { domain:'MOTOR', construct:'Jitter de inicio (irregularidad al iniciar movimiento)', unit:'px', range:[0,50], desc:'Jitter al iniciar movimiento hacia target.' },
-    jitter_terminal_px:     { domain:'MOTOR', construct:'Jitter terminal (irregularidad al aproximar target)', unit:'px', range:[0,50], desc:'Jitter al llegar al target. Correlato: cerebeloso.' },
-    precision_deposito_px:      { domain:'MOTOR', construct:'Precisión de depósito (error de punto final)', unit:'px', range:[0,200], desc:'Distancia media del click/touch al centro del target.' },
+    // === IRREGULARIDAD MOTORA ===
+    // Nombres de código: jitter_* (descriptivo, no diagnóstico)
+    // Lo que el clínico puede inferir de valores altos está en la literatura:
+    //   jitter_reposo_px alto → parkinsonismo, temblor esencial, ansiedad basal (Jankovic 2008)
+    //   jitter_terminal_px alto → patología cerebelosa (Holmes 1922)
+    // El sistema mide. El clínico interpreta.
+    jitter_reposo_px:       { domain:'MOTOR', unit:'px', range:[0,50],
+        desc:'Irregularidad del cursor en reposo >500ms. Lit: parkinsonismo, temblor esencial (Jankovic 2008).' },
+    jitter_inicio_px:       { domain:'MOTOR', unit:'px', range:[0,50],
+        desc:'Irregularidad al iniciar movimiento (primeros 150ms). Proxy de inicio motor.' },
+    jitter_terminal_px:     { domain:'MOTOR', unit:'px', range:[0,50],
+        desc:'Irregularidad al aproximar el target (últimos 80px). Lit: patología cerebelosa (Holmes 1922).' },
+    precision_deposito_px:  { domain:'MOTOR', unit:'px', range:[0,200],
+        desc:'Distancia media del click/touch al centro del target. Proxy de dismetría.' },
 
     // === VELOCIDAD MOTORA ===
     vel_peak_mean:          { domain:'MOTOR', construct:'Velocidad pico', unit:'px/ms', range:[0,5], desc:'Velocidad pico media del cursor durante movimientos.' },
     vel_peak_sd:            { domain:'MOTOR', construct:'Variabilidad velocidad pico', unit:'px/ms', range:[0,3], desc:'SD de velocidad pico.' },
-    vel_cv:                 { domain:'MOTOR', construct:'Coeficiente variación velocidad', unit:'ratio', range:[0,2], desc:'CV de velocidad. Alto = irregular.' },
-    vel_uniformidad_index:          { domain:'MOTOR', construct:'Uniformidad de velocidad (1 - CV velocidad)', unit:'index', range:[0,1], desc:'1 - vel_cv. Alto = movimiento rígido, uniforme.' },
-    vel_oscilacion_index:         { domain:'MOTOR', construct:'Oscilación rítmica de velocidad', unit:'index', range:[0,1], desc:'Oscilaciones de velocidad durante movimiento. Correlato: extrapiramidal.' },
-    vel_caida_brusca_ratio:      { domain:'MOTOR', construct:'Caídas bruscas de aceleración (ratio)', unit:'ratio', range:[0,10], desc:'Caídas bruscas de aceleración. Correlato: espasticidad.' },
-    vel_perfil_abrupto:     { domain:'MOTOR', construct:'Perfil abrupto de velocidad (derivado de caídas)', unit:'index', range:[0,1], desc:'Derivado de clasp_knife. 0=normal, 1=espástico.' },
+    vel_cv:                 { domain:'MOTOR', construct:'CV velocidad (M4)', unit:'ratio', range:[0,2],
+        desc:'Protocolo M4: base de rigidez_index (1-vel_cv). Alto=movimiento rígido sin modulación.' },
+    vel_uniformidad_index:          { domain:'MOTOR', construct:'Índice de uniformidad (rigidez_index)', unit:'index', range:[0,1],
+        desc:'Protocolo M4: rigidez_index = 1 - vel_cv. Alto=pobreza de modulación rítmica.' },
+    vel_oscilacion_index:         { domain:'MOTOR', construct:'Oscilaciones rítmicas (cogwheel_index)', unit:'index', range:[0,1],
+        desc:'Protocolo M4: cogwheel_index. Signo de rueda dentada digital. Ref: Jankovic 2008.' },
+    vel_caida_brusca_ratio:      { domain:'MOTOR', construct:'Caída brusca de aceleración (clasp_knife_ratio)', unit:'ratio', range:[0,10],
+        desc:'Protocolo M4: clasp_knife_ratio. Caídas bruscas de aceleración; indicador de espasticidad o rigidez severa.' },
+    vel_perfil_abrupto:     { domain:'MOTOR', construct:'Perfil abrupto normalizado (espasticidad_index)', unit:'index', range:[0,1],
+        desc:'Protocolo M4: espasticidad_index. Valor normalizado de la caída de tensión motora. 0=normal, 1=espástico.' },
 
     // === TRAYECTORIA / PRAXIS ===
     eficiencia_trayectoria: { domain:'PRAXIS', construct:'Eficiencia de trayectoria', unit:'ratio', range:[0,1], desc:'Path recto / path real. 1=perfecto.' },
@@ -55,17 +69,29 @@ var METRIC_DICTIONARY = {
 
     // === SECUENCIA / PLANIFICACIÓN ===
     secuencia_correcta_pct: { domain:'EJECUTIVO', construct:'Secuenciación', unit:'pct', range:[0,100], desc:'% de acciones en orden correcto.' },
-    ratio_completados:      { domain:'EJECUTIVO', construct:'Completados sobre esperados', unit:'ratio', range:[0,1], desc:'Objetivos completados / esperados.' },
-    eficacia_plan_propio:   { domain:'EJECUTIVO', construct:'Economía de plan', unit:'ratio', range:[0,1], desc:'Acciones útiles / acciones totales.' },
+    ratio_completados:      { domain:'EJECUTIVO', construct:'Eficacia de objetivo (eficacia_objetivo)', unit:'ratio', range:[0,1],
+        desc:'Protocolo E2: eficacia_objetivo. Objetivos logrados / esperados.' },
     plan_failed_attempts:   { domain:'EJECUTIVO', construct:'Intentos fallidos', unit:'count', range:[0,50], desc:'Planes iniciados pero no completados.' },
 
     // === TIEMPO DE REACCIÓN / ATENCIÓN ===
     rt_mean_ms:             { domain:'ATENCION', construct:'Tiempo de reacción medio', unit:'ms', range:[100,5000], desc:'RT medio sobre todos los estímulos respondidos.' },
     rt_sd_ms:               { domain:'ATENCION', construct:'Variabilidad RT', unit:'ms', range:[0,2000], desc:'SD del RT. Alto = inconsistente.' },
-    rt_cv:                  { domain:'ATENCION', construct:'Coeficiente variación RT', unit:'ratio', range:[0,2], desc:'CV del RT. Estándar: <0.25 bueno.' },
-    decaimiento_mitades: { domain:'ATENCION', construct:'Decaimiento por mitades (RT 2da/1ra mitad)', unit:'ratio', range:[0.5,3], desc:'RT 2da mitad / RT 1ra mitad. >1 = fatiga.' },
+    rt_cv:                  { domain:'ATENCION', construct:'Coeficiente de variación RT (A1)', unit:'ratio', range:[0,2],
+        desc:'Protocolo A1. rt_cv > 0.25 sugiere irregularidad atencional. TDAH correlación g=0.76.' },
+    iiv_consecutiva:        { domain:'ATENCION', construct:'Variabilidad intraindividual consecutiva (IIV)', unit:'ms', range:[0,500],
+        desc:'Protocolo A1. SD de las diferencias entre RT de ensayos consecutivos. Sensible a fluctuaciones atencionales.' },
+    decaimiento_vigilancia: { domain:'ATENCION', construct:'Decaimiento de vigilancia', unit:'ratio', range:[0.5,3],
+        desc:'Protocolo A1: RT 2da mitad / RT 1ra mitad. >1 = fatiga de vigilancia sostenida. Calculado post-hoc.' },
 
     // Fatigabilidad y distribucion temporal — tercios, transversal a todos los juegos
+    // A2 Fatiga — protocolo clínico v1 (calculados en análisis diferido SQL)
+    fatiga_motor:         { domain:'FATIGABILIDAD', construct:'Fatiga motora', unit:'ratio', range:[0,5],
+        desc:'Protocolo A2. jitter_terminal / jitter_reposo. >1.5 = fatiga motora significativa.' },
+    fatiga_precision:     { domain:'FATIGABILIDAD', construct:'Fatiga de precisión', unit:'ratio', range:[0,5],
+        desc:'Protocolo A2. precision_deposito_px T3 / T1. Degradación por tiempo de exposición.' },
+    fatiga_global:        { domain:'FATIGABILIDAD', construct:'Fatiga global (media ponderada)', unit:'ratio', range:[0,5],
+        desc:'Protocolo A2. Media ponderada de ratios fatiga_motor + fatiga_precision + RT.' },
+
     eficacia_tercio_1:    { domain:'FATIGABILIDAD', construct:'Eficacia tercio inicial', unit:'ratio', range:[0,1], desc:'Correctos/total en el primer tercio temporal de la sesion.' },
     eficacia_tercio_2:    { domain:'FATIGABILIDAD', construct:'Eficacia tercio medio', unit:'ratio', range:[0,1], desc:'Correctos/total en el segundo tercio temporal de la sesion.' },
     eficacia_tercio_3:    { domain:'FATIGABILIDAD', construct:'Eficacia tercio final', unit:'ratio', range:[0,1], desc:'Correctos/total en el ultimo tercio temporal de la sesion.' },
@@ -88,8 +114,10 @@ var METRIC_DICTIONARY = {
 
     // === CONTROL EJECUTIVO ===
     impulsividad_ratio:     { domain:'INHIBICION', construct:'Impulsividad', unit:'ratio', range:[0,1], desc:'Ratio de acciones rápidas (<150ms) sin pausa previa.' },
-    count_drags_abortados:       { domain:'INHIBICION', construct:'Drags iniciados y no completados', unit:'ratio', range:[0,1], desc:'Capacidad de frenar acción ya iniciada.' },
-    ratio_acciones_util:     { domain:'EJECUTIVO', construct:'Acciones utiles sobre acciones totales', unit:'ratio', range:[0,1], desc:'Acciones mínimas necesarias / acciones reales. 1=óptimo.' },
+    count_drags_abortados:       { domain:'INHIBICION', construct:'Inhibición motora (inhibicion_motor)', unit:'count', range:[0,200],
+        desc:'Protocolo E1: inhibicion_motor. Movimientos iniciados y abortados antes del click.' },
+    ratio_acciones_util:     { domain:'EJECUTIVO', construct:'Economía cognitiva (economia_cognitiva)', unit:'ratio', range:[0,1],
+        desc:'Protocolo E2: economia_cognitiva. Acciones útiles / total. Mide eficiencia ejecutiva.' },
 
     // === INSTRUCCIONES / COMPRENSIÓN ===
     instruction_time_ms:    { domain:'COMPRENSION', construct:'Tiempo de lectura', unit:'ms', range:[0,60000], desc:'Tiempo total leyendo instrucciones.' },
@@ -97,6 +125,14 @@ var METRIC_DICTIONARY = {
     first_action_latency_ms:{ domain:'EJECUTIVO', construct:'Latencia de inicio', unit:'ms', range:[0,30000], desc:'Tiempo desde que aparece el juego hasta 1ra acción.' },
 
     // === META / SESIÓN ===
+    // AFEC — biomarcadores afectivos (protocolo v1, calculados en análisis diferido)
+    engagement_decay:     { domain:'AFEC', construct:'Decaimiento de engagement inter-sesiones', unit:'ratio', range:[-2,2],
+        desc:'Protocolo AFEC1. Variación de duración sesión N vs N-1. Negativo = retracción afectiva.' },
+    color_hex:            { domain:'AFEC', construct:'Color elegido en pre-game (proyectivo)', unit:'hex', range:[0,0],
+        desc:'Protocolo AFEC2. Tono cromático en el mood check-in pre-juego. Análisis proyectivo.' },
+    color_congruencia:    { domain:'AFEC', construct:'Congruencia estado afectivo-rendimiento', unit:'ratio', range:[-1,1],
+        desc:'Protocolo AFEC2. Correlación entre el color elegido y el rendimiento real de la sesión.' },
+
     session_duration_ms:    { domain:'META', construct:'Duración sesión', unit:'ms', range:[0,3600000], desc:'Duración total de la sesión de juego.' },
     total_clicks:           { domain:'META', construct:'Total clicks', unit:'count', range:[0,10000], desc:'Total de clicks/taps en la sesión.' },
     total_actions:          { domain:'META', construct:'Total acciones', unit:'count', range:[0,10000], desc:'Total de acciones significativas.' },
@@ -140,7 +176,6 @@ var METRIC_DICTIONARY = {
     // ── MEMORIA DE TRABAJO ────────────────────────────────────────────────────
     span_items:                   { domain:'MEMORIA_TRABAJO', unit:'count', range:[0,15],   desc:'Cantidad maxima de items manejados simultaneamente sin error.' },
     actualizacion_correcta_pct:   { domain:'MEMORIA_TRABAJO', unit:'pct',   range:[0,100],  desc:'% de actualizaciones correctas en tareas n-back o equivalente.' },
-    interferencia_ratio:          { domain:'MEMORIA_TRABAJO', unit:'ratio', range:[0,3],    desc:'RT en condicion de interferencia / RT en condicion limpia.' },
 
     // ── PLANIFICACION ─────────────────────────────────────────────────────────
     tiempo_planificacion_ms:      { domain:'PLANIFICACION', unit:'ms',    range:[0,60000], desc:'Tiempo antes del primer movimiento (inspeccion del problema).' },
@@ -205,72 +240,112 @@ var METRIC_DICTIONARY = {
     tab_switches_count:           { domain:'ATENCION', unit:'count', range:[0,50],  desc:'Cambios de pestana/ventana. Alias de focus_interruptions_count.' },
 
     // ---------------------------------------------------------------
-    // DOMINIO MEDIA — cámara + micrófono (opt-in explícito)
-    // Procesamiento 100% en browser. Cero frames al servidor.
+    // DOMINIO IDENTIDAD — biometría legal cam+mic (opt-in explícito)
+    // Identidad del paciente real frente a la cámara. Defensa legal.
+    // Valor null si el usuario no consintió o el dispositivo no está disponible.
+    // Doctrina V4 M16: Cam/mic = identidad legal + FACS + cruce contextual, NO cognitivo.
+    // ---------------------------------------------------------------
+    identity_face_present_pct:    { domain:'IDENTIDAD', unit:'ratio', range:[0,1],
+        desc:'Fraccion del tiempo con cara detectada en el frame. Lit: presencia fisica del paciente.' },
+    identity_face_enrolled:       { domain:'IDENTIDAD', unit:'bool',  range:[0,1],
+        desc:'1 si se registró un embedding facial de enrollment al inicio de la sesion.' },
+    identity_session_verified:    { domain:'IDENTIDAD', unit:'bool',  range:[0,1],
+        desc:'1 si la cara detectada coincide con el enrollment a lo largo de la sesion.' },
+    identity_anomaly_count:       { domain:'IDENTIDAD', unit:'count', range:[0,100],
+        desc:'Episodios donde el match de identidad cayó por debajo del umbral. Alerta de suplantacion.' },
+    identity_voice_episodes:      { domain:'IDENTIDAD', unit:'count', range:[0,200],
+        desc:'Episodios de vocalizacion detectados por el mic. Proxy de presencia activa.' },
+
+    // ---------------------------------------------------------------
+    // DOMINIO FACS — expresion facial (face-api, opt-in explícito)
     // Action Units: descripciones musculares observables, sin etiquetas diagnósticas.
-    // valor null si el usuario no consintió o el dispositivo no está disponible.
+    // Lit: Ekman & Friesen (1978), Duchenne (1862), Gross (2002), Cohn & Ekman (2005).
+    // El sistema mide. El clínico interpreta.
     // ---------------------------------------------------------------
 
-    // PRESENCIA Y ATENCIÓN VISUAL
-    cam_face_present_pct:         { domain:'MEDIA', unit:'ratio',  range:[0,1],      desc:'Fraccion del tiempo con cara detectada en el frame.' },
-    cam_face_absent_episodes:     { domain:'MEDIA', unit:'count',  range:[0,100],    desc:'Veces que la cara desapareció del encuadre.' },
-    cam_face_freeze_episodes:     { domain:'MEDIA', unit:'count',  range:[0,50],     desc:'Cara presente + landmarks inmóviles >3s. Proxy de rigidez/ausencia.' },
-    cam_face_freeze_max_ms:       { domain:'MEDIA', unit:'ms',     range:[0,300000], desc:'Freeze más largo. >10s + sin mic = candidato a ausencia epiléptica.' },
-
-    // EXPRESIÓN FACIAL — fenómenos observables con validación empírica FACS
-    // Referencias: Ekman & Friesen (1978), Duchenne (1862), Gross (2002),
-    // Nijenhuis (2004), literatura de neuroftalmología y psicofisiología.
-    // Los nombres describen el fenómeno observable, no un diagnóstico.
-    // Las asociaciones clínicas son de la literatura publicada.
-
     // Ceño y tensión facial superior
-    cam_brow_furrow_episodes:     { domain:'MEDIA', unit:'count',  range:[0,500],
+    facs_brow_furrow_episodes:    { domain:'FACS', unit:'count',  range:[0,500],
         desc:'AU4 corrugador superciliar activo. Lit: esfuerzo cognitivo, frustración, dolor (Ekman 1978).' },
-    cam_brow_furrow_ms:           { domain:'MEDIA', unit:'ms',     range:[0,3600000],
+    facs_brow_furrow_ms:          { domain:'FACS', unit:'ms',     range:[0,3600000],
         desc:'Tiempo total con ceño fruncido. Indicador de carga emocional o cognitiva acumulada.' },
 
     // Tensión nasal
-    cam_nose_wrinkle_episodes:    { domain:'MEDIA', unit:'count',  range:[0,200],
+    facs_nose_wrinkle_episodes:   { domain:'FACS', unit:'count',  range:[0,200],
         desc:'AU9 elevador ala nariz + arruga nasal. Lit: expresión aversiva (Ekman 1978).' },
 
     // Compresión labial
-    cam_lip_compression_episodes: { domain:'MEDIA', unit:'count',  range:[0,200],
+    facs_lip_compression_episodes:{ domain:'FACS', unit:'count',  range:[0,200],
         desc:'AU23+AU24 orbicular labios. Lit: supresión emocional, control inhibitorio (Gross 2002).' },
-    cam_lip_compression_max_ms:   { domain:'MEDIA', unit:'ms',     range:[0,60000],
+    facs_lip_compression_max_ms:  { domain:'FACS', unit:'ms',     range:[0,60000],
         desc:'Tensión labial máxima sostenida en un episodio.' },
 
     // Parpadeo — ampliamente validado en neuroftalmología
-    cam_blink_rate_mean:          { domain:'MEDIA', unit:'n/min',  range:[0,60],
+    facs_blink_rate_mean:         { domain:'FACS', unit:'n/min',  range:[0,60],
         desc:'Parpadeos/min. Norma: 15-20. Bajo: hiperfoco, Parkinson. Alto: fatiga, stress (lit. neuroftalmología).' },
-    cam_blink_rate_cv:            { domain:'MEDIA', unit:'ratio',  range:[0,3],
+    facs_blink_rate_cv:           { domain:'FACS', unit:'ratio',  range:[0,3],
         desc:'Variabilidad del parpadeo. Alto CV indica parpadeo irregular.' },
-    cam_blink_burst_count:        { domain:'MEDIA', unit:'count',  range:[0,100],
+    facs_blink_burst_count:       { domain:'FACS', unit:'count',  range:[0,100],
         desc:'Ráfagas >3 parpadeos en <2s. Lit: tic ocular, stress agudo.' },
 
     // Sonrisa — Duchenne (1862) validado fisiológicamente
-    cam_genuine_smile_pct:        { domain:'MEDIA', unit:'ratio',  range:[0,1],
+    facs_genuine_smile_pct:       { domain:'FACS', unit:'ratio',  range:[0,1],
         desc:'AU6+AU12 simultáneos — sonrisa de Duchenne. Lit: afecto positivo genuino, correlato parasimpático.' },
-    cam_social_smile_pct:         { domain:'MEDIA', unit:'ratio',  range:[0,1],
+    facs_social_smile_pct:        { domain:'FACS', unit:'ratio',  range:[0,1],
         desc:'AU12 sin AU6 — sonrisa voluntaria. Lit: regulación social, diferente correlato fisiológico.' },
 
-    // CORRELACIÓN AFECTO-RENDIMIENTO — cruce humor facial × eficacia del juego
+    // CORRELACIÓN AFECTO-RENDIMIENTO — cruce FACS × eficacia del juego (M16)
     // Requiere tanto agent-media como que los juegos reporten aciertos/errores
     // via ZykosMediaAgent.reportGameEvent('hit'|'error')
     // Lit: Russell (1980) modelo circumplejo, Cohn & Ekman (2005) AU temporal dynamics
-    affect_smile_during_hits_pct:  { domain:'MEDIA', unit:'ratio', range:[0,1],
+    affect_smile_during_hits_pct:  { domain:'FACS', unit:'ratio', range:[0,1],
         desc:'Fraccion de aciertos con sonrisa genuina activa. Alto=afecto positivo reactivo al exito.' },
-    affect_brow_during_errors_pct: { domain:'MEDIA', unit:'ratio', range:[0,1],
+    affect_brow_during_errors_pct: { domain:'FACS', unit:'ratio', range:[0,1],
         desc:'Fraccion de errores con ceño fruncido activo. Alto=esfuerzo/frustración reactiva al error.' },
-    affect_lip_during_errors_pct:  { domain:'MEDIA', unit:'ratio', range:[0,1],
+    affect_lip_during_errors_pct:  { domain:'FACS', unit:'ratio', range:[0,1],
         desc:'Fraccion de errores con boca apretada. Alto=supresion emocional post-error (Gross 2002).' },
-    affect_reactivity:             { domain:'MEDIA', unit:'ratio', range:[-1,1],
+    affect_reactivity:             { domain:'FACS', unit:'ratio', range:[-1,1],
         desc:'>0.3=afecto reactivo al rendimiento. ~0=afecto plano/disociado. <-0.1=patron atipico.' },
 
-    // MICRÓFONO — ambiente sonoro (sin grabar, solo nivel)
-    mic_ambient_db_mean:          { domain:'MEDIA', unit:'dB',     range:[0,120],    desc:'Nivel sonoro ambiental medio. Informa sobre contexto de la sesión.' },
-    mic_ambient_db_cv:            { domain:'MEDIA', unit:'ratio',  range:[0,3],      desc:'Variabilidad sonora. Alto=entorno ruidoso o variable.' },
-    mic_speech_episodes:          { domain:'MEDIA', unit:'count',  range:[0,200],    desc:'Episodios de vocalización del paciente.' },
-    mic_external_noise_count:     { domain:'MEDIA', unit:'count',  range:[0,500],    desc:'Picos de ruido externo >70dB. Proxy de distractores ambientales.' },
+    // ---------------------------------------------------------------
+    // DOMINIO OG_MEDIA — Original Graphics Media (capa fundacional cam+mic)
+    // Sin face-api. Vanilla JS. Bajo CPU. Base sobre la que FACS extiende.
+    // Captura: presencia, luminancia, canal verde (proxy PPG), audio.
+    // Lit: Verkruysse (2008), Poh (2010), De Haan (2013), Mcduff (2014)
+    // ---------------------------------------------------------------
+    og_cam_present:               { domain:'OG_MEDIA', unit:'bool',   range:[0,1],      desc:'1 si la camara estuvo activa en la sesion.' },
+    og_cam_presence_pct:          { domain:'OG_MEDIA', unit:'ratio',  range:[0,1],      desc:'Fraccion del tiempo con contenido visual en el frame.' },
+    og_cam_blackout_count:        { domain:'OG_MEDIA', unit:'count',  range:[0,100],    desc:'Episodios sin contenido visual. Correlato de ausencia fisica.' },
+    og_cam_blackout_max_ms:       { domain:'OG_MEDIA', unit:'ms',     range:[0,600000], desc:'Blackout mas largo de la sesion.' },
+    og_cam_luminance_mean:        { domain:'OG_MEDIA', unit:'0-255',  range:[0,255],    desc:'Luminancia media del frame (ITU-R BT.709).' },
+    og_cam_luminance_cv:          { domain:'OG_MEDIA', unit:'ratio',  range:[0,3],      desc:'Variabilidad de luminancia. Alto=cambios de luz o movimiento.' },
+    og_cam_green_channel_mean:    { domain:'OG_MEDIA', unit:'0-255',  range:[0,255],    desc:'Canal verde medio. Proxy PPG para HR (Verkruysse 2008, Poh 2010).' },
+    og_cam_green_cv:              { domain:'OG_MEDIA', unit:'ratio',  range:[0,3],      desc:'Variabilidad canal verde. Correlato de pulso cardiaco rPPG (De Haan 2013).' },
+    og_mic_present:               { domain:'OG_MEDIA', unit:'bool',   range:[0,1],      desc:'1 si el microfono estuvo activo en la sesion.' },
+    og_mic_db_mean:               { domain:'OG_MEDIA', unit:'dB',     range:[0,100],    desc:'Volumen ambiental medio. Contexto acustico de la sesion.' },
+    og_mic_db_cv:                 { domain:'OG_MEDIA', unit:'ratio',  range:[0,3],      desc:'Variabilidad de volumen. Alto=entorno ruidoso o variable.' },
+    og_mic_silence_pct:           { domain:'OG_MEDIA', unit:'ratio',  range:[0,1],      desc:'Fraccion del tiempo en silencio (<30dB). Entorno controlado.' },
+    og_mic_speech_episodes:       { domain:'OG_MEDIA', unit:'count',  range:[0,500],    desc:'Episodios de vocalizacion (>50dB). Lit: Cummins (2015).' },
+    og_mic_peak_db:               { domain:'OG_MEDIA', unit:'dB',     range:[0,100],    desc:'Pico maximo de audio. Ruido externo extremo o vocalizacion intensa.' },
+
+    // ---------------------------------------------------------------
+    // DOMINIO PLATAFORMA — conducta del paciente en el portal (M15)
+    // Métricas a nivel portal, no propias al juego individual.
+    // Fuente: platform_dom (corsario del portal).
+    // ---------------------------------------------------------------
+    portal_tiempo_seleccion_ms:       { domain:'PLATAFORMA', unit:'ms',    range:[0,3600000],
+        desc:'Tiempo desde que el portal se abre hasta que el paciente selecciona un juego.' },
+    portal_backtrack_count:           { domain:'PLATAFORMA', unit:'count', range:[0,50],
+        desc:'Veces que el paciente volvió al portal desde un juego sin completarlo.' },
+    portal_hover_count:               { domain:'PLATAFORMA', unit:'count', range:[0,200],
+        desc:'Cantidad de hover sobre iconos de juego antes de seleccionar. Proxy de indecision.' },
+    platform_dias_desde_ultima_sesion:{ domain:'PLATAFORMA', unit:'count', range:[0,9999],
+        desc:'Días transcurridos desde la sesion anterior del paciente en la plataforma.' },
+    platform_racha_consecutiva:       { domain:'PLATAFORMA', unit:'count', range:[0,365],
+        desc:'Días consecutivos con al menos una sesion completada.' },
+    platform_sesiones_total:          { domain:'PLATAFORMA', unit:'count', range:[0,9999],
+        desc:'Total de sesiones completadas por el paciente en la plataforma.' },
+    platform_variedad_juegos:         { domain:'PLATAFORMA', unit:'count', range:[0,12],
+        desc:'Cantidad de juegos distintos jugados por el paciente. 12 = set completo.' },
 
     // ---------------------------------------------------------------
     // DOMINIO OG_MEDIA — Original Graphics Media (capa fundacional cam+mic)
@@ -541,7 +616,13 @@ var ZYKOS = {
                           if (r.error) console.warn('[patterns]', r.error.message);
                       }).catch(function(){});
 
-                    // 2. Timeline de humor facial (solo si agent-media estuvo activo)
+                    // 2. Fatiga A2 del protocolo clínico (cómputo diferido)
+                    sb.rpc('zykos_compute_fatiga', { p_session_id: payload.session_id })
+                      .then(function(r){
+                          if (r.error) console.warn('[fatiga-A2]', r.error.message);
+                      }).catch(function(){});
+
+                    // 3. Timeline de humor facial (solo si agent-media estuvo activo)
                     var humTL  = metrics['_raw_humor_timeline'];
                     var humPE  = metrics['_raw_performance_events'];
                     if (humTL && humTL.length > 0) {
