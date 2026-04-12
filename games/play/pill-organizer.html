@@ -1140,7 +1140,10 @@
 
                 var isCorrect = validatePlacement(medType, slot.dataset.day, slot.dataset.time);
                 if (!isCorrect) sessionState.totalErrors++;
-                else sessionState.correctPlacements++;
+                else sessionState.correctPlacements++
+    // Reportar al agente de media para correlacion afecto-rendimiento
+    if (typeof window.ZykosMediaAgent !== 'undefined') window.ZykosMediaAgent.reportGameEvent('hit');
+;
                 sessionState.totalMoves++;
 
                 // consigna se oculta por timer al cargar el nivel (ver loadLevel)
@@ -1178,14 +1181,18 @@
                 if (sb && sessionState.patientDni && sessionState.patientDni !== null) {
                     (async function() {
                         try {
-                            var r = await sb.from('zykos_game_metrics').insert({
+                            var _ppPayload = {
                                 patient_dni: sessionState.patientDni,
                                 session_id: sessionState.sessionId,
                                 game_slug: 'pill-organizer',
                                 metric_type: 'pill_placement',
-                                metric_value: tremorIndex,
+                                metric_value: tremorIndex,  // tremorIndex = jitter_reposo_px local
                                 metric_data: movement
-                            });
+                            };
+                            if (typeof ZykosEvidence !== 'undefined') {
+                                _ppPayload = await ZykosEvidence.prepare(_ppPayload);
+                            }
+                            var r = await sb.from('zykos_game_metrics').insert(_ppPayload);
                             if (r.error) console.warn('[pill] placement:', r.error.message);
                         } catch(e) { console.warn('[pill] placement:', e.message); }
                     })();
@@ -1656,7 +1663,7 @@
                 completeness_pct: Math.round(completeness),
                 errors: sessionState.totalErrors,
                 accuracy_percentage: Math.round(accuracy),
-                avg_tremor_index: parseFloat(avgTremor.toFixed(3)),
+                jitter_reposo_px_mean: parseFloat(avgTremor.toFixed(3)),
                 avg_hesitation_ms: Math.round(avgHesitation),
                 avg_path_efficiency: parseFloat(avgPathEff.toFixed(3)),
                 avg_speed: parseFloat(avgSpeed.toFixed(3)),
@@ -1682,7 +1689,7 @@
             const _dni = sessionState.patientDni && sessionState.patientDni !== null ? sessionState.patientDni : null;
             if (sb && _dni) {
                 try {
-                    const { error: metricErr } = await sb.from('zykos_game_metrics').insert({
+                    var _psPayload = {
                         patient_dni: _dni,
                         game_slug: 'pill-organizer',
                         metric_type: 'session_summary',
@@ -1697,7 +1704,7 @@
                             correct_placements: sessionState.correctPlacements,
                             expected_placements: expected,
                             duration_sec: duration,
-                            tremor_index: avgTremor,
+                            jitter_reposo_px: avgTremor,
                             mean_rt_ms: finalMetrics.avg_hesitation_ms,
                             movement_efficiency: avgPathEff,
                             avg_abrupt_redirections: sessionState.movements.length > 0
@@ -1780,7 +1787,11 @@
                                 return count;
                             })()
                         }
-                    });
+                    };
+                    if (typeof ZykosEvidence !== 'undefined') {
+                        _psPayload = await ZykosEvidence.prepare(_psPayload);
+                    }
+                    const { error: metricErr } = await sb.from('zykos_game_metrics').insert(_psPayload);
                     if (metricErr) console.warn('Longitudinal metric save:', metricErr.message);
                 } catch(e) { console.warn('Longitudinal metric save:', e.message); }
             }
@@ -1801,18 +1812,7 @@
                 } catch(e) { console.warn('Session update:', e.message); }
             }
 
-            if (sessionState.patientId) {
-                fetch('/api/biometricas', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        patient_id: sessionState.patientId,
-                        session_id: sessionState.sessionId || ('pill-' + Date.now()),
-                        game_slug: 'pill-organizer',
-                        biometric_data: { ...finalMetrics, score: finalScore }
-                    })
-                }).catch(e => console.warn('[pill-organizer] Bucket save fail:', e.message));
-            }
+            // /api/biometricas eliminado — endpoint no existe en el stack
 
             // === MOSTRAR MODAL DE RESULTADOS ===
             var omissions = Math.max(0, expected - sessionState.correctPlacements);
@@ -1947,6 +1947,11 @@
         }
 
         function goNextLevel() {
+            // Bloqueo demo: no pasar del nivel máximo permitido
+            if (window._DEMO_MAX_LEVEL && sessionState.currentLevelIndex + 1 >= window._DEMO_MAX_LEVEL) {
+                window.location.href = window._DEMO_RETURN || '/demo/';
+                return;
+            }
             document.getElementById('results-overlay').style.display = 'none';
             if (sessionState.timerInterval) { clearInterval(sessionState.timerInterval); sessionState.timerInterval = null; }
             sessionState.gameActive = false;
@@ -2201,5 +2206,9 @@ window._toggleConsigna = function() {
 <script src="/games/shared/agents/agent-context.js"></script>
 <script src="/games/shared/agents/agent-scroll.js"></script>
 <script src="/games/shared/agents/agent-focus.js"></script>
+    <!-- Agentes de biomarcadores — inicializados desde consentimiento del portal -->
+    <script src="/games/shared/agents/agent-og-media.js"></script>
+    <script src="/games/shared/agents/agent-media.js"></script>
+    <script src="/games/shared/media-init.js"></script>
 </body>
 </html>

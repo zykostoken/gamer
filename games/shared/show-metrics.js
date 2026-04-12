@@ -79,16 +79,16 @@ global.showMetricsModal = async function(resultData) {
             
             // === DISMETRIA ===
             dismetria: {
-                mean_error_px: biomet.dismetria_mean_px || null,
+                mean_error_px: biomet.precision_deposito_px || null,
                 pattern: null  // 'overshooting', 'undershooting', 'erratico', 'normal'
             },
             
             // === COORDINACIÓN MOTORA ===
             motor: {
-                tremor_reposo: biomet.tremor_reposo_px || null,
-                tremor_inicio: biomet.tremor_inicio_px || null,
-                tremor_terminal: biomet.tremor_terminal_px || null,
-                rectificaciones: biomet.rectificaciones_count || 0
+                jitter_reposo_px:   biomet.jitter_reposo_px   || null,
+                jitter_inicio_px:   biomet.jitter_inicio_px   || null,
+                jitter_terminal_px: biomet.jitter_terminal_px || null,
+                rectificaciones:    biomet.rectificaciones_count || 0
             },
             
             // === EJECUTIVO ===
@@ -132,10 +132,11 @@ global.showMetricsModal = async function(resultData) {
         }
         
         // Patrón de dismetria
-        if (biomet.dismetria_mean_px) {
-            if (biomet.dismetria_mean_px > 40) {
+        var _disPx = biomet.precision_deposito_px;
+        if (_disPx) {
+            if (_disPx > 40) {
                 analysis.dismetria.pattern = 'overshooting';
-            } else if (biomet.dismetria_mean_px > 20) {
+            } else if (_disPx > 20) {
                 analysis.dismetria.pattern = 'erratico';
             } else {
                 analysis.dismetria.pattern = 'normal';
@@ -206,7 +207,7 @@ global.showMetricsModal = async function(resultData) {
                     error_rate: analysis.error_pattern.error_rate,
                     
                     // Dismetria
-                    dismetria_mean_px: analysis.dismetria.mean_error_px,
+                    precision_deposito_px: analysis.dismetria.mean_error_px,
                     dismetria_pattern: analysis.dismetria.pattern,
                     
                     // Motor

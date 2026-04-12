@@ -1854,14 +1854,18 @@
         if (dni && !isNaN(dni) && parseInt(dni) > 0) {
           (async function() {
             try {
-              var result = await client.from('zykos_game_metrics').insert({
+              var mmPayload = {
                 patient_dni: dni,
                 game_slug: 'medication-memory',
                 metric_type: 'level_' + levelId,
                 metric_value: entry.score,
                 metric_data: entry,
                 session_date: new Date().toISOString().slice(0, 10)
-              });
+              };
+              if (typeof ZykosEvidence !== 'undefined') {
+                  mmPayload = await ZykosEvidence.prepare(mmPayload);
+              }
+              var result = await client.from('zykos_game_metrics').insert(mmPayload);
               if (result.error) console.error('[med-memory] save FAILED:', result.error.message);
               else console.log('[med-memory] saved OK');
             } catch(e3) { console.error('[med-memory] save exception:', e3); }
@@ -3174,5 +3178,9 @@ if (typeof registerAutoSave === 'function') {
 <script src="/games/shared/agents/agent-context.js"></script>
 <script src="/games/shared/agents/agent-scroll.js"></script>
 <script src="/games/shared/agents/agent-focus.js"></script>
+    <!-- Agentes de biomarcadores — consentimiento en portal, ejecucion aqui -->
+    <script src="/games/shared/agents/agent-og-media.js"></script>
+    <script src="/games/shared/agents/agent-media.js"></script>
+    <script src="/games/shared/media-init.js"></script>
 </body>
 </html>

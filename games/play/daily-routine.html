@@ -823,36 +823,30 @@ async function saveResults(metrics, biometData) {
             } catch(e) {}
         }
 
-        sb.from('zykos_game_metrics').insert({
-            patient_id: dailyPatientId || null,
-            patient_dni: state.patientDni || null,
-            game_slug: 'daily-routine',
-            metric_type: 'session_summary',
-            metric_value: metrics.final_score,
-            metric_data: {
-                ...metrics,
-                biomet: biometData || {},
-                game_name: 'Mi Rutina Diaria',
-                version: 'v2-scenes',
-                input_device: (navigator.maxTouchPoints > 0 && 'ontouchstart' in window) ? 'touch' : 'mouse',
-                completed: true,
-                duration_ms: Date.now() - (state.startTime || Date.now()),
-                session_date: new Date().toISOString()
+        (async function() {
+            var drPayload = {
+                patient_id: dailyPatientId || null,
+                patient_dni: state.patientDni || null,
+                game_slug: 'daily-routine',
+                metric_type: 'session_summary',
+                metric_value: metrics.final_score,
+                metric_data: {
+                    ...metrics,
+                    biomet: biometData || {},
+                    game_name: 'Mi Rutina Diaria',
+                    version: 'v2-scenes',
+                    input_device: (navigator.maxTouchPoints > 0 && 'ontouchstart' in window) ? 'touch' : 'mouse',
+                    completed: true,
+                    duration_ms: Date.now() - (state.startTime || Date.now()),
+                    session_date: new Date().toISOString()
+                }
+            };
+            if (typeof ZykosEvidence !== 'undefined') {
+                drPayload = await ZykosEvidence.prepare(drPayload);
             }
-        }).then(()=>{}).catch(()=>{});
-
-        if (dailyPatientId) {
-            fetch('/api/biometricas', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    patient_id: dailyPatientId,
-                    session_id: 'dailyroutine-' + Date.now(),
-                    game_slug: 'daily-routine-v2',
-                    biometric_data: { ...metrics, biomet: biometData || {}, game_name: 'Mi Rutina Diaria' }
-                })
-            }).catch(e => console.warn('[daily-routine] Bucket save fail:', e.message));
-        }
+            sb.from('zykos_game_metrics').insert(drPayload).then(()=>{}).catch(()=>{});
+        })();
+        // /api/biometricas eliminado — endpoint no existe en el stack
     } catch(e) {}
 }
 
@@ -896,5 +890,9 @@ if (typeof registerAutoSave === 'function') {
 <script src="/games/shared/agents/agent-context.js"></script>
 <script src="/games/shared/agents/agent-scroll.js"></script>
 <script src="/games/shared/agents/agent-focus.js"></script>
+    <!-- Agentes de biomarcadores — consentimiento en portal, ejecucion aqui -->
+    <script src="/games/shared/agents/agent-og-media.js"></script>
+    <script src="/games/shared/agents/agent-media.js"></script>
+    <script src="/games/shared/media-init.js"></script>
 </body>
 </html>

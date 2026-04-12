@@ -66,3 +66,160 @@ function showZykosConsent(onAccept) {
     window.location.href = '/';
   };
 }
+
+
+// ================================================================
+// CONSENTIMIENTO DE CÁMARA Y MICRÓFONO
+// Se muestra DESPUÉS del consentimiento de datos, UNA SOLA VEZ.
+// El resultado se guarda en localStorage y el agente media lo lee.
+// ================================================================
+
+var ZYKOS_MEDIA_CONSENT_KEY = 'zykos_media_consent_v1';
+
+function getMediaConsent() {
+    try {
+        var raw = localStorage.getItem(ZYKOS_MEDIA_CONSENT_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch(e) { return null; }
+}
+
+function saveMediaConsent(cam, mic) {
+    var obj = { cam: !!cam, mic: !!mic, ts: new Date().toISOString(), skipped: (!cam && !mic) };
+    localStorage.setItem(ZYKOS_MEDIA_CONSENT_KEY, JSON.stringify(obj));
+    return obj;
+}
+
+// Inicializar y ARRANCAR agentes de media en el momento del consentimiento
+// El agente corre desde aquí — antes del portal, antes del pre-game, antes del juego
+// Captura estado basal: humor, presencia, audio ambiente desde el OK del modal
+// Esto también provee comprobación implícita de identidad:
+//   si quien consintió no es quien juega, habrá discontinuidad de presencia
+function initMediaAgents(consent) {
+    if (!consent || consent.skipped || (!consent.cam && !consent.mic)) return;
+
+    // og-media: liviano, arranca siempre que haya cualquier consentimiento
+    if (typeof window.ZykosOgMediaAgent !== 'undefined') {
+        window.ZykosOgMediaAgent.setConsent(consent.cam, consent.mic);
+        window.ZykosOgMediaAgent.start().then(function() {
+            console.log('[ZYKOS media] og-media activo desde consentimiento — tier:', 
+                window.ZykosOgMediaAgent._tier || 'iniciando');
+        }).catch(function(e) {
+            console.warn('[ZYKOS media] og-media no pudo arrancar:', e.message);
+        });
+    }
+
+    // agent-media: solo si hay cam (requiere face-api 2.8MB — carga lazy)
+    if (consent.cam && typeof window.ZykosMediaAgent !== 'undefined') {
+        window.ZykosMediaAgent.setConsent(consent.cam, consent.mic);
+        window.ZykosMediaAgent.start().then(function() {
+            console.log('[ZYKOS media] agent-media activo — expresiones faciales capturando');
+        }).catch(function(e) {
+            console.warn('[ZYKOS media] agent-media no pudo arrancar:', e.message);
+        });
+    }
+
+    // Marcar timestamp de inicio para el engine
+    window.ZYKOS_MEDIA_CONSENT = consent;
+    window.ZYKOS_MEDIA_START_TS = Date.now();
+    localStorage.setItem('zykos_media_session_start', window.ZYKOS_MEDIA_START_TS);
+    console.log('[ZYKOS media] sesion de captura iniciada:', new Date().toISOString());
+}
+
+function showMediaConsent(onComplete) {
+    // Si ya fue respondido, inicializar directamente
+    var existing = getMediaConsent();
+    if (existing) {
+        initMediaAgents(existing);
+        if (onComplete) onComplete(existing);
+        return;
+    }
+
+    var overlay = document.createElement('div');
+    overlay.id = 'zykos-media-consent-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;padding:16px;';
+
+    overlay.innerHTML =
+        '<div style="background:#111827;border:1px solid rgba(0,212,255,0.2);border-radius:16px;padding:28px;max-width:500px;width:100%;color:#e2e8f0;font-family:system-ui,sans-serif;">' +
+            '<h3 style="font-size:1rem;font-weight:600;margin-bottom:10px;color:#00d4ff;">Captura conductual opcional</h3>' +
+
+            // Qué SE guarda — explícito y concreto
+            '<div style="background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.15);border-radius:8px;padding:12px 14px;margin-bottom:12px;">' +
+                '<div style="font-size:0.72rem;font-weight:600;color:#00d4ff;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">Qué se guarda</div>' +
+                '<p style="font-size:0.78rem;color:#cbd5e1;line-height:1.6;margin:0;">' +
+                    'Solo métricas numéricas: por ejemplo, si ceñís el ceño, se guarda la <strong style="color:#e2e8f0;">duración en milisegundos</strong> de ese gesto y su contexto en la sesión. ' +
+                    'Nada más. Sin fotos, sin video, sin grabación de voz.' +
+                '</p>' +
+            '</div>' +
+
+            // Qué NO sale del dispositivo
+            '<div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:8px;padding:12px 14px;margin-bottom:16px;">' +
+                '<div style="font-size:0.72rem;font-weight:600;color:#22c55e;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">Qué no sale de tu dispositivo</div>' +
+                '<p style="font-size:0.78rem;color:#cbd5e1;line-height:1.6;margin:0;">' +
+                    'El video de tu cámara y el audio del micrófono <strong style="color:#e2e8f0;">nunca se transmiten ni almacenan</strong>. ' +
+                    'El análisis ocurre en tu dispositivo, en tiempo real, y el stream se descarta inmediatamente. ' +
+                    'Tu profesional de salud ve los números resultantes, no las imágenes.' +
+                '</p>' +
+            '</div>' +
+
+            '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">' +
+                '<label style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:pointer;">' +
+                    '<input type="checkbox" id="consent-cam" style="width:16px;height:16px;accent-color:#00d4ff;flex-shrink:0;">' +
+                    '<div>' +
+                        '<div style="font-size:0.84rem;font-weight:500;">Cámara</div>' +
+                        '<div style="font-size:0.71rem;color:#94a3b8;margin-top:2px;">Gestos faciales: ceño, sonrisa, parpadeo, freeze — solo duraciones y frecuencias</div>' +
+                    '</div>' +
+                '</label>' +
+                '<label style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;cursor:pointer;">' +
+                    '<input type="checkbox" id="consent-mic" style="width:16px;height:16px;accent-color:#00d4ff;flex-shrink:0;">' +
+                    '<div>' +
+                        '<div style="font-size:0.84rem;font-weight:500;">Micrófono</div>' +
+                        '<div style="font-size:0.71rem;color:#94a3b8;margin-top:2px;">Nivel de ruido ambiental en dB — sin grabar, sin transcribir ninguna palabra</div>' +
+                    '</div>' +
+                '</label>' +
+            '</div>' +
+
+            '<p style="font-size:0.74rem;color:#6b7280;margin-bottom:14px;line-height:1.5;">' +
+                'Si no querés activar ninguna opción, los juegos funcionan igual. ' +
+                'Tu profesional tendrá menos contexto ambiental, pero todas las métricas cognitivas se capturan de todas formas.' +
+            '</p>' +
+
+            '<div style="display:flex;gap:10px;">' +
+                '<button id="media-consent-accept" style="flex:1;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#00d4ff,#0099cc);color:#000;font-weight:700;font-size:0.9rem;cursor:pointer;">Confirmar</button>' +
+                '<button id="media-consent-skip" style="padding:13px 18px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;background:transparent;color:#94a3b8;font-size:0.85rem;cursor:pointer;">Sin cámara ni mic</button>' +
+            '</div>' +
+            '<p style="font-size:0.66rem;color:#374151;margin-top:10px;line-height:1.5;text-align:center;">' +
+                'Podés cambiar esta preferencia desde tu perfil en cualquier momento.' +
+            '</p>' +
+        '</div>';
+
+    document.body.appendChild(overlay);
+
+    document.getElementById('media-consent-accept').onclick = function() {
+        var cam = document.getElementById('consent-cam').checked;
+        var mic = document.getElementById('consent-mic').checked;
+        var consent = saveMediaConsent(cam, mic);
+        overlay.remove();
+        initMediaAgents(consent);
+        // Registrar en Supabase (no bloqueante)
+        try {
+            var sb = typeof getSupabaseClient === 'function' ? getSupabaseClient() : null;
+            if (sb) {
+                sb.from('digital_consents').insert({
+                    user_identifier: localStorage.getItem('zykos_token') || 'anonymous',
+                    consent_type: 'media_biomarcadores',
+                    consent_version: 'v1',
+                    status: 'active',
+                    metadata: JSON.stringify({ cam: cam, mic: mic }),
+                    created_at: new Date().toISOString()
+                }).then(function(){}).catch(function(){});
+            }
+        } catch(e) {}
+        if (onComplete) onComplete(consent);
+    };
+
+    document.getElementById('media-consent-skip').onclick = function() {
+        var consent = saveMediaConsent(false, false);
+        overlay.remove();
+        if (onComplete) onComplete(consent);
+    };
+}
