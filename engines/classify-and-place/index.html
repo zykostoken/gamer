@@ -186,7 +186,7 @@ function startMode(){if(typeof showPreGameChat==='function'&&!window._pgd){windo
 function toast(m,t){const c=document.getElementById('toasts'),d=document.createElement('div');d.className='toast toast-'+(t||'info');d.textContent=m;c.appendChild(d);setTimeout(()=>d.remove(),2500)}
 
 /* ===== CLASSIFY ===== */
-function getDiff(){const dk='level_'+STATE.level;return Object.assign({items_per_round:15,categories_visible:5,time_limit:null,hints_available:true,distractors:false,similarity_pairs:false,calculations:false,reasoning_missions:false},(PACK.difficulty_scaling||{})[dk]||(PACK.difficulty_scaling||{})['level_'+Math.max(1,...Object.keys(PACK.difficulty_scaling||{}).map(k=>parseInt(k.replace('level_','')))))||{});}
+function getDiff(){const dk='level_'+STATE.level;return Object.assign({items_per_round:15,categories_visible:5,time_limit:null,hints_available:true,distractors:false,similarity_pairs:false,calculations:false,reasoning_missions:false},(PACK.difficulty_scaling||{})[dk]||(PACK.difficulty_scaling||{})['level_'+Math.max(1,...Object.keys(PACK.difficulty_scaling||{}).map(k=>parseInt(k.replace('level_',''))))]||{});}
 
 function getItemsForLevel(diff){
   // Filtrar items por difficulty maxima segun nivel
