@@ -229,7 +229,7 @@ async function startGame(game) {
     localStorage.setItem('zykos_current_game', game.slug);
     // DNI obligatorio — linkea metricas al usuario
     localStorage.setItem('zykos_patient_dni', userData.dni);
-    window.location.href = game.url + '?dni=' + userData.dni + '&source=zykos';
+    window.location.href = game.url + (game.url.indexOf('?') >= 0 ? '&' : '?') + 'dni=' + userData.dni + '&source=zykos';
   } catch(e) { alert('Error: ' + e.message); }
 }
 
