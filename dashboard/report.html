@@ -3,411 +3,505 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Datos de sesion — ZYKOS GAMER</title>
+<title>Dashboard Clínico — ZYKOS GAMER</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="/js/supabase-config.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0f1e;--sf:#111827;--card:#1a2234;--bd:rgba(255,255,255,.08);--tx:#e2e8f0;--mt:rgba(255,255,255,.4);--ac:#00d4ff;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444}
-body{background:var(--bg);color:var(--tx);font-family:system-ui,sans-serif;min-height:100vh}
-.hd{background:var(--sf);border-bottom:1px solid var(--bd);padding:.8rem 1.5rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
-.hd h1{font-size:1rem;font-weight:500}
-.bk{color:var(--mt);text-decoration:none;font-size:.8rem;padding:.4rem .8rem;border:1px solid var(--bd);border-radius:6px}
-.mn{max-width:1100px;margin:0 auto;padding:2rem 1.5rem}
-.notice{background:#111827;border:1px solid rgba(0,212,255,.15);border-radius:10px;padding:1.25rem;margin-bottom:1.5rem}
-.notice p{color:var(--mt);font-size:.82rem;line-height:1.7;margin-top:.4rem}
-.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem}
-select{background:#111827;color:var(--tx);border:1px solid var(--bd);padding:.45rem .8rem;border-radius:6px;font-size:.82rem}
-.section-title{font-size:.7rem;font-weight:600;color:var(--ac);text-transform:uppercase;letter-spacing:.1em;margin:1.5rem 0 .8rem}
-.chart-card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:1.25rem;margin-bottom:1rem;position:relative}
-.chart-card h3{font-size:.82rem;font-weight:500;color:var(--mt);margin-bottom:1rem}
-.chart-wrap{height:260px;position:relative}
-.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:.75rem}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--mt)}
-.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.affect-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:.6rem;padding:.6rem;background:rgba(255,255,255,.03);border-radius:6px}
-.al{display:flex;align-items:center;gap:4px;font-size:.7rem;color:var(--mt)}
-.al-icon{font-size:11px}
-.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:1rem}
-.metric-box{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:.75rem 1rem}
-.metric-box .val{font-family:ui-monospace,monospace;font-size:1.1rem;font-weight:600;color:var(--ac);margin-bottom:2px}
-.metric-box .lbl{font-size:.68rem;color:var(--mt)}
+:root{
+  --bg:#070d1a;--sf:#0e1625;--card:#131e30;--bd:rgba(255,255,255,.07);
+  --tx:#dde4f0;--mt:rgba(221,228,240,.4);--ac:#00d4ff;
+  --ok:#22c55e;--warn:#f59e0b;--err:#ef4444;--hi:#a78bfa;
+  --d1:#00d4ff;--d2:#22c55e;--d3:#f59e0b;--d4:#818cf8;
+  --d5:#f472b6;--d6:#34d399;--d7:#fb923c;
+}
+body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,sans-serif;min-height:100vh}
+.hd{background:linear-gradient(135deg,#0b1929 0%,#070d1a 100%);
+    border-bottom:1px solid rgba(0,212,255,.15);
+    padding:.85rem 1.5rem;display:flex;justify-content:space-between;align-items:center;
+    position:sticky;top:0;z-index:100;gap:12px;flex-wrap:wrap}
+.hd h1{font-size:.95rem;font-weight:600;color:var(--ac);letter-spacing:.03em}
+.bk{color:var(--mt);text-decoration:none;font-size:.75rem;padding:.35rem .75rem;
+    border:1px solid var(--bd);border-radius:6px}
+.controls{background:var(--sf);border-bottom:1px solid var(--bd);
+          padding:.7rem 1.5rem;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+select{background:#0e1625;color:var(--tx);border:1px solid var(--bd);
+       padding:.38rem .75rem;border-radius:6px;font-size:.8rem}
+.btn{background:rgba(0,212,255,.12);color:var(--ac);border:1px solid rgba(0,212,255,.25);
+     padding:.38rem .9rem;border-radius:6px;font-size:.78rem;cursor:pointer;font-weight:600}
+.mn{max-width:1320px;margin:0 auto;padding:1.5rem}
+.disclaimer{background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.12);
+            border-radius:8px;padding:.75rem 1rem;margin-bottom:1.25rem;
+            font-size:.73rem;color:var(--mt);line-height:1.6}
+.disclaimer strong{color:var(--ac)}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1.5rem}
+.sc{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px}
+.sc .lbl{font-size:.65rem;color:var(--mt);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.sc .val{font-size:1.6rem;font-weight:700;font-variant-numeric:tabular-nums}
+.sc .sub{font-size:.65rem;color:var(--mt);margin-top:2px}
+.domain-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:14px;margin-bottom:1.5rem}
+.domain-card{background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.dc-header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--bd)}
+.dc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dc-title{font-size:.8rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.dc-sub{font-size:.63rem;color:var(--mt);margin-left:auto;text-align:right;max-width:160px;line-height:1.3}
+.dc-body{padding:14px 16px}
+.mc-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+.mc{background:#0a1220;border:1px solid var(--bd);border-radius:8px;padding:8px 11px;min-width:100px;flex:1}
+.mc .mv{font-size:1.05rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ac)}
+.mc .ml{font-size:.6rem;color:var(--mt);margin-top:1px;line-height:1.3}
+.mc.ok .mv{color:var(--ok)}.mc.warn .mv{color:var(--warn)}.mc.err .mv{color:var(--err)}.mc.neu .mv{color:var(--tx)}
+.spark-wrap{height:68px;position:relative;margin-top:8px}
+.flags-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.flag{font-size:.63rem;padding:2px 7px;border-radius:4px;font-weight:600}
+.flag-high{background:rgba(239,68,68,.15);color:var(--err)}
+.flag-med{background:rgba(245,158,11,.15);color:var(--warn)}
+.flag-pos{background:rgba(34,197,94,.15);color:var(--ok)}
+.color-row{display:flex;gap:7px;flex-wrap:wrap;align-items:flex-end;padding:8px 0}
+.strat{display:inline-block;font-size:.62rem;padding:2px 7px;border-radius:4px;
+       background:rgba(167,139,250,.12);color:var(--hi);font-weight:600}
+.table-wrap{overflow-x:auto;margin-bottom:1.5rem}
+table{width:100%;border-collapse:collapse;font-size:.74rem}
+th{text-align:left;padding:7px 9px;border-bottom:1px solid var(--bd);
+   color:var(--mt);font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+td{padding:7px 9px;border-bottom:1px solid rgba(255,255,255,.03);white-space:nowrap;vertical-align:middle}
+tr:hover td{background:rgba(0,212,255,.03)}
 .empty{text-align:center;padding:3rem;color:var(--mt);font-size:.85rem}
-.affect-badge{display:inline-block;font-size:.65rem;padding:2px 7px;border-radius:10px;margin-left:6px}
-.badge-responsive{background:rgba(34,197,94,.15);color:var(--ok)}
-.badge-flat{background:rgba(245,158,11,.15);color:var(--warn)}
-.badge-freeze{background:rgba(239,68,68,.15);color:var(--err)}
+.spinner{width:34px;height:34px;border:3px solid rgba(255,255,255,.08);
+         border-top-color:var(--ac);border-radius:50%;animation:spin .8s linear infinite;margin:2rem auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sec-title{font-size:.67rem;font-weight:700;color:var(--ac);text-transform:uppercase;
+           letter-spacing:.1em;margin:1.25rem 0 .75rem;
+           display:flex;align-items:center;gap:8px}
+.sec-title::after{content:'';flex:1;height:1px;background:rgba(0,212,255,.12)}
+@media(max-width:600px){.domain-grid{grid-template-columns:1fr}.stats-row{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 <div class="hd">
-  <h1>Datos de sesion · ZYKOS GAMER</h1>
-  <a href="/games/portal/" class="bk">Volver al portal</a>
+  <h1>ZYKOS — Dashboard Clínico V4</h1>
+  <a href="/games/portal/" class="bk">← Portal</a>
+</div>
+<div class="controls">
+  <select id="sel-patient" onchange="loadAll()"><option value="">Paciente…</option></select>
+  <select id="sel-days" onchange="loadAll()">
+    <option value="60">Últimos 60 días</option>
+    <option value="30">Últimos 30 días</option>
+    <option value="90">Últimos 90 días</option>
+    <option value="365">Último año</option>
+  </select>
+  <button class="btn" onclick="loadAll()">Actualizar</button>
+  <span id="dtag" style="font-size:.7rem;color:var(--mt);margin-left:4px"></span>
 </div>
 <div class="mn">
-  <div class="notice">
-    <strong style="color:var(--ac);font-size:.82rem">Datos observacionales — sin interpretacion clinica</strong>
-    <p>Mediciones registradas durante las sesiones. Los valores son datos crudos.
-    El profesional de salud interpreta su significado en el contexto del paciente.
-    ZYKOS GAMER no produce diagnosticos ni reemplaza la evaluacion profesional.</p>
+  <div class="disclaimer">
+    <strong>Datos observacionales sin interpretación clínica.</strong>
+    Las métricas describen señales conductuales registradas durante la sesión.
+    ZYKOS no diagnostica ni reemplaza la evaluación del profesional de salud.
+    jitter_px se reporta como dato crudo — la lectura clínica es del profesional.
   </div>
-
-  <div class="controls">
-    <select id="sel-patient" onchange="loadData(this.value)"><option value="">Paciente...</option></select>
-    <select id="sel-game" onchange="loadData(document.getElementById('sel-patient').value)">
-      <option value="">Todos los juegos</option>
-    </select>
-    <select id="sel-days" onchange="loadData(document.getElementById('sel-patient').value)">
-      <option value="30">Ultimos 30 dias</option>
-      <option value="60">Ultimos 60 dias</option>
-      <option value="90">Ultimos 90 dias</option>
-      <option value="365">Ultimo año</option>
-    </select>
-  </div>
-
-  <div id="content"><div class="empty">Selecciona un paciente para ver los datos.</div></div>
+  <div id="content"><div class="spinner"></div></div>
 </div>
-
 <script>
-var sb = getSupabaseClient();
+var sb=getSupabaseClient();
+var _charts={};
 
-async function init() {
-  var token = localStorage.getItem('zykos_token');
-  if (!token) { window.location.href = '/auth/'; return; }
+// ── V4 DOMAIN DEFINITIONS ──────────────────────────────────────────────────
+// PROHIBIDO V4: tremor_* rigidez_index espasticidad_index cogwheel_index
+//              clasp_knife_ratio interferencia_ratio economia_cognitiva
+//              eficacia_plan_propio
+// tremor_avg_jitter → se expone como jitter_px raw, sin etiqueta clínica
+// ──────────────────────────────────────────────────────────────────────────
+var DOMAINS=[
+  {id:'atencion',label:'Atención',col:'#00d4ff',
+   desc:'Sostenida · Vigilancia · CV del TR',
+   mets:[
+     {k:'rt_mean_ms',lb:'TR medio',u:'ms',dir:0,f:'int'},
+     {k:'rt_cv',lb:'Variabilidad TR (CV)',u:'',dir:-1,f:'d2'},
+     {k:'fatiga_index',lb:'Índice fatiga H2/H1',u:'',dir:-1,f:'d2'},
+     {k:'decaimiento_vigilancia',lb:'Decaimiento vigilancia',u:'',dir:-1,f:'d2'},
+     {k:'hesitation_count',lb:'Hesitaciones (>1500ms)',u:'',dir:-1,f:'int'},
+   ],ck:'rt_mean_ms'},
+  {id:'memoria',label:'Memoria',col:'#22c55e',
+   desc:'Trabajo · Procedimental · Inter-objetivo',
+   mets:[
+     {k:'instruction_read_time_ms',lb:'Lectura instrucciones',u:'ms',dir:0,f:'int'},
+     {k:'avg_inter_objective_delay_ms',lb:'Demora inter-objetivo',u:'ms',dir:0,f:'int'},
+     {k:'inter_objective_variability_sd',lb:'Variabilidad demoras',u:'ms',dir:-1,f:'int'},
+     {k:'max_inter_objective_delay_ms',lb:'Demora máxima',u:'ms',dir:0,f:'int'},
+   ],ck:'avg_inter_objective_delay_ms'},
+  {id:'senso',label:'Sensopercepción',col:'#f59e0b',
+   desc:'Latencia inicio · Reacción a estímulo inesperado',
+   mets:[
+     {k:'time_to_first_action_ms',lb:'Latencia de inicio',u:'ms',dir:0,f:'int'},
+     {k:'pool_overflow_rt_mean_ms',lb:'RT ante overflow',u:'ms',dir:0,f:'int'},
+     {k:'pool_overflow_count',lb:'Overflows detectados',u:'',dir:0,f:'int'},
+   ],ck:'time_to_first_action_ms'},
+  {id:'psicomotriz',label:'Psicomotriz',col:'#818cf8',
+   desc:'Coordinación · Eficiencia · Precisión · jitter_px (raw)',
+   mets:[
+     // V4: tremor_avg_jitter se expone como jitter_px — dato crudo
+     {k:'tremor_avg_jitter',lb:'jitter_px [raw]',u:'px',dir:0,f:'d1',raw:true},
+     {k:'movement_efficiency',lb:'Efic. movimiento',u:'',dir:1,f:'pct'},
+     {k:'path_efficiency',lb:'Efic. trayectoria',u:'',dir:1,f:'pct'},
+     {k:'dysmetria_ratio',lb:'Dismetría',u:'',dir:-1,f:'pct'},
+     {k:'direction_changes',lb:'Cambios dirección',u:'',dir:0,f:'int'},
+     {k:'rapid_reversals',lb:'Reversales rápidos',u:'',dir:0,f:'int'},
+     {k:'motor_clumsiness_score',lb:'Torpeza motora',u:'',dir:-1,f:'pct'},
+     {k:'meticulousness_score',lb:'Meticulosidad',u:'',dir:1,f:'pct'},
+   ],ck:'movement_efficiency'},
+  {id:'razonamiento',label:'Razonamiento / Ejecutivo',col:'#f472b6',
+   desc:'Planificación · Impulsividad · Error · Auto-corrección',
+   mets:[
+     {k:'planificacion_ratio',lb:'Ratio planificación',u:'',dir:1,f:'pct'},
+     {k:'neatness_score',lb:'Prolijidad',u:'',dir:1,f:'pct'},
+     {k:'impulsividad_ratio',lb:'Impulsividad (RT<p10)',u:'',dir:-1,f:'pct'},
+     {k:'errores_comision',lb:'Errores comisión',u:'',dir:-1,f:'int'},
+     {k:'errores_omision',lb:'Errores omisión',u:'',dir:-1,f:'int'},
+     {k:'self_correction_ratio',lb:'Auto-corrección',u:'',dir:1,f:'pct'},
+   ],ck:'planificacion_ratio'},
+  {id:'contexto',label:'Contexto',col:'#34d399',
+   desc:'Estrategia espacial · Carga cognitiva · Organización',
+   mets:[
+     {k:'task_switch_count',lb:'Cambios de tarea',u:'',dir:0,f:'int'},
+     {k:'compostera_trips',lb:'Trips compostera',u:'',dir:0,f:'int'},
+     {k:'pool_drain_count',lb:'Vaciados pileta',u:'',dir:0,f:'int'},
+     {k:'blocked_by_bag_count',lb:'Bloqueos bolsa',u:'',dir:-1,f:'int'},
+   ],ck:'task_switch_count'},
+  {id:'gestualidad',label:'Gestualidad / Expresión',col:'#fb923c',
+   desc:'Elección proyectiva color · cam_* mic_* (V4 F4 pendiente)',
+   mets:[],ck:null}
+];
 
-  // Validar sesion
-  var r = await sb.rpc('zykos_validate_session', {p_token: token});
-  if (!r.data || !r.data.ok) { window.location.href = '/auth/'; return; }
-
-  // Obtener pacientes
-  var patients = [];
-  if (r.data.role === 'superadmin' || r.data.role === 'admin') {
-    var pRes = await sb.from('zykos_patients').select('id,dni,full_name').order('dni');
-    patients = pRes.data || [];
-  } else {
-    var pRes = await sb.from('zykos_patients').select('id,dni,full_name').eq('dni', r.data.dni);
-    patients = pRes.data || [];
+// ── INIT ──────────────────────────────────────────
+async function init(){
+  var token=localStorage.getItem('zykos_token');
+  if(!token){window.location.href='/auth/';return;}
+  var r=await sb.rpc('zykos_validate_session',{p_token:token});
+  if(!r.data||!r.data.ok){window.location.href='/auth/';return;}
+  var patients=[];
+  if(r.data.role==='superadmin'||r.data.role==='admin'){
+    var pr=await sb.from('zykos_patients').select('id,dni,full_name').order('dni');
+    patients=pr.data||[];
+  }else{
+    patients=[{dni:r.data.dni,full_name:r.data.display_name||r.data.dni}];
   }
-
-  if (patients.length >= 1) {
-    // Mostrar selector con pacientes disponibles
-    var sel = document.getElementById('sel-patient');
-    patients.forEach(function(p){
-      var o = document.createElement('option');
-      var label = p.full_name && p.full_name !== p.dni
-        ? p.full_name + ' (' + p.dni + ')'
-        : 'Paciente ' + p.dni;
-      o.value = p.dni;
-      o.textContent = label;
-      sel.appendChild(o);
-    });
-    // Si hay exactamente un paciente, seleccionarlo y cargar automáticamente
-    if (patients.length === 1) {
-      sel.value = patients[0].dni;
-      loadData(patients[0].dni);
-    }
-  } else if (false && patients.length === 0) {
-    // Usuario único — cargar directo sin mostrar selector
-    document.querySelector('.controls').style.display = 'none';
-    loadData(patients[0].dni);
-  } else {
-    window.location.href = '/games/portal/';
-  }
+  var sel=document.getElementById('sel-patient');
+  patients.forEach(function(p){
+    var o=document.createElement('option');
+    o.value=p.dni;
+    o.textContent=(p.full_name&&p.full_name!==p.dni)?p.full_name+' ('+p.dni+')':p.dni;
+    sel.appendChild(o);
+  });
+  if(patients.length===1){sel.value=patients[0].dni;loadAll();}
 }
 
-// Cache de charts para destruirlos antes de recrear
-var _charts = {};
-
-async function loadData(dni) {
-  if (!dni) return;
-  var game  = document.getElementById('sel-game').value || null;
-  var days  = parseInt(document.getElementById('sel-days').value) || 30;
-  var content = document.getElementById('content');
-  content.innerHTML = '<div class="empty">Cargando...</div>';
-
-  // Cargar juegos disponibles para el selector
-  var {data: slugs} = await sb.from('zykos_game_metrics')
-    .select('game_slug').eq('patient_dni', dni);
-  var uniqueSlugs = [...new Set((slugs||[]).map(function(r){return r.game_slug;}))];
-  var selGame = document.getElementById('sel-game');
-  if (selGame.options.length <= 1) {
-    uniqueSlugs.forEach(function(s){
-      var o = document.createElement('option'); o.value=s; o.textContent=s; selGame.appendChild(o);
+// ── LOAD ──────────────────────────────────────────
+async function loadAll(){
+  var dni=document.getElementById('sel-patient').value;
+  var days=parseInt(document.getElementById('sel-days').value)||60;
+  if(!dni)return;
+  // destroy old charts
+  Object.keys(_charts).forEach(function(k){try{_charts[k].destroy();}catch(e){}});
+  _charts={};
+  document.getElementById('content').innerHTML='<div class="spinner"></div>';
+  var since=new Date(Date.now()-days*86400000).toISOString();
+  var[r1,r2,rc]=await Promise.all([
+    sb.from('hdd_game_metrics').select('metric_data,game_slug,created_at,patient_dni')
+      .eq('metric_type','session_summary').eq('patient_dni',dni)
+      .gte('created_at',since).order('created_at',{ascending:true}),
+    sb.from('zykos_game_metrics').select('metric_data,game_slug,created_at,patient_dni')
+      .eq('metric_type','session_summary').eq('patient_dni',dni)
+      .gte('created_at',since).order('created_at',{ascending:true}),
+    sb.from('zykos_game_metrics').select('metric_data,created_at')
+      .eq('metric_type','color_eleccion').eq('patient_dni',dni)
+      .order('created_at',{ascending:true})
+  ]);
+  var seen={};
+  var sessions=[];
+  [(r1.data||[]),(r2.data||[])].forEach(function(arr){
+    arr.forEach(function(row){
+      var key=(row.created_at||'').slice(0,19)+'_'+row.game_slug;
+      if(!seen[key]){seen[key]=1;sessions.push(row);}
     });
-  }
-
-  // Datos longitudinales afecto+rendimiento
-  var {data: longData, error: longErr} = await sb.rpc('zykos_get_affect_performance_longitudinal', {
-    p_patient_dni: dni,
-    p_game_slug:   game,
-    p_days_back:   days
   });
-
-  // Datos crudos de sesiones
-  var {data: rawMetrics} = await sb.from('zykos_game_metrics')
-    .select('game_slug,metric_type,metric_value,metric_data,created_at,session_id')
-    .eq('patient_dni', dni)
-    .order('created_at', {ascending: false})
-    .limit(50);
-
-  content.innerHTML = '';
-
-  if (!longData || longData.length === 0) {
-    content.innerHTML = '<div class="empty">Sin sesiones con datos suficientes en este periodo.</div>';
-  } else {
-    renderLongitudinal(content, longData);
+  sessions.sort(function(a,b){return a.created_at>b.created_at?1:-1;});
+  var colors=rc.data||[];
+  document.getElementById('dtag').textContent=sessions.length+' sesiones · '+colors.length+' color';
+  var c=document.getElementById('content');
+  c.innerHTML='';
+  if(!sessions.length&&!colors.length){
+    c.innerHTML='<div class="empty">Sin sesiones en este período.</div>';return;
   }
-
-  if (rawMetrics && rawMetrics.length > 0) {
-    renderRawMetrics(content, rawMetrics);
-  }
+  renderStats(c,sessions);
+  renderDomains(c,sessions,colors);
+  renderFlags(c,sessions);
+  renderTable(c,sessions);
 }
 
-function renderLongitudinal(container, data) {
-  // Preparar datasets
-  var labels  = data.map(function(d){ return (d.session_date||'').slice(5); }); // MM-DD
-  var ef1     = data.map(function(d){ return d.eficacia_tercio_1 != null ? +parseFloat(d.eficacia_tercio_1).toFixed(2) : null; });
-  var ef2     = data.map(function(d){ return d.eficacia_tercio_2 != null ? +parseFloat(d.eficacia_tercio_2).toFixed(2) : null; });
-  var ef3     = data.map(function(d){ return d.eficacia_tercio_3 != null ? +parseFloat(d.eficacia_tercio_3).toFixed(2) : null; });
-  var smiles  = data.map(function(d){ return d.genuine_smile_count || 0; });
-  var brows   = data.map(function(d){ return d.brow_furrow_count || 0; });
-  var hasCam  = data.some(function(d){ return d.genuine_smile_count > 0 || d.brow_furrow_count > 0; });
+// ── STATS ─────────────────────────────────────────
+function renderStats(c,sessions){
+  if(!sessions.length)return;
+  var games={};
+  sessions.forEach(function(s){games[s.game_slug]=(games[s.game_slug]||0)+1;});
+  var last=sessions[sessions.length-1].metric_data||{};
+  var dur=last.duration_sec?Math.floor(last.duration_sec/60)+':'+String(last.duration_sec%60).padStart(2,'0'):'—';
+  var nflags=0;
+  sessions.forEach(function(s){(s.metric_data?.clinical_flags||[]).forEach(function(f){if(f.severity!=='positive')nflags++;});});
+  var d=document.createElement('div');d.className='stats-row';
+  d.innerHTML=
+    mksc('Sesiones',sessions.length,'')+
+    mksc('Juegos',Object.keys(games).length,Object.keys(games).join(', ').substring(0,30))+
+    mksc('Última duración',dur,'sesión más reciente')+
+    mksc('Flags high+med',nflags,nflags>0?'pendientes revisión':'sin alertas',nflags>0?'var(--warn)':'var(--ok)');
+  c.appendChild(d);
+}
+function mksc(lb,v,sub,col){
+  return '<div class="sc"><div class="lbl">'+lb+'</div>'+
+    '<div class="val"'+(col?' style="color:'+col+'"':'')+'>'+v+'</div>'+
+    '<div class="sub">'+sub+'</div></div>';
+}
 
-  // Resumen de afecto
-  var affectSummary = '';
-  data.forEach(function(d, i) {
-    if (d.affect_responsive) affectSummary += '<span class="affect-badge badge-responsive">sesion ' + (i+1) + ': afecto reactivo</span>';
-    if (d.affect_flat)       affectSummary += '<span class="affect-badge badge-flat">sesion ' + (i+1) + ': afecto plano</span>';
-    if (d.has_freeze_candidate) affectSummary += '<span class="affect-badge badge-freeze">sesion ' + (i+1) + ': freeze</span>';
+// ── DOMAIN CARDS ──────────────────────────────────
+function renderDomains(c,sessions,colors){
+  var sec=document.createElement('div');sec.className='sec-title';
+  sec.textContent='7 dominios — V4 Constitución 11-Abr-2026';c.appendChild(sec);
+  var grid=document.createElement('div');grid.className='domain-grid';
+  DOMAINS.forEach(function(dom,di){grid.appendChild(buildCard(dom,sessions,colors,di));});
+  c.appendChild(grid);
+}
+
+function buildCard(dom,sessions,colors,di){
+  var card=document.createElement('div');card.className='domain-card';
+  card.innerHTML='<div class="dc-header">'+
+    '<div class="dc-dot" style="background:'+dom.col+'"></div>'+
+    '<div class="dc-title" style="color:'+dom.col+'">'+dom.label+'</div>'+
+    '<div class="dc-sub">'+dom.desc+'</div></div>';
+  var body=document.createElement('div');body.className='dc-body';
+
+  if(dom.id==='gestualidad'){
+    renderGestualidad(body,sessions,colors);
+    card.appendChild(body);return card;
+  }
+  if(!sessions.length){body.innerHTML='<div style="color:var(--mt);font-size:.75rem">Sin datos</div>';card.appendChild(body);return card;}
+
+  var last=(sessions[sessions.length-1].metric_data)||{};
+  var row=document.createElement('div');row.className='mc-row';
+  var any=false;
+  dom.mets.forEach(function(m){
+    var v=last[m.k];
+    if(v===undefined||v===null)return;
+    any=true;
+    var chip=document.createElement('div');
+    chip.className='mc '+chipCls(v,m);
+    chip.innerHTML='<div class="mv">'+fv(v,m.f)+(m.u?'<span style="font-size:.58rem;margin-left:1px">'+m.u+'</span>':'')+'</div>'+
+      '<div class="ml">'+m.lb+(m.raw?' <span style="opacity:.3">[raw]</span>':'')+'</div>';
+    row.appendChild(chip);
   });
+  if(!any){body.innerHTML='<div style="color:var(--mt);font-size:.75rem">Métricas no disponibles</div>';card.appendChild(body);return card;}
+  body.appendChild(row);
 
-  // Sección título
-  var secEl = document.createElement('div');
-  secEl.className = 'section-title';
-  secEl.textContent = 'evolucion longitudinal (' + data.length + ' sesiones)';
-  container.appendChild(secEl);
-
-  if (affectSummary) {
-    var badgeEl = document.createElement('div');
-    badgeEl.style.marginBottom = '.8rem';
-    badgeEl.innerHTML = affectSummary;
-    container.appendChild(badgeEl);
+  // Contexto extras
+  if(dom.id==='contexto'){
+    var strat=last.coverage_strategy,load=last.cognitive_load_level,patt=last.neatness_pattern;
+    var ex='';
+    if(strat)ex+='<span class="strat">'+strat+'</span> ';
+    if(load)ex+='<span class="strat" style="background:rgba(52,211,153,.1);color:#34d399">'+load+' load</span> ';
+    if(patt)ex+='<span class="strat" style="background:rgba(251,146,60,.1);color:#fb923c">'+patt+'</span>';
+    if(ex){var ed=document.createElement('div');ed.style.cssText='display:flex;flex-wrap:wrap;gap:5px;margin-top:7px';ed.innerHTML=ex;body.appendChild(ed);}
   }
 
-  // Chart 1: Eficacia por tercios
-  var card1 = document.createElement('div');
-  card1.className = 'chart-card';
-  card1.innerHTML = '<h3>eficacia por tercio temporal de sesion</h3><div class="chart-wrap"><canvas id="ch-eficacia"></canvas></div>' +
-    '<div class="legend">' +
-    '<span class="legend-item"><span class="legend-dot" style="background:#00d4ff"></span>primer tercio</span>' +
-    '<span class="legend-item"><span class="legend-dot" style="background:#a78bfa"></span>segundo tercio</span>' +
-    '<span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>tercer tercio</span>' +
-    '</div>';
-  container.appendChild(card1);
+  // Post-error strategy badge (Razonamiento)
+  if(dom.id==='razonamiento'&&last.post_error_strategy&&last.post_error_strategy!=='insufficient_data'){
+    var pb=document.createElement('div');pb.style.cssText='margin-top:7px;font-size:.65rem';
+    var pemap={adapts:{l:'Adapta estrategia',c:'var(--ok)'},se_frena:{l:'Se frena',c:'var(--warn)'},
+               persevera:{l:'Persevera en error',c:'var(--err)'},abandona:{l:'Abandona',c:'var(--err)'}};
+    var pe=pemap[last.post_error_strategy]||{l:last.post_error_strategy,c:'var(--mt)'};
+    pb.innerHTML='Patrón ante error: <span style="color:'+pe.c+';font-weight:600">'+pe.l+'</span>';
+    body.appendChild(pb);
+  }
 
-  setTimeout(function(){
-    var ctx1 = document.getElementById('ch-eficacia');
-    if (!ctx1) return;
-    if (_charts['eficacia']) _charts['eficacia'].destroy();
-    _charts['eficacia'] = new Chart(ctx1.getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [
-          { label:'Tercio 1', data:ef1, borderColor:'#00d4ff', backgroundColor:'rgba(0,212,255,.08)', tension:.4, spanGaps:true },
-          { label:'Tercio 2', data:ef2, borderColor:'#a78bfa', backgroundColor:'rgba(167,139,250,.08)', tension:.4, spanGaps:true },
-          { label:'Tercio 3', data:ef3, borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,.08)', tension:.4, spanGaps:true }
-        ]
-      },
-      options: {
-        responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false} },
-        scales:{
-          y:{ grid:{color:'rgba(255,255,255,.06)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} },
-          x:{ grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} }
-        }
-      }
-    });
-  }, 50);
-
-  // Chart 2: Humor facial superpuesto (solo si hay datos de cámara)
-  if (hasCam) {
-    var card2 = document.createElement('div');
-    card2.className = 'chart-card';
-    card2.innerHTML = '<h3>humor facial durante las sesiones <span style="font-size:.65rem;color:var(--mt)">(marcadores superpuestos sobre eficacia)</span></h3>' +
-      '<div class="chart-wrap"><canvas id="ch-humor"></canvas></div>' +
-      '<div class="affect-legend">' +
-      '<span class="al"><span class="al-icon" style="color:#22c55e">●</span>sonrisa genuina (Duchenne)</span>' +
-      '<span class="al"><span class="al-icon" style="color:#f59e0b">●</span>ceño fruncido (AU4)</span>' +
-      '<span class="al"><span class="al-icon" style="color:#ef4444">▲</span>freeze facial</span>' +
-      '</div>';
-    container.appendChild(card2);
-
-    setTimeout(function(){
-      var ctx2 = document.getElementById('ch-humor');
-      if (!ctx2) return;
-      if (_charts['humor']) _charts['humor'].destroy();
-
-      // Puntos de freeze como anotaciones
-      var freezePoints = data.map(function(d){
-        return d.has_freeze_candidate ? (d.eficacia_tercio_2 || 0) : null;
-      });
-
-      _charts['humor'] = new Chart(ctx2.getContext('2d'), {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label:'Eficacia (T2)', data:ef2,
-              borderColor:'rgba(0,212,255,.4)', borderDash:[4,4],
-              backgroundColor:'transparent', tension:.4, spanGaps:true,
-              pointRadius:0
-            },
-            {
-              label:'Sonrisas genuinas', data:smiles,
-              borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.1)',
-              tension:.4, yAxisID:'y2', fill:true
-            },
-            {
-              label:'Ceño fruncido', data:brows,
-              borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,.08)',
-              tension:.4, yAxisID:'y2', fill:false
-            },
-            {
-              label:'Freeze', data:freezePoints,
-              borderColor:'transparent', backgroundColor:'rgba(239,68,68,.7)',
-              pointStyle:'triangle', pointRadius:8, type:'scatter', yAxisID:'y'
-            }
-          ]
-        },
-        options: {
-          responsive:true, maintainAspectRatio:false,
-          plugins:{ legend:{display:false} },
-          scales:{
-            y:{  grid:{color:'rgba(255,255,255,.06)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} },
-            y2:{ position:'right', grid:{color:'rgba(255,255,255,.03)'}, ticks:{color:'rgba(255,255,255,.3)',font:{size:10}} },
-            x:{  grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} }
-          }
-        }
-      });
-    }, 80);
-
-    // Chart 3: Correlacion afecto-rendimiento
-    var hasAffectData = data.some(function(d){ return d.affect_reactivity != null; });
-    if (hasAffectData) {
-      var reactivity = data.map(function(d){
-        return d.affect_reactivity != null ? +parseFloat(d.affect_reactivity).toFixed(3) : null;
-      });
-      var smileHits = data.map(function(d){
-        return d.affect_smile_hits_pct != null ? +parseFloat(d.affect_smile_hits_pct).toFixed(3) : null;
-      });
-      var browErrors = data.map(function(d){
-        return d.affect_brow_errors_pct != null ? +parseFloat(d.affect_brow_errors_pct).toFixed(3) : null;
-      });
-
-      var card3 = document.createElement('div');
-      card3.className = 'chart-card';
-      card3.innerHTML = '<h3>correlacion afecto–rendimiento <span style="font-size:.62rem;color:var(--mt)">(Russell 1980, Cohn & Ekman 2005)</span></h3>' +
-        '<div class="chart-wrap"><canvas id="ch-affect-corr"></canvas></div>' +
-        '<div class="affect-legend">' +
-        '<span class="al"><span class="al-icon" style="color:#22c55e">●</span>sonrisa durante aciertos</span>' +
-        '<span class="al"><span class="al-icon" style="color:#f59e0b">●</span>ceño durante errores</span>' +
-        '<span class="al"><span class="al-icon" style="color:#00d4ff">●</span>reactividad afectiva (>0.3=reactivo, ~0=plano)</span>' +
-        '</div>';
-      container.appendChild(card3);
-
+  // Sparkline
+  if(sessions.length>=2&&dom.ck){
+    var lbs=sessions.map(function(s){return (s.created_at||'').slice(5,10);});
+    var vals=sessions.map(function(s){return (s.metric_data||{})[dom.ck]??null;});
+    if(vals.some(function(v){return v!==null;})){
+      var sw=document.createElement('div');sw.className='spark-wrap';
+      var cid='spark-'+dom.id;
+      var cv=document.createElement('canvas');cv.id=cid;sw.appendChild(cv);body.appendChild(sw);
+      var mdef=dom.mets.find(function(m){return m.k===dom.ck;})||{};
       setTimeout(function(){
-        var ctx3 = document.getElementById('ch-affect-corr');
-        if (!ctx3) return;
-        if (_charts['affect-corr']) _charts['affect-corr'].destroy();
-        _charts['affect-corr'] = new Chart(ctx3.getContext('2d'), {
-          type: 'line',
-          data: {
-            labels: labels,
-            datasets: [
-              { label:'Sonrisa en aciertos', data:smileHits, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.1)', tension:.4, spanGaps:true, fill:true },
-              { label:'Ceño en errores',     data:browErrors, borderColor:'#f59e0b', backgroundColor:'transparent', tension:.4, spanGaps:true },
-              {
-                label:'Reactividad afectiva', data:reactivity,
-                borderColor:'#00d4ff', backgroundColor:'transparent',
-                borderWidth:2, tension:.4, spanGaps:true,
-                // Línea de referencia en 0.3 (umbral de reactividad sana)
-                borderDash:[]
-              }
-            ]
-          },
-          options: {
-            responsive:true, maintainAspectRatio:false,
-            plugins:{ legend:{display:false},
-              annotation:{
-                annotations:{
-                  threshold:{
-                    type:'line', yMin:0.3, yMax:0.3,
-                    borderColor:'rgba(0,212,255,.3)', borderDash:[4,4], borderWidth:1
-                  }
-                }
-              }
-            },
+        var el=document.getElementById(cid);if(!el)return;
+        if(_charts[cid])_charts[cid].destroy();
+        _charts[cid]=new Chart(el.getContext('2d'),{
+          type:'line',
+          data:{labels:lbs,datasets:[{data:vals,borderColor:dom.col,
+            backgroundColor:dom.col+'22',tension:.35,fill:true,spanGaps:true,
+            pointRadius:3,pointBackgroundColor:dom.col,borderWidth:1.5}]},
+          options:{responsive:true,maintainAspectRatio:false,
+            plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){
+              return (mdef.lb||dom.ck)+': '+fv(ctx.raw,mdef.f||'d2');
+            }}}},
             scales:{
-              y:{ min:-0.2, max:1.1, grid:{color:'rgba(255,255,255,.06)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} },
-              x:{ grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} }
-            }
-          }
+              x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(255,255,255,.28)',font:{size:9}}},
+              y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'rgba(255,255,255,.28)',font:{size:9}}}
+            }}
         });
-      }, 110);
+      },60+di*25);
     }
   }
+
+  // Trend
+  if(sessions.length>=2&&dom.ck){
+    var pv=(sessions[sessions.length-2].metric_data||{})[dom.ck];
+    var cv2=(sessions[sessions.length-1].metric_data||{})[dom.ck];
+    if(pv!=null&&cv2!=null){
+      var delta=cv2-pv;
+      var pct=pv!==0?Math.abs(delta/pv*100).toFixed(0)+'%':'—';
+      var arr=delta>0.01?'↑':delta<-0.01?'↓':'→';
+      var td=document.createElement('div');td.style.cssText='font-size:.62rem;color:var(--mt);margin-top:5px;text-align:right';
+      td.textContent='vs anterior: '+arr+' '+pct;body.appendChild(td);
+    }
+  }
+
+  card.appendChild(body);return card;
 }
 
-function renderRawMetrics(container, metrics) {
-  var sec = document.createElement('div');
-  sec.className = 'section-title';
-  sec.textContent = 'metricas por sesion (ultimas ' + Math.min(metrics.length, 5) + ')';
-  container.appendChild(sec);
-
-  var CANONICAS = ['rt_mean_ms','rt_cv','jitter_reposo_px','vel_cv','vel_oscilacion_index',
-    'precision_deposito_px','hesitaciones_count','errores_comision','errores_omision',
-    'perseveracion_count','eficiencia_trayectoria','decaimiento_mitades','d_prime',
-    'focus_interruptions_count','inactivity_episodes_count',
-    'affect_reactivity','cam_genuine_smile_pct','cam_brow_furrow_ms'];
-
-  var bySession = {};
-  metrics.forEach(function(m){
-    var k = (m.session_id||'') + '_' + m.game_slug;
-    if (!bySession[k]) bySession[k] = { slug: m.game_slug, date: m.created_at, metrics: [] };
-    bySession[k].metrics.push(m);
-  });
-
-  Object.keys(bySession).slice(0,5).forEach(function(k) {
-    var s = bySession[k];
-    var card = document.createElement('div');
-    card.className = 'chart-card';
-    var dateStr = s.date ? s.date.slice(0,16).replace('T',' ') : '';
-    card.innerHTML = '<h3>' + s.slug + ' <span style="color:var(--mt);font-weight:400">' + dateStr + '</span></h3>';
-
-    var grid = document.createElement('div');
-    grid.className = 'metric-grid';
-
-    s.metrics.slice(0,1).forEach(function(m) {
-      var d = m.metric_data || {};
-      CANONICAS.forEach(function(key) {
-        if (d[key] !== undefined && d[key] !== null) {
-          var box = document.createElement('div');
-          box.className = 'metric-box';
-          box.innerHTML = '<div class="val">' + Number(d[key]).toFixed(2) + '</div>' +
-                          '<div class="lbl">' + key + '</div>';
-          grid.appendChild(box);
-        }
-      });
+// ── GESTUALIDAD ───────────────────────────────────
+function renderGestualidad(body,sessions,colors){
+  if(colors.length>0){
+    var t=document.createElement('div');
+    t.style.cssText='font-size:.64rem;color:var(--mt);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px';
+    t.textContent='Elección proyectiva de color (post-sesión)';body.appendChild(t);
+    var freq={};
+    colors.forEach(function(c){var h=(c.metric_data||{}).color_hex;if(h)freq[h]=(freq[h]||0)+1;});
+    var cr=document.createElement('div');cr.className='color-row';
+    Object.entries(freq).sort(function(a,b){return b[1]-a[1];}).forEach(function(e){
+      var hex=e[0],cnt=e[1];
+      var h=Math.max(28,Math.min(72,cnt*24));var w=Math.max(36,Math.min(60,cnt*18));
+      var dot=document.createElement('div');
+      dot.style.cssText='width:'+w+'px;height:'+h+'px;border-radius:8px;background:'+hex+
+        ';border:2px solid rgba(255,255,255,.1);display:flex;align-items:flex-end;justify-content:center;padding-bottom:3px';
+      dot.title=hex+' × '+cnt;
+      dot.innerHTML='<span style="font-size:.6rem;color:rgba(255,255,255,.5)">'+cnt+'</span>';
+      cr.appendChild(dot);
     });
+    body.appendChild(cr);
+    // Sequence
+    var seq=document.createElement('div');
+    seq.style.cssText='display:flex;gap:3px;flex-wrap:wrap;margin-top:8px;align-items:center';
+    seq.innerHTML='<span style="font-size:.6rem;color:var(--mt);margin-right:3px">Secuencia →</span>';
+    colors.slice(-20).forEach(function(c){
+      var hex=(c.metric_data||{}).color_hex;if(!hex)return;
+      var d=document.createElement('div');
+      d.style.cssText='width:15px;height:15px;border-radius:3px;background:'+hex+';border:1px solid rgba(255,255,255,.1)';
+      d.title=(c.created_at||'').slice(0,10);seq.appendChild(d);
+    });
+    body.appendChild(seq);
+  }else{
+    body.innerHTML='<div style="color:var(--mt);font-size:.74rem;margin-bottom:8px">Sin elecciones de color registradas</div>';
+  }
+  var pending=document.createElement('div');
+  pending.style.cssText='margin-top:10px;font-size:.63rem;color:rgba(255,255,255,.18);'+
+    'border:1px dashed rgba(255,255,255,.09);border-radius:6px;padding:8px 10px;line-height:1.6';
+  pending.innerHTML='<span style="color:rgba(255,255,255,.3)">cam_* / mic_* — pendiente V4 F4</span><br>'+
+    'Identidad biométrica pasiva · FACS (sorpresa/enojo/risa/llanto) · cruce cam_event + screen_state';
+  body.appendChild(pending);
+}
 
-    if (grid.children.length > 0) {
-      card.appendChild(grid);
-      container.appendChild(card);
-    }
+// ── FLAGS ─────────────────────────────────────────
+function renderFlags(c,sessions){
+  var all=[];
+  sessions.forEach(function(s){
+    (s.metric_data?.clinical_flags||[]).forEach(function(f){
+      all.push({k:f.flag,desc:f.desc,sev:f.severity,date:(s.created_at||'').slice(0,10)});
+    });
   });
+  if(!all.length)return;
+  var sec=document.createElement('div');sec.className='sec-title';
+  sec.textContent='Flags clínicos ('+all.length+')';c.appendChild(sec);
+  var w=document.createElement('div');
+  w.style.cssText='background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:1.25rem;display:flex;flex-wrap:wrap;gap:7px';
+  var byF={};
+  all.forEach(function(f){if(!byF[f.k])byF[f.k]={desc:f.desc,sev:f.sev,n:0};byF[f.k].n++;});
+  Object.entries(byF).forEach(function(e){
+    var k=e[0],d=e[1];
+    var cls=d.sev==='high'?'flag-high':d.sev==='positive'?'flag-pos':'flag-med';
+    var el=document.createElement('div');el.className='flag '+cls;
+    el.title=d.desc;el.textContent=k+(d.n>1?' ×'+d.n:'');w.appendChild(el);
+  });
+  c.appendChild(w);
+}
+
+// ── TABLE ─────────────────────────────────────────
+function renderTable(c,sessions){
+  var sec=document.createElement('div');sec.className='sec-title';
+  sec.textContent='Sesiones — vista tabular';c.appendChild(sec);
+  var w=document.createElement('div');
+  w.style.cssText='background:var(--card);border:1px solid var(--bd);border-radius:10px;overflow:hidden';
+  var t=document.createElement('table');
+  t.innerHTML='<thead><tr>'+
+    '<th>Fecha</th><th>Juego</th><th>Niv</th><th>Dur</th>'+
+    '<th>TR medio</th><th>CV</th><th>Fatiga</th>'+
+    '<th>Efic.Mov</th><th>Planif.</th><th>Carga</th><th>Flags</th>'+
+    '</tr></thead>';
+  var tb=document.createElement('tbody');
+  sessions.slice().reverse().forEach(function(s){
+    var d=s.metric_data||{};
+    var dur=d.duration_sec?Math.floor(d.duration_sec/60)+':'+String(d.duration_sec%60).padStart(2,'0'):'—';
+    var flags=d.clinical_flags||[];
+    var hi=flags.filter(function(f){return f.severity==='high';}).length;
+    var me=flags.filter(function(f){return f.severity==='medium';}).length;
+    var po=flags.filter(function(f){return f.severity==='positive';}).length;
+    var fs=(hi?'<span class="flag flag-high">'+hi+'H</span> ':'')+(me?'<span class="flag flag-med">'+me+'M</span> ':'')+(po?'<span class="flag flag-pos">'+po+'P</span>':'')||'—';
+    var tr=document.createElement('tr');
+    tr.innerHTML=
+      '<td>'+(s.created_at||'').slice(0,16).replace('T',' ')+'</td>'+
+      '<td>'+(s.game_slug||'—')+'</td>'+
+      '<td>'+(d.level||'—')+'</td>'+
+      '<td>'+dur+'</td>'+
+      '<td>'+fv(d.rt_mean_ms,'int')+'</td>'+
+      '<td>'+fv(d.rt_cv,'d2')+'</td>'+
+      '<td>'+fv(d.fatiga_index,'d2')+'</td>'+
+      '<td>'+fv(d.movement_efficiency,'pct')+'</td>'+
+      '<td>'+fv(d.planificacion_ratio,'pct')+'</td>'+
+      '<td>'+(d.cognitive_load_level||'—')+'</td>'+
+      '<td>'+fs+'</td>';
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);w.appendChild(t);c.appendChild(w);
+}
+
+// ── HELPERS ───────────────────────────────────────
+function fv(v,f){
+  if(v===null||v===undefined)return'—';
+  var n=parseFloat(v);if(isNaN(n))return String(v);
+  if(f==='int')return Math.round(n).toLocaleString('es-AR');
+  if(f==='d1')return n.toFixed(1);
+  if(f==='d2')return n.toFixed(2);
+  if(f==='pct')return(n<=1?(n*100).toFixed(0):n.toFixed(0))+'%';
+  return n.toFixed(2);
+}
+function chipCls(v,m){
+  if(!m.dir)return'neu';
+  var n=parseFloat(v);if(isNaN(n))return'neu';
+  if(m.dir===1){// high_good
+    var s=m.f==='pct'&&n<=1?n:n/100;
+    return s>=.75?'ok':s>=.5?'warn':'err';
+  }
+  if(m.dir===-1){// low_good
+    if(m.k==='rt_cv')return n<.35?'ok':n<.6?'warn':'err';
+    if(m.k==='fatiga_index')return n<1.1?'ok':n<1.3?'warn':'err';
+    if(m.k==='dysmetria_ratio')return n<.05?'ok':n<.1?'warn':'err';
+    if(m.k==='impulsividad_ratio')return n<.02?'ok':n<.1?'warn':'err';
+    if(m.k==='errores_comision'||m.k==='errores_omision')return n===0?'ok':n<3?'warn':'err';
+    if(m.k==='motor_clumsiness_score'){var s2=m.f==='pct'&&n<=1?n:n/100;return s2<.3?'ok':s2<.5?'warn':'err';}
+    if(m.k==='hesitation_count')return n===0?'ok':n<3?'warn':'err';
+    if(m.k==='blocked_by_bag_count')return n===0?'ok':n<3?'warn':'err';
+    return'neu';
+  }
+  return'neu';
 }
 
 init();
