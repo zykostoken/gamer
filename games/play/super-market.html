@@ -732,7 +732,7 @@ function showRecipeRecallQuiz() {
 }
 
 // ========== EVALUATION ==========
-function finishGame() {
+async function finishGame() {
     clearInterval(timerInterval);
     var totalTime = Date.now() - startTime;
     var cartTotal = getCartTotal();
