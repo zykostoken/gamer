@@ -150,7 +150,10 @@ const PACK_MAP={
   'libreria-escolar':'/packs/classify-and-place/libreria-escolar/pack.json',
   'supermarket':     '/packs/classify-and-place/supermarket/pack.json',
   'carniceria':      '/packs/classify-and-place/carniceria/pack.json',
-  'merceria':        '/packs/classify-and-place/merceria/pack.json'
+  'merceria':        '/packs/classify-and-place/merceria/pack.json',
+  'futbol-camisetas-numeros': '/packs/classify-and-place/futbol-camisetas-numeros/pack.json',
+  'futbol-botines-tamano':    '/packs/classify-and-place/futbol-botines-tamano/pack.json',
+  'futbol-medias-mugre':      '/packs/classify-and-place/futbol-medias-mugre/pack.json'
 };
 let PACK=null,STATE={phase:'intro',mode:'classify',level:1,score:0,correct:0,errors:0,totalItems:0,placedItems:0,startTime:0,timerInterval:null,currentItems:[],moves:[],mouseData:[],lastMoveTime:0,kitCart:{},kitMissionIdx:0,calcIdx:0,simIdx:0,kitBudget:0,kitSpent:0,kitScenario:null,seriationIdx:0,groupIdx:0,reasonIdx:0,reasonScenIdx:0,
 // Kit telemetry
@@ -167,6 +170,17 @@ async function loadPack(){const p=new URLSearchParams(location.search),id=p.get(
 // Init telemetry with patient ID (from URL param or localStorage)
 const pid=new URLSearchParams(location.search).get('pid')||localStorage.getItem('zykos_patient_dni')||null;
 if(pid&&typeof ZYKOS!=='undefined'){var _packSlug='classify-'+(new URLSearchParams(location.search).get('pack')||'unknown');setTimeout(function(){ZYKOS.startSession(_packSlug,pid,null);},150);}
+// Rutina Diaria bypass: si la URL trae ?mode= valido O el pack declara scenario_slug, saltar la intro
+const _urlMode=new URLSearchParams(location.search).get('mode');
+const _validModes=['classify','kit','calc','sim','seriation','grouping','reasoning'];
+const _isRutinaDiaria=PACK.meta&&PACK.meta.scenario_slug;
+if(_urlMode&&_validModes.indexOf(_urlMode)>=0){
+  STATE.mode=_urlMode;
+  // Para Rutina Diaria, ir directo al modo. Para otros packs, igual respetar el mode pero pasar por intro liviana.
+  if(_isRutinaDiaria){
+    return startMode();
+  }
+}
 showIntro()}
 
 function showIntro(){STATE.phase='intro';const ml=Object.keys(PACK.difficulty_scaling||{}).length||4,g=document.getElementById('game'),hm=PACK.missions&&(PACK.missions.grouping||PACK.missions.calculation||PACK.missions.similarity_discrimination);

@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "id": "futbol-camisetas-numeros",
+    "name": "Camisetas del equipo",
+    "subtitle": "Se cayeron del perchero del vestuario",
+    "emoji": "👕",
+    "description": "El utilero te pide una mano: las camisetas del equipo se cayeron del perchero. Acomodalas como te parezca.",
+    "setting": "Vestuario del Atlético Necochea Unidos. Perchero de madera, banco corrido, olor a embrocación y cuero.",
+    "scenario_slug": "futbol",
+    "axis_slug": "camisetas",
+    "tier": 1,
+    "cognitive_targets": [
+      "seriación numérica",
+      "lectura de números",
+      "control visuomotor drag-and-drop",
+      "planificación de trayectoria",
+      "memoria de trabajo"
+    ],
+    "colors": {
+      "accent": "#22c55e",
+      "surface": "#0f1f15",
+      "bg": "#0a1410",
+      "category_header": "#4ade80"
+    }
+  },
+
+  "categories": [
+    { "id": "perchero", "label": "Perchero", "emoji": "📌", "color": "#22c55e", "description": "Las once camisetas del equipo van acá" }
+  ],
+
+  "items": [
+    { "id": "cam_01", "name": "Camiseta 1", "emoji": "👕", "category": "perchero", "numeric": 1, "dorsal": 1 },
+    { "id": "cam_02", "name": "Camiseta 2", "emoji": "👕", "category": "perchero", "numeric": 2, "dorsal": 2 },
+    { "id": "cam_03", "name": "Camiseta 3", "emoji": "👕", "category": "perchero", "numeric": 3, "dorsal": 3 },
+    { "id": "cam_04", "name": "Camiseta 4", "emoji": "👕", "category": "perchero", "numeric": 4, "dorsal": 4 },
+    { "id": "cam_05", "name": "Camiseta 5", "emoji": "👕", "category": "perchero", "numeric": 5, "dorsal": 5 },
+    { "id": "cam_06", "name": "Camiseta 6", "emoji": "👕", "category": "perchero", "numeric": 6, "dorsal": 6 },
+    { "id": "cam_07", "name": "Camiseta 7", "emoji": "👕", "category": "perchero", "numeric": 7, "dorsal": 7 },
+    { "id": "cam_08", "name": "Camiseta 8", "emoji": "👕", "category": "perchero", "numeric": 8, "dorsal": 8 },
+    { "id": "cam_09", "name": "Camiseta 9", "emoji": "👕", "category": "perchero", "numeric": 9, "dorsal": 9 },
+    { "id": "cam_10", "name": "Camiseta 10", "emoji": "👕", "category": "perchero", "numeric": 10, "dorsal": 10 },
+    { "id": "cam_11", "name": "Camiseta 11", "emoji": "👕", "category": "perchero", "numeric": 11, "dorsal": 11 }
+  ],
+
+  "missions": {
+    "seriation": [
+      {
+        "id": "perchero_completo",
+        "name": "Acomodar el perchero",
+        "description": "El utilero te pide que las acomodes en el perchero. Son las camisetas del equipo.",
+        "axis_slug": "camisetas",
+        "items_to_order": ["cam_01", "cam_02", "cam_03", "cam_04", "cam_05", "cam_06", "cam_07", "cam_08", "cam_09", "cam_10", "cam_11"],
+        "next_exercise": "futbol-camisetas-tamanos",
+        "min_difficulty": 1
+      }
+    ]
+  },
+
+  "difficulty_scaling": {
+    "level_1": {
+      "items_per_round": 11,
+      "time_limit": null,
+      "hints_available": false
+    }
+  }
+}

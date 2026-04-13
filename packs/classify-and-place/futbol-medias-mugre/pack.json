@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "id": "futbol-medias-mugre",
+    "name": "Medias del equipo",
+    "subtitle": "Salieron de la canasta sin lavar",
+    "emoji": "🧦",
+    "description": "El utilero junta las medias del equipo de la canasta del vestuario. Acomodalas como te parezca.",
+    "setting": "Canasta del vestuario. Ocho medias del mismo modelo: bordas verdes, planta blanca. Unas recién lavadas, otras de varios partidos sin lavar. La luz del tubo del techo no ayuda mucho.",
+    "scenario_slug": "futbol",
+    "axis_slug": "medias",
+    "tier": 1,
+    "cognitive_targets": [
+      "discriminación perceptual de tonalidad",
+      "seriación por intensidad cromática",
+      "control visuomotor drag-and-drop",
+      "comparación visual continua"
+    ],
+    "colors": {
+      "accent": "#a3a3a3",
+      "surface": "#1a1a1a",
+      "bg": "#0f0f0f",
+      "category_header": "#d4d4d4"
+    }
+  },
+
+  "categories": [
+    { "id": "tendero", "label": "Soga del vestuario", "emoji": "🪢", "color": "#a3a3a3", "description": "Acomodá las medias acá" }
+  ],
+
+  "items": [
+    { "id": "med_t01", "name": "Media (impecable)",        "emoji": "🧦", "category": "tendero", "tonality": 1 },
+    { "id": "med_t02", "name": "Media (apenas marcada)",   "emoji": "🧦", "category": "tendero", "tonality": 2 },
+    { "id": "med_t03", "name": "Media (un poquito gris)",  "emoji": "🧦", "category": "tendero", "tonality": 3 },
+    { "id": "med_t04", "name": "Media (gris suave)",       "emoji": "🧦", "category": "tendero", "tonality": 4 },
+    { "id": "med_t05", "name": "Media (gris claro)",       "emoji": "🧦", "category": "tendero", "tonality": 5 },
+    { "id": "med_t06", "name": "Media (gris medio)",       "emoji": "🧦", "category": "tendero", "tonality": 6 },
+    { "id": "med_t07", "name": "Media (gris oscuro)",      "emoji": "🧦", "category": "tendero", "tonality": 7 },
+    { "id": "med_t08", "name": "Media (casi marrón)",      "emoji": "🧦", "category": "tendero", "tonality": 8 }
+  ],
+
+  "missions": {
+    "seriation": [
+      {
+        "id": "medias_orden",
+        "name": "Acomodar las medias",
+        "description": "El utilero junta las medias de la canasta. Acomodalas en la soga del vestuario como te parezca.",
+        "axis_slug": "medias",
+        "items_to_order": ["med_t01", "med_t02", "med_t03", "med_t04", "med_t05", "med_t06", "med_t07", "med_t08"],
+        "next_exercise": "futbol-medias-mugre-trampa",
+        "min_difficulty": 1
+      }
+    ]
+  },
+
+  "difficulty_scaling": {
+    "level_1": {
+      "items_per_round": 8,
+      "time_limit": null,
+      "hints_available": false
+    }
+  }
+}

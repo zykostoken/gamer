@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "id": "futbol-botines-tamano",
+    "name": "Botines del equipo",
+    "subtitle": "El utilero los dejó tirados en el vestuario",
+    "emoji": "👟",
+    "description": "Los botines del equipo quedaron desordenados en el banco. Acomodalos como te parezca.",
+    "setting": "Banco del vestuario. Cinco pares de botines de cuero negro, todos del mismo modelo, talles distintos. Algunos con tapón largo, todos con cordones blancos.",
+    "scenario_slug": "futbol",
+    "axis_slug": "botines",
+    "tier": 1,
+    "cognitive_targets": [
+      "seriación de magnitud perceptual",
+      "comparación visual de tamaños",
+      "control visuomotor drag-and-drop",
+      "planificación de trayectoria"
+    ],
+    "colors": {
+      "accent": "#f59e0b",
+      "surface": "#1f1810",
+      "bg": "#14100a",
+      "category_header": "#fbbf24"
+    }
+  },
+
+  "categories": [
+    { "id": "banco", "label": "Banco del vestuario", "emoji": "🪑", "color": "#f59e0b", "description": "Acomodá los botines acá" }
+  ],
+
+  "items": [
+    { "id": "bot_38", "name": "Par de botines (talle 38)", "emoji": "👟", "category": "banco", "size": 38 },
+    { "id": "bot_40", "name": "Par de botines (talle 40)", "emoji": "👟", "category": "banco", "size": 40 },
+    { "id": "bot_42", "name": "Par de botines (talle 42)", "emoji": "👟", "category": "banco", "size": 42 },
+    { "id": "bot_44", "name": "Par de botines (talle 44)", "emoji": "👟", "category": "banco", "size": 44 },
+    { "id": "bot_46", "name": "Par de botines (talle 46)", "emoji": "👟", "category": "banco", "size": 46 }
+  ],
+
+  "missions": {
+    "seriation": [
+      {
+        "id": "botines_orden",
+        "name": "Acomodar los botines",
+        "description": "Los botines del equipo quedaron desordenados. Ponelos en el banco como te parezca.",
+        "axis_slug": "botines",
+        "items_to_order": ["bot_38", "bot_40", "bot_42", "bot_44", "bot_46"],
+        "next_exercise": "futbol-botines-duenos",
+        "min_difficulty": 1
+      }
+    ]
+  },
+
+  "difficulty_scaling": {
+    "level_1": {
+      "items_per_round": 5,
+      "time_limit": null,
+      "hints_available": false
+    }
+  }
+}
