@@ -724,8 +724,6 @@ async function saveResults(metrics) {
             else console.log('[fridge-logic] saved OK');
 
             // /api/biometricas eliminado — endpoint no existe en el stack
-                })
-            }).catch(e => console.warn('[fridge-logic] Bucket save fail:', e.message));
         }
     } catch (err) {
         console.error('Save error:', err);
