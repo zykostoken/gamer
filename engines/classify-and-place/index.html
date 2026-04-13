@@ -352,6 +352,18 @@ document.getElementById('game').innerHTML=`<div style="text-align:center;margin-
 /* ===== RESULTS (classify) ===== */
 
 /* ===== SERIATION — ordenar items en secuencia ===== */
+/* ===== SERIATION — Rutina Diaria, blueprint v1.0 =====
+ * Drag-and-drop con pointer events (mousedown/move/up + touch).
+ * Esto SÍ activa agent-motor (jitter, vel_cv, eficiencia_trayectoria, etc.)
+ * a diferencia del HTML5 drag nativo viejo que NO lo hacía.
+ *
+ * Captura métricas canónicas V4.2 dominio SERIACION:
+ *   seriation_strategy_detected, seriation_dimension_used,
+ *   seriation_completeness_pct, seriation_inversion_count,
+ *   seriation_dimension_switches, seriation_first_pickup_dimension,
+ *   seriation_completion_time_ms
+ * Y al terminar llama RPC zykos_complete_exercise para gestionar progreso.
+ */
 function startSeriation(){
   STATE.phase='playing';
   const missions=(PACK.missions?.seriation||[]).filter(function(m){return !m.min_difficulty||m.min_difficulty<=STATE.level;});
@@ -364,10 +376,13 @@ function startSeriation(){
   STATE._serItems=items;
   STATE._serOrder=shuffled.map(i=>i.id);
   STATE._serStart=performance.now();
+  STATE._serMoves=[]; // path por cada drag para análisis post-hoc
+  STATE._serFirstPickupDim=null; // dimensión del primer pickup (proxy de "qué miró primero")
 
   const itemsHTML=shuffled.map((it,idx)=>
-    `<div class="ser-item" draggable="true" data-id="${it.id}" data-pos="${idx}"
-      style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin:6px 0;cursor:grab;display:flex;align-items:center;gap:10px;font-size:.9rem;">
+    `<div class="ser-item" data-id="${it.id}" data-pos="${idx}"
+      style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin:6px 0;cursor:grab;display:flex;align-items:center;gap:10px;font-size:.9rem;user-select:none;touch-action:none;"
+      data-size="${it.size||''}" data-tonality="${it.tonality||''}" data-color="${it.color||''}" data-numeric="${it.numeric||it.dorsal||''}">
       <span style="color:var(--dim);font-family:monospace;min-width:20px">${idx+1}</span>
       <span style="font-size:1.2rem">${it.emoji}</span>
       <span>${it.name}</span>
@@ -377,60 +392,271 @@ function startSeriation(){
   document.getElementById('game').innerHTML=`
     <div style="max-width:600px;margin:0 auto;padding:16px">
       <div style="text-align:center;margin-bottom:20px">
-        <div style="font-size:2rem">${mission.emoji||'📋'}</div>
+        <div style="font-size:2rem">${mission.emoji||''}</div>
         <div style="font-size:1.1rem;font-weight:700;margin:8px 0">${mission.name}</div>
         <div style="color:var(--dim);font-size:.85rem;line-height:1.5">${mission.description}</div>
       </div>
-      <div style="color:var(--muted);font-size:.75rem;text-align:center;margin-bottom:12px">Arrastrá los items para ordenarlos</div>
-      <div id="ser-list" style="min-height:200px">${itemsHTML}</div>
+      <div style="color:var(--muted);font-size:.75rem;text-align:center;margin-bottom:12px">Acomodalas como te parezca</div>
+      <div id="ser-list" style="min-height:200px;position:relative">${itemsHTML}</div>
       <div style="text-align:center;margin-top:20px">
-        <button class="btn btn-primary" onclick="checkSeriation()">Verificar orden</button>
-        <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="STATE.seriationIdx++;startSeriation()">Otra misión</button>
+        <button class="btn btn-primary" onclick="checkSeriation()">Listo</button>
+        <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="STATE.seriationIdx++;startSeriation()">Otra</button>
       </div>
     </div>`;
 
-  // Drag to reorder
+  // ===== Pointer-events drag =====
+  // Reemplaza HTML5 drag nativo. Estos eventos SÍ los captura agent-motor.
   const list=document.getElementById('ser-list');
-  let dragging=null;
-  list.addEventListener('dragstart',e=>{dragging=e.target.closest('.ser-item');dragging.style.opacity='.4';});
-  list.addEventListener('dragend',e=>{if(dragging)dragging.style.opacity='1';dragging=null;});
-  list.addEventListener('dragover',e=>{e.preventDefault();const over=e.target.closest('.ser-item');if(over&&over!==dragging){const items=[...list.querySelectorAll('.ser-item')];const iDrag=items.indexOf(dragging),iOver=items.indexOf(over);if(iDrag<iOver)list.insertBefore(dragging,over.nextSibling);else list.insertBefore(dragging,over);}});
+  const dragState={active:false,item:null,offsetX:0,offsetY:0,pickupTime:0,pathPoints:[]};
+  let lastSwapTarget=null;
+
+  function inferDimFromItem(item){
+    // Para detectar "qué miró primero" — proxy desde el atributo más saliente del item
+    if(item.dataset.numeric)return 'numeric';
+    if(item.dataset.size)return 'size';
+    if(item.dataset.tonality)return 'tonality';
+    if(item.dataset.color)return 'color';
+    return 'unknown';
+  }
+
+  function onDragBegin(item,clientX,clientY){
+    dragState.active=true;
+    dragState.item=item;
+    dragState.pickupTime=performance.now();
+    dragState.pathPoints=[{x:clientX,y:clientY,t:dragState.pickupTime}];
+    item.classList.add('ser-dragging');
+    item.style.opacity='.6';
+    item.style.cursor='grabbing';
+    if(STATE._serFirstPickupDim===null){
+      STATE._serFirstPickupDim=inferDimFromItem(item);
+    }
+  }
+  function onDragMove(clientX,clientY){
+    if(!dragState.active)return;
+    dragState.pathPoints.push({x:clientX,y:clientY,t:performance.now()});
+    // Detectar sobre qué item está y reordenar visualmente
+    const elBelow=document.elementFromPoint(clientX,clientY);
+    const sibling=elBelow?elBelow.closest('.ser-item'):null;
+    if(sibling&&sibling!==dragState.item&&sibling!==lastSwapTarget){
+      const siblings=Array.from(list.children);
+      const dragIdx=siblings.indexOf(dragState.item);
+      const sibIdx=siblings.indexOf(sibling);
+      if(dragIdx<sibIdx)list.insertBefore(dragState.item,sibling.nextSibling);
+      else list.insertBefore(dragState.item,sibling);
+      lastSwapTarget=sibling;
+    }
+  }
+  function onDragEnd(){
+    if(!dragState.active)return;
+    dragState.active=false;
+    if(dragState.item){
+      dragState.item.classList.remove('ser-dragging');
+      dragState.item.style.opacity='1';
+      dragState.item.style.cursor='grab';
+      // Registrar move para análisis post-hoc
+      STATE._serMoves.push({
+        itemId:dragState.item.dataset.id,
+        path:dragState.pathPoints,
+        durationMs:performance.now()-dragState.pickupTime,
+        finalPos:Array.from(list.children).indexOf(dragState.item)
+      });
+    }
+    dragState.item=null;
+    lastSwapTarget=null;
+  }
+
+  // Mouse
+  list.addEventListener('mousedown',function(e){
+    const item=e.target.closest('.ser-item');
+    if(item&&e.button===0){
+      e.preventDefault();
+      onDragBegin(item,e.clientX,e.clientY);
+    }
+  });
+  document.addEventListener('mousemove',function(e){
+    if(dragState.active)onDragMove(e.clientX,e.clientY);
+  });
+  document.addEventListener('mouseup',function(e){
+    if(dragState.active&&e.button===0)onDragEnd();
+  });
+  // Touch
+  list.addEventListener('touchstart',function(e){
+    const item=e.target.closest('.ser-item');
+    if(item){
+      e.preventDefault();
+      const t=e.touches[0];
+      onDragBegin(item,t.clientX,t.clientY);
+    }
+  },{passive:false});
+  document.addEventListener('touchmove',function(e){
+    if(dragState.active){
+      e.preventDefault();
+      const t=e.touches[0];
+      onDragMove(t.clientX,t.clientY);
+    }
+  },{passive:false});
+  document.addEventListener('touchend',function(e){
+    if(dragState.active){
+      e.preventDefault();
+      onDragEnd();
+    }
+  },{passive:false});
+}
+
+/* ===== Detección post-hoc de estrategia de seriación =====
+ * No se le dice al paciente cuál es el orden "correcto". Captura qué dimensión privilegió.
+ * Devuelve métricas canónicas V4.2 dominio SERIACION.
+ */
+function detectSeriationStrategy(actualOrder, items, mission){
+  // actualOrder: array de item_id en el orden final del paciente
+  // items: array de objetos item completos
+  // mission: la mission con items_to_order (orden "objetivo" si lo declara)
+
+  const itemMap={};items.forEach(it=>{itemMap[it.id]=it});
+  const n=actualOrder.length;
+
+  // Helper: calcular qué tan ordenado está actualOrder por una dimensión
+  function correlationByKey(key){
+    // Extraer valores y sortearlos
+    const values=actualOrder.map(id=>itemMap[id]&&itemMap[id][key]);
+    if(values.some(v=>v===undefined||v===null||v===''))return null;
+    // Para cada par adyacente, ¿está en orden ascendente?
+    let asc=0,desc=0;
+    for(let i=1;i<n;i++){
+      const a=isNaN(values[i-1])?values[i-1]:Number(values[i-1]);
+      const b=isNaN(values[i])?values[i]:Number(values[i]);
+      if(a<b)asc++;else if(a>b)desc++;
+    }
+    const total=n-1;
+    return {asc:asc/total,desc:desc/total,total:total};
+  }
+
+  // Probar múltiples dimensiones
+  const dims={
+    numeric:correlationByKey('numeric')||correlationByKey('dorsal'),
+    size:correlationByKey('size'),
+    tonality:correlationByKey('tonality'),
+    color:correlationByKey('color')
+  };
+
+  // Encontrar la dimensión dominante (mayor asc o desc)
+  let bestDim=null,bestScore=0,bestDir='';
+  for(const [k,v] of Object.entries(dims)){
+    if(!v)continue;
+    if(v.asc>bestScore){bestScore=v.asc;bestDim=k;bestDir='asc';}
+    if(v.desc>bestScore){bestScore=v.desc;bestDim=k;bestDir='desc';}
+  }
+
+  // Strategy enum (alineado con METRIC_DICTIONARY V4.2)
+  let strategy='no_pattern';
+  if(bestScore>=0.8){
+    strategy=bestDir+'_'+bestDim;
+  }else if(bestScore>=0.5){
+    strategy='partial_'+bestDim;
+  }else{
+    strategy='no_pattern';
+  }
+  // Mission incompleta? (si el motor devuelve sin cambios, items en posición original)
+  if(STATE._serMoves.length===0)strategy='incomplete';
+
+  // Inversiones respecto al orden detectado (pares adyacentes desalineados)
+  let inversions=0;
+  if(bestDim){
+    const refValues=actualOrder.map(id=>{
+      const v=itemMap[id]&&itemMap[id][bestDim]||itemMap[id]&&itemMap[id]['dorsal'];
+      return isNaN(v)?v:Number(v);
+    });
+    for(let i=1;i<refValues.length;i++){
+      if(bestDir==='asc'&&refValues[i]<refValues[i-1])inversions++;
+      if(bestDir==='desc'&&refValues[i]>refValues[i-1])inversions++;
+    }
+  }
+
+  // Dimension switches (cuántas veces cambió de dimensión durante drags consecutivos)
+  // Proxy: contar cambios en first-touched dimension across moves
+  let switches=0;
+  for(let i=1;i<STATE._serMoves.length;i++){
+    const prev=itemMap[STATE._serMoves[i-1].itemId];
+    const curr=itemMap[STATE._serMoves[i].itemId];
+    // Si el item previo y actual difieren significativamente en una dimensión, registrar switch
+    if(prev&&curr&&bestDim){
+      const dPrev=prev[bestDim],dCurr=curr[bestDim];
+      if(dPrev!==undefined&&dCurr!==undefined&&Math.abs(Number(dPrev)-Number(dCurr))>2)switches++;
+    }
+  }
+
+  return {
+    seriation_strategy_detected:strategy,
+    seriation_dimension_used:bestDim||'none',
+    seriation_completeness_pct:Math.round(bestScore*100),
+    seriation_inversion_count:inversions,
+    seriation_dimension_switches:switches,
+    seriation_first_pickup_dimension:STATE._serFirstPickupDim||'unknown',
+    seriation_completion_time_ms:Math.round(performance.now()-STATE._serStart)
+  };
 }
 
 function checkSeriation(){
   const mission=STATE._serMission;
-  const correctOrder=mission.items_to_order;
-  const actualOrder=[...document.querySelectorAll('.ser-item')].map(el=>el.dataset.id);
+  const actualOrder=Array.from(document.querySelectorAll('.ser-item')).map(el=>el.dataset.id);
+  const items=STATE._serItems;
   const rt=Math.round(performance.now()-STATE._serStart);
-  let correct=0;
-  actualOrder.forEach((id,i)=>{if(id===correctOrder[i])correct++;});
-  const pct=Math.round(correct/correctOrder.length*100);
-  const isOk=pct>=80;
-  if(isOk){STATE.correct++;STATE.score+=200;}else{STATE.errors++;}
-  document.getElementById('h-score').textContent=STATE.score;
-  STATE.moves.push({mode:'seriation',mission:mission.id,pct_correct:pct,rt_ms:rt,correct:isOk});
 
-  // Mostrar resultado con el orden correcto
-  const correctHTML=correctOrder.map((id,i)=>{
-    const it=PACK.items.find(x=>x.id===id);
-    const userPos=actualOrder.indexOf(id);
-    const ok=userPos===i;
-    return `<div style="padding:8px 12px;border-radius:8px;border:1px solid ${ok?'var(--ok)':'var(--err)'};margin:4px 0;display:flex;align-items:center;gap:10px;font-size:.85rem;">
-      <span style="color:${ok?'var(--ok)':'var(--err)'};font-weight:700">${i+1}</span>
-      <span>${it?.emoji||''}</span><span>${it?.name||id}</span>
-      ${ok?'':'<span style="color:var(--err);font-size:.75rem;margin-left:auto">vos pusiste pos '+(userPos+1)+'</span>'}
-    </div>`;
-  }).join('');
+  // Métricas canónicas V4.2 (post-hoc)
+  const seriationMetrics=detectSeriationStrategy(actualOrder, items, mission);
 
+  // Registrar move legacy para compatibilidad
+  STATE.moves.push({mode:'seriation',mission:mission.id,rt_ms:rt,pct_correct:seriationMetrics.seriation_completeness_pct,correct:seriationMetrics.seriation_completeness_pct>=80});
+
+  // Enviar al motor canónico — agent-motor ya capturó jitter/vel/etc en background
+  if(typeof ZYKOS!=='undefined'&&ZYKOS.isActive()){
+    ZYKOS.endSession(Object.assign({
+      session_duration_ms:rt,
+      _raw_seriation:{
+        pack_id:PACK.meta.id,
+        mode:'seriation',
+        mission_id:mission.id,
+        actual_order:actualOrder,
+        target_order:mission.items_to_order,
+        moves_count:STATE._serMoves.length,
+        moves_summary:STATE._serMoves.slice(-20).map(m=>({itemId:m.itemId,duration:m.durationMs,pathLen:m.path.length}))
+      }
+    }, seriationMetrics));
+  }
+
+  // Llamar RPC zykos_complete_exercise (gestión de progreso Rutina Diaria)
+  // Solo si tenemos DNI y supabase client
+  try{
+    const dni=new URLSearchParams(location.search).get('dni')||localStorage.getItem('zykos_patient_dni');
+    if(dni&&typeof getSupabaseClient==='function'){
+      const sb=getSupabaseClient();
+      if(sb){
+        const scenarioSlug=PACK.meta.scenario_slug||'futbol';
+        const axisSlug=PACK.meta.axis_slug||mission.axis_slug||'unknown';
+        const exerciseSlug=PACK.meta.id;
+        const nextExercise=mission.next_exercise||null;
+        sb.rpc('zykos_complete_exercise',{
+          p_dni:dni,
+          p_scenario:scenarioSlug,
+          p_axis:axisSlug,
+          p_exercise_slug:exerciseSlug,
+          p_next_exercise:nextExercise
+        }).then(r=>{
+          if(r.error)console.warn('[seriation] complete_exercise RPC:',r.error.message);
+          else console.log('[seriation] progress updated:',r.data);
+        }).catch(e=>console.warn('[seriation] RPC exception:',e.message));
+      }
+    }
+  }catch(e){console.warn('[seriation] progress save error:',e.message);}
+
+  // Pantalla de cierre — neutra, sin "ganaste/perdiste"
   document.getElementById('game').innerHTML=`
-    <div style="max-width:600px;margin:0 auto;padding:16px;text-align:center">
-      <div style="font-size:2rem">${isOk?'[ok]':'[x]'}</div>
-      <div style="font-size:1.2rem;font-weight:700;margin:8px 0;color:${isOk?'var(--ok)':'var(--err)'}">${pct}% correcto</div>
-      <div style="color:var(--dim);font-size:.8rem;margin-bottom:16px">Orden correcto:</div>
-      ${correctHTML}
-      <div style="margin-top:20px;display:flex;gap:10px;justify-content:center">
-        <button class="btn btn-primary" onclick="STATE.seriationIdx++;startSeriation()">Siguiente misión</button>
-        <button class="btn btn-ghost btn-sm" onclick="showIntro()">Menú</button>
+    <div style="max-width:600px;margin:0 auto;padding:32px 16px;text-align:center">
+      <div style="font-size:1.3rem;font-weight:700;margin-bottom:12px">Listo</div>
+      <div style="color:var(--dim);font-size:.95rem;margin-bottom:8px">Buen trabajo</div>
+      <div style="color:var(--dim);font-size:.8rem;margin-bottom:32px">Mañana hay otro</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn btn-ghost btn-sm" onclick="showIntro()">Volver</button>
       </div>
     </div>`;
 }
