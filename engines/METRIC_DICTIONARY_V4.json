@@ -1,40 +1,469 @@
 {
-  "version": "4.1",
-  "generated_at": "2026-04-11",
+  "version": "4.2",
+  "generated_at": "2026-04-13",
   "source_of_truth": "zykos_metrics_canonical (Supabase aypljitzifwjosjkqsuu)",
-  "total_metrics": 104,
+  "total_metrics": 123,
   "principle": "Una sola tabla universal. Los juegos NO definen metricas. Los agentes capturan del DOM. El clinico interpreta post-hoc.",
-  "prohibited_metrics": ["tremor_*", "dismetria_mean_px", "rigidez_index", "espasticidad_index", "cogwheel_index", "clasp_knife_ratio", "output_clinico_en_juego", "clinical_flags_hardcoded"],
+  "prohibited_metrics": [
+    "tremor_*",
+    "dismetria_mean_px",
+    "rigidez_index",
+    "espasticidad_index",
+    "cogwheel_index",
+    "clasp_knife_ratio",
+    "output_clinico_en_juego",
+    "clinical_flags_hardcoded"
+  ],
   "domains_summary": {
-    "MOTOR": {"agent": "agent-motor", "count": 6, "metrics": ["jitter_reposo_px", "jitter_inicio_px", "jitter_terminal_px", "precision_deposito_px", "eficiencia_trayectoria", "rectificaciones_count"]},
-    "VELOCIDAD": {"agent": "agent-motor", "count": 5, "metrics": ["vel_cv", "vel_uniformidad_index", "vel_oscilacion_index", "vel_caida_brusca_ratio", "vel_peak_mean_px_ms"]},
-    "ATENCION": {"agent": "agent-rt + agent-focus", "count": 7, "metrics": ["rt_mean_ms", "rt_sd_ms", "rt_cv", "hesitaciones_count", "hesitacion_duracion_mean_ms", "focus_interruptions_count", "tab_switches_count"]},
-    "EJECUTIVO": {"agent": "agent-inhibition + agent-context", "count": 8, "metrics": ["errores_comision", "errores_omision", "falsos_clicks", "impulsividad_ratio", "inhibicion_motor", "perseveracion_count", "secuencia_correcta_pct", "eficacia_objetivo"]},
-    "MEMORIA": {"agent": "PENDIENTE F3 memory_domain_expansion", "count": 4, "metrics": ["pregame_consigna_recall_pct", "cliente_pedido_recall_pct", "lista_items_recall_count", "task_switch_cost_ms"]},
-    "COMPRENSION": {"agent": "agent-context", "count": 2, "metrics": ["instruction_comprehension_delay_ms", "auditory_compliance_pct"]},
-    "PERCEPCION_TEMPORAL": {"agent": "time_estimation_probe", "original_zykos": true, "count": 3, "metrics": ["subjective_time_error_ms", "subjective_time_ratio", "vague_time_interpretation_ms"]},
-    "ESTIMULOS_AUDITIVOS": {"agent": "lawn_mower_auditory_dynamic_stimuli", "count": 2, "metrics": ["auditory_stimulus_detected_count", "auditory_stimulus_latency_ms"]},
-    "MUSICA_FONDO": {"agent": "agent-context", "count": 3, "metrics": ["bg_music_reaction_events", "bg_music_tempo_entrainment_ratio", "bg_audio_distraction_count"]},
-    "SERIACION_PLANIFICACION": {"agent": "agent-context", "count": 6, "metrics": ["seriacion_orden_correcto_count", "seriacion_inversiones_count", "ejecucion_pasos_saltados_count", "multinivel_progresion_ratio", "complejidad_max_alcanzada", "niveles_reintentados_count"]},
-    "CALCULO_RAZONAMIENTO": {"agent": "PENDIENTE F3 math_reasoning_expansion", "count": 4, "metrics": ["calculo_vuelto_error_pct", "calculo_peso_precio_error_pct", "presupuesto_overrun_ratio", "producto_sustitucion_logica_pct"]},
-    "TEMPORALIDAD_CANONICA": {"agent": "post-session-analyzer", "count": 3, "metrics": ["temporal_quarters", "temporal_halves", "temporal_quarters_per_game"], "rule": "Toda metrica cronometrable se divide en Q1-Q4 y H1-H2"},
-    "PRESENCIA_PLATAFORMA": {"agent": "agent-presence", "count": 3, "metrics": ["presencia_activa_pct", "presencia_ausente_pct", "hilo_perdido_count"]},
-    "BIOMETRICA_CAM_FACS": {"agent": "agent-media", "count": 4, "metrics": ["cam_face_detected", "cam_identity_match_score", "cam_facs_markers", "cam_attention_gaze_pct"]},
-    "BIOMETRICA_OG_MEDIA": {"agent": "agent-og-media", "academic": "Verkruysse 2008, Poh 2010, Mcduff 2014", "count": 14, "metrics": ["og_cam_present", "og_cam_presence_pct", "og_cam_blackout_count", "og_cam_blackout_max_ms", "og_cam_luminance_mean", "og_cam_luminance_cv", "og_cam_green_channel_mean", "og_cam_green_cv", "og_mic_present", "og_mic_db_mean", "og_mic_db_cv", "og_mic_silence_pct", "og_mic_speech_episodes", "og_mic_peak_db"]},
-    "BIOMETRICA_VOZ": {"agent": "agent-media", "count": 3, "metrics": ["mic_ambient_db", "mic_voice_detected", "mic_speech_prosody"]},
-    "HARDWARE": {"agent": "agent-motor calibracion", "rule": "Se mide para RESTARSE del humanware", "count": 5, "metrics": ["hw_idle_jitter_px", "hw_device_type", "hw_input_device", "hw_screen_resolution", "hw_calibration_timestamp"]},
-    "SESION_METADATOS": {"count": 5, "metrics": ["duration_ms", "n_clicks", "n_actions", "completed", "level"]},
-    "PROYECTIVO_DCAT": {"agent": "mood-modals + dcat-coder", "framework": "8 dimensiones bipolares", "count": 3, "metrics": ["color_hex", "color_context", "dcat_attributes"]},
-    "INTEGRIDAD_HASH_CHAIN": {"status": "PENDIENTE trigger SHA-256", "count": 2, "metrics": ["entry_hash", "previous_hash"]},
-    "AUDIT": {"count": 4, "metrics": ["created_at", "client_timestamp", "ip_address", "user_agent"]},
-    "IDENTITY_CONTEXT": {"count": 6, "metrics": ["dni", "user_id", "game_slug", "session_id", "session_ordinal", "nature"]},
-    "EXTENSION": {"count": 1, "metrics": ["extra_metrics"]}
+    "MOTOR": {
+      "agent": "agent-motor",
+      "count": 6,
+      "metrics": [
+        "jitter_reposo_px",
+        "jitter_inicio_px",
+        "jitter_terminal_px",
+        "precision_deposito_px",
+        "eficiencia_trayectoria",
+        "rectificaciones_count"
+      ]
+    },
+    "VELOCIDAD": {
+      "agent": "agent-motor",
+      "count": 5,
+      "metrics": [
+        "vel_cv",
+        "vel_uniformidad_index",
+        "vel_oscilacion_index",
+        "vel_caida_brusca_ratio",
+        "vel_peak_mean_px_ms"
+      ]
+    },
+    "ATENCION": {
+      "agent": "agent-rt + agent-focus",
+      "count": 7,
+      "metrics": [
+        "rt_mean_ms",
+        "rt_sd_ms",
+        "rt_cv",
+        "hesitaciones_count",
+        "hesitacion_duracion_mean_ms",
+        "focus_interruptions_count",
+        "tab_switches_count"
+      ]
+    },
+    "EJECUTIVO": {
+      "agent": "agent-inhibition + agent-context",
+      "count": 8,
+      "metrics": [
+        "errores_comision",
+        "errores_omision",
+        "falsos_clicks",
+        "impulsividad_ratio",
+        "inhibicion_motor",
+        "perseveracion_count",
+        "secuencia_correcta_pct",
+        "eficacia_objetivo"
+      ]
+    },
+    "MEMORIA": {
+      "agent": "PENDIENTE F3 memory_domain_expansion",
+      "count": 4,
+      "metrics": [
+        "pregame_consigna_recall_pct",
+        "cliente_pedido_recall_pct",
+        "lista_items_recall_count",
+        "task_switch_cost_ms"
+      ]
+    },
+    "COMPRENSION": {
+      "agent": "agent-context",
+      "count": 2,
+      "metrics": [
+        "instruction_comprehension_delay_ms",
+        "auditory_compliance_pct"
+      ]
+    },
+    "PERCEPCION_TEMPORAL": {
+      "agent": "time_estimation_probe",
+      "original_zykos": true,
+      "count": 3,
+      "metrics": [
+        "subjective_time_error_ms",
+        "subjective_time_ratio",
+        "vague_time_interpretation_ms"
+      ]
+    },
+    "ESTIMULOS_AUDITIVOS": {
+      "agent": "lawn_mower_auditory_dynamic_stimuli",
+      "count": 2,
+      "metrics": [
+        "auditory_stimulus_detected_count",
+        "auditory_stimulus_latency_ms"
+      ]
+    },
+    "MUSICA_FONDO": {
+      "agent": "agent-context",
+      "count": 3,
+      "metrics": [
+        "bg_music_reaction_events",
+        "bg_music_tempo_entrainment_ratio",
+        "bg_audio_distraction_count"
+      ]
+    },
+    "SERIACION_PLANIFICACION": {
+      "agent": "agent-context",
+      "count": 6,
+      "metrics": [
+        "seriacion_orden_correcto_count",
+        "seriacion_inversiones_count",
+        "ejecucion_pasos_saltados_count",
+        "multinivel_progresion_ratio",
+        "complejidad_max_alcanzada",
+        "niveles_reintentados_count"
+      ]
+    },
+    "CALCULO_RAZONAMIENTO": {
+      "agent": "PENDIENTE F3 math_reasoning_expansion",
+      "count": 4,
+      "metrics": [
+        "calculo_vuelto_error_pct",
+        "calculo_peso_precio_error_pct",
+        "presupuesto_overrun_ratio",
+        "producto_sustitucion_logica_pct"
+      ]
+    },
+    "TEMPORALIDAD_CANONICA": {
+      "agent": "post-session-analyzer",
+      "count": 3,
+      "metrics": [
+        "temporal_quarters",
+        "temporal_halves",
+        "temporal_quarters_per_game"
+      ],
+      "rule": "Toda metrica cronometrable se divide en Q1-Q4 y H1-H2"
+    },
+    "PRESENCIA_PLATAFORMA": {
+      "agent": "agent-presence",
+      "count": 3,
+      "metrics": [
+        "presencia_activa_pct",
+        "presencia_ausente_pct",
+        "hilo_perdido_count"
+      ]
+    },
+    "BIOMETRICA_CAM_FACS": {
+      "agent": "agent-media",
+      "count": 4,
+      "metrics": [
+        "cam_face_detected",
+        "cam_identity_match_score",
+        "cam_facs_markers",
+        "cam_attention_gaze_pct"
+      ]
+    },
+    "BIOMETRICA_OG_MEDIA": {
+      "agent": "agent-og-media",
+      "academic": "Verkruysse 2008, Poh 2010, Mcduff 2014",
+      "count": 14,
+      "metrics": [
+        "og_cam_present",
+        "og_cam_presence_pct",
+        "og_cam_blackout_count",
+        "og_cam_blackout_max_ms",
+        "og_cam_luminance_mean",
+        "og_cam_luminance_cv",
+        "og_cam_green_channel_mean",
+        "og_cam_green_cv",
+        "og_mic_present",
+        "og_mic_db_mean",
+        "og_mic_db_cv",
+        "og_mic_silence_pct",
+        "og_mic_speech_episodes",
+        "og_mic_peak_db"
+      ]
+    },
+    "BIOMETRICA_VOZ": {
+      "agent": "agent-media",
+      "count": 3,
+      "metrics": [
+        "mic_ambient_db",
+        "mic_voice_detected",
+        "mic_speech_prosody"
+      ]
+    },
+    "HARDWARE": {
+      "agent": "agent-motor calibracion",
+      "rule": "Se mide para RESTARSE del humanware",
+      "count": 5,
+      "metrics": [
+        "hw_idle_jitter_px",
+        "hw_device_type",
+        "hw_input_device",
+        "hw_screen_resolution",
+        "hw_calibration_timestamp"
+      ]
+    },
+    "SESION_METADATOS": {
+      "count": 5,
+      "metrics": [
+        "duration_ms",
+        "n_clicks",
+        "n_actions",
+        "completed",
+        "level"
+      ]
+    },
+    "PROYECTIVO_DCAT": {
+      "agent": "mood-modals + dcat-coder",
+      "framework": "8 dimensiones bipolares",
+      "count": 3,
+      "metrics": [
+        "color_hex",
+        "color_context",
+        "dcat_attributes"
+      ]
+    },
+    "INTEGRIDAD_HASH_CHAIN": {
+      "status": "PENDIENTE trigger SHA-256",
+      "count": 2,
+      "metrics": [
+        "entry_hash",
+        "previous_hash"
+      ]
+    },
+    "AUDIT": {
+      "count": 4,
+      "metrics": [
+        "created_at",
+        "client_timestamp",
+        "ip_address",
+        "user_agent"
+      ]
+    },
+    "IDENTITY_CONTEXT": {
+      "count": 6,
+      "metrics": [
+        "dni",
+        "user_id",
+        "game_slug",
+        "session_id",
+        "session_ordinal",
+        "nature"
+      ]
+    },
+    "EXTENSION": {
+      "count": 1,
+      "metrics": [
+        "extra_metrics"
+      ]
+    },
+    "SERIACION": {
+      "agent": "engine-post-hoc-analysis",
+      "count": 7,
+      "note": "Strategy-detection metrics computed at exercise completion. Captures which dimension the patient privileged when ordering items under open prompt conditions.",
+      "metrics": [
+        "seriation_strategy_detected",
+        "seriation_dimension_used",
+        "seriation_completeness_pct",
+        "seriation_inversion_count",
+        "seriation_dimension_switches",
+        "seriation_first_pickup_dimension",
+        "seriation_completion_time_ms"
+      ],
+      "metric_types": {
+        "seriation_strategy_detected": {
+          "type": "enum",
+          "values": [
+            "ascending_numeric",
+            "descending_numeric",
+            "ascending_size",
+            "descending_size",
+            "ascending_tonality",
+            "descending_tonality",
+            "categorical_binary",
+            "categorical_ternary",
+            "spatial_clustering",
+            "no_pattern",
+            "incomplete"
+          ],
+          "description": "Inferred ordering strategy from final item positions."
+        },
+        "seriation_dimension_used": {
+          "type": "enum",
+          "values": [
+            "numeric",
+            "size",
+            "tonality",
+            "color",
+            "position",
+            "none"
+          ],
+          "description": "Dimension the patient privileged when ordering."
+        },
+        "seriation_completeness_pct": {
+          "type": "float",
+          "range": [
+            0,
+            100
+          ],
+          "description": "Percentage of the sequence that respects the detected pattern."
+        },
+        "seriation_inversion_count": {
+          "type": "int",
+          "min": 0,
+          "description": "Adjacent pairs inverted relative to the detected order."
+        },
+        "seriation_dimension_switches": {
+          "type": "int",
+          "min": 0,
+          "description": "Number of times the patient switched criterion mid-task."
+        },
+        "seriation_first_pickup_dimension": {
+          "type": "enum",
+          "values": [
+            "numeric",
+            "size",
+            "tonality",
+            "color",
+            "position",
+            "unknown"
+          ],
+          "description": "Dimension the patient looked at first, inferred from dwell_time_pre_pickup."
+        },
+        "seriation_completion_time_ms": {
+          "type": "int",
+          "min": 0,
+          "description": "Time from first pickup to last drop."
+        }
+      }
+    },
+    "AGRUPACION": {
+      "agent": "engine-post-hoc-analysis",
+      "count": 6,
+      "note": "Strategy-detection metrics for grouping tasks where the patient forms clusters under open prompt.",
+      "metrics": [
+        "grouping_clusters_formed",
+        "grouping_intra_cluster_coherence",
+        "grouping_inter_cluster_separation_px",
+        "grouping_outliers_count",
+        "grouping_strategy_detected",
+        "grouping_revision_count"
+      ],
+      "metric_types": {
+        "grouping_clusters_formed": {
+          "type": "int",
+          "min": 0,
+          "description": "Number of spatial clusters detected at exercise end."
+        },
+        "grouping_intra_cluster_coherence": {
+          "type": "float",
+          "range": [
+            0,
+            1
+          ],
+          "description": "Mean categorical coherence within each cluster. 1 = all items in cluster share same category tag."
+        },
+        "grouping_inter_cluster_separation_px": {
+          "type": "float",
+          "min": 0,
+          "description": "Average pixel distance between cluster centroids."
+        },
+        "grouping_outliers_count": {
+          "type": "int",
+          "min": 0,
+          "description": "Items that were not assigned to any cluster (spatially isolated)."
+        },
+        "grouping_strategy_detected": {
+          "type": "enum",
+          "values": [
+            "by_category",
+            "by_color",
+            "by_size",
+            "by_position",
+            "mixed",
+            "none"
+          ],
+          "description": "Inferred grouping dimension."
+        },
+        "grouping_revision_count": {
+          "type": "int",
+          "min": 0,
+          "description": "Items moved between clusters after their first drop."
+        }
+      }
+    },
+    "SECUENCIACION": {
+      "agent": "engine-post-hoc-analysis",
+      "count": 6,
+      "note": "Strategy-detection metrics for sequencing tasks where the patient reconstructs an ordered procedure (AVD, motor sequence, temporal sequence).",
+      "metrics": [
+        "sequence_steps_correct_count",
+        "sequence_steps_total",
+        "sequence_first_error_position",
+        "sequence_revision_count",
+        "sequence_completion_time_ms",
+        "sequence_pattern_detected"
+      ],
+      "metric_types": {
+        "sequence_steps_correct_count": {
+          "type": "int",
+          "min": 0,
+          "description": "Steps in the correct position relative to target order."
+        },
+        "sequence_steps_total": {
+          "type": "int",
+          "min": 0,
+          "description": "Total number of steps in the sequence."
+        },
+        "sequence_first_error_position": {
+          "type": "int",
+          "min": -1,
+          "description": "Zero-indexed position of the first error. -1 if no errors."
+        },
+        "sequence_revision_count": {
+          "type": "int",
+          "min": 0,
+          "description": "Steps moved to a different position after first drop."
+        },
+        "sequence_completion_time_ms": {
+          "type": "int",
+          "min": 0,
+          "description": "Time from first pickup to last drop."
+        },
+        "sequence_pattern_detected": {
+          "type": "enum",
+          "values": [
+            "strict_order",
+            "partial_order",
+            "reverse_order",
+            "clustered",
+            "random"
+          ],
+          "description": "Inferred sequencing pattern from final arrangement."
+        }
+      }
+    }
   },
   "dictionary_meta": {
-    "total_domains": 23,
-    "total_metrics": 104,
+    "total_domains": 26,
+    "total_metrics": 123,
     "active_agents": 9,
-    "agent_inventory": ["agent-presence", "agent-focus", "agent-context", "agent-inhibition", "agent-motor", "agent-rt", "agent-scroll", "agent-media", "agent-og-media"],
-    "pending_agents": ["agent-memory (F3)", "agent-math (F3)"]
+    "agent_inventory": [
+      "agent-presence",
+      "agent-focus",
+      "agent-context",
+      "agent-inhibition",
+      "agent-motor",
+      "agent-rt",
+      "agent-scroll",
+      "agent-media",
+      "agent-og-media",
+      "engine-post-hoc-analysis"
+    ],
+    "pending_agents": [
+      "agent-memory (F3)",
+      "agent-math (F3)"
+    ],
+    "pseudo_agents_note": "engine-post-hoc-analysis is not a real-time pirate agent. It refers to functions in the game engine that compute strategy-detection metrics at exercise completion, from the DOM state and the recorded move log."
   }
 }
