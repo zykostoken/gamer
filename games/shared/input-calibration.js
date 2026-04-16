@@ -329,7 +329,7 @@ function finishCalibration() {
         pixel_ratio: window.devicePixelRatio || 1,
         user_agent: navigator.userAgent,
 
-        // Idle jitter (tremor basal del hardware)
+        // Idle jitter (nivel basal del hardware)
         idle_jitter_px: parseFloat(idleJitter.toFixed(2)),
         idle_jitter_x: CALIB.idleJitterSamples.length > 0
             ? parseFloat(CALIB.idleJitterSamples[0].jitter_x.toFixed(2)) : 0,
@@ -353,7 +353,7 @@ function finishCalibration() {
         path_efficiency_mean: parseFloat(mean(efficiencies).toFixed(3)),
         path_efficiency_sd: parseFloat(sd(efficiencies).toFixed(3)),
 
-        // Approach jitter (tremor terminal basal del hardware)
+        // Approach jitter (nivel terminal basal del hardware)
         approach_jitter_mean: parseFloat(mean(jitters).toFixed(2)),
         approach_jitter_sd: parseFloat(sd(jitters).toFixed(2)),
 
@@ -475,7 +475,7 @@ function getProfile() {
 
 /**
  * Adjust a raw metric value using hardware baseline
- * @param {string} metricType - 'tremor', 'rt', 'offset', 'efficiency'
+ * @param {string} metricType - 'jitter', 'rt', 'offset', 'efficiency'
  * @param {number} rawValue - The raw value from the game
  * @param {Object} [hwProfile] - Hardware profile (default: from localStorage)
  * @returns {Object} { adjusted, raw, baseline, adjustment_pct }
@@ -491,11 +491,6 @@ function adjust(metricType, rawValue, hwProfile) {
         case 'jitter_reposo':
         case 'jitter_inicio':
         case 'jitter_terminal':
-        // Legacy aliases for backward compatibility
-        case 'tremor':
-        case 'tremor_reposo':
-        case 'tremor_inicio':
-        case 'tremor_terminal':
             // Subtract idle hardware jitter from jitter measurement
             baseline = hw.idle_jitter_px || 0;
             adjusted = Math.max(0, rawValue - baseline);

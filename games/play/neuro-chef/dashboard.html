@@ -153,7 +153,7 @@
                 <div class="chart-box"><h3>Evolución Tiempo de Reacción (ms)</h3><canvas id="chart-rt"></canvas></div>
                 <div class="chart-box"><h3>Evolución d' (Sensibilidad)</h3><canvas id="chart-dprime"></canvas></div>
                 <div class="chart-box"><h3>Omisiones vs Comisiones por Sesión</h3><canvas id="chart-errors"></canvas></div>
-                <div class="chart-box"><h3>Índice de Tremor</h3><canvas id="chart-tremor"></canvas></div>
+                <div class="chart-box"><h3>Jitter (estabilidad motora)</h3><canvas id="chart-jitter"></canvas></div>
             </div>
 
             <div class="sessions-section">
@@ -161,7 +161,7 @@
                 <table class="sessions-table">
                     <thead><tr>
                         <th>Fecha</th><th>Score</th><th>RT (ms)</th><th>d'</th>
-                        <th>Omis.</th><th>Comis.</th><th>Tremor</th><th>Hesit.</th><th>Duración</th>
+                        <th>Omis.</th><th>Comis.</th><th>Jitter</th><th>Hesit.</th><th>Duración</th>
                     </tr></thead>
                     <tbody id="sessions-tbody"></tbody>
                 </table>
@@ -219,10 +219,10 @@
             ]}, options: { ...chartOpts, scales: { ...chartOpts.scales, x: { ...chartOpts.scales.x, stacked: false }, y: { ...chartOpts.scales.y, stacked: false } } }
         });
 
-        // Tremor Chart
-        new Chart(document.getElementById('chart-tremor'), {
+        // Jitter Chart
+        new Chart(document.getElementById('chart-jitter'), {
             type: 'line', data: { labels, datasets: [{
-                label: 'Tremor', data: chartData.map(d => d.tremor),
+                label: 'Jitter', data: chartData.map(d => d.jitter),
                 borderColor: '#ce93d8', backgroundColor: 'rgba(206,147,216,0.1)', tension: 0.3, fill: true
             }]}, options: chartOpts
         });
@@ -234,7 +234,7 @@
             tbody.innerHTML += `<tr>
                 <td>${d.date}</td><td>${d.score ?? '---'}</td><td>${d.rt ?? '---'}</td>
                 <td>${d.dprime ?? '---'}</td><td>${d.omissions}</td><td>${d.commissions}</td>
-                <td>${d.tremor ?? '---'}</td><td>${d.hesitations}</td><td>${dur}</td>
+                <td>${d.jitter ?? "---"}</td><td>${d.hesitations}</td><td>${dur}</td>
             </tr>`;
         });
     }

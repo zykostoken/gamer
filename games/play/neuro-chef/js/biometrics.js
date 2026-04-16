@@ -1,5 +1,5 @@
 // ========== BIOMETRICS ENGINE - NEURO-CHEF ==========
-// Captura: RT, omisiones, comisiones, F+/F-, tremor, hesitación, resets, action log
+// Captura: RT, omisiones, comisiones, F+/F-, jitter, hesitación, resets, action log
 
 const Biometrics = {
     // ---------- STATE ----------
@@ -7,7 +7,7 @@ const Biometrics = {
     firstActionTime: null,
     actionLog: [],
     dragSamples: [],        // {x, y, t} durante drag
-    tremors: [],            // jitter calculado por drag
+    jitters: [],            // jitter calculado por drag
     hesitations: [],        // pausas >2s entre acciones
     lastActionTime: null,
     resetCount: 0,
@@ -21,7 +21,7 @@ const Biometrics = {
         this.firstActionTime = null;
         this.actionLog = [];
         this.dragSamples = [];
-        this.tremors = [];
+        this.jitters = [];
         this.hesitations = [];
         this.lastActionTime = null;
         this.interactionCount = 0;
@@ -83,10 +83,10 @@ const Biometrics = {
 
     logDrop(itemId, target, isCorrect) {
         this.logAction('drop', { item: itemId, target, correct: isCorrect });
-        // Calculate tremor from this drag
+        // Calculate jitter from this drag
         if (this.dragSamples.length > 5) {
-            const tremor = this._calcTremor(this.dragSamples);
-            this.tremors.push(tremor);
+            const jitter = this._calcJitter(this.dragSamples);
+            this.jitters.push(jitter);
         }
         this.dragSamples = [];
     },
@@ -109,9 +109,9 @@ const Biometrics = {
         this.logAction('verify', {});
     },
 
-    // ---------- TREMOR ANALYSIS ----------
+    // ---------- JITTER ANALYSIS ----------
     // Mide jitter: desviación del path recto durante drag
-    _calcTremor(samples) {
+    _calcJitter(samples) {
         if (samples.length < 3) return { jitter: 0, speed_var: 0 };
 
         // 1. Path jitter: desviación perpendicular de la recta start→end
@@ -152,7 +152,7 @@ const Biometrics = {
 
     // ---------- GLOBAL MOUSE/TOUCH TRACKING ----------
     _setupGlobalListeners() {
-        // Track drag movements globally for tremor
+        // Track drag movements globally for jitter
         const handler = (e) => {
             if (this.dragSamples.length > 0 || document.querySelector('.dragging')) {
                 const x = e.clientX || (e.touches && e.touches[0]?.clientX) || 0;
@@ -175,12 +175,12 @@ const Biometrics = {
             ? this.firstActionTime - this.levelStart 
             : totalTime;
 
-        // Tremor average
-        const avgTremor = this.tremors.length > 0
-            ? this.tremors.reduce((a, t) => a + t.jitter, 0) / this.tremors.length
+        // Jitter average
+        const avgJitter = this.jitters.length > 0
+            ? this.jitters.reduce((a, t) => a + t.jitter, 0) / this.jitters.length
             : 0;
-        const avgSpeedVar = this.tremors.length > 0
-            ? this.tremors.reduce((a, t) => a + t.speed_var, 0) / this.tremors.length
+        const avgSpeedVar = this.jitters.length > 0
+            ? this.jitters.reduce((a, t) => a + t.speed_var, 0) / this.jitters.length
             : 0;
 
         // Signal Detection Theory metrics
@@ -229,10 +229,10 @@ const Biometrics = {
             errores_comision:       falseAlarms,
 
             // Motor — nombres canónicos
-            jitter_reposo_px:       Math.round(avgTremor * 100) / 100,
+            jitter_reposo_px:       Math.round(avgJitter * 100) / 100,
             vel_cv:                 Math.round(avgSpeedVar * 1000) / 1000,
             rectificaciones_count:  this.abruptDirectionChanges,
-            _raw_jitter_samples:    this.tremors.length,
+            _raw_jitter_samples:    this.jitters.length,
 
             // Atención y ejecutivo — nombres canónicos
             hesitaciones_count:     this.hesitations.length,
@@ -248,7 +248,7 @@ const Biometrics = {
 
             // Raw para análisis diferido
             _raw_action_log:        this.actionLog,
-            _raw_jitter_details:    this.tremors,
+            _raw_jitter_details:    this.jitters,
             _raw_hesitations:       this.hesitations
         };
     },

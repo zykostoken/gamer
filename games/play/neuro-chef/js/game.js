@@ -1052,7 +1052,7 @@ function showResultsScreen(summary) {
         <h3 style="color:#D4A574;margin:1.5rem 0 0.5rem;font-size:0.95rem;">Perfil Biometrico</h3>
         <div class="results-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));">
             <div class="result-card"><div class="result-value">${Math.round(bio.avg_reaction_time||0)}</div><div class="result-label">RT Media (ms)</div></div>
-            <div class="result-card"><div class="result-value">${(bio.avg_tremor||0).toFixed(2)}</div><div class="result-label">Temblor Prom</div></div>
+            <div class="result-card"><div class="result-value">${(bio.avg_jitter||0).toFixed(2)}</div><div class="result-label">Jitter promedio</div></div>
             <div class="result-card"><div class="result-value">${(bio.avg_d_prime||0).toFixed(2)}</div><div class="result-label">d-prime</div></div>
             <div class="result-card"><div class="result-value">${bio.total_hesitations||0}</div><div class="result-label">Hesitaciones</div></div>
             <div class="result-card"><div class="result-value">${bio.total_undos||0}</div><div class="result-label">Deshacer</div></div>
