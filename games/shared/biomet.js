@@ -664,14 +664,14 @@ function compute() {
 
         // Eficacia
         ratio_completados:        ratio_completados !== null ? +ratio_completados.toFixed(3) : null,
-        eficacia_plan_propio:     eficacia_plan_propio !== null ? +eficacia_plan_propio.toFixed(3) : null,
+        eficacia_objetivo:        eficacia_plan_propio !== null ? +eficacia_plan_propio.toFixed(3) : null,
         plan_failed_attempts:     m.plan_failed_attempts,
 
         // RT / Atención
         rt_mean_ms:               rt_list.length ? +rt_mean.toFixed(1) : null,
         rt_sd_ms:                 rt_list.length ? +rt_sd.toFixed(1) : null,
         rt_cv:                    rt_list.length ? +rt_cv.toFixed(3) : null,
-        decaimiento_mitades:      +decaimiento_ratio.toFixed(3),
+        decaimiento_vigilancia:   +decaimiento_ratio.toFixed(3),
         hesitaciones_count:       hesitaciones_count,
         hesitacion_duracion_mean_ms: hesitacion_duracion_mean_ms ? +hesitacion_duracion_mean_ms.toFixed(0) : null,
 

@@ -53,7 +53,7 @@ iframe{width:100%;height:100%;border:none}
 // instruction_read_time_ms: tiempo en pantalla de instrucciones
 //
 // ─── ATENCIONAL ───
-// decaimiento_mitades: ratio RT 2da mitad / 1ra mitad
+// decaimiento_vigilancia: ratio RT 2da mitad / 1ra mitad
 // fatiga_index: ratio errores 2da mitad / 1ra mitad
 // scrollback_count: veces que el usuario vuelve a leer instrucciones
 // tab_switches: veces que cambió de pestaña durante el juego
@@ -527,7 +527,7 @@ async function computeAndSave() {
         
         // Atencional
         tab_switches: W.tabSwitches,
-        decaimiento_mitades: Math.round(vigilanceDecrement * 100) / 100,
+        decaimiento_vigilancia: Math.round(vigilanceDecrement * 100) / 100,
         
         // Conductual
         perseveraciones: W.perseverations,

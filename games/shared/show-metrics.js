@@ -59,7 +59,7 @@ global.showMetricsModal = async function(resultData) {
         var analysis = {
             // === EFICACIA ===
             ratio_completados: biomet.ratio_completados || null,  // objetivos logrados / objetivos totales
-            eficacia_plan_propio: biomet.eficacia_plan_propio || null,  // ejecutó correctamente su propio plan
+            eficacia_objetivo: biomet.eficacia_objetivo || biomet.eficacia_plan_propio || null,  // ejecutó correctamente su propio plan
             
             // === EFICIENCIA ===
             ratio_acciones_util: biomet.ratio_acciones_util || null,  // acciones útiles / acciones totales
@@ -195,7 +195,7 @@ global.showMetricsModal = async function(resultData) {
                 metric_data: {
                     // Plan ejecutado vs ideal
                     ratio_completados: analysis.ratio_completados,
-                    eficacia_plan_propio: analysis.eficacia_plan_propio,
+                    eficacia_objetivo: analysis.eficacia_objetivo,
                     ratio_acciones_util: analysis.ratio_acciones_util,
                     eficiencia_trayectoria: analysis.eficiencia_trayectoria,
                     
@@ -211,9 +211,9 @@ global.showMetricsModal = async function(resultData) {
                     dismetria_pattern: analysis.dismetria.pattern,
                     
                     // Motor
-                    tremor_reposo: analysis.motor.tremor_reposo,
-                    tremor_inicio: analysis.motor.tremor_inicio,
-                    tremor_terminal: analysis.motor.tremor_terminal,
+                    jitter_reposo_px: analysis.motor.jitter_reposo_px,
+                    jitter_inicio_px: analysis.motor.jitter_inicio_px,
+                    jitter_terminal_px: analysis.motor.jitter_terminal_px,
                     rectificaciones: analysis.motor.rectificaciones,
                     
                     // Ejecutivo

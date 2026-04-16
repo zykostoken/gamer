@@ -1105,7 +1105,7 @@ async function saveBiometrics(bio) {
             eficacia_tercio_1:      bio.eficacia_tercio_1,
             eficacia_tercio_2:      bio.eficacia_tercio_2,
             eficacia_tercio_3:      bio.eficacia_tercio_3,
-            decaimiento_mitades:    bio.decaimiento_mitades
+            decaimiento_vigilancia: bio.decaimiento_vigilancia
         }
     };
     try {
