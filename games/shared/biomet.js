@@ -61,10 +61,10 @@ var BM = {
 
     // --- Métricas acumuladas ---
     metrics: {
-        // Tremor
-        tremor_reposo_samples: [],
-        tremor_inicio_samples: [],
-        tremor_terminal_samples: [],
+        // Jitter (canonical V4 naming)
+        jitter_reposo_samples: [],
+        jitter_inicio_samples: [],
+        jitter_terminal_samples: [],
 
         // Praxis
         rectificaciones: 0,
@@ -308,12 +308,12 @@ function _onMouseMove(e) {
         if (!BM.stationaryStart) BM.stationaryStart = t;
         BM.stationaryBuffer.push({ x, y, t });
 
-        // Medir tremor reposo cuando estático por CFG.REPOSO_MIN_MS
+        // Medir jitter reposo cuando estático por CFG.REPOSO_MIN_MS
         if (t - BM.stationaryStart >= CFG.REPOSO_MIN_MS && BM.stationaryBuffer.length >= 5) {
             var xs = BM.stationaryBuffer.map(function(p){ return p.x; });
             var ys = BM.stationaryBuffer.map(function(p){ return p.y; });
-            var tremor = (sd(xs) + sd(ys)) / 2;
-            BM.metrics.tremor_reposo_samples.push(tremor);
+            var jitter = (sd(xs) + sd(ys)) / 2;
+            BM.metrics.jitter_reposo_samples.push(jitter);
             BM.stationaryBuffer = []; // reset para siguiente ventana
             BM.stationaryStart = t;
         }
@@ -342,11 +342,11 @@ function _finalizeMove(move, t_end) {
         if (ang > 45) BM.metrics.rectificaciones++;
     }
 
-    // Tremor de inicio (SD de primeros puntos)
+    // Jitter de inicio (SD de primeros puntos)
     if (move._onset_pts && move._onset_pts.length >= 3) {
         var oxs = move._onset_pts.map(function(p){ return p.x; });
         var oys = move._onset_pts.map(function(p){ return p.y; });
-        BM.metrics.tremor_inicio_samples.push((sd(oxs) + sd(oys)) / 2);
+        BM.metrics.jitter_inicio_samples.push((sd(oxs) + sd(oys)) / 2);
     }
 
     // Distancia recta (para eficiencia)
@@ -420,7 +420,7 @@ function _onMouseDown(e) {
         if (endPts.length >= 3) {
             var txs = endPts.map(function(p){ return p.x; });
             var tys = endPts.map(function(p){ return p.y; });
-            BM.metrics.tremor_terminal_samples.push((sd(txs) + sd(tys)) / 2);
+            BM.metrics.jitter_terminal_samples.push((sd(txs) + sd(tys)) / 2);
         }
     }
 
@@ -483,7 +483,7 @@ function start(opts) {
     BM.posSamples = []; BM.stationaryBuffer = [];
     BM.currentMove = null; BM.lastPos = null;
     Object.assign(BM.metrics, {
-        tremor_reposo_samples: [], tremor_inicio_samples: [], tremor_terminal_samples: [],
+        jitter_reposo_samples: [], jitter_inicio_samples: [], jitter_terminal_samples: [],
         rectificaciones: 0, falsos_clicks: 0, errores_omision: 0, errores_comision: 0,
         perseveraciones: 0, last_action_target: null, same_target_streak: 0,
         total_path_px: 0, total_straight_px: 0, actions_util: 0, actions_total: 0,
@@ -518,10 +518,10 @@ function compute() {
     var clicks = BM.clicks;
     var n_clicks = clicks.length;
 
-    // ---- TREMOR ----
-    var jitter_reposo      = mean(m.tremor_reposo_samples);
-    var jitter_inicio      = mean(m.tremor_inicio_samples);
-    var jitter_terminal    = mean(m.tremor_terminal_samples);
+    // ---- JITTER ----
+    var jitter_reposo      = mean(m.jitter_reposo_samples);
+    var jitter_inicio      = mean(m.jitter_inicio_samples);
+    var jitter_terminal    = mean(m.jitter_terminal_samples);
     var precision_deposito_local  = n_clicks > 0
         ? mean(clicks.filter(function(c){ return c.precision_deposito_px != null; }).map(function(c){ return c.precision_deposito_px; }))
         : 0;
@@ -716,9 +716,9 @@ function compute() {
                 hw_offset_mean_px:       hw.offset_mean_px,
                 hw_path_efficiency:      hw.path_efficiency_mean,
                 // Metricas ajustadas por baseline de hardware
-                jitter_reposo_adj:       IC.adjust('tremor_reposo', tremor_reposo, hw).adjusted,
-                jitter_inicio_adj:       IC.adjust('tremor_inicio', tremor_inicio, hw).adjusted,
-                jitter_terminal_adj:     IC.adjust('tremor_terminal', tremor_terminal, hw).adjusted,
+                jitter_reposo_adj:       IC.adjust('jitter_reposo', jitter_reposo, hw).adjusted,
+                jitter_inicio_adj:       IC.adjust('jitter_inicio', jitter_inicio, hw).adjusted,
+                jitter_terminal_adj:     IC.adjust('jitter_terminal', jitter_terminal, hw).adjusted,
                 precision_deposito_adj:  IC.adjust('dismetria', precision_deposito_px, hw).adjusted,
                 rt_mean_adj_ms:          IC.adjust('rt_ms', rt_mean, hw).adjusted,
                 eficiencia_tray_adj:     IC.adjust('efficiency', eficiencia_trayectoria, hw).adjusted

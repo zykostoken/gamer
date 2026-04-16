@@ -64,7 +64,7 @@ var WORKER_CODE = [
 '    vel_oscilacion_index:+cogwheel.toFixed(3),',
 '    vel_caida_brusca_ratio:+claspKnife.toFixed(3),',
 '    vel_perfil_abrupto:+Math.min(1,Math.max(0,(claspKnife-1)/4)).toFixed(3),',
-'    _raw_tremor_samples:{reposo:d.reposo_jitters.length,inicio:d.inicio_jitters.length,terminal:d.terminal_jitters.length}',
+'    _raw_jitter_samples:{reposo:d.reposo_jitters.length,inicio:d.inicio_jitters.length,terminal:d.terminal_jitters.length}',
 '  });',
 '};'
 ].join('\n');
@@ -154,7 +154,7 @@ function computeFallback(data) {
         vel_oscilacion_index:+cogwheel.toFixed(3),
         vel_caida_brusca_ratio:+claspKnife.toFixed(3),
         vel_perfil_abrupto:+Math.min(1,Math.max(0,(claspKnife-1)/4)).toFixed(3),
-        _raw_tremor_samples:{reposo:data.reposo_jitters.length,inicio:data.inicio_jitters.length,terminal:data.terminal_jitters.length}
+        _raw_jitter_samples:{reposo:data.reposo_jitters.length,inicio:data.inicio_jitters.length,terminal:data.terminal_jitters.length}
     };
 }
 

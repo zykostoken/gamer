@@ -487,11 +487,16 @@ function adjust(metricType, rawValue, hwProfile) {
     var baseline, adjusted, desc;
 
     switch (metricType) {
+        case 'jitter':
+        case 'jitter_reposo':
+        case 'jitter_inicio':
+        case 'jitter_terminal':
+        // Legacy aliases for backward compatibility
         case 'tremor':
         case 'tremor_reposo':
         case 'tremor_inicio':
         case 'tremor_terminal':
-            // Subtract idle hardware jitter from tremor measurement
+            // Subtract idle hardware jitter from jitter measurement
             baseline = hw.idle_jitter_px || 0;
             adjusted = Math.max(0, rawValue - baseline);
             desc = 'Jitter basal hardware restado';
