@@ -562,7 +562,8 @@ async function loadData(dni){
   if (prevGame) selGame.value = prevGame;
 
   // Todas las RPCs en paralelo
-  var [sessRes, granularRes, placementRes, baselineRes, colorsRes, rawRes, rtRawRes, movRawRes] = await Promise.all([
+  var [sessRes, granularRes, placementRes, baselineRes, colorsRes, rawRes, rtRawRes, movRawRes,
+       vizRadarRes, vizLongRes, vizRtRes, vizJitterRes] = await Promise.all([
     sb.rpc('zykos_dashboard_sessions', { p_dni: dni, p_game_slug: game, p_days_back: days }),
     sb.rpc('zykos_dashboard_granular', { p_dni: dni, p_game_slug: game, p_days_back: days }),
     sb.rpc('zykos_dashboard_placement_analysis', { p_dni: dni, p_game_slug: game, p_days_back: days }),
@@ -587,7 +588,12 @@ async function loadData(dni){
       .eq('patient_dni', dni)
       .eq('metric_type', 'movement_sample')
       .order('created_at', { ascending: true })
-      .limit(500)
+      .limit(500),
+    // V4 micro-viz RPCs (Constitucion Art. III — cuartos/mitades, Art. X — baseline intra-individual)
+    sb.rpc('zykos_viz_radar', { p_dni: dni, p_session_date: null }),
+    sb.rpc('zykos_viz_longitudinal', { p_dni: dni, p_game_slug: game }),
+    sb.rpc('zykos_viz_rt_timeline', { p_dni: dni, p_game_slug: game, p_session_date: null }),
+    sb.rpc('zykos_viz_jitter_pulse', { p_dni: dni, p_game_slug: game, p_session_date: null })
   ]);
 
   if (sessRes.error){ content.innerHTML = '<div class="err-box">Error: ' + sessRes.error.message + '</div>'; return; }
@@ -600,7 +606,11 @@ async function loadData(dni){
     colors: colorsRes.data || [],
     rawMetrics: rawRes.data || [],
     rtRaw: rtRawRes.data || [],
-    movRaw: movRawRes.data || []
+    movRaw: movRawRes.data || [],
+    vizRadar: (vizRadarRes && vizRadarRes.data) || [],
+    vizLongitudinal: (vizLongRes && vizLongRes.data) || [],
+    vizRtTimeline: (vizRtRes && vizRtRes.data) || [],
+    vizJitterPulse: (vizJitterRes && vizJitterRes.data) || []
   });
 }
 
@@ -653,6 +663,9 @@ function render(content, patient, data){
   if (data.sessions.length > 0){
     renderLongitudinal(content, data.sessions, data.baseline);
   }
+
+  // 5b. MICRO-VIZ V4 — las 4 RPCs canonicas (radar, longitudinal, rt_timeline, jitter_pulse)
+  renderVizV4(content, data);
 
   // 6. COLORES proyectivos
   if (data.colors.length) renderColors(content, data.colors);
@@ -1057,6 +1070,426 @@ function renderRaw(content, rawMetrics){
     '<thead><tr><th>Fecha</th><th>Juego</th><th>Nivel</th><th>Estado</th><th>Dur</th><th>rt_mean</th><th>rt_cv</th><th>jitter_reposo</th><th>omision</th></tr></thead>' +
     '<tbody>' + rows + '</tbody></table></div>';
   content.appendChild(sec);
+}
+
+function renderVizV4(content, data){
+  var hasAny = (data.vizRadar && data.vizRadar.length) ||
+               (data.vizLongitudinal && data.vizLongitudinal.length) ||
+               (data.vizRtTimeline && data.vizRtTimeline.length) ||
+               (data.vizJitterPulse && data.vizJitterPulse.length);
+  if (!hasAny) return;
+
+  var sec = document.createElement('div');
+  sec.className = 'section';
+  sec.innerHTML = '<div class="section-title"><span class="dot" style="background:var(--mag)"></span>MICRO-VIZ V4 · perfil semiologico canonico<span class="agent">zykos_viz_* RPCs</span></div>';
+  content.appendChild(sec);
+
+  // 1. RADAR — panorama de sesion mas reciente (7 dominios semiologicos)
+  if (data.vizRadar && data.vizRadar.length > 0){
+    renderVizRadar(sec, data.vizRadar);
+  }
+
+  // 2. LONGITUDINAL — series inter-sesion con p25-p75 propio y practice effect
+  if (data.vizLongitudinal && data.vizLongitudinal.length > 0){
+    renderVizLongitudinal(sec, data.vizLongitudinal[0]);
+  }
+
+  // 3+4. RT timeline + jitter pulse en grid-2 (granularidad intra-sesion)
+  var hasRt = data.vizRtTimeline && data.vizRtTimeline.length > 0;
+  var hasJit = data.vizJitterPulse && data.vizJitterPulse.length > 0;
+  if (hasRt || hasJit){
+    var grid = document.createElement('div');
+    grid.className = 'grid-2';
+    grid.style.marginTop = '.9rem';
+    if (hasRt) renderVizRtTimeline(grid, data.vizRtTimeline[0]);
+    if (hasJit) renderVizJitterPulse(grid, data.vizJitterPulse[0]);
+    sec.appendChild(grid);
+  }
+}
+
+function renderVizRadar(parent, radarRows){
+  // Tomar hasta las 3 sesiones mas recientes para superponer
+  var rows = radarRows.slice(0, 3);
+  var card = document.createElement('div');
+  card.className = 'card';
+  card.style.marginTop = '.8rem';
+  var latest = rows[0];
+  var strengthPill = latest.dominant_strength
+    ? '<span class="pill ok" data-tip="Dominio con score mas alto en la sesion mas reciente">fortaleza: ' + latest.dominant_strength + '</span>'
+    : '';
+  var weaknessPill = latest.dominant_weakness
+    ? '<span class="pill warn" data-tip="Dominio con score mas bajo en la sesion mas reciente">foco: ' + latest.dominant_weakness + '</span>'
+    : '';
+  card.innerHTML = '<h3>Radar semiologico · 7 dominios V4 ' +
+    '<span class="help" data-tip="Cada eje es un dominio semiologico (Constitucion V4 Art. VII). Scores normalizados 0-1 por el analyzer post-hoc. Superpone hasta 3 sesiones recientes para ver trayectoria por dominio.">?</span></h3>' +
+    '<div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem">' + strengthPill + weaknessPill + '</div>' +
+    '<div class="chart-wrap" style="height:320px"><canvas id="v4-radar"></canvas></div>' +
+    '<p style="font-size:.62rem;color:var(--dim);margin-top:.5rem;line-height:1.5">' +
+    'Sesion mas reciente: <b style="color:var(--tx)">' + (latest.session_date || '?') + '</b> · juego: ' + (latest.game_slug || '?') +
+    '. Scores calculados por zykos_viz_radar desde metrics canonicas (rt_cv, jitter_reposo, eficiencia_trayectoria, presencia_activa, cam_presence).' +
+    '</p>';
+  parent.appendChild(card);
+
+  var labels = ['Atencion','Memoria','Sensopercepcion','Psicomotriz','Razonamiento','Contexto/Plataforma','Gestualidad'];
+  var palette = ['rgba(0,212,255,', 'rgba(167,139,250,', 'rgba(236,72,153,'];
+  var datasets = rows.map(function(r, i){
+    var base = palette[i] || palette[0];
+    return {
+      label: (r.session_date || '') + (r.game_slug ? ' · ' + r.game_slug : ''),
+      data: [
+        parseFloat(r.domain_atencion) || 0,
+        parseFloat(r.domain_memoria) || 0,
+        parseFloat(r.domain_sensopercepcion) || 0,
+        parseFloat(r.domain_psicomotriz) || 0,
+        parseFloat(r.domain_razonamiento) || 0,
+        parseFloat(r.domain_contexto_plataforma) || 0,
+        parseFloat(r.domain_gestualidad) || 0
+      ],
+      backgroundColor: base + (i === 0 ? '0.18)' : '0.08)'),
+      borderColor: base + '0.9)',
+      borderWidth: i === 0 ? 2 : 1.2,
+      pointBackgroundColor: base + '1)',
+      pointRadius: i === 0 ? 3 : 2
+    };
+  });
+
+  var ctx = document.getElementById('v4-radar');
+  if (ctx){
+    _charts['v4-radar'] = new Chart(ctx.getContext('2d'), {
+      type: 'radar',
+      data: { labels: labels, datasets: datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: 'rgba(229,233,240,.75)', font: { size: 10 } } },
+          tooltip: { callbacks: { label: function(c){ return c.dataset.label + ' · ' + c.label + ': ' + c.parsed.r.toFixed(2); } } }
+        },
+        scales: {
+          r: {
+            min: 0, max: 1,
+            ticks: { color: 'rgba(229,233,240,.4)', backdropColor: 'transparent', stepSize: 0.25, font: { size: 9 } },
+            grid: { color: 'rgba(255,255,255,.08)' },
+            angleLines: { color: 'rgba(255,255,255,.1)' },
+            pointLabels: { color: 'rgba(229,233,240,.85)', font: { size: 10 } }
+          }
+        }
+      }
+    });
+  }
+}
+
+function renderVizLongitudinal(parent, row){
+  var card = document.createElement('div');
+  card.className = 'card';
+  card.style.marginTop = '.8rem';
+  var dates = row.session_dates || [];
+  var n = row.n_sessions || dates.length;
+  var peDetected = row.practice_effect_detected === true;
+  var alerts = row.alert_signals || {};
+  var alertPills = '';
+  Object.keys(alerts).forEach(function(k){
+    var v = alerts[k];
+    if (typeof v === 'string'){
+      var cls = v.indexOf('mejoria') >= 0 ? 'ok' : (v.indexOf('deterioro') >= 0 ? 'err' : 'neutral');
+      alertPills += '<span class="pill ' + cls + '">' + k + ': ' + v + '</span>';
+    } else if (typeof v === 'number'){
+      var sign = v > 0 ? '+' : '';
+      alertPills += '<span class="pill info">' + k + ': ' + sign + v.toFixed(1) + '%</span>';
+    }
+  });
+  var pePill = peDetected
+    ? '<span class="pill ok" data-tip="Efecto practica significativo detectado entre primera y ultima sesion">practice effect detectado</span>'
+    : '<span class="pill neutral" data-tip="Sin efecto practica significativo aun. Requiere >5 sesiones para baseline estable.">sin practice effect</span>';
+
+  card.innerHTML = '<h3>Longitudinal inter-sesion · ' + n + ' sesiones ' +
+    '<span class="help" data-tip="Series temporales del paciente contra su propio p25-p75 historico. Constitucion V4 Art. X: comparacion intra-individual exclusiva, nunca cutoffs poblacionales. Practice effect = mejora esperable con repeticion; su ausencia es biomarcador de deterioro (Duff et al).">?</span></h3>' +
+    '<div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem">' + pePill + alertPills + '</div>' +
+    '<div class="chart-wrap" style="height:260px"><canvas id="v4-longitudinal"></canvas></div>' +
+    '<p style="font-size:.62rem;color:var(--dim);margin-top:.5rem;line-height:1.5">' +
+    'Cada serie es una metrica canonica V4 escalada a su propio rango (min-max del paciente) para comparar evolucion relativa. ' +
+    'Pendiente menor = mejor para rt_mean/rt_cv/jitter/impulsividad · Pendiente mayor = mejor para eficiencia.' +
+    '</p>';
+  parent.appendChild(card);
+
+  // Normalizar cada serie a 0-1 por su propio min-max para comparar en un solo eje
+  function norm(arr){
+    if (!arr || !arr.length) return [];
+    var vals = arr.map(function(v){ return v === null ? null : parseFloat(v); });
+    var valid = vals.filter(function(v){ return v !== null && !isNaN(v); });
+    if (valid.length === 0) return vals;
+    var mn = Math.min.apply(null, valid);
+    var mx = Math.max.apply(null, valid);
+    var rng = mx - mn;
+    if (rng <= 0) return vals.map(function(){ return 0.5; });
+    return vals.map(function(v){ return v === null || isNaN(v) ? null : (v - mn) / rng; });
+  }
+
+  var series = [
+    { label: 'RT media (ms)', data: norm(row.rt_mean_series), color: 'rgba(0,212,255,1)', raw: row.rt_mean_series },
+    { label: 'RT CV', data: norm(row.rt_cv_series), color: 'rgba(167,139,250,1)', raw: row.rt_cv_series },
+    { label: 'Jitter reposo (px)', data: norm(row.jitter_reposo_series), color: 'rgba(236,72,153,1)', raw: row.jitter_reposo_series },
+    { label: 'Eficiencia trayectoria', data: norm(row.eficiencia_trayectoria_series), color: 'rgba(34,197,94,1)', raw: row.eficiencia_trayectoria_series },
+    { label: 'Impulsividad', data: norm(row.impulsividad_series), color: 'rgba(245,158,11,1)', raw: row.impulsividad_series }
+  ];
+
+  var labels = dates.map(function(d, i){
+    var ord = row.session_ordinals && row.session_ordinals[i];
+    return (d || '?') + (ord ? ' #' + ord : '');
+  });
+
+  var datasets = series.filter(function(s){ return s.raw && s.raw.some(function(v){ return v !== null; }); }).map(function(s){
+    return {
+      label: s.label,
+      data: s.data,
+      rawValues: s.raw,
+      borderColor: s.color,
+      backgroundColor: s.color.replace('1)', '0.1)'),
+      tension: 0.25,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      spanGaps: true
+    };
+  });
+
+  var ctx = document.getElementById('v4-longitudinal');
+  if (ctx){
+    _charts['v4-longitudinal'] = new Chart(ctx.getContext('2d'), {
+      type: 'line',
+      data: { labels: labels, datasets: datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: 'rgba(229,233,240,.75)', font: { size: 10 }, boxWidth: 12 } },
+          tooltip: {
+            callbacks: {
+              label: function(c){
+                var raw = c.dataset.rawValues && c.dataset.rawValues[c.dataIndex];
+                var rawTxt = raw === null || raw === undefined ? 'sin dato' : (typeof raw === 'number' ? raw.toFixed(3) : raw);
+                return c.dataset.label + ': ' + rawTxt + ' (norm ' + (c.parsed.y !== null ? c.parsed.y.toFixed(2) : '-') + ')';
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            min: 0, max: 1,
+            title: { display: true, text: 'Normalizado intra-individual', color: 'rgba(229,233,240,.5)', font: { size: 10 } },
+            ticks: { color: 'rgba(229,233,240,.4)', font: { size: 9 } },
+            grid: { color: 'rgba(255,255,255,.05)' }
+          },
+          x: {
+            ticks: { color: 'rgba(229,233,240,.4)', font: { size: 9 }, maxRotation: 0, autoSkip: true },
+            grid: { color: 'rgba(255,255,255,.03)' }
+          }
+        }
+      }
+    });
+  }
+}
+
+function renderVizRtTimeline(parent, row){
+  var card = document.createElement('div');
+  card.className = 'card';
+  var pattern = row.session_pattern || 'sin patron';
+  var patternCls = pattern.indexOf('fatiga') >= 0 ? 'warn' :
+                   pattern.indexOf('mejoria') >= 0 ? 'ok' :
+                   pattern.indexOf('deterioro') >= 0 ? 'err' : 'neutral';
+  var qMeans = row.q_means || [];
+  var qStdevs = row.q_stdevs || [];
+  var qMeanTxt = qMeans.length === 4
+    ? 'Q1: ' + qMeans[0] + '±' + (qStdevs[0] || 0) + ' · Q2: ' + qMeans[1] + '±' + (qStdevs[1] || 0) +
+      ' · Q3: ' + qMeans[2] + '±' + (qStdevs[2] || 0) + ' · Q4: ' + qMeans[3] + '±' + (qStdevs[3] || 0)
+    : '';
+  card.innerHTML = '<h3>RT por trial · cuartos Q1-Q4 ' +
+    '<span class="help" data-tip="Un punto por trial en orden temporal. Asignacion a cuartos (Constitucion V4 Art. III) permite detectar warm-up, fatiga lineal, fatiga tardia, inversion en U. Lineas horizontales = percentiles 10 y 90 propios.">?</span></h3>' +
+    '<div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem">' +
+    '<span class="pill ' + patternCls + '">patron: ' + pattern + '</span>' +
+    '<span class="pill neutral">' + (row.session_date || '?') + ' · ' + (row.game_slug || '') + '</span>' +
+    '</div>' +
+    '<div class="chart-wrap" style="height:220px"><canvas id="v4-rt-timeline"></canvas></div>' +
+    '<p style="font-size:.6rem;color:var(--dim);margin-top:.5rem;line-height:1.5">' + qMeanTxt + '</p>';
+  parent.appendChild(card);
+
+  var trials = row.trial_orders || [];
+  var rts = row.rt_values_ms || [];
+  var quarters = row.quarter_assignments || [];
+  var qColors = ['rgba(0,212,255,0.85)', 'rgba(167,139,250,0.85)', 'rgba(236,72,153,0.85)', 'rgba(245,158,11,0.85)'];
+  var points = trials.map(function(t, i){
+    return { x: t, y: rts[i], q: quarters[i] };
+  });
+  // Un dataset por cuarto para colorear
+  var byQ = [[],[],[],[]];
+  points.forEach(function(p){
+    var qIdx = (p.q || 1) - 1;
+    if (qIdx >= 0 && qIdx < 4) byQ[qIdx].push({ x: p.x, y: p.y });
+  });
+  var datasets = byQ.map(function(arr, i){
+    return {
+      label: 'Q' + (i+1),
+      data: arr,
+      backgroundColor: qColors[i],
+      borderColor: qColors[i],
+      pointRadius: 2.5,
+      pointHoverRadius: 4,
+      showLine: false
+    };
+  }).filter(function(d){ return d.data.length > 0; });
+
+  var p10 = row.p10_value_ms;
+  var p90 = row.p90_value_ms;
+  if (p10 !== null && p10 !== undefined && trials.length){
+    datasets.push({
+      label: 'p10 (' + p10 + 'ms)',
+      data: [{x: trials[0], y: p10}, {x: trials[trials.length-1], y: p10}],
+      borderColor: 'rgba(34,197,94,0.6)',
+      borderDash: [4,4],
+      borderWidth: 1.2,
+      pointRadius: 0,
+      showLine: true,
+      type: 'line'
+    });
+  }
+  if (p90 !== null && p90 !== undefined && trials.length){
+    datasets.push({
+      label: 'p90 (' + p90 + 'ms)',
+      data: [{x: trials[0], y: p90}, {x: trials[trials.length-1], y: p90}],
+      borderColor: 'rgba(239,68,68,0.6)',
+      borderDash: [4,4],
+      borderWidth: 1.2,
+      pointRadius: 0,
+      showLine: true,
+      type: 'line'
+    });
+  }
+
+  var ctx = document.getElementById('v4-rt-timeline');
+  if (ctx){
+    _charts['v4-rt-timeline'] = new Chart(ctx.getContext('2d'), {
+      type: 'scatter',
+      data: { datasets: datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: 'rgba(229,233,240,.75)', font: { size: 9 }, boxWidth: 10 } }
+        },
+        scales: {
+          x: {
+            type: 'linear',
+            title: { display: true, text: 'Trial', color: 'rgba(229,233,240,.5)', font: { size: 10 } },
+            ticks: { color: 'rgba(229,233,240,.4)', font: { size: 9 } },
+            grid: { color: 'rgba(255,255,255,.04)' }
+          },
+          y: {
+            title: { display: true, text: 'RT (ms)', color: 'rgba(229,233,240,.5)', font: { size: 10 } },
+            ticks: { color: 'rgba(229,233,240,.4)', font: { size: 9 } },
+            grid: { color: 'rgba(255,255,255,.04)' }
+          }
+        }
+      }
+    });
+  }
+}
+
+function renderVizJitterPulse(parent, row){
+  var card = document.createElement('div');
+  card.className = 'card';
+  var pattern = row.pattern_descriptor || 'sin patron';
+  var patternCls = pattern === 'bradicinesia' ? 'warn' :
+                   pattern === 'hiperkinesia' || pattern === 'tremor' ? 'err' :
+                   pattern === 'estable' ? 'ok' : 'neutral';
+  card.innerHTML = '<h3>Pulso de jitter intra-sesion ' +
+    '<span class="help" data-tip="Jitter instantaneo (px) en ventanas temporales sucesivas. Baseline idle se resta del hardware (calibracion). Picos = rafagas motoras. pattern_descriptor es clasificacion automatica post-hoc del analyzer.">?</span></h3>' +
+    '<div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem">' +
+    '<span class="pill ' + patternCls + '">patron motor: ' + pattern + '</span>' +
+    '<span class="pill info">picos: ' + (row.peaks_count || 0) + '</span>' +
+    '<span class="pill neutral">' + (row.session_date || '?') + ' · ' + (row.game_slug || '') + '</span>' +
+    '</div>' +
+    '<div class="chart-wrap" style="height:220px"><canvas id="v4-jitter-pulse"></canvas></div>' +
+    '<p style="font-size:.6rem;color:var(--dim);margin-top:.5rem;line-height:1.5">' +
+    'Baseline idle: ' + (row.baseline_idle_px || 0) + 'px · p50: ' + (row.p50_jitter_px || 0) + 'px · p95: ' + (row.p95_jitter_px || 0) + 'px' +
+    (row.mean_interval_between_peaks_ms > 0 ? ' · intervalo medio entre picos: ' + Math.round(row.mean_interval_between_peaks_ms/1000) + 's' : '') +
+    '</p>';
+  parent.appendChild(card);
+
+  var ts = row.timestamps_ms || [];
+  var jitter = (row.jitter_instant_px || []).map(function(v){ return parseFloat(v); });
+  var labels = ts.map(function(t){ return (t/1000).toFixed(1) + 's'; });
+
+  var baseline = parseFloat(row.baseline_idle_px) || 0;
+  var p50 = parseFloat(row.p50_jitter_px) || 0;
+  var p95 = parseFloat(row.p95_jitter_px) || 0;
+
+  var datasets = [{
+    label: 'Jitter (px)',
+    data: jitter,
+    borderColor: 'rgba(236,72,153,1)',
+    backgroundColor: 'rgba(236,72,153,0.15)',
+    tension: 0.3,
+    fill: true,
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    borderWidth: 1.5
+  }];
+
+  if (p95 > 0){
+    datasets.push({
+      label: 'p95',
+      data: labels.map(function(){ return p95; }),
+      borderColor: 'rgba(239,68,68,0.55)',
+      borderDash: [3,4],
+      borderWidth: 1,
+      pointRadius: 0,
+      fill: false
+    });
+  }
+  if (p50 > 0){
+    datasets.push({
+      label: 'p50',
+      data: labels.map(function(){ return p50; }),
+      borderColor: 'rgba(245,158,11,0.55)',
+      borderDash: [3,4],
+      borderWidth: 1,
+      pointRadius: 0,
+      fill: false
+    });
+  }
+  if (baseline > 0){
+    datasets.push({
+      label: 'baseline idle',
+      data: labels.map(function(){ return baseline; }),
+      borderColor: 'rgba(34,197,94,0.55)',
+      borderDash: [6,3],
+      borderWidth: 1,
+      pointRadius: 0,
+      fill: false
+    });
+  }
+
+  var ctx = document.getElementById('v4-jitter-pulse');
+  if (ctx){
+    _charts['v4-jitter-pulse'] = new Chart(ctx.getContext('2d'), {
+      type: 'line',
+      data: { labels: labels, datasets: datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: 'rgba(229,233,240,.75)', font: { size: 9 }, boxWidth: 10 } }
+        },
+        scales: {
+          y: {
+            title: { display: true, text: 'Jitter (px)', color: 'rgba(229,233,240,.5)', font: { size: 10 } },
+            ticks: { color: 'rgba(229,233,240,.4)', font: { size: 9 } },
+            grid: { color: 'rgba(255,255,255,.04)' }
+          },
+          x: {
+            ticks: { color: 'rgba(229,233,240,.4)', font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+            grid: { color: 'rgba(255,255,255,.03)' }
+          }
+        }
+      }
+    });
+  }
 }
 
 function renderGlossary(content){
