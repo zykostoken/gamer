@@ -13,7 +13,7 @@
  *
  * WHAT IT DOES NOT DO:
  * - No analysis, no interpretation, no clinical labels
- * - No tremor detection, no hesitation counting
+ * - No jitter detection, no hesitation counting
  * - Those are post-hoc in Supabase
  */
 (function() {

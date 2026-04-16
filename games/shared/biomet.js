@@ -19,9 +19,9 @@
 // CONFIGURACIÓN
 // ================================================================
 var CFG = {
-    REPOSO_MIN_MS:        500,    // cursor estático por este tiempo → medir tremor reposo
-    INICIO_VENTANA_MS:    150,    // primeros Nms de cada movimiento = tremor inicio
-    TERMINAL_DIST_PX:     80,     // últimos Npx al target = tremor terminal
+    REPOSO_MIN_MS:        500,    // cursor estático por este tiempo → medir jitter reposo
+    INICIO_VENTANA_MS:    150,    // primeros Nms de cada movimiento = jitter inicio
+    TERMINAL_DIST_PX:     80,     // últimos Npx al target = jitter terminal
     HESITACION_MS:        1500,   // pausa activa = hesitación
     IMPULSIVIDAD_PERCENTIL: 0.10, // RT < p10 propio = respuesta impulsiva
     DECAIMIENTO_MITAD:    true,   // comparar primera vs segunda mitad de sesión
@@ -274,7 +274,7 @@ function _onMouseMove(e) {
             BM.currentMove = { t_start: t, path: [], intended_target: null };
             BM.metrics.moves_started++;
 
-            // Tremor de inicio: capturar primeras muestras
+            // Jitter de inicio: capturar primeras muestras
             BM.currentMove._onset_start = t;
         }
         BM.lastMoveTime = t;
@@ -284,7 +284,7 @@ function _onMouseMove(e) {
         if (BM.currentMove) {
             BM.currentMove.path.push({ x, y, t });
 
-            // Tremor de inicio: primeros CFG.INICIO_VENTANA_MS ms
+            // Jitter de inicio: primeros CFG.INICIO_VENTANA_MS ms
             if (t - BM.currentMove.t_start <= CFG.INICIO_VENTANA_MS) {
                 BM.currentMove._onset_pts = BM.currentMove._onset_pts || [];
                 BM.currentMove._onset_pts.push({ x, y });
@@ -408,7 +408,7 @@ function _onMouseDown(e) {
     var intended = BM.currentMove ? BM.currentMove.intended_target : null;
     var near = nearestTarget(x, y);
 
-    // Tremor terminal: SD de los últimos puntos antes del click
+    // Jitter terminal: SD de los últimos puntos antes del click
     if (BM.currentMove && BM.currentMove.path.length >= 4) {
         var path = BM.currentMove.path;
         var endPts = [];
@@ -649,7 +649,7 @@ function compute() {
         n_clicks:       n_clicks,
         n_actions:      m.actions_total,
 
-        // Tremor
+        // Jitter
         jitter_reposo_px:     +jitter_reposo.toFixed(2),
         jitter_inicio_px:     +jitter_inicio.toFixed(2),
         jitter_terminal_px:   +jitter_terminal.toFixed(2),

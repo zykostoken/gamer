@@ -15,7 +15,7 @@
  * - Stage/level/difficulty context
  *
  * WHAT IT DOES NOT DO:
- * - No tremor, no hesitation, no fatigue, no composites
+ * - No jitter, no hesitation, no fatigue, no composites
  * - No clinical flags, no diagnostic labels
  * - Those come from post-hoc analysis in Supabase
  */

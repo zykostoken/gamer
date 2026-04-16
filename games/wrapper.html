@@ -565,7 +565,7 @@ async function computeAndSave() {
 // ======================== TREMOR COMPUTATION ========================
 function computeJitter(positions) {
     if (positions.length < 5) return 0;
-    // Tremor = standard deviation of position deltas
+    // Jitter (temblor involuntario) = standard deviation of position deltas
     var deltas = [];
     for (var i = 1; i < positions.length; i++) {
         var dx = positions[i].x - positions[i-1].x;

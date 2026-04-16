@@ -132,7 +132,7 @@
             animation: glow-pulse 2.2s ease-in-out infinite;
         }
 
-        .tremor-indicator {
+        .stability-indicator {
             transition: all 0.3s;
         }
 
@@ -247,7 +247,7 @@
                 <div id="patient-display" class="text-sm opacity-90 mb-1">Paciente: --</div>
                 <div id="level-badge" class="text-xs font-bold bg-white/20 rounded-full px-3 py-1 mb-1 inline-block" style="display:none;">Nivel 1</div>
                 <div id="timer-display" class="text-3xl font-mono font-bold">00:00</div>
-                <div id="tremor-badge" class="text-xs opacity-75 mt-1">Precisión: --</div>
+                <div id="stability-badge" class="text-xs opacity-75 mt-1">Precisión: --</div>
                 <button id="btn-ver-consigna"
                     onclick="window._toggleConsigna()"
                     style="display:none;margin-top:6px;padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.1);color:white;font-size:0.75rem;cursor:pointer;">
@@ -322,8 +322,8 @@
                     </h4>
                     <div class="space-y-3 text-sm">
                         <div class="flex justify-between items-center">
-                            <span class="text-gray-700">Tremor (estabilidad):</span>
-                            <span id="tremor-display" class="font-bold text-purple-700 tremor-indicator">--</span>
+                            <span class="text-gray-700">Estabilidad motora:</span>
+                            <span id="stability-display" class="font-bold text-purple-700 stability-indicator">--</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-gray-700">Movimientos:</span>
@@ -772,10 +772,10 @@
                 </div>`;}).join('');
 
             // Reset metrics display
-            document.getElementById('tremor-display').textContent = '--';
+            document.getElementById('stability-display').textContent = '--';
             document.getElementById('moves-count').textContent = '0';
             document.getElementById('accuracy-display').textContent = '0/0';
-            document.getElementById('tremor-badge').textContent = 'Precision: --';
+            document.getElementById('stability-badge').textContent = 'Precision: --';
             document.getElementById('efficiency-display').textContent = '--';
             document.getElementById('omission-display').textContent = '--';
             document.getElementById('commission-display').textContent = '0';
@@ -915,7 +915,7 @@
                     );
                 }
 
-                var tremorIndex = pathLength / (directDist || 1);
+                var jitterIndex = pathLength / (directDist || 1);
 
                 var hesitationMs = 0, hesitationCount = 0;
                 for (var i = 1; i < cd.pathPoints.length; i++) {
@@ -956,7 +956,7 @@
                     to_compartment: 'day' + slot.dataset.day + '-' + slot.dataset.time,
                     med: medType,
                     durationMs: durationMs,
-                    tremorIndex: parseFloat(tremorIndex.toFixed(3)),
+                    jitterIndex: parseFloat(jitterIndex.toFixed(3)),
                     pathLength: Math.round(pathLength),
                     directDistance: Math.round(directDist),
                     pathEfficiency: pathLength > 0 ? parseFloat((directDist / pathLength).toFixed(3)) : 1,
@@ -989,7 +989,7 @@
                                 session_id: sessionState.sessionId,
                                 game_slug: 'pill-organizer',
                                 metric_type: 'pill_placement',
-                                metric_value: tremorIndex,  // tremorIndex = jitter_reposo_px local
+                                metric_value: jitterIndex,  // jitterIndex = jitter_reposo_px local
                                 metric_data: movement
                             };
                             if (typeof ZykosEvidence !== 'undefined') {
@@ -1266,19 +1266,19 @@
         function updateRealTimeMetrics() {
             if (sessionState.movements.length === 0) return;
 
-            const avgTremor = sessionState.movements.reduce((sum, m) => sum + m.tremorIndex, 0) / sessionState.movements.length;
-            const tremorDisplay = document.getElementById('tremor-display');
-            const tremorBadge = document.getElementById('tremor-badge');
+            const avgJitter = sessionState.movements.reduce((sum, m) => sum + m.jitterIndex, 0) / sessionState.movements.length;
+            const stabilityDisplay = document.getElementById('stability-display');
+            const stabilityBadge = document.getElementById('stability-badge');
 
-            let tremorLabel, tremorClass;
-            if (avgTremor < 1.2) { tremorLabel = 'Excelente'; tremorClass = 'text-green-600'; }
-            else if (avgTremor < 1.5) { tremorLabel = 'Bueno'; tremorClass = 'text-yellow-600'; }
-            else if (avgTremor < 2.0) { tremorLabel = 'Aceptable'; tremorClass = 'text-orange-600'; }
-            else { tremorLabel = 'Revisar'; tremorClass = 'text-red-600'; }
+            let stabilityLabel, stabilityClass;
+            if (avgJitter < 1.2) { stabilityLabel = 'Excelente'; stabilityClass = 'text-green-600'; }
+            else if (avgJitter < 1.5) { stabilityLabel = 'Bueno'; stabilityClass = 'text-yellow-600'; }
+            else if (avgJitter < 2.0) { stabilityLabel = 'Aceptable'; stabilityClass = 'text-orange-600'; }
+            else { stabilityLabel = 'Revisar'; stabilityClass = 'text-red-600'; }
 
-            tremorDisplay.textContent = `${avgTremor.toFixed(2)} (${tremorLabel})`;
-            tremorDisplay.className = `font-bold tremor-indicator ${tremorClass}`;
-            tremorBadge.textContent = `Precision: ${tremorLabel}`;
+            stabilityDisplay.textContent = `${avgJitter.toFixed(2)} (${stabilityLabel})`;
+            stabilityDisplay.className = `font-bold stability-indicator ${stabilityClass}`;
+            stabilityBadge.textContent = `Precision: ${stabilityLabel}`;
 
             // Correctas / Esperadas
             const expected = getExpectedPlacements();
@@ -1324,10 +1324,8 @@
             pvEl.textContent = persevs;
             pvEl.className = 'font-bold ' + (persevs === 0 ? 'text-green-600' : persevs <= 2 ? 'text-amber-600' : 'text-red-600');
 
-            // Clinical hint (real-time interpretation)
-            const hintEl = document.getElementById('clinical-hint');
-            const hint = generateClinicalHint(avgTremor, omissions, sessionState.totalErrors, avgHesitation, avgEff, persevs);
-            if (hint) { hintEl.textContent = hint; hintEl.style.display = 'block'; }
+            // [V4 Art XI] clinical-hint display eliminado — interpretación clínica NO se muestra al paciente.
+            // El elemento #clinical-hint permanece en el DOM oculto por compatibilidad; nunca se activa.
 
             // Update completion indicator
             var completionPct = expected > 0 ? Math.min(100, Math.round((sessionState.correctPlacements / expected) * 100)) : 0;
@@ -1376,18 +1374,10 @@
             return count;
         }
 
-        function generateClinicalHint(tremor, omissions, commissions, hesitation, efficiency, persevs) {
-            // Hint based on the Guia de Interpretacion Clinica
-            if (tremor > 2.0) return 'Tremor elevado: si predomina en reposo, considerar parkinsonismo farmacologico. Si aumenta al acercarse al target, patron cerebeloso. Cruzar con medicacion actual.';
-            if (commissions > 2 && omissions <= 1 && hesitation < 800) return 'Patron impulsivo: comisiones altas + omisiones bajas + decision rapida. Sugiere fallo inhibitorio sin deficit mnesico.';
-            if (omissions > 2 && commissions <= 1 && hesitation > 2000) return 'Patron conservador-ansioso: evita errores pero omite. Enlentecimiento por ansiedad anticipatoria, no por deficit de procesamiento.';
-            if (omissions > 1 && commissions > 1) return 'Patron desorganizado: comisiones + omisiones simultaneas. No discrimina correctamente el esquema. Evaluar comprension de consigna.';
-            if (persevs > 2) return 'Perseveracion: repite el mismo error sin corregir. Patron frontal clasico. Diferente de impulsividad (que es rapida y variada).';
-            if (efficiency < 0.5) return 'Eficiencia motora baja: trayectorias erraticas. Si tremor tambien elevado = componente extrapiramidal. Si tremor normal = descoordinacion visuomotora.';
-            if (tremor > 1.5 && efficiency > 0.7) return 'Tremor presente pero precision conservada: posible compensacion activa. Monitorear longitudinalmente.';
-            if (hesitation > 3000) return 'Hesitacion elevada: latencia pre-movimiento alta. Puede indicar retardo psicomotor (depresion), ansiedad anticipatoria, o confusion con el esquema.';
-            return null;
-        }
+        // [V4 Art XI] generateClinicalHint() eliminada — devolvía diagnósticos hardcodeados
+        // visibles al paciente ("considerar parkinsonismo", "retardo psicomotor (depresion)",
+        // "ansiedad anticipatoria", "patron frontal clasico"). Inaceptable: interpretación clínica
+        // post-hoc queda para el psiquiatra leyendo el dashboard, nunca para el paciente en runtime.
 
         // ===========================================
         // FINALIZACION
@@ -1427,8 +1417,8 @@
         async function completeSession() {
             const duration = Math.floor(((sessionState.endTime || Date.now()) - (sessionState.levelStartTime || sessionState.startTime)) / 1000);
 
-            const avgTremor = sessionState.movements.length > 0
-                ? sessionState.movements.reduce((sum, m) => sum + m.tremorIndex, 0) / sessionState.movements.length : 0;
+            const avgJitter = sessionState.movements.length > 0
+                ? sessionState.movements.reduce((sum, m) => sum + m.jitterIndex, 0) / sessionState.movements.length : 0;
             const avgHesitation = sessionState.movements.length > 0
                 ? sessionState.movements.reduce((sum, m) => sum + m.hesitationMs, 0) / sessionState.movements.length : 0;
             const accuracy = sessionState.totalMoves > 0
@@ -1466,7 +1456,7 @@
                 completeness_pct: Math.round(completeness),
                 errors: sessionState.totalErrors,
                 accuracy_percentage: Math.round(accuracy),
-                jitter_reposo_px_mean: parseFloat(avgTremor.toFixed(3)),
+                jitter_reposo_px_mean: parseFloat(avgJitter.toFixed(3)),
                 avg_hesitation_ms: Math.round(avgHesitation),
                 avg_path_efficiency: parseFloat(avgPathEff.toFixed(3)),
                 avg_speed: parseFloat(avgSpeed.toFixed(3)),
@@ -1483,10 +1473,10 @@
             };
 
             const baseScore = sessionState.correctPlacements * 100;
-            const tremorBonus = avgTremor < 1.2 ? 300 : avgTremor < 1.5 ? 150 : avgTremor < 2.0 ? 50 : 0;
+            const stabilityBonus = avgJitter < 1.2 ? 300 : avgJitter < 1.5 ? 150 : avgJitter < 2.0 ? 50 : 0;
             const timeBonus = Math.max(0, 400 - duration);
             const errorPenalty = sessionState.totalErrors * 75;
-            const finalScore = Math.max(0, baseScore + tremorBonus + timeBonus - errorPenalty);
+            const finalScore = Math.max(0, baseScore + stabilityBonus + timeBonus - errorPenalty);
 
             // === GUARDAR EN SUPABASE ===
             const _dni = sessionState.patientDni && sessionState.patientDni !== null ? sessionState.patientDni : null;
@@ -1507,7 +1497,7 @@
                             correct_placements: sessionState.correctPlacements,
                             expected_placements: expected,
                             duration_sec: duration,
-                            jitter_reposo_px: avgTremor,
+                            jitter_reposo_px: avgJitter,
                             mean_rt_ms: finalMetrics.avg_hesitation_ms,
                             movement_efficiency: avgPathEff,
                             avg_abrupt_redirections: sessionState.movements.length > 0
@@ -1621,22 +1611,22 @@
             var omissions = Math.max(0, expected - sessionState.correctPlacements);
             var commissions = sessionState.totalErrors;
             var perseverations = countPerseverations();
-            showResultsModal(finalScore, accuracy, completeness, avgTremor, avgHesitation, avgPathEff, duration, expected, omissions, commissions, perseverations);
+            showResultsModal(finalScore, accuracy, completeness, avgJitter, avgHesitation, avgPathEff, duration, expected, omissions, commissions, perseverations);
         }
 
         // ===========================================
         // RESULTADOS — Modal visual
         // ===========================================
-        function showResultsModal(score, accuracy, completeness, tremor, hesitation, pathEff, duration, expected, omissions, commissions, perseverations) {
+        function showResultsModal(score, accuracy, completeness, stability, hesitation, pathEff, duration, expected, omissions, commissions, perseverations) {
             const level = LEVELS[sessionState.currentLevelIndex];
             const hasNextLevel = sessionState.currentLevelIndex < LEVELS.length - 1;
             const passed = accuracy >= 60 && completeness >= 50;
 
-            let tremorLabel;
-            if (tremor < 1.2) tremorLabel = 'Excelente';
-            else if (tremor < 1.5) tremorLabel = 'Bueno';
-            else if (tremor < 2.0) tremorLabel = 'Aceptable';
-            else tremorLabel = 'Revisar';
+            let stabilityLabel;
+            if (stability < 1.2) stabilityLabel = 'Excelente';
+            else if (stability < 1.5) stabilityLabel = 'Bueno';
+            else if (stability < 2.0) stabilityLabel = 'Aceptable';
+            else stabilityLabel = 'Revisar';
 
             const scoreColor = passed ? 'bg-gradient-to-br from-green-400 to-emerald-600 text-white' : 'bg-gradient-to-br from-orange-400 to-red-500 text-white';
             const mins = Math.floor(duration / 60);
@@ -1692,8 +1682,8 @@
                 <div class="text-left mb-6">
                     <h4 class="font-bold text-gray-700 mb-2 text-sm">[X] Biometría Motora</h4>
                     <div class="metric-row">
-                        <span class="text-gray-600">Índice de Temblor</span>
-                        <span class="font-bold">${tremor.toFixed(2)} (${tremorLabel})</span>
+                        <span class="text-gray-600">Estabilidad motora</span>
+                        <span class="font-bold">${stability.toFixed(2)} (${stabilityLabel})</span>
                     </div>
                     <div class="metric-row">
                         <span class="text-gray-600">Hesitación promedio</span>

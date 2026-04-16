@@ -407,7 +407,7 @@ function renderMotorProfile(metrics) {
     const rtAvg     = safeAvg(ds.map(d=>rf(d,'rt_mean_ms','mean_rt_ms')));
     const rtcvAvg   = safeAvg(ds.map(d=>rf(d,'rt_cv')));
     const jitterAvg = safeAvg(ds.map(d=>rf(d,'jitter_reposo_px')));
-    const jTermAvg  = safeAvg(ds.map(d=>rf(d,'jitter_terminal_px','tremor_terminal')));
+    const jTermAvg  = safeAvg(ds.map(d=>rf(d,'jitter_terminal_px')));
     const dysAvg    = safeAvg(ds.map(d=>rf(d,'dysmetria_index','dysmetria_ratio','precision_deposito_px')));
     const movEffAvg = safeAvg(ds.map(d=>rf(d,'movement_efficiency')));
     const trayAvg   = safeAvg(ds.map(d=>rf(d,'eficiencia_trayectoria','path_efficiency')));
@@ -474,7 +474,7 @@ function renderMetricsTable(metrics) {
         const lat    = fmt(rf(d,'first_click_latency_ms','time_to_first_action_ms'),0,' ms');
         // Motor
         const jit    = fmt(rf(d,'jitter_reposo_px'),2,' px');
-        const jterm  = fmt(rf(d,'jitter_terminal_px','tremor_terminal','tremor_max_jitter'),2,' px');
+        const jterm  = fmt(rf(d,'jitter_terminal_px','tremor_max_jitter'),2,' px');  // tremor_max_jitter: legacy key en 11 rows históricos inmutables pre-V4, mantener como lectura de compatibilidad
         const dys    = fmt(rf(d,'dysmetria_index','dysmetria_ratio'),2);
         const meff   = fmt(rf(d,'movement_efficiency'),2);
         const teff   = fmt(rf(d,'eficiencia_trayectoria','path_efficiency'),2);
