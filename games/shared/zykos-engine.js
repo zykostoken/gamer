@@ -47,15 +47,15 @@ var METRIC_DICTIONARY = {
     vel_peak_mean:          { domain:'MOTOR', construct:'Velocidad pico', unit:'px/ms', range:[0,5], desc:'Velocidad pico media del cursor durante movimientos.' },
     vel_peak_sd:            { domain:'MOTOR', construct:'Variabilidad velocidad pico', unit:'px/ms', range:[0,3], desc:'SD de velocidad pico.' },
     vel_cv:                 { domain:'MOTOR', construct:'CV velocidad (M4)', unit:'ratio', range:[0,2],
-        desc:'Protocolo M4: base de rigidez_index (1-vel_cv). Alto=movimiento rígido sin modulación.' },
-    vel_uniformidad_index:          { domain:'MOTOR', construct:'Índice de uniformidad (rigidez_index)', unit:'index', range:[0,1],
-        desc:'Protocolo M4: rigidez_index = 1 - vel_cv. Alto=pobreza de modulación rítmica.' },
-    vel_oscilacion_index:         { domain:'MOTOR', construct:'Oscilaciones rítmicas (cogwheel_index)', unit:'index', range:[0,1],
-        desc:'Protocolo M4: cogwheel_index. Signo de rueda dentada digital. Ref: Jankovic 2008.' },
-    vel_caida_brusca_ratio:      { domain:'MOTOR', construct:'Caída brusca de aceleración (clasp_knife_ratio)', unit:'ratio', range:[0,10],
-        desc:'Protocolo M4: clasp_knife_ratio. Caídas bruscas de aceleración; indicador de espasticidad o rigidez severa.' },
-    vel_perfil_abrupto:     { domain:'MOTOR', construct:'Perfil abrupto normalizado (espasticidad_index)', unit:'index', range:[0,1],
-        desc:'Protocolo M4: espasticidad_index. Valor normalizado de la caída de tensión motora. 0=normal, 1=espástico.' },
+        desc:'Protocolo M4: Coeficiente de variación de velocidad. Alto=movimiento rígido sin modulación.' },
+    vel_uniformidad_index:          { domain:'MOTOR', construct:'Índice de uniformidad', unit:'index', range:[0,1],
+        desc:'Protocolo M4: 1 - vel_cv. Alto=pobreza de modulación rítmica.' },
+    vel_oscilacion_index:         { domain:'MOTOR', construct:'Oscilaciones rítmicas', unit:'index', range:[0,1],
+        desc:'Protocolo M4: Signo de rueda dentada digital. Ref: Jankovic 2008.' },
+    vel_caida_brusca_ratio:      { domain:'MOTOR', construct:'Caída brusca de aceleración', unit:'ratio', range:[0,10],
+        desc:'Protocolo M4: Caídas bruscas de aceleración; indicador de rigidez motora severa.' },
+    vel_perfil_abrupto:     { domain:'MOTOR', construct:'Perfil abrupto normalizado', unit:'index', range:[0,1],
+        desc:'Protocolo M4: Valor normalizado de la caída de tensión motora. 0=normal, 1=abrupto.' },
 
     // === TRAYECTORIA / PRAXIS ===
     eficiencia_trayectoria: { domain:'PRAXIS', construct:'Eficiencia de trayectoria', unit:'ratio', range:[0,1], desc:'Path recto / path real. 1=perfecto.' },
@@ -69,8 +69,8 @@ var METRIC_DICTIONARY = {
 
     // === SECUENCIA / PLANIFICACIÓN ===
     secuencia_correcta_pct: { domain:'EJECUTIVO', construct:'Secuenciación', unit:'pct', range:[0,100], desc:'% de acciones en orden correcto.' },
-    ratio_completados:      { domain:'EJECUTIVO', construct:'Eficacia de objetivo (eficacia_objetivo)', unit:'ratio', range:[0,1],
-        desc:'Protocolo E2: eficacia_objetivo. Objetivos logrados / esperados.' },
+    ratio_completados:      { domain:'EJECUTIVO', construct:'Eficacia de objetivo', unit:'ratio', range:[0,1],
+        desc:'Protocolo E2: Objetivos logrados / esperados.' },
     plan_failed_attempts:   { domain:'EJECUTIVO', construct:'Intentos fallidos', unit:'count', range:[0,50], desc:'Planes iniciados pero no completados.' },
 
     // === TIEMPO DE REACCIÓN / ATENCIÓN ===
@@ -114,10 +114,10 @@ var METRIC_DICTIONARY = {
 
     // === CONTROL EJECUTIVO ===
     impulsividad_ratio:     { domain:'INHIBICION', construct:'Impulsividad', unit:'ratio', range:[0,1], desc:'Ratio de acciones rápidas (<150ms) sin pausa previa.' },
-    count_drags_abortados:       { domain:'INHIBICION', construct:'Inhibición motora (inhibicion_motor)', unit:'count', range:[0,200],
-        desc:'Protocolo E1: inhibicion_motor. Movimientos iniciados y abortados antes del click.' },
-    ratio_acciones_util:     { domain:'EJECUTIVO', construct:'Economía cognitiva (economia_cognitiva)', unit:'ratio', range:[0,1],
-        desc:'Protocolo E2: economia_cognitiva. Acciones útiles / total. Mide eficiencia ejecutiva.' },
+    count_drags_abortados:       { domain:'INHIBICION', construct:'Inhibición motora', unit:'count', range:[0,200],
+        desc:'Protocolo E1: Movimientos iniciados y abortados antes del click.' },
+    ratio_acciones_util:     { domain:'EJECUTIVO', construct:'Economía cognitiva', unit:'ratio', range:[0,1],
+        desc:'Protocolo E2: Acciones útiles / total. Mide eficiencia ejecutiva.' },
 
     // === INSTRUCCIONES / COMPRENSIÓN ===
     instruction_time_ms:    { domain:'COMPRENSION', construct:'Tiempo de lectura', unit:'ms', range:[0,60000], desc:'Tiempo total leyendo instrucciones.' },
