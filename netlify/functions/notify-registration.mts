@@ -13,7 +13,7 @@ export default async (req: Request, context: Context) => {
       return new Response(JSON.stringify({ ok: false }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
-    const adminEmail = Netlify.env.get("ADMIN_EMAIL") || "gonzaloperez.cortizo@gmail.com";
+    const adminEmail = Netlify.env.get("ADMIN_EMAIL") || "gonzaloperezcortizo@gmail.com";
     const smtpUser = Netlify.env.get("ZOHO_SMTP_USER");
     const smtpPass = Netlify.env.get("ZOHO_SMTP_PASS");
     const timestamp = new Date().toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" });

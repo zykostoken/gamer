@@ -814,17 +814,10 @@ async function saveResults(metrics, biometData) {
         if (!dailyPatientId) {
             try { dailyPatientId = parseInt(localStorage.getItem('zykos_patient_dni')); } catch(e) {}
         }
-        // Fallback: lookup by DNI if still no numeric ID
-        if (!dailyPatientId && state.patientDni && state.patientDni !== null) {
-            try {
-                const { data: pdata } = await sb.from('zykos_patients').select('id').eq('dni', state.patientDni).single();
-                if (pdata) dailyPatientId = pdata.id;
-            } catch(e) {}
-        }
+        // [V4] zykos_patients lookup eliminado — tabla no existe. DNI es identificador universal.
 
         (async function() {
             var drPayload = {
-                patient_id: dailyPatientId || null,
                 patient_dni: state.patientDni || null,
                 game_slug: 'daily-routine',
                 metric_type: 'session_summary',
