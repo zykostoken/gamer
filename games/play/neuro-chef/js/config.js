@@ -656,7 +656,7 @@ const ROPA = {
 // ========== ESTADO DEL JUEGO ==========
 const gameState = {
     patientId: null,
-    patientDni: 'HDD-2026-DEMO',
+    patientDni: null,
     sessionId: null,
     currentLevel: 1,
     totalLevels: 6,

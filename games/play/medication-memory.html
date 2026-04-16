@@ -1851,15 +1851,16 @@
         // DNI resolved above
         var dni = new URLSearchParams(window.location.search).get('dni') || null;
         if (!dni) try { dni = localStorage.getItem('zykos_patient_dni'); } catch(e2){}
-        if (dni && !isNaN(dni) && parseInt(dni) > 0) {
+        if (!dni && window.ZYKOS_DNI) dni = window.ZYKOS_DNI;
+        if (dni) {
           (async function() {
             try {
               var mmPayload = {
-                patient_dni: dni,
+                patient_dni: String(dni),
                 game_slug: 'medication-memory',
-                metric_type: 'level_' + levelId,
+                metric_type: 'session_summary',
                 metric_value: entry.score,
-                metric_data: entry,
+                metric_data: Object.assign({}, entry, { level: levelId, level_id: levelId }),
                 session_date: new Date().toISOString().slice(0, 10)
               };
               if (typeof ZykosEvidence !== 'undefined') {
