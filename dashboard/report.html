@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Informe de sesiones · ZYKOS GAMER</title>
+<title>Informe clinico · ZYKOS V4</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="/js/supabase-config.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#060912;--sf:#0d1322;--card:#141b2e;--bd:rgba(255,255,255,.08);
-  --tx:#e5e9f0;--mt:rgba(229,233,240,.55);--dim:rgba(229,233,240,.35);
+  --bg:#060912;--sf:#0d1322;--card:#141b2e;--card2:#1a2236;--bd:rgba(255,255,255,.08);
+  --tx:#e5e9f0;--mt:rgba(229,233,240,.60);--dim:rgba(229,233,240,.35);
   --ac:#00d4ff;--ac2:#a78bfa;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444;--mag:#ec4899
 }
 body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,sans-serif;min-height:100vh;line-height:1.5}
@@ -20,10 +20,12 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,sa
 .hd .tag{display:inline-block;font-size:.6rem;padding:2px 7px;border-radius:4px;background:rgba(0,212,255,.12);color:var(--ac);margin-left:.6rem;letter-spacing:.08em;text-transform:uppercase}
 .bk{color:var(--mt);text-decoration:none;font-size:.8rem;padding:.4rem .8rem;border:1px solid var(--bd);border-radius:6px;transition:.15s}
 .bk:hover{color:var(--tx);border-color:var(--ac)}
-.mn{max-width:1200px;margin:0 auto;padding:1.8rem 1.5rem 3rem}
+.mn{max-width:1320px;margin:0 auto;padding:1.8rem 1.5rem 3rem}
 .notice{background:linear-gradient(135deg,rgba(0,212,255,.04),rgba(167,139,250,.02));border:1px solid rgba(0,212,255,.15);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem}
 .notice h2{font-size:.78rem;color:var(--ac);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:.35rem}
-.notice p{color:var(--mt);font-size:.78rem;line-height:1.6}
+.notice p{color:var(--mt);font-size:.78rem;line-height:1.65}
+.legacy-warn{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);color:#fcd34d;padding:.7rem 1rem;border-radius:8px;font-size:.75rem;margin-bottom:1.2rem;line-height:1.55}
+.legacy-warn strong{color:var(--warn)}
 .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem;background:var(--card);padding:.9rem 1rem;border:1px solid var(--bd);border-radius:10px}
 select{background:var(--sf);color:var(--tx);border:1px solid var(--bd);padding:.5rem .85rem;border-radius:6px;font-size:.85rem;cursor:pointer;font-family:inherit;min-width:200px}
 select:hover{border-color:var(--ac)}
@@ -37,49 +39,106 @@ select option{background:var(--sf);color:var(--tx)}
 .pt-stat .lbl{font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
 .empty{text-align:center;padding:4rem 2rem;color:var(--mt);font-size:.88rem}
 .empty .sub{font-size:.75rem;color:var(--dim);margin-top:.5rem;max-width:520px;margin-left:auto;margin-right:auto}
-.domain{margin-bottom:2.2rem}
-.domain-title{display:flex;align-items:center;gap:.6rem;font-size:.75rem;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:.12em;margin:1.5rem 0 .9rem;padding-bottom:.5rem;border-bottom:1px solid var(--bd)}
-.domain-title .dot{width:6px;height:6px;border-radius:50%;background:var(--ac)}
-.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:.9rem}
-.chart-card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:1rem 1.1rem 1.1rem}
-.chart-card h3{font-size:.78rem;font-weight:500;color:var(--mt);margin-bottom:.8rem;letter-spacing:.02em}
-.chart-card h3 .unit{color:var(--dim);font-weight:400;margin-left:.3rem;font-size:.72rem}
-.chart-wrap{height:200px;position:relative}
-.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;margin-bottom:.6rem}
-.kpi{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:.7rem .85rem}
-.kpi .v{font-size:1.35rem;font-weight:600;color:var(--tx);line-height:1.1}
-.kpi .l{font-size:.66rem;color:var(--dim);text-transform:uppercase;letter-spacing:.05em;margin-top:.2rem}
+.section{margin-bottom:2rem}
+.section-title{display:flex;align-items:center;gap:.6rem;font-size:.72rem;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:.12em;margin:1.5rem 0 .8rem;padding-bottom:.45rem;border-bottom:1px solid var(--bd)}
+.section-title .dot{width:6px;height:6px;border-radius:50%;background:var(--ac)}
+.section-title .agent{margin-left:auto;font-size:.6rem;color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:.8rem}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.7rem}
+.grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.6rem}
+@media (max-width:720px){.grid-4{grid-template-columns:repeat(2,1fr)}}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:.9rem 1rem 1rem;position:relative}
+.card h3{font-size:.72rem;font-weight:500;color:var(--tx);margin-bottom:.55rem;letter-spacing:.01em;display:flex;justify-content:space-between;align-items:baseline;gap:.4rem}
+.card h3 .unit{color:var(--dim);font-weight:400;font-size:.62rem}
+.card h3 .help{color:var(--dim);cursor:help;font-weight:400;font-size:.65rem;padding:0 4px;border-radius:3px;border:1px solid var(--bd);transition:.15s}
+.card h3 .help:hover{color:var(--ac);border-color:var(--ac)}
+.chart-wrap{height:180px;position:relative}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;margin-bottom:.9rem}
+.kpi{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:.8rem .9rem;position:relative}
+.kpi .v{font-size:1.4rem;font-weight:600;color:var(--tx);line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:.66rem;color:var(--dim);text-transform:uppercase;letter-spacing:.05em;margin-top:.25rem;display:flex;justify-content:space-between;align-items:center;gap:4px}
+.kpi .l .help{cursor:help;font-size:.6rem;opacity:.6;transition:.15s}
+.kpi .l .help:hover{opacity:1;color:var(--ac)}
 .kpi.ok .v{color:var(--ok)}
 .kpi.warn .v{color:var(--warn)}
 .kpi.err .v{color:var(--err)}
+.kpi-sub{font-size:.65rem;color:var(--mt);margin-top:.2rem;font-variant-numeric:tabular-nums}
 .colors-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:.4rem}
 .cchip{width:26px;height:26px;border-radius:6px;border:1px solid rgba(255,255,255,.12);cursor:help}
-.raw-table{width:100%;border-collapse:collapse;font-size:.72rem;margin-top:.4rem}
-.raw-table th{text-align:left;padding:.45rem .6rem;background:var(--sf);color:var(--mt);font-weight:500;text-transform:uppercase;letter-spacing:.04em;font-size:.62rem;border-bottom:1px solid var(--bd)}
-.raw-table td{padding:.4rem .6rem;border-bottom:1px solid rgba(255,255,255,.04);color:var(--tx)}
+.raw-table{width:100%;border-collapse:collapse;font-size:.7rem;margin-top:.4rem}
+.raw-table th{text-align:left;padding:.45rem .6rem;background:var(--sf);color:var(--mt);font-weight:500;text-transform:uppercase;letter-spacing:.04em;font-size:.6rem;border-bottom:1px solid var(--bd)}
+.raw-table td{padding:.4rem .6rem;border-bottom:1px solid rgba(255,255,255,.04);color:var(--tx);font-variant-numeric:tabular-nums}
 .raw-table tr:hover td{background:rgba(0,212,255,.03)}
-.raw-table .g{color:var(--dim);font-size:.7rem}
-.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:500;letter-spacing:.03em}
+.raw-table .g{color:var(--dim);font-size:.68rem}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:500;letter-spacing:.03em;white-space:nowrap}
 .pill.ok{background:rgba(34,197,94,.12);color:var(--ok)}
 .pill.warn{background:rgba(245,158,11,.12);color:var(--warn)}
 .pill.err{background:rgba(239,68,68,.12);color:var(--err)}
 .pill.neutral{background:rgba(167,139,250,.12);color:var(--ac2)}
+.pill.info{background:rgba(0,212,255,.12);color:var(--ac)}
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--dim);border-top-color:var(--ac);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:.5rem}
 @keyframes spin{to{transform:rotate(360deg)}}
 .err-box{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);color:#fca5a5;padding:1rem;border-radius:8px;font-size:.8rem}
+/* Tooltip */
+.tip{position:fixed;background:#0a0f1c;border:1px solid var(--ac);border-radius:8px;padding:.7rem .85rem;max-width:320px;font-size:.7rem;color:var(--tx);z-index:1000;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.6);line-height:1.55;display:none}
+.tip b{color:var(--ac);display:block;font-size:.72rem;margin-bottom:.3rem}
+.tip .row{display:flex;gap:.5rem;margin-top:.35rem;font-size:.65rem}
+.tip .row span:first-child{color:var(--dim);text-transform:uppercase;letter-spacing:.05em;min-width:60px}
+.tip .row span:last-child{color:var(--mt)}
+/* Small multiples Q1-Q4 */
+.quarters{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:.5rem}
+.quarter{background:var(--card2);border-radius:6px;padding:.6rem .5rem;text-align:center}
+.quarter .qlbl{font-size:.6rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+.quarter .qval{font-size:1.1rem;font-weight:600;color:var(--tx);font-variant-numeric:tabular-nums;line-height:1.1;margin-top:4px}
+.quarter .qbar{height:4px;margin-top:6px;border-radius:2px;background:rgba(0,212,255,.2);position:relative;overflow:hidden}
+.quarter .qbar-fill{position:absolute;top:0;left:0;bottom:0;background:var(--ac);border-radius:2px}
+/* Baseline comparison */
+.baseline-row{display:flex;flex-direction:column;gap:.5rem;padding:.4rem 0}
+.baseline-item{display:grid;grid-template-columns:180px 1fr 80px;gap:10px;align-items:center;padding:.4rem 0;border-bottom:1px dashed rgba(255,255,255,.04)}
+.baseline-item:last-child{border-bottom:none}
+.baseline-item .bn{font-size:.72rem;color:var(--tx);font-weight:500;display:flex;align-items:center;gap:5px}
+.baseline-item .bn .help{font-size:.55rem;color:var(--dim);cursor:help;padding:1px 4px;border-radius:3px;border:1px solid var(--bd)}
+.baseline-item .bn .help:hover{color:var(--ac);border-color:var(--ac)}
+.baseline-item .val{font-size:.8rem;color:var(--tx);font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.baseline-item .val.out-iqr{color:var(--warn)}
+.baseline-bar{position:relative;height:16px;background:var(--sf);border-radius:8px;overflow:visible}
+.baseline-bar .iqr-band{position:absolute;top:3px;bottom:3px;background:rgba(167,139,250,.15);border-left:1px solid var(--ac2);border-right:1px solid var(--ac2);border-radius:2px}
+.baseline-bar .median-line{position:absolute;top:0;bottom:0;width:2px;background:var(--ac2)}
+.baseline-bar .today-dot{position:absolute;top:3px;width:10px;height:10px;border-radius:50%;background:var(--ac);border:2px solid var(--bg);box-shadow:0 0 6px rgba(0,212,255,.6);transform:translateX(-5px)}
+.baseline-bar .today-dot.out-iqr{background:var(--warn);box-shadow:0 0 6px rgba(245,158,11,.8)}
+/* Box plot SVG container */
+.boxplot-wrap{width:100%;height:90px}
+.cam-panel{background:linear-gradient(135deg,rgba(236,72,153,.04),rgba(167,139,250,.02));border:1px solid rgba(236,72,153,.15);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.2rem}
+.cam-panel h3{font-size:.78rem;color:var(--mag);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:.4rem}
+.cam-status{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;margin-top:.7rem}
+.cam-status .item{background:rgba(0,0,0,.2);border:1px dashed rgba(236,72,153,.2);border-radius:6px;padding:.6rem;text-align:center}
+.cam-status .item .state{font-size:.85rem;font-weight:600;color:var(--dim)}
+.cam-status .item .lbl{font-size:.62rem;color:var(--dim);margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+.cam-panel .expl{font-size:.72rem;color:var(--mt);line-height:1.65;margin-top:.6rem}
+.hw-calibration{background:rgba(0,212,255,.04);border:1px dashed rgba(0,212,255,.2);border-radius:6px;padding:.55rem .8rem;font-size:.68rem;color:var(--mt);margin-top:.6rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.hw-calibration b{color:var(--ac);text-transform:uppercase;letter-spacing:.05em;font-size:.6rem;font-weight:500}
+.trajectory-svg{background:var(--card2);border-radius:6px;padding:6px}
+.glossary{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:1rem;font-size:.7rem}
+.glossary details{margin-bottom:4px}
+.glossary summary{cursor:pointer;padding:.35rem 0;color:var(--ac);font-weight:500;list-style:none}
+.glossary summary::-webkit-details-marker{display:none}
+.glossary summary:hover{color:var(--tx)}
+.glossary .gdef{padding:.4rem .8rem;color:var(--mt);border-left:2px solid var(--ac);margin:4px 0 10px;line-height:1.6}
+.glossary .gdef .formula{display:inline-block;background:var(--sf);padding:1px 6px;border-radius:3px;font-family:ui-monospace,monospace;color:var(--ac);font-size:.65rem}
 </style>
 </head>
 <body>
 
 <header class="hd">
-  <h1>Informe de sesiones<span class="tag">V4</span></h1>
+  <h1>Informe clinico<span class="tag">Canon V4</span></h1>
   <a href="/games/portal/" class="bk">Volver al portal</a>
 </header>
 
 <main class="mn">
+
   <div class="notice">
-    <h2>Datos observacionales · sin interpretacion clinica</h2>
-    <p>Mediciones registradas durante las sesiones del paciente. Los valores son crudos y deben ser interpretados por el profesional de salud en el contexto del paciente. ZYKOS GAMER captura semiologia digital continua; no produce diagnosticos ni reemplaza la evaluacion profesional.</p>
+    <h2>Semiologia digital continua · sin interpretacion diagnostica</h2>
+    <p>Datos observacionales capturados durante la interaccion del paciente con la plataforma. Nombres de metricas segun METRIC_DICTIONARY_V4.json. Toda metrica se compara contra el baseline individual del propio paciente (nunca normas poblacionales externas). El profesional interpreta en contexto clinico. ZYKOS nunca diagnostica, nunca etiqueta, nunca recomienda tratamiento.</p>
   </div>
 
   <div class="controls">
@@ -94,13 +153,244 @@ select option{background:var(--sf);color:var(--tx)}
   </div>
 
   <div id="content"></div>
+
 </main>
+
+<div class="tip" id="tooltip"></div>
 
 <script>
 var sb = null;
 var _charts = {};
 var _currentDni = null;
 var _roster = [];
+
+// =========================================================================
+// DICCIONARIO DE METRICAS V4 — tooltips inline para transparencia
+// =========================================================================
+var DICT = {
+  'rt_mean_ms': {
+    label:'Tiempo de reaccion medio',
+    what:'Promedio de tiempo entre que aparece un estimulo y el paciente responde.',
+    how:'AVG(rt_ms) sobre todos los trials de la sesion',
+    high:'Enlentecimiento psicomotor, bradipsiquia, efecto farmacologico, fatiga.',
+    low:'Respuesta rapida. Si tambien hay errores altos = impulsividad.',
+    unit:'milisegundos',
+    domain:'ATENCION',
+    agent:'agent-rt'
+  },
+  'rt_sd_ms': {
+    label:'Desviacion estandar del RT',
+    what:'Cuanto varia el tiempo de reaccion de un trial al siguiente (dispersion absoluta).',
+    how:'STDDEV_SAMP(rt_ms) sobre la sesion',
+    high:'Inconsistencia atencional, fluctuacion de vigilancia.',
+    low:'RT estable y predecible.',
+    unit:'milisegundos',
+    domain:'ATENCION',
+    agent:'agent-rt'
+  },
+  'rt_cv': {
+    label:'Coeficiente de variacion del RT',
+    what:'Variabilidad relativa del tiempo de reaccion — cuanto varia el RT respecto a su propio promedio. Es el biomarcador atencional mas robusto de la literatura.',
+    how:'rt_sd_ms / rt_mean_ms',
+    high:'Variabilidad intra-individual alta (IIV). Asociada a TDAH (g=0.76), fatiga, fluctuacion de vigilancia, deterioro cognitivo temprano.',
+    low:'RT estable, atencion sostenida.',
+    unit:'ratio (0-2+)',
+    domain:'ATENCION',
+    agent:'agent-rt',
+    threshold:'Referencia: >0.35 es elevado en la mayoria de poblaciones, pero siempre comparar contra el propio baseline'
+  },
+  'fatiga_ratio_h2_h1': {
+    label:'Fatiga temporal (H2 / H1)',
+    what:'Cuanto se enlentece el paciente en la segunda mitad de la sesion comparado con la primera.',
+    how:'AVG(rt_ms) en segunda mitad / AVG(rt_ms) en primera mitad',
+    high:'>1.15 indica enlentecimiento progresivo. >1.30 es marcado. Compatible con fatiga central, agotamiento atencional, inicio de sedacion.',
+    low:'<1.00 = se acelera (warm-up, efecto de practica intra-sesion).',
+    unit:'ratio (1.0 = sin cambio)',
+    domain:'ATENCION',
+    agent:'engine-post-hoc-analysis (Art. Temporalidad Canonica)'
+  },
+  'impulsividad_ratio': {
+    label:'Ratio de impulsividad',
+    what:'Proporcion de trials en los que el RT fue menor al percentil 10 propio — es decir, respuestas llamativamente rapidas relativas a uno mismo.',
+    how:'(count(rt_ms < p10_propio)) / n_trials',
+    high:'Respuestas precipitadas, posible desinhibicion.',
+    low:'RT deliberado. No es virtud automatica: si tambien RT medio es alto = hesitacion.',
+    unit:'ratio (0-1)',
+    domain:'EJECUTIVO',
+    agent:'engine-post-hoc-analysis'
+  },
+  'jitter_reposo_px': {
+    label:'Jitter en reposo',
+    what:'Oscilacion involuntaria del cursor cuando el paciente no se mueve (mano apoyada sin actuar). Proxy cuantitativo de temblor de reposo tras restar calibracion de hardware.',
+    how:'SD(x) + SD(y) en ventanas de reposo >500ms, menos hw_idle_jitter_px',
+    high:'Oscilaciones aumentadas. Signo motor.',
+    low:'Mano estable.',
+    unit:'pixeles',
+    domain:'MOTOR',
+    agent:'agent-motor',
+    warning:'NO interpretar directamente como tremor clinico — eso es constructo, no dato (Constitucion V4).'
+  },
+  'jitter_inicio_px': {
+    label:'Jitter de inicio',
+    what:'Oscilacion en los primeros 150ms de un movimiento — inestabilidad al arrancar.',
+    how:'SD(x) + SD(y) en ventana [0, 150ms] de cada movimiento',
+    high:'Dificultad para iniciar con precision.',
+    low:'Inicio estable.',
+    unit:'pixeles',
+    domain:'MOTOR',
+    agent:'agent-motor'
+  },
+  'jitter_terminal_px': {
+    label:'Jitter terminal',
+    what:'Oscilacion en los ultimos 80px antes de llegar al target — inestabilidad al aproximarse.',
+    how:'SD(x) + SD(y) en los ultimos 80px de trayectoria',
+    high:'Dismetria de aproximacion, tipica de afectacion cerebelosa o hipercorreccion.',
+    low:'Aproximacion suave.',
+    unit:'pixeles',
+    domain:'MOTOR',
+    agent:'agent-motor'
+  },
+  'precision_deposito_px': {
+    label:'Precision de deposito',
+    what:'Distancia entre el centro del target y el punto donde el paciente efectivamente solto.',
+    how:'AVG(distancia al centro del target al soltar)',
+    high:'Imprecision en el punto final.',
+    low:'Preciso.',
+    unit:'pixeles',
+    domain:'MOTOR',
+    agent:'agent-motor'
+  },
+  'eficiencia_trayectoria': {
+    label:'Eficiencia de trayectoria',
+    what:'Cuan directa fue la ruta del cursor. 1.0 = linea recta perfecta. Valores bajos = ruta serpenteante.',
+    how:'distancia_directa (primer-ultimo punto) / distancia_total_recorrida',
+    high:'Movimiento directo, planificado.',
+    low:'Trayectoria erratica, hipercorreccion, exploracion motora, desorganizacion.',
+    unit:'ratio (0-1)',
+    domain:'MOTOR',
+    agent:'agent-motor'
+  },
+  'vel_cv': {
+    label:'Coef. variacion de velocidad',
+    what:'Cuanto varia la velocidad del cursor dentro de la sesion.',
+    how:'SD(velocidades) / MEAN(velocidades)',
+    high:'Aceleraciones y frenadas bruscas, movimiento irregular.',
+    low:'Velocidad constante (puede ser rigidez motora si extrema).',
+    unit:'ratio',
+    domain:'VELOCIDAD',
+    agent:'agent-motor'
+  },
+  'direction_changes_count': {
+    label:'Cambios de direccion',
+    what:'Cuantas veces la trayectoria cambio de sentido (rectificaciones).',
+    how:'count de inversiones de signo en eje X entre samples consecutivos',
+    high:'Muchas correcciones de rumbo — hipercorreccion, temblor intencional, desorganizacion motora.',
+    low:'Trayectoria directa.',
+    unit:'count',
+    domain:'MOTOR',
+    agent:'agent-motor'
+  },
+  'hesitaciones_count': {
+    label:'Hesitaciones',
+    what:'Pausas activas mayores a 1500ms durante movimiento o entre acciones.',
+    how:'count(pausas >1500ms) excluyendo idle',
+    high:'Titubeo, duda, pianificacion en tiempo real, inicio de bloqueo.',
+    low:'Fluido.',
+    unit:'count',
+    domain:'ATENCION',
+    agent:'agent-rt'
+  },
+  'errores_omision': {
+    label:'Errores por omision',
+    what:'Objetivos que debian ser respondidos y no lo fueron (no-go cuando debia ser go).',
+    how:'count(target no alcanzado)',
+    high:'Inatencion, distractibilidad, inatencion sostenida deficitaria.',
+    low:'Foco mantenido.',
+    unit:'count',
+    domain:'EJECUTIVO',
+    agent:'juego_internal'
+  },
+  'errores_comision': {
+    label:'Errores por comision',
+    what:'Respuestas a estimulos que debian ser ignorados (go cuando debia ser no-go).',
+    how:'count(respuesta a distractor)',
+    high:'Desinhibicion, impulsividad cognitiva.',
+    low:'Control inhibitorio preservado.',
+    unit:'count',
+    domain:'EJECUTIVO',
+    agent:'agent-inhibition'
+  },
+  'perseveracion_count': {
+    label:'Perseveraciones',
+    what:'Repeticion del mismo error o accion dentro de una ventana temporal corta (5s).',
+    how:'count(error_repetido within 5000ms)',
+    high:'Rigidez cognitiva, dificultad para cambio de set.',
+    low:'Flexibilidad cognitiva preservada.',
+    unit:'count',
+    domain:'EJECUTIVO',
+    agent:'engine-post-hoc-analysis'
+  },
+  'n_trials': {
+    label:'Numero de trials',
+    what:'Cantidad de objetivos que el paciente enfrento en la sesion.',
+    how:'count de metric_type=objective_rt',
+    high:'Sesion productiva.',
+    low:'Sesion corta o abandono temprano.',
+    unit:'count',
+    domain:'SESION',
+    agent:'juego_internal'
+  },
+  'n_movements': {
+    label:'Muestras de movimiento',
+    what:'Cantidad de puntos de trayectoria (x, y, t) capturados.',
+    how:'count de metric_type=movement_sample',
+    high:'Alta resolucion motora.',
+    low:'Poca data motora.',
+    unit:'count',
+    domain:'SESION',
+    agent:'corsario_dom'
+  },
+  'cam_face_present_pct': {
+    label:'% presencia facial',
+    what:'Porcentaje del tiempo de sesion con rostro detectado por face-api.js. Validacion de identidad legal y presencia real.',
+    how:'face-api onFrame → (frames con face / frames totales)',
+    high:'Persona visible toda la sesion. Defensa legal solida.',
+    low:'Ausencia prolongada — dudosa validez de la data.',
+    unit:'%',
+    domain:'BIOMETRICA_CAM_FACS',
+    agent:'agent-media (face-api.js)'
+  },
+  'cam_identity_match_score': {
+    label:'Match de identidad',
+    what:'Similitud del descriptor facial actual vs el enrollment del paciente. 1.0 = identico; <0.7 = probablemente otra persona.',
+    how:'cosine_similarity(face_descriptor_actual, enrollment)',
+    high:'Misma persona confirmada.',
+    low:'Otra persona o enrollment invalido.',
+    unit:'ratio (0-1)',
+    domain:'BIOMETRICA_CAM_FACS',
+    agent:'agent-media (face-api.js)'
+  },
+  'affect_smile_during_hits_pct': {
+    label:'Sonrisa durante aciertos',
+    what:'Porcentaje de aciertos en los que el paciente sonrio (FACS Duchenne) dentro de ±500ms del evento.',
+    how:'Cruce eventos FACS × objective_rt mismo timestamp',
+    high:'Congruencia afectiva positiva — experiencia gratificante.',
+    low:'Afecto plano — anhedonia conductual, apatía, depresion.',
+    unit:'%',
+    domain:'AFECTO',
+    agent:'engine-post-hoc-analysis (cruce FACS + contexto)'
+  },
+  'affect_brow_during_errors_pct': {
+    label:'Ceno durante errores',
+    what:'Porcentaje de errores acompanados de ceno fruncido (FACS AU4) — marcador de frustracion/esfuerzo.',
+    how:'Cruce eventos FACS AU4 × errores mismo timestamp',
+    high:'Registra sus errores emocionalmente. Insight afectivo.',
+    low:'Ausencia de reaccion — anosognosia, apatía, aplanamiento.',
+    unit:'%',
+    domain:'AFECTO',
+    agent:'engine-post-hoc-analysis (cruce FACS + contexto)'
+  }
+};
 
 function destroyCharts(){ Object.values(_charts).forEach(function(c){ try{ c.destroy(); }catch(e){} }); _charts = {}; }
 
@@ -109,6 +399,60 @@ function fmt(v, decimals){
   var n = parseFloat(v);
   if (isNaN(n)) return String(v);
   return decimals != null ? n.toFixed(decimals) : Math.round(n).toString();
+}
+
+// Tooltip helpers
+var tip = document.getElementById('tooltip');
+function showTip(e, key){
+  var m = DICT[key];
+  if (!m) return;
+  var html = '<b>' + m.label + ' · <code style="color:var(--dim);font-size:.62rem">' + key + '</code></b>' + m.what;
+  html += '<div class="row"><span>Calculo</span><span>' + m.how + '</span></div>';
+  if (m.high) html += '<div class="row"><span>Alto</span><span>' + m.high + '</span></div>';
+  if (m.low) html += '<div class="row"><span>Bajo</span><span>' + m.low + '</span></div>';
+  if (m.threshold) html += '<div class="row"><span>Nota</span><span>' + m.threshold + '</span></div>';
+  if (m.warning) html += '<div class="row"><span>Aviso</span><span style="color:var(--warn)">' + m.warning + '</span></div>';
+  html += '<div class="row"><span>Dominio</span><span>' + m.domain + ' · ' + m.agent + '</span></div>';
+  tip.innerHTML = html;
+  tip.style.display = 'block';
+  var r = e.currentTarget.getBoundingClientRect();
+  var x = r.left;
+  var y = r.bottom + 8;
+  if (x + 340 > window.innerWidth) x = window.innerWidth - 340;
+  if (y + 200 > window.innerHeight) y = r.top - 200;
+  tip.style.left = x + 'px';
+  tip.style.top = y + 'px';
+}
+function hideTip(){ tip.style.display = 'none'; }
+
+function helpIcon(key){
+  return '<span class="help" data-tip="' + key + '" title="">?</span>';
+}
+
+// SVG box plot: min/p25/p50/p75/max inline
+function boxPlotSVG(stats, width, height){
+  if (!stats || !stats.p50) return '';
+  var w = width || 280, h = height || 80;
+  var pad = 20;
+  var range = stats.max - stats.min;
+  if (range <= 0) range = 1;
+  var scale = function(v){ return pad + ((v - stats.min) / range) * (w - 2*pad); };
+  var yC = h / 2;
+  var boxH = 26;
+  return '<svg width="' + w + '" height="' + h + '" class="boxplot-wrap" viewBox="0 0 ' + w + ' ' + h + '">' +
+    // whiskers
+    '<line x1="' + scale(stats.min) + '" y1="' + yC + '" x2="' + scale(stats.max) + '" y2="' + yC + '" stroke="rgba(255,255,255,.2)" stroke-width="1"/>' +
+    '<line x1="' + scale(stats.min) + '" y1="' + (yC-8) + '" x2="' + scale(stats.min) + '" y2="' + (yC+8) + '" stroke="rgba(255,255,255,.35)" stroke-width="1.5"/>' +
+    '<line x1="' + scale(stats.max) + '" y1="' + (yC-8) + '" x2="' + scale(stats.max) + '" y2="' + (yC+8) + '" stroke="rgba(255,255,255,.35)" stroke-width="1.5"/>' +
+    // box
+    '<rect x="' + scale(stats.p25) + '" y="' + (yC - boxH/2) + '" width="' + (scale(stats.p75) - scale(stats.p25)) + '" height="' + boxH + '" fill="rgba(0,212,255,.2)" stroke="var(--ac)" stroke-width="1.5" rx="2"/>' +
+    // median
+    '<line x1="' + scale(stats.p50) + '" y1="' + (yC - boxH/2) + '" x2="' + scale(stats.p50) + '" y2="' + (yC + boxH/2) + '" stroke="#fff" stroke-width="2"/>' +
+    // labels
+    '<text x="' + scale(stats.min) + '" y="' + (h - 4) + '" fill="var(--dim)" font-size="10" text-anchor="middle">' + fmt(stats.min, 0) + '</text>' +
+    '<text x="' + scale(stats.p50) + '" y="' + 14 + '" fill="#fff" font-size="10" text-anchor="middle" font-weight="600">' + fmt(stats.p50, 0) + '</text>' +
+    '<text x="' + scale(stats.max) + '" y="' + (h - 4) + '" fill="var(--dim)" font-size="10" text-anchor="middle">' + fmt(stats.max, 0) + '</text>' +
+    '</svg>';
 }
 
 async function init(){
@@ -131,9 +475,7 @@ async function init(){
 
   _roster = rosterRes.data || [];
   var isPro = (userRole === 'superadmin' || userRole === 'professional' || userRole === 'director_medico');
-  if (!isPro){
-    _roster = _roster.filter(function(r){ return r.dni === userDni; });
-  }
+  if (!isPro){ _roster = _roster.filter(function(r){ return r.dni === userDni; }); }
 
   var selP = document.getElementById('sel-patient');
   selP.innerHTML = '';
@@ -158,6 +500,16 @@ async function init(){
   var first = _roster.find(function(r){ return r.total_metrics > 0; }) || _roster[0];
   selP.value = first.dni;
   await loadData(first.dni);
+
+  // Tooltip delegation
+  document.addEventListener('mouseover', function(e){
+    var t = e.target.closest('[data-tip]');
+    if (t) showTip(e, t.getAttribute('data-tip'));
+  });
+  document.addEventListener('mouseout', function(e){
+    var t = e.target.closest('[data-tip]');
+    if (t) hideTip();
+  });
 }
 
 async function loadData(dni){
@@ -165,7 +517,7 @@ async function loadData(dni){
   _currentDni = dni;
   destroyCharts();
   var content = document.getElementById('content');
-  content.innerHTML = '<div class="empty"><span class="spinner"></span>Cargando metricas...</div>';
+  content.innerHTML = '<div class="empty"><span class="spinner"></span>Calculando metricas canonicas V4...</div>';
 
   var game = document.getElementById('sel-game').value || null;
   var days = parseInt(document.getElementById('sel-days').value) || 30;
@@ -183,65 +535,99 @@ async function loadData(dni){
   });
   if (prevGame) selGame.value = prevGame;
 
-  var sessRes = await sb.rpc('zykos_dashboard_sessions', { p_dni: dni, p_game_slug: game, p_days_back: days });
+  // Todas las RPCs en paralelo
+  var [sessRes, granularRes, baselineRes, colorsRes, rawRes, rtRawRes, movRawRes] = await Promise.all([
+    sb.rpc('zykos_dashboard_sessions', { p_dni: dni, p_game_slug: game, p_days_back: days }),
+    sb.rpc('zykos_dashboard_granular', { p_dni: dni, p_game_slug: game, p_days_back: days }),
+    sb.rpc('zykos_dashboard_baseline', { p_dni: dni, p_days_back: 365 }),
+    sb.rpc('zykos_dashboard_color_history', { p_dni: dni, p_days_back: days }),
+    sb.from('zykos_game_metrics')
+      .select('game_slug,metric_type,metric_data,created_at')
+      .eq('patient_dni', dni)
+      .in('metric_type', ['session_summary','pill_placement','session_complete','session_biomet'])
+      .order('created_at', { ascending: false })
+      .limit(20),
+    // RT crudo para box plots
+    sb.from('zykos_game_metrics')
+      .select('metric_data,created_at,game_slug')
+      .eq('patient_dni', dni)
+      .eq('metric_type', 'objective_rt')
+      .order('created_at', { ascending: false })
+      .limit(500),
+    // Movimientos para trayectoria
+    sb.from('zykos_game_metrics')
+      .select('metric_data,created_at,game_slug')
+      .eq('patient_dni', dni)
+      .eq('metric_type', 'movement_sample')
+      .order('created_at', { ascending: true })
+      .limit(500)
+  ]);
+
   if (sessRes.error){ content.innerHTML = '<div class="err-box">Error: ' + sessRes.error.message + '</div>'; return; }
-  var sessions = sessRes.data || [];
 
-  var colorsRes = await sb.rpc('zykos_dashboard_color_history', { p_dni: dni, p_days_back: days });
-  var colors = colorsRes.data || [];
-
-  var rawRes = await sb.from('zykos_game_metrics')
-    .select('game_slug,metric_type,metric_data,created_at')
-    .eq('patient_dni', dni)
-    .in('metric_type', ['session_summary','pill_placement','session_complete','session_biomet'])
-    .order('created_at', { ascending: false })
-    .limit(20);
-  var rawMetrics = rawRes.data || [];
-
-  render(content, patient, sessions, colors, rawMetrics);
+  render(content, patient, {
+    sessions: sessRes.data || [],
+    granular: granularRes.data || [],
+    baseline: baselineRes.data || [],
+    colors: colorsRes.data || [],
+    rawMetrics: rawRes.data || [],
+    rtRaw: rtRawRes.data || [],
+    movRaw: movRawRes.data || []
+  });
 }
 
-function render(content, patient, sessions, colors, rawMetrics){
+function render(content, patient, data){
   content.innerHTML = '';
-  renderHeader(content, patient, sessions);
 
-  if (sessions.length === 0){
+  // 1. HERO
+  renderHeader(content, patient, data.sessions);
+
+  // Warnings
+  var hasLegacy = data.sessions.some(function(s){ return s.has_legacy_prohibited_keys === true; });
+  if (hasLegacy){
+    var legacyGames = [...new Set(data.sessions.filter(function(s){return s.has_legacy_prohibited_keys}).map(function(s){return s.game_slug}))];
+    var w = document.createElement('div');
+    w.className = 'legacy-warn';
+    w.innerHTML = '<strong>Deuda V4 detectada:</strong> ' + legacyGames.join(', ') +
+      ' todavia escriben nombres legacy (tremor_*, clinical_flags, etc). La RPC los traduce a canonicos V4 on-the-fly. Pendiente: migrar al engine canonico.';
+    content.appendChild(w);
+  }
+
+  // 2. CAM/MIC panel (siempre visible — si no hay data, explica que falta)
+  renderCamPanel(content, patient);
+
+  if (data.sessions.length === 0 && data.granular.length === 0){
     var e = document.createElement('div');
     e.className = 'empty';
-    e.innerHTML = 'Sin sesiones registradas en este periodo.<div class="sub">El paciente aun no jugo en este rango, o las metricas no se grabaron. Verificar consola del juego en la proxima sesion y ampliar el rango de fechas.</div>';
+    e.innerHTML = 'Sin sesiones registradas en este periodo.<div class="sub">El paciente aun no jugo en este rango. Ampliar rango de fechas.</div>';
     content.appendChild(e);
-    if (colors.length) renderColors(content, colors);
+    if (data.colors.length) renderColors(content, data.colors);
     return;
   }
 
-  var chartData = [].concat(sessions).reverse();
+  // 3. ANALISIS GRANULAR (lo clinicamente valioso arriba)
+  if (data.granular.length > 0){
+    renderGranularAnalysis(content, data.granular, data.rtRaw, data.movRaw);
+  }
 
-  renderKPIs(content, sessions);
-  renderDomain(content, 'Atencion y vigilancia', chartData, [
-    { key:'rt_mean_ms', label:'RT medio', unit:'ms', color:'#00d4ff' },
-    { key:'rt_cv', label:'Variabilidad RT (CV)', unit:'ratio', color:'#a78bfa', decimals:2 },
-    { key:'fatiga_index', label:'Indice de fatiga', unit:'2da/1ra mitad', color:'#f59e0b', decimals:2 },
-    { key:'hesitation_count', label:'Hesitaciones', unit:'count', color:'#ec4899' }
-  ]);
-  renderDomain(content, 'Control psicomotor', chartData, [
-    { key:'tremor_avg', label:'Tremor jitter medio', unit:'px', color:'#22c55e', decimals:1 },
-    { key:'path_efficiency', label:'Eficiencia trayectoria', unit:'ratio', color:'#00d4ff', decimals:2 },
-    { key:'movement_efficiency', label:'Eficiencia movimiento', unit:'ratio', color:'#a78bfa', decimals:2 },
-    { key:'dysmetria_ratio', label:'Dismetria', unit:'ratio', color:'#ef4444', decimals:3 }
-  ]);
-  renderDomain(content, 'Funciones ejecutivas', chartData, [
-    { key:'errores_omision', label:'Errores de omision', unit:'count', color:'#ef4444' },
-    { key:'errores_comision', label:'Errores de comision', unit:'count', color:'#f59e0b' },
-    { key:'self_correction_ratio', label:'Autocorreccion', unit:'ratio', color:'#22c55e', decimals:2 },
-    { key:'planificacion_ratio', label:'Planificacion', unit:'ratio', color:'#00d4ff', decimals:2 }
-  ]);
-  renderDomain(content, 'Sensopercepcion y comprension', chartData, [
-    { key:'instruction_read_time_ms', label:'Tiempo leyendo consigna', unit:'ms', color:'#a78bfa' },
-    { key:'time_to_first_action_ms', label:'Latencia primera accion', unit:'ms', color:'#00d4ff' }
-  ]);
+  // 4. KPIs de la ultima sesion
+  if (data.sessions.length > 0){
+    renderKPIs(content, data.sessions);
+  }
 
-  if (colors.length) renderColors(content, colors);
-  renderRaw(content, rawMetrics);
+  // 5. LONGITUDINAL vs baseline propio
+  if (data.sessions.length > 0){
+    renderLongitudinal(content, data.sessions, data.baseline);
+  }
+
+  // 6. COLORES proyectivos
+  if (data.colors.length) renderColors(content, data.colors);
+
+  // 7. RAW
+  renderRaw(content, data.rawMetrics);
+
+  // 8. GLOSARIO
+  renderGlossary(content);
 }
 
 function renderHeader(content, patient, sessions){
@@ -261,110 +647,319 @@ function renderHeader(content, patient, sessions){
   content.appendChild(h);
 }
 
-function renderKPIs(content, sessions){
-  var latest = sessions[0];
-  var rtcv = parseFloat(latest.rt_cv || 0);
-  var fat = parseFloat(latest.fatiga_index || 1);
-  var pe = parseFloat(latest.path_efficiency || 0);
-  var om = parseInt(latest.errores_omision || 0);
-  var row = document.createElement('div');
-  row.className = 'kpi-row';
-  row.innerHTML =
-    '<div class="kpi ' + (rtcv > 0.35 ? 'warn' : 'ok') + '"><div class="v">' + fmt(rtcv,2) + '</div><div class="l">RT-CV ultima</div></div>' +
-    '<div class="kpi ' + (fat > 1.3 ? 'warn' : 'ok') + '"><div class="v">' + fmt(fat,2) + '</div><div class="l">Fatiga ultima</div></div>' +
-    '<div class="kpi ' + (pe > 0.75 ? 'ok' : 'warn') + '"><div class="v">' + fmt(pe,2) + '</div><div class="l">Eficiencia ultima</div></div>' +
-    '<div class="kpi ' + (om > 50 ? 'err' : om > 10 ? 'warn' : 'ok') + '"><div class="v">' + om + '</div><div class="l">Omisiones ultima</div></div>';
-  content.appendChild(row);
+function renderCamPanel(content, patient){
+  // Hoy no hay data cam/mic — pero el panel es permanente
+  var p = document.createElement('div');
+  p.className = 'cam-panel';
+  p.innerHTML = '<h3>IDENTIDAD · PRESENCIA · AFECTO</h3>' +
+    '<p class="expl">Face-api.js (cam) y el servicio de audio (mic) validan tres dimensiones: ' +
+    '<b style="color:var(--tx)">(1) identidad legal</b> — confirmar que del otro lado hay una persona real identificable (defensa ReNaPDiS/ANMAT/tribunal); ' +
+    '<b style="color:var(--tx)">(2) presencia activa</b> — la sesion es del paciente interactuando, no un bot ni alguien llenando formulario dormido; ' +
+    '<b style="color:var(--tx)">(3) semiologia gestual</b> — eventos FACS espontaneos (sonrisa Duchenne, ceno fruncido, compresion labial) cruzados con el contexto simultaneo en pantalla (acierto/error) dan un biomarcador afectivo directo sin self-report. ' +
+    'Los constructos vienen validados por face-api — no son interpretaciones nuestras (Constitucion V4 Art. IX).</p>' +
+    '<div class="cam-status">' +
+      '<div class="item"><div class="state">sin data</div><div class="lbl">cam_face_present_pct</div></div>' +
+      '<div class="item"><div class="state">sin data</div><div class="lbl">cam_identity_match</div></div>' +
+      '<div class="item"><div class="state">sin data</div><div class="lbl">cam_facs_markers</div></div>' +
+      '<div class="item"><div class="state">sin data</div><div class="lbl">mic_voice_detected</div></div>' +
+    '</div>' +
+    '<p class="expl" style="margin-top:.7rem;color:var(--dim);font-size:.68rem">' +
+    'Pendiente: integrar agent-media.js (face-api) en el arranque de los juegos. Sin esta capa, ' +
+    'la semiologia afectiva queda ciega y la defensa legal de identidad es debil.</p>';
+  content.appendChild(p);
 }
 
-function renderDomain(content, title, data, metrics){
-  var hasAny = metrics.some(function(m){
-    return data.some(function(d){ return d[m.key] !== null && d[m.key] !== undefined; });
+function renderGranularAnalysis(content, granular, rtRaw, movRaw){
+  var sec = document.createElement('div');
+  sec.className = 'section';
+  var label = '<div class="section-title"><span class="dot"></span>ANALISIS DE LA SESION · granular post-hoc' +
+              '<span class="agent">objective_rt + movement_sample → engine-post-hoc-analysis</span></div>';
+  sec.innerHTML = label;
+  content.appendChild(sec);
+
+  granular.forEach(function(g){
+    if (!g.n_trials && !g.n_movements) return;
+
+    var card = document.createElement('div');
+    card.className = 'card';
+    card.style.marginBottom = '.8rem';
+
+    // Filtrar RT raw de este dia+juego
+    var rtSamples = (rtRaw || []).filter(function(r){
+      return r.created_at.slice(0,10) === g.session_date && r.game_slug === g.game_slug;
+    }).map(function(r){ return parseInt(r.metric_data.rt_ms); }).filter(function(v){ return !isNaN(v); });
+
+    var movSamples = (movRaw || []).filter(function(r){
+      return r.created_at.slice(0,10) === g.session_date && r.game_slug === g.game_slug;
+    }).map(function(r){ return { x: parseFloat(r.metric_data.x), y: parseFloat(r.metric_data.y), t: parseInt(r.metric_data.elapsed_ms) }; });
+
+    // Compute quartiles from rtSamples for box plot
+    var bpStats = null;
+    if (rtSamples.length > 3){
+      var sorted = [...rtSamples].sort(function(a,b){ return a-b; });
+      var pct = function(p){ var i = (p/100)*(sorted.length-1); var f = Math.floor(i); var c = Math.ceil(i); if (f===c) return sorted[f]; return sorted[f] + (sorted[c]-sorted[f])*(i-f); };
+      bpStats = { min: sorted[0], p25: pct(25), p50: pct(50), p75: pct(75), max: sorted[sorted.length-1] };
+    }
+
+    var qCells = '';
+    if (g.rt_q1_mean_ms != null){
+      var qs = [g.rt_q1_mean_ms, g.rt_q2_mean_ms, g.rt_q3_mean_ms, g.rt_q4_mean_ms].map(parseFloat);
+      var qMax = Math.max.apply(null, qs.filter(function(x){return !isNaN(x)}));
+      ['Q1','Q2','Q3','Q4'].forEach(function(ql, i){
+        var v = qs[i];
+        var pct = (v && qMax) ? (v/qMax*100) : 0;
+        qCells += '<div class="quarter"><div class="qlbl">' + ql + '</div><div class="qval">' + (v ? Math.round(v) : '-') + '<span style="font-size:.7rem;color:var(--dim)">ms</span></div><div class="qbar"><div class="qbar-fill" style="width:' + pct + '%"></div></div></div>';
+      });
+    }
+
+    // Trajectory SVG
+    var trajSvg = '';
+    if (movSamples.length > 1){
+      var xs = movSamples.map(function(m){ return m.x; });
+      var ys = movSamples.map(function(m){ return m.y; });
+      var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
+      var minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+      var rangeX = (maxX - minX) || 1, rangeY = (maxY - minY) || 1;
+      var tw = 280, th = 120, pad = 10;
+      var path = movSamples.map(function(m, i){
+        var px = pad + ((m.x - minX) / rangeX) * (tw - 2*pad);
+        var py = pad + ((m.y - minY) / rangeY) * (th - 2*pad);
+        return (i === 0 ? 'M' : 'L') + px.toFixed(1) + ',' + py.toFixed(1);
+      }).join(' ');
+      var first = movSamples[0], last = movSamples[movSamples.length-1];
+      var fx = pad + ((first.x - minX) / rangeX) * (tw - 2*pad);
+      var fy = pad + ((first.y - minY) / rangeY) * (th - 2*pad);
+      var lx = pad + ((last.x - minX) / rangeX) * (tw - 2*pad);
+      var ly = pad + ((last.y - minY) / rangeY) * (th - 2*pad);
+      trajSvg = '<svg class="trajectory-svg" width="100%" height="120" viewBox="0 0 ' + tw + ' ' + th + '" preserveAspectRatio="xMidYMid meet">' +
+        '<line x1="' + fx + '" y1="' + fy + '" x2="' + lx + '" y2="' + ly + '" stroke="rgba(167,139,250,.3)" stroke-width="1" stroke-dasharray="3,3"/>' +
+        '<path d="' + path + '" fill="none" stroke="var(--ac)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<circle cx="' + fx + '" cy="' + fy + '" r="4" fill="var(--ok)"/>' +
+        '<circle cx="' + lx + '" cy="' + ly + '" r="4" fill="var(--err)"/>' +
+        '<text x="' + (fx+6) + '" y="' + (fy-4) + '" fill="var(--ok)" font-size="9">inicio</text>' +
+        '<text x="' + (lx-30) + '" y="' + (ly-4) + '" fill="var(--err)" font-size="9">fin</text>' +
+        '</svg>';
+    }
+
+    // HW calibration band (estatico por ahora — cuando exista RPC de calibracion, leer del backend)
+    var hwBand = '<div class="hw-calibration"><span><b>Calibracion hardware</b> · hw_idle_jitter_px no registrada en esta sesion</span><span style="color:var(--dim)">Pendiente: integrar agent-motor calibracion previa al juego</span></div>';
+
+    var html = '<h3><span>' + g.session_date + ' · ' + g.game_slug + '</span><span class="unit">' + g.n_trials + ' trials · ' + g.n_movements + ' mov samples</span></h3>';
+
+    html += '<div class="grid-3" style="margin-top:.7rem">';
+
+    // Box plot RT
+    if (bpStats){
+      html += '<div class="card" style="background:var(--card2);padding:.8rem">' +
+              '<h3><span>Distribucion RT intra-sesion ' + helpIcon('rt_mean_ms') + '</span><span class="unit">ms</span></h3>' +
+              boxPlotSVG(bpStats, 320, 90) +
+              '<p style="font-size:.62rem;color:var(--dim);margin-top:.3rem;text-align:center">min · p25 · [mediana ' + Math.round(bpStats.p50) + '] · p75 · max</p>' +
+              '</div>';
+    }
+
+    // Quarters Q1-Q4
+    if (qCells){
+      html += '<div class="card" style="background:var(--card2);padding:.8rem">' +
+              '<h3><span>Cuartos temporales ' + helpIcon('fatiga_ratio_h2_h1') + '</span><span class="unit">RT medio por Q</span></h3>' +
+              '<div class="quarters">' + qCells + '</div>' +
+              '<p style="font-size:.62rem;color:var(--dim);margin-top:.5rem;text-align:center">Q1→Q4: ' +
+              (g.rt_q4_mean_ms && g.rt_q1_mean_ms && g.rt_q4_mean_ms > g.rt_q1_mean_ms * 1.15 ? '<span class="pill warn">enlentecimiento progresivo</span>' : g.rt_q4_mean_ms && g.rt_q1_mean_ms && g.rt_q4_mean_ms < g.rt_q1_mean_ms * 0.85 ? '<span class="pill ok">warm-up positivo</span>' : '<span class="pill info">estable</span>') + '</p>' +
+              '</div>';
+    }
+
+    // Trajectory
+    if (trajSvg){
+      html += '<div class="card" style="background:var(--card2);padding:.8rem">' +
+              '<h3><span>Trayectoria motora ' + helpIcon('eficiencia_trayectoria') + '</span><span class="unit">x, y en px</span></h3>' +
+              trajSvg +
+              '<p style="font-size:.62rem;color:var(--dim);margin-top:.3rem;text-align:center">Azul: recorrido real · Punteado violeta: ideal directo · eficiencia = <b style="color:var(--ac)">' + fmt(g.eficiencia_trayectoria, 3) + '</b></p>' +
+              '</div>';
+    }
+
+    html += '</div>';
+
+    // KPI strip de metricas clave
+    html += '<div class="kpi-row" style="margin-top:1rem">';
+    [
+      ['rt_mean_ms', g.rt_mean_ms, 0, 'ms'],
+      ['rt_cv', g.rt_cv, 3, ''],
+      ['fatiga_ratio_h2_h1', g.fatiga_ratio_h2_h1, 2, ''],
+      ['impulsividad_ratio', g.impulsividad_ratio, 3, ''],
+      ['eficiencia_trayectoria', g.eficiencia_trayectoria, 3, ''],
+      ['direction_changes_count', g.direction_changes_count, 0, ''],
+      ['vel_cv', g.vel_cv, 3, '']
+    ].forEach(function(pair){
+      var key = pair[0], v = pair[1], dec = pair[2], unit = pair[3];
+      var cls = '';
+      if (key === 'rt_cv' && v != null){ cls = v > 0.4 ? 'err' : v > 0.25 ? 'warn' : 'ok'; }
+      if (key === 'fatiga_ratio_h2_h1' && v != null){ cls = v > 1.3 ? 'err' : v > 1.15 ? 'warn' : 'ok'; }
+      if (key === 'eficiencia_trayectoria' && v != null){ cls = v > 0.75 ? 'ok' : v > 0.4 ? 'warn' : 'err'; }
+      html += '<div class="kpi ' + cls + '"><div class="v">' + fmt(v, dec) + (unit ? ' <span style="font-size:.75rem;color:var(--dim)">' + unit + '</span>' : '') + '</div><div class="l">' + key + ' ' + helpIcon(key) + '</div></div>';
+    });
+    html += '</div>';
+
+    html += hwBand;
+
+    card.innerHTML = html;
+    sec.appendChild(card);
   });
-  if (!hasAny) return;
+}
+
+function renderKPIs(content, sessions){
+  var latest = sessions[0];
+  var sec = document.createElement('div');
+  sec.className = 'section';
+  sec.innerHTML = '<div class="section-title"><span class="dot" style="background:var(--ac2)"></span>INDICADORES — ultima sesion summary<span class="agent">zykos_game_metrics · metric_type=session_summary</span></div>';
+  var kpiHtml = '<div class="kpi-row">';
+  [
+    ['rt_mean_ms', latest.rt_mean_ms, 0, 'ms'],
+    ['rt_cv', latest.rt_cv, 2, ''],
+    ['jitter_reposo_px', latest.jitter_reposo_px, 2, 'px'],
+    ['eficiencia_trayectoria', latest.eficiencia_trayectoria, 2, ''],
+    ['errores_omision', latest.errores_omision, 0, ''],
+    ['errores_comision', latest.errores_comision, 0, ''],
+    ['hesitaciones_count', latest.hesitaciones_count, 0, '']
+  ].forEach(function(pair){
+    var key = pair[0], v = pair[1], dec = pair[2], unit = pair[3];
+    if (v == null) return;
+    kpiHtml += '<div class="kpi"><div class="v">' + fmt(v, dec) + (unit ? ' <span style="font-size:.75rem;color:var(--dim)">' + unit + '</span>' : '') + '</div><div class="l">' + key + ' ' + helpIcon(key) + '</div></div>';
+  });
+  kpiHtml += '</div>';
+  sec.innerHTML += kpiHtml;
+  content.appendChild(sec);
+}
+
+function renderLongitudinal(content, sessions, baseline){
+  // Comparar cada metrica contra el baseline propio
+  var bmap = {};
+  (baseline || []).forEach(function(b){ bmap[b.metric_name] = b; });
 
   var sec = document.createElement('div');
-  sec.className = 'domain';
-  sec.innerHTML = '<div class="domain-title"><span class="dot"></span>' + title + '</div><div class="grid-2" data-grid></div>';
-  content.appendChild(sec);
-  var grid = sec.querySelector('[data-grid]');
+  sec.className = 'section';
+  var statusCount = { optimo: 0, indicativo: 0, insuficiente: 0 };
+  baseline.forEach(function(b){ statusCount[b.baseline_status] = (statusCount[b.baseline_status] || 0) + 1; });
+  var statusText = baseline.length === 0 ? 'sin baseline (necesita ≥3 sesiones)' :
+                   statusCount.optimo > 0 ? statusCount.optimo + ' metricas con baseline optimo (≥10 sesiones)' :
+                   statusCount.indicativo > 0 ? statusCount.indicativo + ' metricas con baseline indicativo (3-9 sesiones)' :
+                   statusCount.insuficiente + ' metricas con baseline insuficiente';
+  sec.innerHTML = '<div class="section-title"><span class="dot" style="background:var(--ac2)"></span>LONGITUDINAL vs baseline propio<span class="agent">' + statusText + '</span></div>';
 
-  metrics.forEach(function(m){
-    var values = data.map(function(d){ var v = d[m.key]; return (v === null || v === undefined) ? null : parseFloat(v); });
-    if (values.every(function(v){ return v === null; })) return;
+  var latest = sessions[0];
 
-    var labels = data.map(function(d){ return (d.session_date || '').slice(5) + ' ' + (d.game_slug || '').slice(0,8); });
-    var card = document.createElement('div');
-    card.className = 'chart-card';
-    var cid = 'ch-' + m.key + '-' + Math.random().toString(36).slice(2,8);
-    card.innerHTML = '<h3>' + m.label + '<span class="unit">' + m.unit + '</span></h3><div class="chart-wrap"><canvas id="' + cid + '"></canvas></div>';
-    grid.appendChild(card);
+  var bodyHtml = '<div class="card"><div class="baseline-row">';
+  var anyShown = false;
 
-    setTimeout(function(){
-      var ctx = document.getElementById(cid);
-      if (!ctx) return;
-      _charts[cid] = new Chart(ctx.getContext('2d'), {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: m.label, data: values,
-            borderColor: m.color, backgroundColor: m.color + '22',
-            tension: .35, spanGaps: true, fill: true,
-            pointRadius: 3, pointHoverRadius: 5, borderWidth: 2
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { backgroundColor:'#0d1322', titleColor:'#e5e9f0', bodyColor:'#e5e9f0', borderColor: m.color, borderWidth: 1 } },
-          scales: {
-            x: { ticks: { color:'rgba(229,233,240,.5)', font:{size:10} }, grid: { color:'rgba(255,255,255,.04)' } },
-            y: { ticks: { color:'rgba(229,233,240,.5)', font:{size:10} }, grid: { color:'rgba(255,255,255,.04)' }, beginAtZero: true }
-          }
-        }
-      });
-    }, 30);
+  [
+    'rt_mean_ms', 'rt_cv', 'rt_sd_ms',
+    'jitter_reposo_px', 'jitter_terminal_px', 'eficiencia_trayectoria',
+    'vel_cv', 'hesitaciones_count', 'errores_omision', 'errores_comision',
+    'impulsividad_ratio', 'fatiga_ratio_h2_h1'
+  ].forEach(function(key){
+    var b = bmap[key];
+    if (!b) return;
+    var todayVal = latest[key] != null ? parseFloat(latest[key]) : null;
+    if (todayVal == null || isNaN(todayVal)) return;
+    anyShown = true;
+
+    var range = parseFloat(b.p90_val) - parseFloat(b.p10_val);
+    if (range <= 0) range = Math.abs(parseFloat(b.median_val)) || 1;
+    var scale = function(v){ return Math.max(0, Math.min(100, ((v - parseFloat(b.p10_val)) / range) * 100)); };
+
+    var iqrLowPct = scale(parseFloat(b.iqr_low));
+    var iqrHighPct = scale(parseFloat(b.iqr_high));
+    var medianPct = scale(parseFloat(b.median_val));
+    var todayPct = scale(todayVal);
+    var outIqr = todayVal < parseFloat(b.iqr_low) || todayVal > parseFloat(b.iqr_high);
+
+    bodyHtml += '<div class="baseline-item">' +
+      '<div class="bn">' + key + ' ' + helpIcon(key) + '</div>' +
+      '<div class="baseline-bar">' +
+        '<div class="iqr-band" style="left:' + iqrLowPct + '%;right:' + (100 - iqrHighPct) + '%"></div>' +
+        '<div class="median-line" style="left:' + medianPct + '%"></div>' +
+        '<div class="today-dot ' + (outIqr ? 'out-iqr' : '') + '" style="left:' + todayPct + '%" title="Hoy: ' + todayVal.toFixed(3) + '"></div>' +
+      '</div>' +
+      '<div class="val ' + (outIqr ? 'out-iqr' : '') + '">' + fmt(todayVal, key.includes('ms') || key.includes('count') || key.includes('errores') ? 0 : 3) + '</div>' +
+      '</div>';
   });
+
+  if (!anyShown){
+    bodyHtml += '<p style="color:var(--dim);font-size:.75rem;text-align:center;padding:1rem">Sin overlap entre ultima sesion y baseline. Necesitan mas sesiones para contexto longitudinal.</p>';
+  }
+
+  bodyHtml += '</div>' +
+    '<p style="font-size:.65rem;color:var(--dim);margin-top:.7rem;padding:0 .5rem;line-height:1.6">' +
+    '<span style="color:var(--ac2)">Banda violeta</span> = rango intercuartilico (p25-p75) del propio paciente · ' +
+    '<span style="color:#fff">Linea blanca</span> = mediana historica · ' +
+    '<span style="color:var(--ac)">Punto cyan</span> = valor de hoy · ' +
+    '<span style="color:var(--warn)">Punto amarillo</span> = fuera del rango intercuartilico propio. ' +
+    'Constitucion V4 Art. X: comparacion exclusiva intra-individual, nunca cutoffs poblacionales.' +
+    '</p>' +
+    '</div>';
+
+  sec.innerHTML += bodyHtml;
+  content.appendChild(sec);
 }
 
 function renderColors(content, colors){
   var sec = document.createElement('div');
-  sec.className = 'domain';
-  sec.innerHTML = '<div class="domain-title"><span class="dot" style="background:#ec4899"></span>Colores seleccionados · capa afectiva</div>' +
-    '<div class="chart-card"><h3>Historico de elecciones de color post-sesion</h3>' +
-    '<div class="colors-row">' +
+  sec.className = 'section';
+  sec.innerHTML = '<div class="section-title"><span class="dot" style="background:var(--mag)"></span>PROYECTIVO DCAT<span class="agent">mood-modals · elecciones de color post-sesion</span></div>' +
+    '<div class="card"><div class="colors-row">' +
     colors.map(function(c){
       var d = new Date(c.picked_at).toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'});
       return '<div class="cchip" style="background:' + (c.color_hex || '#444') + '" title="' + d + ' · ' + c.game_slug + ' · ' + (c.color_name || c.color_hex) + '"></div>';
     }).join('') +
-    '</div></div>';
+    '</div><p style="font-size:.65rem;color:var(--dim);margin-top:.6rem">Elecciones proyectivas cronologicas. El atributo codificado (DCAT) importa mas que el objeto elegido. Framework Murray + Exner + Luscher adaptado.</p></div>';
   content.appendChild(sec);
 }
 
 function renderRaw(content, rawMetrics){
   if (!rawMetrics || rawMetrics.length === 0) return;
   var sec = document.createElement('div');
-  sec.className = 'domain';
+  sec.className = 'section';
   var rows = rawMetrics.map(function(m){
     var d = m.metric_data || {};
     var date = new Date(m.created_at).toLocaleString('es-AR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
     var compl = d.completed === true ? '<span class="pill ok">OK</span>' : d.completed === false ? '<span class="pill warn">incompleto</span>' : '-';
+    var jitter = d.jitter_reposo_px != null ? parseFloat(d.jitter_reposo_px).toFixed(2) :
+                 d.tremor_avg_jitter != null ? parseFloat(d.tremor_avg_jitter).toFixed(2) + '*' :
+                 d.tremorIndex != null ? parseFloat(d.tremorIndex).toFixed(2) + '*' : '-';
     return '<tr>' +
       '<td class="g">' + date + '</td>' +
       '<td>' + (m.game_slug || '') + '</td>' +
       '<td>' + (d.level || '-') + '</td>' +
       '<td>' + compl + '</td>' +
       '<td>' + (d.duration_sec ? d.duration_sec + 's' : '-') + '</td>' +
-      '<td>' + (d.mean_rt_ms ? Math.round(d.mean_rt_ms) + 'ms' : '-') + '</td>' +
+      '<td>' + (d.mean_rt_ms || d.rt_mean_ms ? Math.round(d.mean_rt_ms || d.rt_mean_ms) + 'ms' : '-') + '</td>' +
       '<td>' + (d.rt_cv != null ? parseFloat(d.rt_cv).toFixed(2) : '-') + '</td>' +
+      '<td>' + jitter + '</td>' +
       '<td>' + (d.errores_omision != null ? d.errores_omision : '-') + '</td>' +
-      '<td>' + (d.path_efficiency != null ? parseFloat(d.path_efficiency).toFixed(2) : '-') + '</td>' +
       '</tr>';
   }).join('');
-  sec.innerHTML = '<div class="domain-title"><span class="dot" style="background:#a78bfa"></span>Ultimos registros crudos</div>' +
-    '<div class="chart-card" style="overflow-x:auto"><table class="raw-table">' +
-    '<thead><tr><th>Fecha</th><th>Juego</th><th>Nivel</th><th>Estado</th><th>Dur</th><th>RT</th><th>CV</th><th>Omision</th><th>Eficiencia</th></tr></thead>' +
+  sec.innerHTML = '<div class="section-title"><span class="dot" style="background:var(--dim)"></span>REGISTROS CRUDOS<span class="agent">ultimos 20 · * = nombre legacy pre-V4</span></div>' +
+    '<div class="card" style="overflow-x:auto"><table class="raw-table">' +
+    '<thead><tr><th>Fecha</th><th>Juego</th><th>Nivel</th><th>Estado</th><th>Dur</th><th>rt_mean</th><th>rt_cv</th><th>jitter_reposo</th><th>omision</th></tr></thead>' +
     '<tbody>' + rows + '</tbody></table></div>';
+  content.appendChild(sec);
+}
+
+function renderGlossary(content){
+  var sec = document.createElement('div');
+  sec.className = 'section';
+  sec.innerHTML = '<div class="section-title"><span class="dot" style="background:var(--dim)"></span>GLOSARIO · dict V4.2<span class="agent">METRIC_DICTIONARY_V4.json</span></div>';
+  var items = '';
+  Object.keys(DICT).forEach(function(k){
+    var m = DICT[k];
+    items += '<details><summary>' + k + ' <span style="color:var(--dim);font-weight:400">· ' + m.label + '</span></summary>' +
+             '<div class="gdef"><b style="color:var(--tx)">' + m.what + '</b><br>' +
+             '<span class="formula">' + m.how + '</span><br>' +
+             '<span style="color:var(--warn)">Alto:</span> ' + m.high + '<br>' +
+             '<span style="color:var(--ok)">Bajo:</span> ' + m.low + '<br>' +
+             '<span style="color:var(--dim)">Dominio: ' + m.domain + ' · Agente: ' + m.agent + '</span>' +
+             (m.warning ? '<br><span style="color:var(--warn)">! ' + m.warning + '</span>' : '') +
+             '</div></details>';
+  });
+  sec.innerHTML += '<div class="glossary">' + items + '</div>';
   content.appendChild(sec);
 }
 
