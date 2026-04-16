@@ -406,14 +406,40 @@ var tip = document.getElementById('tooltip');
 function showTip(e, key){
   var m = DICT[key];
   if (!m) return;
-  var html = '<b>' + m.label + ' · <code style="color:var(--dim);font-size:.62rem">' + key + '</code></b>' + m.what;
-  html += '<div class="row"><span>Calculo</span><span>' + m.how + '</span></div>';
-  if (m.high) html += '<div class="row"><span>Alto</span><span>' + m.high + '</span></div>';
-  if (m.low) html += '<div class="row"><span>Bajo</span><span>' + m.low + '</span></div>';
-  if (m.threshold) html += '<div class="row"><span>Nota</span><span>' + m.threshold + '</span></div>';
-  if (m.warning) html += '<div class="row"><span>Aviso</span><span style="color:var(--warn)">' + m.warning + '</span></div>';
-  html += '<div class="row"><span>Dominio</span><span>' + m.domain + ' · ' + m.agent + '</span></div>';
-  tip.innerHTML = html;
+
+  tip.replaceChildren();
+
+  var title = document.createElement('b');
+  title.appendChild(document.createTextNode((m.label || '') + ' · '));
+  var codeEl = document.createElement('code');
+  codeEl.style.color = 'var(--dim)';
+  codeEl.style.fontSize = '.62rem';
+  codeEl.textContent = key;
+  title.appendChild(codeEl);
+  tip.appendChild(title);
+  tip.appendChild(document.createTextNode(m.what || ''));
+
+  function appendRow(label, value, color){
+    if (!value) return;
+    var row = document.createElement('div');
+    row.className = 'row';
+    var left = document.createElement('span');
+    left.textContent = label;
+    var right = document.createElement('span');
+    if (color) right.style.color = color;
+    right.textContent = value;
+    row.appendChild(left);
+    row.appendChild(right);
+    tip.appendChild(row);
+  }
+
+  appendRow('Calculo', m.how);
+  appendRow('Alto', m.high);
+  appendRow('Bajo', m.low);
+  appendRow('Nota', m.threshold);
+  appendRow('Aviso', m.warning, 'var(--warn)');
+  appendRow('Dominio', (m.domain || '') + ' · ' + (m.agent || ''));
+
   tip.style.display = 'block';
   var r = e.currentTarget.getBoundingClientRect();
   var x = r.left;
