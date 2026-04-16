@@ -700,8 +700,8 @@ async function saveResults(metrics) {
             game = newGame;
         }
         
-        // Save to zykos_game_metrics — V3 fix: removed patient_id (invalid column), proper await
-        const patientDni = (gameState.patientId && gameState.patientId !== null) ? gameState.patientId : null;
+        // Save to zykos_game_metrics — V4 fix: corrected patientDni key mismatch that silently dropped metrics
+        const patientDni = gameState.patientDni || gameState.patientId || null;
         if (patientDni) {
             var flPayload = {
                 patient_dni: patientDni,

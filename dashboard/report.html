@@ -3,414 +3,373 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Datos de sesion — ZYKOS GAMER</title>
+<title>Informe de sesiones · ZYKOS GAMER</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="/js/supabase-config.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0f1e;--sf:#111827;--card:#1a2234;--bd:rgba(255,255,255,.08);--tx:#e2e8f0;--mt:rgba(255,255,255,.4);--ac:#00d4ff;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444}
-body{background:var(--bg);color:var(--tx);font-family:system-ui,sans-serif;min-height:100vh}
+:root{
+  --bg:#060912;--sf:#0d1322;--card:#141b2e;--bd:rgba(255,255,255,.08);
+  --tx:#e5e9f0;--mt:rgba(229,233,240,.55);--dim:rgba(229,233,240,.35);
+  --ac:#00d4ff;--ac2:#a78bfa;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444;--mag:#ec4899
+}
+body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,sans-serif;min-height:100vh;line-height:1.5}
 .hd{background:var(--sf);border-bottom:1px solid var(--bd);padding:.8rem 1.5rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
-.hd h1{font-size:1rem;font-weight:500}
-.bk{color:var(--mt);text-decoration:none;font-size:.8rem;padding:.4rem .8rem;border:1px solid var(--bd);border-radius:6px}
-.mn{max-width:1100px;margin:0 auto;padding:2rem 1.5rem}
-.notice{background:#111827;border:1px solid rgba(0,212,255,.15);border-radius:10px;padding:1.25rem;margin-bottom:1.5rem}
-.notice p{color:var(--mt);font-size:.82rem;line-height:1.7;margin-top:.4rem}
-.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem}
-select{background:#111827;color:var(--tx);border:1px solid var(--bd);padding:.45rem .8rem;border-radius:6px;font-size:.82rem}
-.section-title{font-size:.7rem;font-weight:600;color:var(--ac);text-transform:uppercase;letter-spacing:.1em;margin:1.5rem 0 .8rem}
-.chart-card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:1.25rem;margin-bottom:1rem;position:relative}
-.chart-card h3{font-size:.82rem;font-weight:500;color:var(--mt);margin-bottom:1rem}
-.chart-wrap{height:260px;position:relative}
-.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:.75rem}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--mt)}
-.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.affect-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:.6rem;padding:.6rem;background:rgba(255,255,255,.03);border-radius:6px}
-.al{display:flex;align-items:center;gap:4px;font-size:.7rem;color:var(--mt)}
-.al-icon{font-size:11px}
-.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:1rem}
-.metric-box{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:.75rem 1rem}
-.metric-box .val{font-family:ui-monospace,monospace;font-size:1.1rem;font-weight:600;color:var(--ac);margin-bottom:2px}
-.metric-box .lbl{font-size:.68rem;color:var(--mt)}
-.empty{text-align:center;padding:3rem;color:var(--mt);font-size:.85rem}
-.affect-badge{display:inline-block;font-size:.65rem;padding:2px 7px;border-radius:10px;margin-left:6px}
-.badge-responsive{background:rgba(34,197,94,.15);color:var(--ok)}
-.badge-flat{background:rgba(245,158,11,.15);color:var(--warn)}
-.badge-freeze{background:rgba(239,68,68,.15);color:var(--err)}
+.hd h1{font-size:1rem;font-weight:500;letter-spacing:.02em}
+.hd .tag{display:inline-block;font-size:.6rem;padding:2px 7px;border-radius:4px;background:rgba(0,212,255,.12);color:var(--ac);margin-left:.6rem;letter-spacing:.08em;text-transform:uppercase}
+.bk{color:var(--mt);text-decoration:none;font-size:.8rem;padding:.4rem .8rem;border:1px solid var(--bd);border-radius:6px;transition:.15s}
+.bk:hover{color:var(--tx);border-color:var(--ac)}
+.mn{max-width:1200px;margin:0 auto;padding:1.8rem 1.5rem 3rem}
+.notice{background:linear-gradient(135deg,rgba(0,212,255,.04),rgba(167,139,250,.02));border:1px solid rgba(0,212,255,.15);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem}
+.notice h2{font-size:.78rem;color:var(--ac);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:.35rem}
+.notice p{color:var(--mt);font-size:.78rem;line-height:1.6}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem;background:var(--card);padding:.9rem 1rem;border:1px solid var(--bd);border-radius:10px}
+select{background:var(--sf);color:var(--tx);border:1px solid var(--bd);padding:.5rem .85rem;border-radius:6px;font-size:.85rem;cursor:pointer;font-family:inherit;min-width:200px}
+select:hover{border-color:var(--ac)}
+select option{background:var(--sf);color:var(--tx)}
+.pt-header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:1.2rem}
+.pt-header h2{font-size:1.35rem;font-weight:600}
+.pt-header .pt-dni{color:var(--dim);font-size:.85rem;font-weight:400;margin-top:2px}
+.pt-stats{display:flex;gap:1.5rem;flex-wrap:wrap}
+.pt-stat{text-align:right}
+.pt-stat .num{font-size:1.25rem;font-weight:600;color:var(--ac)}
+.pt-stat .lbl{font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+.empty{text-align:center;padding:4rem 2rem;color:var(--mt);font-size:.88rem}
+.empty .sub{font-size:.75rem;color:var(--dim);margin-top:.5rem;max-width:520px;margin-left:auto;margin-right:auto}
+.domain{margin-bottom:2.2rem}
+.domain-title{display:flex;align-items:center;gap:.6rem;font-size:.75rem;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:.12em;margin:1.5rem 0 .9rem;padding-bottom:.5rem;border-bottom:1px solid var(--bd)}
+.domain-title .dot{width:6px;height:6px;border-radius:50%;background:var(--ac)}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:.9rem}
+.chart-card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:1rem 1.1rem 1.1rem}
+.chart-card h3{font-size:.78rem;font-weight:500;color:var(--mt);margin-bottom:.8rem;letter-spacing:.02em}
+.chart-card h3 .unit{color:var(--dim);font-weight:400;margin-left:.3rem;font-size:.72rem}
+.chart-wrap{height:200px;position:relative}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;margin-bottom:.6rem}
+.kpi{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:.7rem .85rem}
+.kpi .v{font-size:1.35rem;font-weight:600;color:var(--tx);line-height:1.1}
+.kpi .l{font-size:.66rem;color:var(--dim);text-transform:uppercase;letter-spacing:.05em;margin-top:.2rem}
+.kpi.ok .v{color:var(--ok)}
+.kpi.warn .v{color:var(--warn)}
+.kpi.err .v{color:var(--err)}
+.colors-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:.4rem}
+.cchip{width:26px;height:26px;border-radius:6px;border:1px solid rgba(255,255,255,.12);cursor:help}
+.raw-table{width:100%;border-collapse:collapse;font-size:.72rem;margin-top:.4rem}
+.raw-table th{text-align:left;padding:.45rem .6rem;background:var(--sf);color:var(--mt);font-weight:500;text-transform:uppercase;letter-spacing:.04em;font-size:.62rem;border-bottom:1px solid var(--bd)}
+.raw-table td{padding:.4rem .6rem;border-bottom:1px solid rgba(255,255,255,.04);color:var(--tx)}
+.raw-table tr:hover td{background:rgba(0,212,255,.03)}
+.raw-table .g{color:var(--dim);font-size:.7rem}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:500;letter-spacing:.03em}
+.pill.ok{background:rgba(34,197,94,.12);color:var(--ok)}
+.pill.warn{background:rgba(245,158,11,.12);color:var(--warn)}
+.pill.err{background:rgba(239,68,68,.12);color:var(--err)}
+.pill.neutral{background:rgba(167,139,250,.12);color:var(--ac2)}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--dim);border-top-color:var(--ac);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:.5rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err-box{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);color:#fca5a5;padding:1rem;border-radius:8px;font-size:.8rem}
 </style>
 </head>
 <body>
-<div class="hd">
-  <h1>Datos de sesion · ZYKOS GAMER</h1>
+
+<header class="hd">
+  <h1>Informe de sesiones<span class="tag">V4</span></h1>
   <a href="/games/portal/" class="bk">Volver al portal</a>
-</div>
-<div class="mn">
+</header>
+
+<main class="mn">
   <div class="notice">
-    <strong style="color:var(--ac);font-size:.82rem">Datos observacionales — sin interpretacion clinica</strong>
-    <p>Mediciones registradas durante las sesiones. Los valores son datos crudos.
-    El profesional de salud interpreta su significado en el contexto del paciente.
-    ZYKOS GAMER no produce diagnosticos ni reemplaza la evaluacion profesional.</p>
+    <h2>Datos observacionales · sin interpretacion clinica</h2>
+    <p>Mediciones registradas durante las sesiones del paciente. Los valores son crudos y deben ser interpretados por el profesional de salud en el contexto del paciente. ZYKOS GAMER captura semiologia digital continua; no produce diagnosticos ni reemplaza la evaluacion profesional.</p>
   </div>
 
   <div class="controls">
-    <select id="sel-patient" onchange="loadData(this.value)"><option value="">Paciente...</option></select>
-    <select id="sel-game" onchange="loadData(document.getElementById('sel-patient').value)">
-      <option value="">Todos los juegos</option>
-    </select>
-    <select id="sel-days" onchange="loadData(document.getElementById('sel-patient').value)">
-      <option value="30">Ultimos 30 dias</option>
-      <option value="60">Ultimos 60 dias</option>
+    <select id="sel-patient"><option value="">Cargando pacientes...</option></select>
+    <select id="sel-game"><option value="">Todos los juegos</option></select>
+    <select id="sel-days">
+      <option value="7">Ultimos 7 dias</option>
+      <option value="30" selected>Ultimos 30 dias</option>
       <option value="90">Ultimos 90 dias</option>
-      <option value="365">Ultimo año</option>
+      <option value="365">Ultimo ano</option>
     </select>
   </div>
 
-  <div id="content"><div class="empty">Selecciona un paciente para ver los datos.</div></div>
-</div>
+  <div id="content"></div>
+</main>
 
 <script>
-var sb = getSupabaseClient();
-
-async function init() {
-  var token = localStorage.getItem('zykos_token');
-  if (!token) { window.location.href = '/auth/'; return; }
-
-  // Validar sesion
-  var r = await sb.rpc('zykos_validate_session', {p_token: token});
-  if (!r.data || !r.data.ok) { window.location.href = '/auth/'; return; }
-
-  // Obtener pacientes
-  var patients = [];
-  if (r.data.role === 'superadmin' || r.data.role === 'admin') {
-    var pRes = await sb.from('zykos_patients').select('id,dni,full_name').order('dni');
-    patients = pRes.data || [];
-  } else {
-    var pRes = await sb.from('zykos_patients').select('id,dni,full_name').eq('dni', r.data.dni);
-    patients = pRes.data || [];
-  }
-
-  if (patients.length >= 1) {
-    // Mostrar selector con pacientes disponibles
-    var sel = document.getElementById('sel-patient');
-    patients.forEach(function(p){
-      var o = document.createElement('option');
-      var label = p.full_name && p.full_name !== p.dni
-        ? p.full_name + ' (' + p.dni + ')'
-        : 'Paciente ' + p.dni;
-      o.value = p.dni;
-      o.textContent = label;
-      sel.appendChild(o);
-    });
-    // Si hay exactamente un paciente, seleccionarlo y cargar automáticamente
-    if (patients.length === 1) {
-      sel.value = patients[0].dni;
-      loadData(patients[0].dni);
-    }
-  } else if (false && patients.length === 0) {
-    // Usuario único — cargar directo sin mostrar selector
-    document.querySelector('.controls').style.display = 'none';
-    loadData(patients[0].dni);
-  } else {
-    window.location.href = '/games/portal/';
-  }
-}
-
-// Cache de charts para destruirlos antes de recrear
+var sb = null;
 var _charts = {};
+var _currentDni = null;
+var _roster = [];
 
-async function loadData(dni) {
-  if (!dni) return;
-  var game  = document.getElementById('sel-game').value || null;
-  var days  = parseInt(document.getElementById('sel-days').value) || 30;
-  var content = document.getElementById('content');
-  content.innerHTML = '<div class="empty">Cargando...</div>';
+function destroyCharts(){ Object.values(_charts).forEach(function(c){ try{ c.destroy(); }catch(e){} }); _charts = {}; }
 
-  // Cargar juegos disponibles para el selector
-  var {data: slugs} = await sb.from('zykos_game_metrics')
-    .select('game_slug').eq('patient_dni', dni);
-  var uniqueSlugs = [...new Set((slugs||[]).map(function(r){return r.game_slug;}))];
-  var selGame = document.getElementById('sel-game');
-  if (selGame.options.length <= 1) {
-    uniqueSlugs.forEach(function(s){
-      var o = document.createElement('option'); o.value=s; o.textContent=s; selGame.appendChild(o);
-    });
-  }
-
-  // Datos longitudinales afecto+rendimiento
-  var {data: longData, error: longErr} = await sb.rpc('zykos_get_affect_performance_longitudinal', {
-    p_patient_dni: dni,
-    p_game_slug:   game,
-    p_days_back:   days
-  });
-
-  // Datos crudos de sesiones
-  var {data: rawMetrics} = await sb.from('zykos_game_metrics')
-    .select('game_slug,metric_type,metric_value,metric_data,created_at,session_id')
-    .eq('patient_dni', dni)
-    .order('created_at', {ascending: false})
-    .limit(50);
-
-  content.innerHTML = '';
-
-  if (!longData || longData.length === 0) {
-    content.innerHTML = '<div class="empty">Sin sesiones con datos suficientes en este periodo.</div>';
-  } else {
-    renderLongitudinal(content, longData);
-  }
-
-  if (rawMetrics && rawMetrics.length > 0) {
-    renderRawMetrics(content, rawMetrics);
-  }
+function fmt(v, decimals){
+  if (v === null || v === undefined || v === '') return '-';
+  var n = parseFloat(v);
+  if (isNaN(n)) return String(v);
+  return decimals != null ? n.toFixed(decimals) : Math.round(n).toString();
 }
 
-function renderLongitudinal(container, data) {
-  // Preparar datasets
-  var labels  = data.map(function(d){ return (d.session_date||'').slice(5); }); // MM-DD
-  var ef1     = data.map(function(d){ return d.eficacia_tercio_1 != null ? +parseFloat(d.eficacia_tercio_1).toFixed(2) : null; });
-  var ef2     = data.map(function(d){ return d.eficacia_tercio_2 != null ? +parseFloat(d.eficacia_tercio_2).toFixed(2) : null; });
-  var ef3     = data.map(function(d){ return d.eficacia_tercio_3 != null ? +parseFloat(d.eficacia_tercio_3).toFixed(2) : null; });
-  var smiles  = data.map(function(d){ return d.genuine_smile_count || 0; });
-  var brows   = data.map(function(d){ return d.brow_furrow_count || 0; });
-  var hasCam  = data.some(function(d){ return d.genuine_smile_count > 0 || d.brow_furrow_count > 0; });
+async function init(){
+  sb = getSupabaseClient();
+  if (!sb){ document.getElementById('content').innerHTML = '<div class="err-box">No se pudo inicializar la conexion con la base de datos.</div>'; return; }
 
-  // Resumen de afecto
-  var affectSummary = '';
-  data.forEach(function(d, i) {
-    if (d.affect_responsive) affectSummary += '<span class="affect-badge badge-responsive">sesion ' + (i+1) + ': afecto reactivo</span>';
-    if (d.affect_flat)       affectSummary += '<span class="affect-badge badge-flat">sesion ' + (i+1) + ': afecto plano</span>';
-    if (d.has_freeze_candidate) affectSummary += '<span class="affect-badge badge-freeze">sesion ' + (i+1) + ': freeze</span>';
-  });
+  var token = null; try{ token = localStorage.getItem('zykos_token'); }catch(e){}
+  if (!token){ window.location.href = '/auth/?return=' + encodeURIComponent(window.location.pathname); return; }
 
-  // Sección título
-  var secEl = document.createElement('div');
-  secEl.className = 'section-title';
-  secEl.textContent = 'evolucion longitudinal (' + data.length + ' sesiones)';
-  container.appendChild(secEl);
+  var v = await sb.rpc('zykos_validate_session', { p_token: token });
+  if (v.error || !v.data || !v.data.ok){
+    document.getElementById('content').innerHTML = '<div class="err-box">Sesion expirada. Volver a <a href="/auth/" style="color:var(--ac)">iniciar sesion</a>.</div>';
+    return;
+  }
+  var userRole = v.data.role || 'free_user';
+  var userDni = v.data.dni;
 
-  if (affectSummary) {
-    var badgeEl = document.createElement('div');
-    badgeEl.style.marginBottom = '.8rem';
-    badgeEl.innerHTML = affectSummary;
-    container.appendChild(badgeEl);
+  var rosterRes = await sb.rpc('zykos_dashboard_patient_roster');
+  if (rosterRes.error){ document.getElementById('content').innerHTML = '<div class="err-box">Error cargando pacientes: ' + rosterRes.error.message + '</div>'; return; }
+
+  _roster = rosterRes.data || [];
+  var isPro = (userRole === 'superadmin' || userRole === 'professional' || userRole === 'director_medico');
+  if (!isPro){
+    _roster = _roster.filter(function(r){ return r.dni === userDni; });
   }
 
-  // Chart 1: Eficacia por tercios
-  var card1 = document.createElement('div');
-  card1.className = 'chart-card';
-  card1.innerHTML = '<h3>eficacia por tercio temporal de sesion</h3><div class="chart-wrap"><canvas id="ch-eficacia"></canvas></div>' +
-    '<div class="legend">' +
-    '<span class="legend-item"><span class="legend-dot" style="background:#00d4ff"></span>primer tercio</span>' +
-    '<span class="legend-item"><span class="legend-dot" style="background:#a78bfa"></span>segundo tercio</span>' +
-    '<span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>tercer tercio</span>' +
+  var selP = document.getElementById('sel-patient');
+  selP.innerHTML = '';
+  if (_roster.length === 0){
+    selP.innerHTML = '<option value="">Sin pacientes</option>';
+    document.getElementById('content').innerHTML = '<div class="empty">Todavia no hay pacientes con metricas registradas.</div>';
+    return;
+  }
+  _roster.forEach(function(r){
+    var o = document.createElement('option');
+    o.value = r.dni;
+    var name = r.display_name || ('Paciente ' + r.dni);
+    var suffix = r.total_metrics > 0 ? ' · ' + r.total_metrics + ' metricas' : ' · sin datos';
+    o.textContent = name + ' (' + r.dni + ')' + suffix;
+    selP.appendChild(o);
+  });
+
+  selP.onchange = function(){ loadData(this.value); };
+  document.getElementById('sel-game').onchange = function(){ loadData(document.getElementById('sel-patient').value); };
+  document.getElementById('sel-days').onchange = function(){ loadData(document.getElementById('sel-patient').value); };
+
+  var first = _roster.find(function(r){ return r.total_metrics > 0; }) || _roster[0];
+  selP.value = first.dni;
+  await loadData(first.dni);
+}
+
+async function loadData(dni){
+  if (!dni) return;
+  _currentDni = dni;
+  destroyCharts();
+  var content = document.getElementById('content');
+  content.innerHTML = '<div class="empty"><span class="spinner"></span>Cargando metricas...</div>';
+
+  var game = document.getElementById('sel-game').value || null;
+  var days = parseInt(document.getElementById('sel-days').value) || 30;
+  var patient = _roster.find(function(r){ return r.dni === dni; }) || { dni: dni, display_name: 'Paciente ' + dni };
+
+  var gp = await sb.rpc('zykos_dashboard_games_played', { p_dni: dni });
+  var selGame = document.getElementById('sel-game');
+  var prevGame = selGame.value;
+  selGame.innerHTML = '<option value="">Todos los juegos</option>';
+  (gp.data || []).forEach(function(g){
+    var o = document.createElement('option');
+    o.value = g.game_slug;
+    o.textContent = g.game_slug + ' (' + g.session_count + ')';
+    selGame.appendChild(o);
+  });
+  if (prevGame) selGame.value = prevGame;
+
+  var sessRes = await sb.rpc('zykos_dashboard_sessions', { p_dni: dni, p_game_slug: game, p_days_back: days });
+  if (sessRes.error){ content.innerHTML = '<div class="err-box">Error: ' + sessRes.error.message + '</div>'; return; }
+  var sessions = sessRes.data || [];
+
+  var colorsRes = await sb.rpc('zykos_dashboard_color_history', { p_dni: dni, p_days_back: days });
+  var colors = colorsRes.data || [];
+
+  var rawRes = await sb.from('zykos_game_metrics')
+    .select('game_slug,metric_type,metric_data,created_at')
+    .eq('patient_dni', dni)
+    .in('metric_type', ['session_summary','pill_placement','session_complete','session_biomet'])
+    .order('created_at', { ascending: false })
+    .limit(20);
+  var rawMetrics = rawRes.data || [];
+
+  render(content, patient, sessions, colors, rawMetrics);
+}
+
+function render(content, patient, sessions, colors, rawMetrics){
+  content.innerHTML = '';
+  renderHeader(content, patient, sessions);
+
+  if (sessions.length === 0){
+    var e = document.createElement('div');
+    e.className = 'empty';
+    e.innerHTML = 'Sin sesiones registradas en este periodo.<div class="sub">El paciente aun no jugo en este rango, o las metricas no se grabaron. Verificar consola del juego en la proxima sesion y ampliar el rango de fechas.</div>';
+    content.appendChild(e);
+    if (colors.length) renderColors(content, colors);
+    return;
+  }
+
+  var chartData = [].concat(sessions).reverse();
+
+  renderKPIs(content, sessions);
+  renderDomain(content, 'Atencion y vigilancia', chartData, [
+    { key:'rt_mean_ms', label:'RT medio', unit:'ms', color:'#00d4ff' },
+    { key:'rt_cv', label:'Variabilidad RT (CV)', unit:'ratio', color:'#a78bfa', decimals:2 },
+    { key:'fatiga_index', label:'Indice de fatiga', unit:'2da/1ra mitad', color:'#f59e0b', decimals:2 },
+    { key:'hesitation_count', label:'Hesitaciones', unit:'count', color:'#ec4899' }
+  ]);
+  renderDomain(content, 'Control psicomotor', chartData, [
+    { key:'tremor_avg', label:'Tremor jitter medio', unit:'px', color:'#22c55e', decimals:1 },
+    { key:'path_efficiency', label:'Eficiencia trayectoria', unit:'ratio', color:'#00d4ff', decimals:2 },
+    { key:'movement_efficiency', label:'Eficiencia movimiento', unit:'ratio', color:'#a78bfa', decimals:2 },
+    { key:'dysmetria_ratio', label:'Dismetria', unit:'ratio', color:'#ef4444', decimals:3 }
+  ]);
+  renderDomain(content, 'Funciones ejecutivas', chartData, [
+    { key:'errores_omision', label:'Errores de omision', unit:'count', color:'#ef4444' },
+    { key:'errores_comision', label:'Errores de comision', unit:'count', color:'#f59e0b' },
+    { key:'self_correction_ratio', label:'Autocorreccion', unit:'ratio', color:'#22c55e', decimals:2 },
+    { key:'planificacion_ratio', label:'Planificacion', unit:'ratio', color:'#00d4ff', decimals:2 }
+  ]);
+  renderDomain(content, 'Sensopercepcion y comprension', chartData, [
+    { key:'instruction_read_time_ms', label:'Tiempo leyendo consigna', unit:'ms', color:'#a78bfa' },
+    { key:'time_to_first_action_ms', label:'Latencia primera accion', unit:'ms', color:'#00d4ff' }
+  ]);
+
+  if (colors.length) renderColors(content, colors);
+  renderRaw(content, rawMetrics);
+}
+
+function renderHeader(content, patient, sessions){
+  var total = sessions.reduce(function(a,s){ return a + parseInt(s.session_count||0); }, 0);
+  var completed = sessions.reduce(function(a,s){ return a + parseInt(s.completed_count||0); }, 0);
+  var uniqueDays = sessions.length;
+  var h = document.createElement('div');
+  h.className = 'pt-header';
+  h.innerHTML =
+    '<div><h2>' + (patient.display_name || ('Paciente ' + patient.dni)) + '</h2>' +
+    '<div class="pt-dni">DNI ' + patient.dni + (patient.role ? ' · ' + patient.role : '') + '</div></div>' +
+    '<div class="pt-stats">' +
+    '<div class="pt-stat"><div class="num">' + total + '</div><div class="lbl">Registros</div></div>' +
+    '<div class="pt-stat"><div class="num">' + completed + '</div><div class="lbl">Completados</div></div>' +
+    '<div class="pt-stat"><div class="num">' + uniqueDays + '</div><div class="lbl">Dias activos</div></div>' +
     '</div>';
-  container.appendChild(card1);
+  content.appendChild(h);
+}
 
-  setTimeout(function(){
-    var ctx1 = document.getElementById('ch-eficacia');
-    if (!ctx1) return;
-    if (_charts['eficacia']) _charts['eficacia'].destroy();
-    _charts['eficacia'] = new Chart(ctx1.getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [
-          { label:'Tercio 1', data:ef1, borderColor:'#00d4ff', backgroundColor:'rgba(0,212,255,.08)', tension:.4, spanGaps:true },
-          { label:'Tercio 2', data:ef2, borderColor:'#a78bfa', backgroundColor:'rgba(167,139,250,.08)', tension:.4, spanGaps:true },
-          { label:'Tercio 3', data:ef3, borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,.08)', tension:.4, spanGaps:true }
-        ]
-      },
-      options: {
-        responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false} },
-        scales:{
-          y:{ grid:{color:'rgba(255,255,255,.06)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} },
-          x:{ grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} }
-        }
-      }
-    });
-  }, 50);
+function renderKPIs(content, sessions){
+  var latest = sessions[0];
+  var rtcv = parseFloat(latest.rt_cv || 0);
+  var fat = parseFloat(latest.fatiga_index || 1);
+  var pe = parseFloat(latest.path_efficiency || 0);
+  var om = parseInt(latest.errores_omision || 0);
+  var row = document.createElement('div');
+  row.className = 'kpi-row';
+  row.innerHTML =
+    '<div class="kpi ' + (rtcv > 0.35 ? 'warn' : 'ok') + '"><div class="v">' + fmt(rtcv,2) + '</div><div class="l">RT-CV ultima</div></div>' +
+    '<div class="kpi ' + (fat > 1.3 ? 'warn' : 'ok') + '"><div class="v">' + fmt(fat,2) + '</div><div class="l">Fatiga ultima</div></div>' +
+    '<div class="kpi ' + (pe > 0.75 ? 'ok' : 'warn') + '"><div class="v">' + fmt(pe,2) + '</div><div class="l">Eficiencia ultima</div></div>' +
+    '<div class="kpi ' + (om > 50 ? 'err' : om > 10 ? 'warn' : 'ok') + '"><div class="v">' + om + '</div><div class="l">Omisiones ultima</div></div>';
+  content.appendChild(row);
+}
 
-  // Chart 2: Humor facial superpuesto (solo si hay datos de cámara)
-  if (hasCam) {
-    var card2 = document.createElement('div');
-    card2.className = 'chart-card';
-    card2.innerHTML = '<h3>humor facial durante las sesiones <span style="font-size:.65rem;color:var(--mt)">(marcadores superpuestos sobre eficacia)</span></h3>' +
-      '<div class="chart-wrap"><canvas id="ch-humor"></canvas></div>' +
-      '<div class="affect-legend">' +
-      '<span class="al"><span class="al-icon" style="color:#22c55e">●</span>sonrisa genuina (Duchenne)</span>' +
-      '<span class="al"><span class="al-icon" style="color:#f59e0b">●</span>ceño fruncido (AU4)</span>' +
-      '<span class="al"><span class="al-icon" style="color:#ef4444">▲</span>freeze facial</span>' +
-      '</div>';
-    container.appendChild(card2);
+function renderDomain(content, title, data, metrics){
+  var hasAny = metrics.some(function(m){
+    return data.some(function(d){ return d[m.key] !== null && d[m.key] !== undefined; });
+  });
+  if (!hasAny) return;
+
+  var sec = document.createElement('div');
+  sec.className = 'domain';
+  sec.innerHTML = '<div class="domain-title"><span class="dot"></span>' + title + '</div><div class="grid-2" data-grid></div>';
+  content.appendChild(sec);
+  var grid = sec.querySelector('[data-grid]');
+
+  metrics.forEach(function(m){
+    var values = data.map(function(d){ var v = d[m.key]; return (v === null || v === undefined) ? null : parseFloat(v); });
+    if (values.every(function(v){ return v === null; })) return;
+
+    var labels = data.map(function(d){ return (d.session_date || '').slice(5) + ' ' + (d.game_slug || '').slice(0,8); });
+    var card = document.createElement('div');
+    card.className = 'chart-card';
+    var cid = 'ch-' + m.key + '-' + Math.random().toString(36).slice(2,8);
+    card.innerHTML = '<h3>' + m.label + '<span class="unit">' + m.unit + '</span></h3><div class="chart-wrap"><canvas id="' + cid + '"></canvas></div>';
+    grid.appendChild(card);
 
     setTimeout(function(){
-      var ctx2 = document.getElementById('ch-humor');
-      if (!ctx2) return;
-      if (_charts['humor']) _charts['humor'].destroy();
-
-      // Puntos de freeze como anotaciones
-      var freezePoints = data.map(function(d){
-        return d.has_freeze_candidate ? (d.eficacia_tercio_2 || 0) : null;
-      });
-
-      _charts['humor'] = new Chart(ctx2.getContext('2d'), {
+      var ctx = document.getElementById(cid);
+      if (!ctx) return;
+      _charts[cid] = new Chart(ctx.getContext('2d'), {
         type: 'line',
         data: {
           labels: labels,
-          datasets: [
-            {
-              label:'Eficacia (T2)', data:ef2,
-              borderColor:'rgba(0,212,255,.4)', borderDash:[4,4],
-              backgroundColor:'transparent', tension:.4, spanGaps:true,
-              pointRadius:0
-            },
-            {
-              label:'Sonrisas genuinas', data:smiles,
-              borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.1)',
-              tension:.4, yAxisID:'y2', fill:true
-            },
-            {
-              label:'Ceño fruncido', data:brows,
-              borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,.08)',
-              tension:.4, yAxisID:'y2', fill:false
-            },
-            {
-              label:'Freeze', data:freezePoints,
-              borderColor:'transparent', backgroundColor:'rgba(239,68,68,.7)',
-              pointStyle:'triangle', pointRadius:8, type:'scatter', yAxisID:'y'
-            }
-          ]
+          datasets: [{
+            label: m.label, data: values,
+            borderColor: m.color, backgroundColor: m.color + '22',
+            tension: .35, spanGaps: true, fill: true,
+            pointRadius: 3, pointHoverRadius: 5, borderWidth: 2
+          }]
         },
         options: {
-          responsive:true, maintainAspectRatio:false,
-          plugins:{ legend:{display:false} },
-          scales:{
-            y:{  grid:{color:'rgba(255,255,255,.06)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} },
-            y2:{ position:'right', grid:{color:'rgba(255,255,255,.03)'}, ticks:{color:'rgba(255,255,255,.3)',font:{size:10}} },
-            x:{  grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} }
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { backgroundColor:'#0d1322', titleColor:'#e5e9f0', bodyColor:'#e5e9f0', borderColor: m.color, borderWidth: 1 } },
+          scales: {
+            x: { ticks: { color:'rgba(229,233,240,.5)', font:{size:10} }, grid: { color:'rgba(255,255,255,.04)' } },
+            y: { ticks: { color:'rgba(229,233,240,.5)', font:{size:10} }, grid: { color:'rgba(255,255,255,.04)' }, beginAtZero: true }
           }
         }
       });
-    }, 80);
-
-    // Chart 3: Correlacion afecto-rendimiento
-    var hasAffectData = data.some(function(d){ return d.affect_reactivity != null; });
-    if (hasAffectData) {
-      var reactivity = data.map(function(d){
-        return d.affect_reactivity != null ? +parseFloat(d.affect_reactivity).toFixed(3) : null;
-      });
-      var smileHits = data.map(function(d){
-        return d.affect_smile_hits_pct != null ? +parseFloat(d.affect_smile_hits_pct).toFixed(3) : null;
-      });
-      var browErrors = data.map(function(d){
-        return d.affect_brow_errors_pct != null ? +parseFloat(d.affect_brow_errors_pct).toFixed(3) : null;
-      });
-
-      var card3 = document.createElement('div');
-      card3.className = 'chart-card';
-      card3.innerHTML = '<h3>correlacion afecto–rendimiento <span style="font-size:.62rem;color:var(--mt)">(Russell 1980, Cohn & Ekman 2005)</span></h3>' +
-        '<div class="chart-wrap"><canvas id="ch-affect-corr"></canvas></div>' +
-        '<div class="affect-legend">' +
-        '<span class="al"><span class="al-icon" style="color:#22c55e">●</span>sonrisa durante aciertos</span>' +
-        '<span class="al"><span class="al-icon" style="color:#f59e0b">●</span>ceño durante errores</span>' +
-        '<span class="al"><span class="al-icon" style="color:#00d4ff">●</span>reactividad afectiva (>0.3=reactivo, ~0=plano)</span>' +
-        '</div>';
-      container.appendChild(card3);
-
-      setTimeout(function(){
-        var ctx3 = document.getElementById('ch-affect-corr');
-        if (!ctx3) return;
-        if (_charts['affect-corr']) _charts['affect-corr'].destroy();
-        _charts['affect-corr'] = new Chart(ctx3.getContext('2d'), {
-          type: 'line',
-          data: {
-            labels: labels,
-            datasets: [
-              { label:'Sonrisa en aciertos', data:smileHits, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.1)', tension:.4, spanGaps:true, fill:true },
-              { label:'Ceño en errores',     data:browErrors, borderColor:'#f59e0b', backgroundColor:'transparent', tension:.4, spanGaps:true },
-              {
-                label:'Reactividad afectiva', data:reactivity,
-                borderColor:'#00d4ff', backgroundColor:'transparent',
-                borderWidth:2, tension:.4, spanGaps:true,
-                // Línea de referencia en 0.3 (umbral de reactividad sana)
-                borderDash:[]
-              }
-            ]
-          },
-          options: {
-            responsive:true, maintainAspectRatio:false,
-            plugins:{ legend:{display:false},
-              annotation:{
-                annotations:{
-                  threshold:{
-                    type:'line', yMin:0.3, yMax:0.3,
-                    borderColor:'rgba(0,212,255,.3)', borderDash:[4,4], borderWidth:1
-                  }
-                }
-              }
-            },
-            scales:{
-              y:{ min:-0.2, max:1.1, grid:{color:'rgba(255,255,255,.06)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} },
-              x:{ grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'rgba(255,255,255,.4)',font:{size:10}} }
-            }
-          }
-        });
-      }, 110);
-    }
-  }
+    }, 30);
+  });
 }
 
-function renderRawMetrics(container, metrics) {
+function renderColors(content, colors){
   var sec = document.createElement('div');
-  sec.className = 'section-title';
-  sec.textContent = 'metricas por sesion (ultimas ' + Math.min(metrics.length, 5) + ')';
-  container.appendChild(sec);
+  sec.className = 'domain';
+  sec.innerHTML = '<div class="domain-title"><span class="dot" style="background:#ec4899"></span>Colores seleccionados · capa afectiva</div>' +
+    '<div class="chart-card"><h3>Historico de elecciones de color post-sesion</h3>' +
+    '<div class="colors-row">' +
+    colors.map(function(c){
+      var d = new Date(c.picked_at).toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'});
+      return '<div class="cchip" style="background:' + (c.color_hex || '#444') + '" title="' + d + ' · ' + c.game_slug + ' · ' + (c.color_name || c.color_hex) + '"></div>';
+    }).join('') +
+    '</div></div>';
+  content.appendChild(sec);
+}
 
-  var CANONICAS = ['rt_mean_ms','rt_cv','jitter_reposo_px','vel_cv','vel_oscilacion_index',
-    'precision_deposito_px','hesitaciones_count','errores_comision','errores_omision',
-    'perseveracion_count','eficiencia_trayectoria','decaimiento_mitades','d_prime',
-    'focus_interruptions_count','inactivity_episodes_count',
-    'affect_reactivity','cam_genuine_smile_pct','cam_brow_furrow_ms'];
-
-  var bySession = {};
-  metrics.forEach(function(m){
-    var k = (m.session_id||'') + '_' + m.game_slug;
-    if (!bySession[k]) bySession[k] = { slug: m.game_slug, date: m.created_at, metrics: [] };
-    bySession[k].metrics.push(m);
-  });
-
-  Object.keys(bySession).slice(0,5).forEach(function(k) {
-    var s = bySession[k];
-    var card = document.createElement('div');
-    card.className = 'chart-card';
-    var dateStr = s.date ? s.date.slice(0,16).replace('T',' ') : '';
-    card.innerHTML = '<h3>' + s.slug + ' <span style="color:var(--mt);font-weight:400">' + dateStr + '</span></h3>';
-
-    var grid = document.createElement('div');
-    grid.className = 'metric-grid';
-
-    s.metrics.slice(0,1).forEach(function(m) {
-      var d = m.metric_data || {};
-      CANONICAS.forEach(function(key) {
-        if (d[key] !== undefined && d[key] !== null) {
-          var box = document.createElement('div');
-          box.className = 'metric-box';
-          box.innerHTML = '<div class="val">' + Number(d[key]).toFixed(2) + '</div>' +
-                          '<div class="lbl">' + key + '</div>';
-          grid.appendChild(box);
-        }
-      });
-    });
-
-    if (grid.children.length > 0) {
-      card.appendChild(grid);
-      container.appendChild(card);
-    }
-  });
+function renderRaw(content, rawMetrics){
+  if (!rawMetrics || rawMetrics.length === 0) return;
+  var sec = document.createElement('div');
+  sec.className = 'domain';
+  var rows = rawMetrics.map(function(m){
+    var d = m.metric_data || {};
+    var date = new Date(m.created_at).toLocaleString('es-AR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+    var compl = d.completed === true ? '<span class="pill ok">OK</span>' : d.completed === false ? '<span class="pill warn">incompleto</span>' : '-';
+    return '<tr>' +
+      '<td class="g">' + date + '</td>' +
+      '<td>' + (m.game_slug || '') + '</td>' +
+      '<td>' + (d.level || '-') + '</td>' +
+      '<td>' + compl + '</td>' +
+      '<td>' + (d.duration_sec ? d.duration_sec + 's' : '-') + '</td>' +
+      '<td>' + (d.mean_rt_ms ? Math.round(d.mean_rt_ms) + 'ms' : '-') + '</td>' +
+      '<td>' + (d.rt_cv != null ? parseFloat(d.rt_cv).toFixed(2) : '-') + '</td>' +
+      '<td>' + (d.errores_omision != null ? d.errores_omision : '-') + '</td>' +
+      '<td>' + (d.path_efficiency != null ? parseFloat(d.path_efficiency).toFixed(2) : '-') + '</td>' +
+      '</tr>';
+  }).join('');
+  sec.innerHTML = '<div class="domain-title"><span class="dot" style="background:#a78bfa"></span>Ultimos registros crudos</div>' +
+    '<div class="chart-card" style="overflow-x:auto"><table class="raw-table">' +
+    '<thead><tr><th>Fecha</th><th>Juego</th><th>Nivel</th><th>Estado</th><th>Dur</th><th>RT</th><th>CV</th><th>Omision</th><th>Eficiencia</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table></div>';
+  content.appendChild(sec);
 }
 
 init();
 </script>
+
 </body>
 </html>
