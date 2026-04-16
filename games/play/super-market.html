@@ -1121,7 +1121,7 @@ async function saveSupermarketResult(metrics) {
                 // SDT y comprensión
                 errores_comision:   metrics.errors_got ? metrics.errors_got.length : 0,
                 errores_omision:    metrics.missed_items || 0,
-                economia_cognitiva: metrics.scan_score || null,
+                ratio_acciones_util: metrics.scan_score || null,
                 // Timing
                 hesitaciones_count: metrics.hesitation_count || 0,
                 rt_mean_ms:         metrics.avg_hesitation_ms || null,

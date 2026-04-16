@@ -979,8 +979,8 @@ async function finishGame() {
         levels_completed:gameState.levelMetrics.length, reset_count:Biometrics.resetCount,
         biometric_summary:{
             avg_reaction_time:avg(gameState.biometricData.map(b=>b.rt_mean_ms)),
-            avg_tremor:avg(gameState.biometricData.map(b=>b.jitter_reposo_px)),
-            avg_tremor_speed_var:avg(gameState.biometricData.map(b=>b.vel_cv)),
+            avg_jitter:avg(gameState.biometricData.map(b=>b.jitter_reposo_px)),
+            avg_jitter_speed_var:avg(gameState.biometricData.map(b=>b.vel_cv)),
             avg_d_prime:avg(gameState.biometricData.map(b=>b.d_prime)),
             total_hesitations:sum(gameState.biometricData.map(b=>b.hesitaciones_count)),
             total_hesitation_ms:sum(gameState.biometricData.map(b=>b.hesitation_total_ms)),
@@ -1013,9 +1013,9 @@ async function finishGame() {
                 errores_comision: summary.biometric_summary.total_commissions,
                 errores_omision: summary.biometric_summary.total_omissions,
                 completed: true,
-                // Motor / Tremor
-                jitter_reposo_px: summary.biometric_summary.avg_tremor,
-                vel_cv: summary.biometric_summary.avg_tremor_speed_var,
+                // Motor / Jitter
+                jitter_reposo_px: summary.biometric_summary.avg_jitter,
+                vel_cv: summary.biometric_summary.avg_jitter_speed_var,
                 // Behavioral
                 hesitaciones_count: summary.biometric_summary.total_hesitations,
                 total_hesitation_ms: summary.biometric_summary.total_hesitation_ms,
@@ -1070,7 +1070,7 @@ function showResultsScreen(summary) {
 // ========== SUPABASE HELPERS ==========
 async function saveLevelMetrics(metric) {
     if (!sb) return;
-    const clean={...metric};if(clean.biometrics){clean.biometrics={...clean.biometrics};delete clean.biometrics.action_log;delete clean.biometrics.tremor_details;delete clean.biometrics.hesitation_details}
+    const clean={...metric};if(clean.biometrics){clean.biometrics={...clean.biometrics};delete clean.biometrics.action_log;delete clean.biometrics.jitter_details;delete clean.biometrics.hesitation_details}
     try { await sb.from('zykos_game_metrics').insert({  patient_dni:gameState.patientDni || null, session_id:gameState.sessionId, game_slug:'neuro-chef-v2', metric_type:`level_${metric.level}`, metric_value:metric.score, metric_data:clean }); } catch(e) { console.warn('Metric save fail:',e); }
 }
 
@@ -1105,7 +1105,7 @@ async function saveBiometrics(bio) {
             eficacia_tercio_1:      bio.eficacia_tercio_1,
             eficacia_tercio_2:      bio.eficacia_tercio_2,
             eficacia_tercio_3:      bio.eficacia_tercio_3,
-            decaimiento_mitades:    bio.decaimiento_mitades
+            decaimiento_vigilancia: bio.decaimiento_vigilancia
         }
     };
     try {

@@ -1425,9 +1425,9 @@
             ? Math.round(clinicalMetrics.invalidMoves / clinicalMetrics.totalMoves * 100) / 100 : 0,
           resets: resetEvents.length,
           // --- Motor (feeds dominio Coordinacion) ---
-          tremor_event_count: mm.tremor_event_count,
+          jitter_event_count: mm.tremor_event_count,
           jitter_reposo_px: mm.jitter_reposo_px,
-          tremor_terminal: mm.tremor_max_jitter,
+          jitter_terminal_px: mm.tremor_max_jitter,
           overshoot_count: mm.overshoot_count,
           dysmetria_index: mm.dysmetria_ratio,
           direction_changes: mm.direction_changes,
@@ -1579,7 +1579,7 @@
     const flags = [];
     // Variaciones observadas — etiquetas descriptivas de la medición, no diagnósticas
     if (rt_cv > 0.35) flags.push({flag:'HIGH_RT_VARIABILITY', severity:'info', desc:'rt_cv=' + rt_cv.toFixed(3) + ' (>0.35)'});
-    if (fatiga > 1.3) flags.push({flag:'FATIGA_INDEX', severity:'info', desc:'decaimiento_mitades=' + fatiga.toFixed(2) + ' (>1.3)'});
+    if (fatiga > 1.3) flags.push({flag:'FATIGA_INDEX', severity:'info', desc:'decaimiento_vigilancia=' + fatiga.toFixed(2) + ' (>1.3)'});
     if (cm.time_to_first_action_ms < 2000) flags.push({flag:'LATENCIA_INICIO', severity:'info', desc:'first_action_latency=' + Math.round(cm.time_to_first_action_ms) + 'ms (<2000)'});
     if (cm.time_to_first_action_ms > 8000) flags.push({flag:'LATENCIA_INICIO', severity:'info', desc:'first_action_latency=' + Math.round(cm.time_to_first_action_ms) + 'ms (>8000)'});
     if (comOm > 2) flags.push({flag:'RATIO_COM_OM', severity:'info', desc:'comision/omision=' + comOm.toFixed(2) + ' (>2)'});
@@ -1670,7 +1670,7 @@
       resets: resetEvents.length,
       reset_timing: resetEvents.map(r => r.timeSinceStart),
       // Motor / Fine Motor
-      tremor_events: stats.motor_markers?.tremor_event_count || 0,
+      jitter_events: stats.motor_markers?.tremor_event_count || 0,
       jitter_reposo_px: stats.motor_markers?.jitter_reposo_px || 0,
       dysmetria_overshoots: stats.motor_markers?.overshoot_count || 0,
       direction_changes: stats.motor_markers?.direction_changes || 0,
@@ -5568,7 +5568,7 @@
           try { var cs = calculateClinicalStats(); var cm = cs.clinical_markers||{}; var mm = cs.motor_markers||{}; var pm = cs.planning_markers||{};
             return { mean_rt_ms: cm.mean_reaction_time_ms, rt_cv: cm.rt_coefficient_of_variation,
               errores_comision: cm.commission_errors, errores_omision: cm.omission_errors,
-              movement_efficiency: cm.movement_efficiency, tremor_event_count: mm.tremor_event_count,
+              movement_efficiency: cm.movement_efficiency, jitter_event_count: mm.tremor_event_count,
               planificacion_ratio: pm.plan_efficiency, direction_changes: mm.direction_changes };
           } catch(e) { return {}; }
         })())

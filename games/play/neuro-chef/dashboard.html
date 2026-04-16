@@ -130,7 +130,7 @@
         const allBio = bioMetrics.map(m => m.metric_data).filter(Boolean);
         const avgRT = allBio.length ? Math.round(allBio.reduce((a, b) => a + (b.reaction_time_ms || 0), 0) / allBio.length) : 0;
         const avgDPrime = allBio.length ? (allBio.reduce((a, b) => a + (b.d_prime || 0), 0) / allBio.length).toFixed(2) : '---';
-        const avgTremor = allBio.length ? (allBio.reduce((a, b) => a + (b.jitter_reposo_px || b.tremor_avg || 0), 0) / allBio.length).toFixed(1) : '---';
+        const avgJitter = allBio.length ? (allBio.reduce((a, b) => a + (b.jitter_reposo_px || 0), 0) / allBio.length).toFixed(1) : '---';
         const totalOmissions = allBio.reduce((a, b) => a + (b.misses || 0), 0);
         const totalCommissions = allBio.reduce((a, b) => a + (b.false_alarms || 0), 0);
         const totalHesitations = allBio.reduce((a, b) => a + (b.hesitation_count || 0), 0);
@@ -142,7 +142,7 @@
                 <div class="summary-card"><div class="val">${completedSessions}</div><div class="lbl">Completadas</div></div>
                 <div class="summary-card"><div class="val">${avgRT}ms</div><div class="lbl">RT promedio</div></div>
                 <div class="summary-card"><div class="val">${avgDPrime}</div><div class="lbl">d' promedio</div></div>
-                <div class="summary-card"><div class="val">${avgTremor}</div><div class="lbl">Tremor idx</div></div>
+                <div class="summary-card"><div class="val">${avgJitter}</div><div class="lbl">Jitter idx</div></div>
                 <div class="summary-card"><div class="val">${totalOmissions}</div><div class="lbl">Omisiones totales</div></div>
                 <div class="summary-card"><div class="val">${totalCommissions}</div><div class="lbl">Comisiones totales</div></div>
                 <div class="summary-card"><div class="val">${totalHesitations}</div><div class="lbl">Hesitaciones</div></div>
@@ -178,7 +178,7 @@
                 dprime: sBio.length ? +(sBio.reduce((a,b) => a + (b.d_prime||0), 0) / sBio.length).toFixed(2) : null,
                 omissions: sBio.reduce((a,b) => a + (b.misses||0), 0),
                 commissions: sBio.reduce((a,b) => a + (b.false_alarms||0), 0),
-                tremor: sBio.length ? +(sBio.reduce((a,b) => a + (b.jitter_reposo_px||b.tremor_avg||0), 0) / sBio.length).toFixed(2) : null,
+                jitter: sBio.length ? +(sBio.reduce((a,b) => a + (b.jitter_reposo_px||0), 0) / sBio.length).toFixed(2) : null,
                 hesitations: sBio.reduce((a,b) => a + (b.hesitation_count||0), 0),
                 score: s.final_score,
                 duration: s.completed_at ? Math.round((new Date(s.completed_at) - new Date(s.started_at)) / 1000) : null
