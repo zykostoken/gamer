@@ -652,17 +652,8 @@
                 document.getElementById('patient-display').textContent = 'Paciente: ' + sessionState.patientDni;
 
                 if (sb) {
-                    // patientId already set from URL param (numeric)
-                    // Only lookup by DNI if we don't have numeric ID
-                    if (!sessionState.patientId && sessionState.patientDni !== null) {
-                        getOrCreatePatient(sessionState.patientDni)
-                            .then(id => { if (id) sessionState.patientId = id; })
-                            .catch(e => { console.warn('[pill-organizer] Patient lookup failed:', e.message); });
-                    }
-
-                    sb.from('zykos_games').select('id').eq('slug', 'pill-organizer').single()
-                        .then(({ data }) => { sessionState.gameId = data?.id || null; })
-                        .catch(e => { console.warn('[pill-organizer] Game lookup failed:', e.message); });
+                    // [V4 fix] patientDni es el identificador universal — no se necesita patientId numérico ni gameId
+                    console.log('[pill-organizer] init OK, DNI:', sessionState.patientDni);
                 }
             } catch(err) {
                 console.error('[pill-organizer] Init failed:', err);
@@ -1588,23 +1579,7 @@
                 } catch(e) { console.warn('Longitudinal metric save:', e.message); }
             }
 
-            if (sb && sessionState.sessionId) {
-                try {
-                    const { error: sessErr } = await sb.from('zykos_game_sessions')
-                        .update({
-                            completed_at: new Date().toISOString(),
-                            completed: true,
-                            score: finalScore,
-                            max_score: expected * 100 + 700,
-                            duration_seconds: duration,
-                            metrics: finalMetrics
-                        })
-                        .eq('id', sessionState.sessionId);
-                    if (sessErr) console.warn('Session update:', sessErr.message);
-                } catch(e) { console.warn('Session update:', e.message); }
-            }
-
-            // /api/biometricas eliminado — endpoint no existe en el stack
+            // [V4] zykos_game_sessions UPDATE eliminado — schema mismatch, datos de sesión van en zykos_game_metrics
 
             // === MOSTRAR MODAL DE RESULTADOS ===
             var omissions = Math.max(0, expected - sessionState.correctPlacements);
@@ -1774,52 +1749,14 @@
         // ===========================================
         // SUPABASE HELPERS
         // ===========================================
-        async function getOrCreatePatient(dni) {
-            if (!sb) return null;
-            const { data: existing } = await sb
-                .from('zykos_patients')
-                .select('id')
-                .eq('dni', dni)
-                .single();
-
-            if (existing) return existing.id;
-
-            const { data: newPatient } = await sb
-                .from('zykos_patients')
-                .insert({
-                    dni: dni,
-                    full_name: 'Paciente Demo HDD',
-                    admission_date: new Date().toISOString().split('T')[0]
-                })
-                .select('id')
-                .single();
-
-            return newPatient?.id;
-        }
+        // [V4] getOrCreatePatient eliminada — zykos_patients no existe, DNI es identificador universal
 
         async function startGameSession() {
             sessionState.startTime = Date.now();
             sessionState.levelStartTime = Date.now();
             sessionState.gameActive = true;
-
-            if (sb) {
-                try {
-                    const { data: session } = await sb
-                        .from('zykos_game_sessions')
-                        .insert({
-                            patient_id: sessionState.patientId,
-                            game_id: sessionState.gameId,
-                            level: LEVELS[sessionState.currentLevelIndex].id,
-                            started_at: new Date().toISOString()
-                        })
-                        .select('id')
-                        .single();
-                    sessionState.sessionId = session?.id;
-                } catch(e) {
-                    console.warn('[pill-organizer] Session create failed:', e.message);
-                    sessionState.sessionId = null;
-                }
-            }
+            // sessionId = crypto UUID client-side (zykos_game_sessions INSERT tenía schema mismatch)
+            sessionState.sessionId = crypto.randomUUID ? crypto.randomUUID() : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
             startTimer();
         }
 

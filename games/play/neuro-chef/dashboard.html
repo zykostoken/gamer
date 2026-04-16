@@ -66,38 +66,34 @@
     const sb = getSupabaseClient();
 
     const params = new URLSearchParams(window.location.search);
-    const patientId = params.get('patient_id');
+    const patientDni = params.get('dni') || params.get('patient_id');
 
     // Restrict: only accessible from admin session
     if (!localStorage.getItem('zykos_admin_session')) {
-        document.getElementById('content').innerHTML = '<div class="no-data">Acceso restringido a profesionales. <a href="/dashboard/" style="color:#D4A574;">Iniciar sesión</a></div>';
-    } else if (!patientId) {
-        document.getElementById('content').innerHTML = '<div class="no-data">No se especificó paciente. Agregá ?patient_id=UUID a la URL.</div>';
+        document.getElementById('content').innerHTML = '<div class="no-data">Acceso restringido a profesionales. <a href="/dashboard/" style="color:#D4A574;">Iniciar sesion</a></div>';
+    } else if (!patientDni) {
+        document.getElementById('content').innerHTML = '<div class="no-data">No se especifico paciente. Agrega ?dni=XXXXXXXX a la URL.</div>';
     } else {
-        loadDashboard(patientId);
+        loadDashboard(patientDni);
     }
 
-    async function loadDashboard(pid) {
+    async function loadDashboard(dni) {
         try {
-            // Get patient info
-            const { data: patient } = await sb.from('zykos_patients').select('*').eq('id', pid).single();
+            // Get patient info from zykos_users (not zykos_patients which doesn't exist)
+            const { data: patient } = await sb.from('zykos_users').select('display_name, dni, email').eq('dni', dni).single();
             if (patient) {
-                document.getElementById('patient-info').innerHTML = `<strong>${patient.full_name || patient.dni}</strong> | DNI: ${patient.dni}`;
+                document.getElementById('patient-info').innerHTML = '<strong>' + (patient.display_name || patient.dni) + '</strong> | DNI: ' + patient.dni;
             }
 
-            // Get all sessions
-            const { data: sessions } = await sb.from('zykos_game_sessions')
-                .select('*').eq('patient_id', pid).order('started_at', { ascending: true });
-
-            // Get all metrics
+            // Get all metrics (zykos_game_metrics is the single source of truth)
             const { data: metrics } = await sb.from('zykos_game_metrics')
-                .select('*').eq('patient_id', pid).eq('game_slug', 'neuro-chef-v2').order('created_at', { ascending: true });
+                .select('*').eq('patient_dni', dni).eq('game_slug', 'neuro-chef-v2').order('created_at', { ascending: true });
 
-            // Get mood checkins
-            const { data: moods } = await sb.from('zykos_mood_checkins')
-                .select('*').eq('patient_id', pid).order('created_at', { ascending: true });
+            // Mood colors from game_metrics (metric_type = color_eleccion)
+            const { data: moods } = await sb.from('zykos_game_metrics')
+                .select('*').eq('patient_dni', dni).eq('metric_type', 'color_eleccion').order('created_at', { ascending: true });
 
-            if (!sessions || sessions.length === 0) {
+            if (!metrics || metrics.length === 0) {
                 document.getElementById('content').innerHTML = '<div class="no-data">Este paciente no tiene sesiones registradas aún.</div>';
                 return;
             }

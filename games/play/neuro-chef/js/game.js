@@ -10,11 +10,10 @@ async function initGame() {
         (function(){try{return localStorage.getItem('zykos_patient_dni')}catch(e){return null}})() ||
         ('DEMO-' + Date.now());
     gameState.patientDni = playerDni;
+    // [V4] DNI es el identificador universal — no se necesita patientId numérico
     // Ocultar modal de login — no se usa mas
     const loginModal = document.getElementById('player-login-modal');
     if (loginModal) loginModal.style.display = 'none';
-    // Resolve DNI → id for DB operations
-    getOrCreatePatient(playerDni, 'Demo').then(id => { if (id) gameState.patientId = id; }).catch(() => {});
     // Ocultar pre-game modal y arrancar directo
     var preModal = document.getElementById('pre-game-modal');
     if (preModal) preModal.classList.add('hidden');
@@ -53,14 +52,13 @@ function setupPlayerLogin() {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const dni = dniInput.value.trim();
-        if (!dni) { errorEl.textContent = 'Ingresá un DNI o identificador'; errorEl.classList.remove('hidden'); return; }
+        if (!dni) { errorEl.textContent = 'Ingresa un DNI o identificador'; errorEl.classList.remove('hidden'); return; }
         errorEl.classList.add('hidden');
         const name = nameInput.value.trim();
         gameState.patientDni = dni;
-        gameState.patientId = await getOrCreatePatient(dni, name);
-        if (!gameState.patientId) { errorEl.textContent = 'Error conectando. Intentá de nuevo.'; errorEl.classList.remove('hidden'); return; }
+        // [V4] DNI es suficiente — no se necesita patientId numérico
         saveRecentPlayer(dni, name);
-        document.getElementById('patient-display').textContent = name || `Pac: ${dni}`;
+        document.getElementById('patient-display').textContent = name || ('DNI: ' + dni);
         modal.classList.add('hidden');
         await loadPlayerHistory();
         setupPreGameModal();
@@ -75,26 +73,21 @@ function saveRecentPlayer(dni, name) {
 }
 
 async function loadPlayerHistory() {
-    if (!gameState.patientId || !sb) return;
+    if (!gameState.patientDni || !sb) return;
     try {
-        const { data } = await sb.from('zykos_game_sessions').select('id, started_at, completed_at, final_score')
-            .eq('patient_id', gameState.patientId).order('started_at', { ascending: false }).limit(10);
+        const { data } = await sb.from('zykos_game_metrics')
+            .select('id, created_at, metric_value, metric_data')
+            .eq('patient_dni', gameState.patientDni)
+            .eq('game_slug', 'neuro-chef-v2')
+            .eq('metric_type', 'session_complete')
+            .order('created_at', { ascending: false }).limit(10);
         gameState.playerHistory = data || [];
-        console.log(`[Neuro-Chef] ${(data||[]).length} previous sessions`);
+        console.log('[Neuro-Chef] ' + (data||[]).length + ' previous sessions');
     } catch(e) { gameState.playerHistory = []; }
 }
 
-async function getOrCreatePatient(dni, name) {
-    if (!sb) { console.warn('[neuro-chef] Offline, usando ID local'); return 'offline-' + dni; }
-    try {
-        const { data: existing } = await sb.from('zykos_patients').select('id, full_name').eq('dni', dni).single();
-        if (existing) { document.getElementById('patient-display').textContent = existing.full_name || `Pac: ${dni}`; return existing.id; }
-        // Patient not found — do NOT auto-create (was creating garbage DEMO patients)
-        console.warn('[neuro-chef] Patient not found for DNI:', dni);
-        document.getElementById('patient-display').textContent = `DNI: ${dni} (no registrado)`;
-        return null;
-    } catch(e) { console.error('[Neuro-Chef] Patient error:', e); return null; }
-}
+// [V4] getOrCreatePatient eliminada — zykos_patients no existe en ZYKOS gamer.
+// DNI es el identificador universal via patient_dni en zykos_game_metrics.
 
 // ========== PRE-GAME MODAL ==========
 function setupPreGameModal() {
@@ -235,11 +228,8 @@ async function startGame() {
     Biometrics.resetCount = 0;
     
     if (sb) {
-        try { const { data: g } = await sb.from('zykos_games').select('id').eq('slug', 'neuro-chef-v2').single(); gameState.gameId = g?.id; } catch(e) { console.error("[neuro-chef] save error:", e.message || e); }
-        try {
-            const { data: s } = await sb.from('zykos_game_sessions').insert({  game_id: gameState.gameId, level: 1, started_at: new Date().toISOString() }).select('id').single();
-            gameState.sessionId = s?.id;
-        } catch(e) { console.warn('[Neuro-Chef] Session fail:', e); }
+        // [V4] sessionId = client-side UUID (zykos_session_holds ya trackea via consume_session RPC)
+        gameState.sessionId = crypto.randomUUID ? crypto.randomUUID() : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
     }
     
     if (gameState.preMood && !gameState.preMood.skipped && sb) {
@@ -994,7 +984,7 @@ async function finishGame() {
         }
     };
     if (sb) {
-        try { await sb.from('zykos_game_sessions').update({ completed_at:new Date().toISOString(), final_score:gameState.totalCorrect-gameState.totalErrors, metadata:summary }).eq('id',gameState.sessionId); } catch(e) { console.error("[neuro-chef] save error:", e.message || e); }
+        // [V4] zykos_game_sessions UPDATE eliminado — session_id es UUID client-side, datos completos van a zykos_game_metrics
         try { await sb.from('zykos_game_metrics').insert({
             
             patient_dni: (gameState.patientDni && gameState.patientDni!== null) ? gameState.patientDni : null,

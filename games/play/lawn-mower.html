@@ -1299,15 +1299,7 @@
   // DNI is the universal identifier
   const lmPatientDni = lmParams.get('dni') || (function(){ try { return localStorage.getItem('zykos_patient_dni'); } catch(e){ return null; } })() || window.ZYKOS_DNI;
 
-  async function lmGetOrCreatePatient(dni) {
-    if (!getLmSupa()) return null;
-    try {
-      const { data: existing } = await lmSupa.from('zykos_patients').select('id').eq('dni', dni).single();
-      if (existing) return existing.id;
-      const { data: np } = await lmSupa.from('zykos_patients').insert({ dni, full_name: 'Paciente ' + dni, admission_date: new Date().toISOString().split('T')[0] }).select('id').single();
-      return np?.id;
-    } catch(e) { return null; }
-  }
+  // [V4] lmGetOrCreatePatient eliminada — zykos_patients no existe, DNI es identificador universal
 
   let _lmSaved = false;
   async function lmSaveToSupabase(completed, finalScore, clinicalStats) {
