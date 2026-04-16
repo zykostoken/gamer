@@ -122,7 +122,7 @@ Referencia en runtime: `games/shared/zykos-engine.js` → `METRIC_DICTIONARY`
 ### Metricas prohibidas (NUNCA en codigo activo, NUNCA en el diccionario)
 `tremor_avg_jitter`, `tremor_reposo_px`, `rigidez_index`, `espasticidad_index`, `cogwheel_index`, `clasp_knife_ratio`, `interferencia_ratio`, `economia_cognitiva`, `eficacia_plan_propio`, `decaimiento_mitades`.
 
-Los fenomenos que estos nombres intentaban capturar se miden con nombres descriptivos del fenomeno observable: `vel_uniformidad_index`, `vel_oscilacion_index`, `vel_caida_brusca_ratio`, `vel_perfil_abrupto`, `decaimiento_vigilancia`, `wm_interferencia_ratio`, `ratio_acciones_util`.
+Los fenomenos que estos nombres intentaban capturar se miden con nombres descriptivos del fenomeno observable: `vel_uniformidad_index`, `vel_oscilacion_index`, `vel_caida_brusca_ratio`, `vel_perfil_abrupto`, `vigor_mental_h1_h2`, `wm_interferencia_ratio`, `ratio_acciones_util`.
 
 ### Composites clinicos V4 (calculados por zykos-post-session-analyzer, NO por el juego)
 ```

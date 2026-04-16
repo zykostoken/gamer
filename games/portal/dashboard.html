@@ -308,10 +308,11 @@ function renderStats(metrics, moods) {
     const jAvg = safeAvg(ds.map(d=>rf(d,'jitter_reposo_px')));
     document.getElementById('stat-jitter').textContent = fmt(jAvg,2,' px')||'—';
 
-    const fAvg = safeAvg(ds.map(d=>rf(d,'fatigue_index','fatiga_index','decaimiento_vigilancia')));
+    const fAvg = safeAvg(ds.map(d=>rf(d,'vigor_mental_h1_h2')));
     const fEl = document.getElementById('stat-fatigue');
     fEl.textContent = fmt(fAvg,2)||'—';
-    if (fAvg != null) fEl.style.color = fAvg > 1.3 ? 'var(--danger)' : fAvg > 1.0 ? 'var(--warn)' : 'var(--success)';
+    // V4: vigor alto = warm-up/bueno, vigor bajo = fatiga
+    if (fAvg != null) fEl.style.color = fAvg < 0.77 ? 'var(--danger)' : fAvg < 1.0 ? 'var(--warn)' : 'var(--success)';
 }
 
 // ========== MOOD COLORS ==========
@@ -418,7 +419,7 @@ function renderMotorProfile(metrics) {
     const selfCorr  = safeAvg(ds.map(d=>rf(d,'self_correction_ratio')));
     const persAvg   = safeAvg(ds.map(d=>rf(d,'perseveration_count')));
     const hesAvg    = safeAvg(ds.map(d=>rf(d,'hesitation_count')));
-    const fatAvg    = safeAvg(ds.map(d=>rf(d,'fatigue_index','fatiga_index','decaimiento_vigilancia')));
+    const fatAvg    = safeAvg(ds.map(d=>rf(d,'vigor_mental_h1_h2')));
     const latAvg    = safeAvg(ds.map(d=>rf(d,'first_click_latency_ms','time_to_first_action_ms')));
     const quantAvg  = safeAvg(ds.map(d=>rf(d,'quantum_energetico')));
 
@@ -428,7 +429,7 @@ function renderMotorProfile(metrics) {
         chip('RT medio', fmt(rtAvg,0,' ms'), colorVal(rtAvg,[500,1000,2000],['var(--success)','#22c55e','var(--warn)','var(--danger)'])) +
         chip('RT-CV', fmt(rtcvAvg,2), rtcvAvg!=null?(rtcvAvg>0.35?'var(--danger)':rtcvAvg>0.25?'var(--warn)':'var(--success)'):'var(--muted)') +
         chip('Hesitaciones', fmt(hesAvg,0), hesAvg!=null&&hesAvg>5?'var(--warn)':'var(--text)') +
-        chip('Fatiga index', fmt(fatAvg,2), fatAvg!=null?(fatAvg>1.3?'var(--danger)':fatAvg>1.0?'var(--warn)':'var(--success)'):'var(--muted)') +
+        chip('Vigor H1/H2', fmt(fatAvg,2), fatAvg!=null?(fatAvg<0.77?'var(--danger)':fatAvg<1.0?'var(--warn)':'var(--success)'):'var(--muted)') +
         chip('Latencia inicio', fmt(latAvg,0,' ms'), latAvg!=null&&latAvg>8000?'var(--warn)':'var(--text)') +
         // MOTOR
         '<div style="grid-column:1/-1;margin:8px 0 4px;"><span class="section-label">Coordinacion motora</span></div>' +
@@ -468,7 +469,7 @@ function renderMetricsTable(metrics) {
         // Atencion
         const rt     = fmt(rf(d,'rt_mean_ms','mean_rt_ms'),0,' ms');
         const rtcv   = fmt(rf(d,'rt_cv'),2);
-        const fat    = fmt(rf(d,'fatigue_index','fatiga_index','decaimiento_vigilancia'),2);
+        const fat    = fmt(rf(d,'vigor_mental_h1_h2'),2);
         const hes    = fmt(rf(d,'hesitation_count'),0);
         const lat    = fmt(rf(d,'first_click_latency_ms','time_to_first_action_ms'),0,' ms');
         // Motor
@@ -494,8 +495,8 @@ function renderMetricsTable(metrics) {
         // Color RT-CV
         const rtcvVal = rf(d,'rt_cv');
         const rtcvColor = rtcvVal!=null?(rtcvVal>0.35?'color:var(--danger)':rtcvVal>0.25?'color:var(--warn)':''):'';
-        const fatVal = rf(d,'fatigue_index','fatiga_index','decaimiento_vigilancia');
-        const fatColor = fatVal!=null?(fatVal>1.3?'color:var(--danger)':fatVal>1.0?'color:var(--warn)':''):'';
+        const fatVal = rf(d,'vigor_mental_h1_h2');
+        const fatColor = fatVal!=null?(fatVal<0.77?'color:var(--danger)':fatVal<1.0?'color:var(--warn)':''):'';
 
         const tr = document.createElement('tr');
         tr.innerHTML = DOMPurify.sanitize(

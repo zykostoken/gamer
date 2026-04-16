@@ -9,7 +9,7 @@
 //
 // Métricas canónicas:
 // - rt_mean_ms, rt_sd_ms, rt_cv
-// - decaimiento_vigilancia
+// - vigor_mental_h1_h2
 // - hesitaciones_count, hesitacion_mean_ms
 // - first_action_latency_ms
 // ================================================================
@@ -186,13 +186,15 @@ var agent = {
             iivCons = +(sd(diffs).toFixed(1));
         }
 
-        // Vigilance decrement: compare first half vs second half RTs
-        var decaimiento = 1;
+        // Vigor mental H1/H2 (V4 canonical — inversión del ex-decaimiento_vigilancia)
+        // Alto = H2 más rápido que H1 = warm-up / mejora
+        // Bajo = H2 más lento que H1 = fatigabilidad
+        var vigor = 1;
         if (rts.length >= 6) {
             var mid = Math.floor(rts.length / 2);
             var first = mean(rts.slice(0, mid));
             var second = mean(rts.slice(mid));
-            decaimiento = first > 0 ? second / first : 1;
+            vigor = second > 0 ? first / second : 1;
         }
         
         // First action latency
@@ -205,7 +207,7 @@ var agent = {
             rt_sd_ms:                 rts.length > 0 ? +(rtSd.toFixed(1)) : null,
             rt_cv:                    rts.length > 0 ? +(rtCv.toFixed(3)) : null,
             iiv_consecutiva:          iivCons,
-            decaimiento_vigilancia:   +(decaimiento.toFixed(3)),
+            vigor_mental_h1_h2:       +(vigor.toFixed(3)),
             hesitaciones_count:       state.hesitations.length,
             hesitacion_mean_ms:       state.hesitations.length > 0 
                 ? +(mean(state.hesitations.map(function(h) { return h.duration_ms; })).toFixed(0)) 

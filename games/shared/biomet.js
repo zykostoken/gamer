@@ -537,13 +537,15 @@ function compute() {
     var rt_sd   = sd(rt_list);
     var rt_cv   = rt_mean > 0 ? rt_sd / rt_mean : 0;
 
-    // Decaimiento de vigilancia
-    var decaimiento_ratio = 1;
+    // Vigor mental H1/H2 (V4 canonical — inversión de ex-decaimiento_vigilancia)
+    // Alto = H1 mas lento que H2 = mejora temporal / warm-up
+    // Bajo = H1 mas rapido que H2 = fatigabilidad
+    var vigor_h1_h2 = 1;
     if (rt_list.length >= 6) {
         var mid = Math.floor(rt_list.length / 2);
         var rt_first  = mean(rt_list.slice(0, mid));
         var rt_second = mean(rt_list.slice(mid));
-        decaimiento_ratio = rt_first > 0 ? rt_second / rt_first : 1;
+        vigor_h1_h2 = rt_second > 0 ? rt_first / rt_second : 1;
     }
 
     // ---- EFICACIA POR TERCIOS (fatigabilidad) ----
@@ -671,7 +673,7 @@ function compute() {
         rt_mean_ms:               rt_list.length ? +rt_mean.toFixed(1) : null,
         rt_sd_ms:                 rt_list.length ? +rt_sd.toFixed(1) : null,
         rt_cv:                    rt_list.length ? +rt_cv.toFixed(3) : null,
-        decaimiento_vigilancia:   +decaimiento_ratio.toFixed(3),
+        vigor_mental_h1_h2:       +vigor_h1_h2.toFixed(3),
         hesitaciones_count:       hesitaciones_count,
         hesitacion_duracion_mean_ms: hesitacion_duracion_mean_ms ? +hesitacion_duracion_mean_ms.toFixed(0) : null,
 

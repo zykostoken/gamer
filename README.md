@@ -82,7 +82,7 @@ Principio: Un constructo = un nombre = una columna. Si no está en el diccionari
 | META | 5 | Metadata normalización |
 | HARDWARE | 2 | Hardware correction baseline |
 
-Métricas clave: `jitter_reposo_px`, `vel_cv`, `vel_oscilacion_index`, `precision_deposito_px`, `rt_mean_ms`, `rt_cv`, `decaimiento_vigilancia`, `perseveracion_count`, `d_prime`, `hit_rate`, `evocacion_libre_count`, `consolidacion_pct`, `calculo_correcto_count`, `razonamiento_proporcional_pct`, `tiempo_planificacion_ms`, `facs_genuine_smile_pct`, `identity_session_verified`
+Métricas clave: `jitter_reposo_px`, `vel_cv`, `vel_oscilacion_index`, `precision_deposito_px`, `rt_mean_ms`, `rt_cv`, `vigor_mental_h1_h2`, `perseveracion_count`, `d_prime`, `hit_rate`, `evocacion_libre_count`, `consolidacion_pct`, `calculo_correcto_count`, `razonamiento_proporcional_pct`, `tiempo_planificacion_ms`, `facs_genuine_smile_pct`, `identity_session_verified`
 
 Métricas **prohibidas** (nunca en código activo): `tremor_*`, `rigidez_index`, `espasticidad_index`, `cogwheel_index`, `clasp_knife_ratio`, `interferencia_ratio`, `economia_cognitiva`, `eficacia_plan_propio`, `decaimiento_mitades`.
 

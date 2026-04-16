@@ -1374,14 +1374,14 @@
       // Commission/omission ratio (impulsivity vs inattention differential)
       const com_om_ratio = cm.omission_errors > 0
         ? Math.round(cm.commission_errors / cm.omission_errors * 100) / 100 : (cm.commission_errors > 0 ? 999 : 0);
-      // Decaimiento vigilancia (inter-objective delay trend)
-      let decaimiento_vigilancia = null;
+      // Vigor mental H1/H2 (V4 canónico — inversión del ex-decaimiento_vigilancia)
+      let vigor_mental_h1_h2 = null;
       if (iod.length >= 6) {
         const h1 = iod.slice(0, Math.floor(iod.length/2));
         const h2 = iod.slice(Math.floor(iod.length/2));
         const m1 = h1.reduce((a,b)=>a+b,0)/h1.length;
         const m2 = h2.reduce((a,b)=>a+b,0)/h2.length;
-        decaimiento_vigilancia = m1 > 0 ? Math.round(m2/m1*100)/100 : null;
+        vigor_mental_h1_h2 = m2 > 0 ? Math.round(m1/m2*100)/100 : null;
       }
 
       var _lmPayload = {
@@ -1404,7 +1404,7 @@
           fatigue_index_rt: fatiga_index,
           rt_1st_half_ms: rt_1st_half,
           rt_2nd_half_ms: rt_2nd_half,
-          fatigue_index: decaimiento_vigilancia,
+          vigor_mental_h1_h2: vigor_mental_h1_h2,
           // --- Executive Function (feeds dominio Ejecutiva) ---
           planning_ratio: pm.plan_efficiency,
           movement_efficiency: cm.movement_efficiency,
@@ -1425,9 +1425,9 @@
             ? Math.round(clinicalMetrics.invalidMoves / clinicalMetrics.totalMoves * 100) / 100 : 0,
           resets: resetEvents.length,
           // --- Motor (feeds dominio Coordinacion) ---
-          jitter_event_count: mm.tremor_event_count,
+          jitter_event_count: mm.jitter_event_count,
           jitter_reposo_px: mm.jitter_reposo_px,
-          jitter_terminal_px: mm.tremor_max_jitter,
+          jitter_terminal_px: mm.jitter_max_px,
           overshoot_count: mm.overshoot_count,
           dysmetria_index: mm.dysmetria_ratio,
           direction_changes: mm.direction_changes,
@@ -1466,7 +1466,6 @@
             return Math.round(rt_norm * completion * (1 - Math.max(0, fatigue_norm - 1)) * 100)/100;
           })(),
           mood_pre_game: typeof lmMoodColor !== 'undefined' ? lmMoodColor : null,
-          clinical_flags: lmGenerateClinicalFlags(cm, mm, pm, rt_cv, fatiga_index, com_om_ratio, post_error_strategy),
           // --- NEW: Planning paradigm signals (PSYKOS_FENOTIPADO Part 4) ---
           cable_stucks: cableStucks,
           blocked_by_bag_count: blockedByBagCount,
@@ -1575,20 +1574,7 @@
 
   // Observaciones de sesión — valores numéricos sin interpretación clínica
   // El clínico interpreta. El sistema mide.
-  function lmGenerateClinicalFlags(cm, mm, pm, rt_cv, fatiga, comOm, postErr) {
-    const flags = [];
-    // Variaciones observadas — etiquetas descriptivas de la medición, no diagnósticas
-    if (rt_cv > 0.35) flags.push({flag:'HIGH_RT_VARIABILITY', severity:'info', desc:'rt_cv=' + rt_cv.toFixed(3) + ' (>0.35)'});
-    if (fatiga > 1.3) flags.push({flag:'FATIGA_INDEX', severity:'info', desc:'decaimiento_vigilancia=' + fatiga.toFixed(2) + ' (>1.3)'});
-    if (cm.time_to_first_action_ms < 2000) flags.push({flag:'LATENCIA_INICIO', severity:'info', desc:'first_action_latency=' + Math.round(cm.time_to_first_action_ms) + 'ms (<2000)'});
-    if (cm.time_to_first_action_ms > 8000) flags.push({flag:'LATENCIA_INICIO', severity:'info', desc:'first_action_latency=' + Math.round(cm.time_to_first_action_ms) + 'ms (>8000)'});
-    if (comOm > 2) flags.push({flag:'RATIO_COM_OM', severity:'info', desc:'comision/omision=' + comOm.toFixed(2) + ' (>2)'});
-    if (comOm < 0.3 && cm.omission_errors > 2) flags.push({flag:'RATIO_COM_OM', severity:'info', desc:'comision/omision=' + comOm.toFixed(2) + ' (<0.3)'});
-    if (mm.jitter_reposo_px > 0.5) flags.push({flag:'JITTER_REPOSO', severity:'info', desc:'jitter_reposo_px=' + (mm.jitter_reposo_px||0).toFixed(3) + ' (>0.5)'});
-    if (pm.plan_efficiency > 0.75) flags.push({flag:'EFICIENCIA_TRAYECTORIA', severity:'info', desc:'eficiencia_trayectoria=' + pm.plan_efficiency.toFixed(2) + ' (>0.75)'});
-    if (pm.plan_efficiency < 0.4 && pm.plan_efficiency > 0) flags.push({flag:'EFICIENCIA_TRAYECTORIA', severity:'info', desc:'eficiencia_trayectoria=' + pm.plan_efficiency.toFixed(2) + ' (<0.40)'});
-    return flags;
-  }
+  // [V4] Función lmGenerateClinicalFlags eliminada — interpretación clínica queda para el psiquiatra (Art XI).
 
   // ---- INTRA-SESSION TIME SERIES (second-by-second data for FDA) ----
   let metricsTimeSeries = {
@@ -1670,7 +1656,7 @@
       resets: resetEvents.length,
       reset_timing: resetEvents.map(r => r.timeSinceStart),
       // Motor / Fine Motor
-      jitter_events: stats.motor_markers?.tremor_event_count || 0,
+      jitter_events: stats.motor_markers?.jitter_event_count || 0,
       jitter_reposo_px: stats.motor_markers?.jitter_reposo_px || 0,
       dysmetria_overshoots: stats.motor_markers?.overshoot_count || 0,
       direction_changes: stats.motor_markers?.direction_changes || 0,
@@ -1791,9 +1777,9 @@
     firstMoveTime: 0,        // Time to first action (reaction to start)
     levelCompletionAttempts: 0,  // How many times level was restarted
 
-    // === NEW: Fine Motor / Tremor ===
+    // === NEW: Fine Motor / Jitter Events ===
     mouseMoveSamples: [],    // {x, y, t} raw mouse positions during play
-    tremorEvents: [],        // computed jitter per movement segment
+    jitterEvents: [],        // computed jitter per movement segment
     lastMouseX: 0,
     lastMouseY: 0,
 
@@ -1842,9 +1828,9 @@
       sessionStartTime: Date.now(),
       firstMoveTime: 0,
       levelCompletionAttempts: clinicalMetrics.levelCompletionAttempts + 1,
-      // Fine motor / tremor
+      // Fine motor / jitter events
       mouseMoveSamples: [],
-      tremorEvents: [],
+      jitterEvents: [],
       lastMouseX: 0,
       lastMouseY: 0,
       // Dysmetria
@@ -1921,10 +1907,10 @@
 
       // === NEW: Motor / Fine Motor (Motricidad Fina) ===
       motor_markers: {
-        // Tremor detection
-        tremor_event_count: clinicalMetrics.tremorEvents.length,
+        // Jitter event detection
+        jitter_event_count: clinicalMetrics.jitterEvents.length,
         jitter_reposo_px: 0,
-        tremor_max_jitter: 0,
+        jitter_max_px: 0,
         vel_cv_baseline: 0,
 
         // Dysmetria (imprecise targeting)
@@ -1939,7 +1925,7 @@
           ? (clinicalMetrics.rapidReversals / clinicalMetrics.totalMoves) : 0,
 
         // Motor clumsiness composite (torpeza motora)
-        // High = clumsy: many errors, overshoots, invalid moves, tremor
+        // High = clumsy: many errors, overshoots, invalid moves, jitter
         vel_oscilacion_index: 0,
 
         // Meticulousness composite (minuciosidad / prolijidad)
@@ -2004,15 +1990,15 @@
         Math.round(frs.reduce((a, b) => a + b, 0) / frs.length);
     }
 
-    // === Tremor statistics ===
-    if (clinicalMetrics.tremorEvents.length > 0) {
-      const tremors = clinicalMetrics.tremorEvents;
+    // === Jitter event statistics ===
+    if (clinicalMetrics.jitterEvents.length > 0) {
+      const jitters = clinicalMetrics.jitterEvents;
       stats.motor_markers.jitter_reposo_px =
-        Math.round(tremors.reduce((a, t) => a + t.jitter, 0) / tremors.length * 100) / 100;
-      stats.motor_markers.tremor_max_jitter =
-        Math.round(Math.max(...tremors.map(t => t.jitter)) * 100) / 100;
+        Math.round(jitters.reduce((a, t) => a + t.jitter, 0) / jitters.length * 100) / 100;
+      stats.motor_markers.jitter_max_px =
+        Math.round(Math.max(...jitters.map(t => t.jitter)) * 100) / 100;
       stats.motor_markers.vel_cv_baseline =
-        Math.round(tremors.reduce((a, t) => a + t.speed_var, 0) / tremors.length * 1000) / 1000;
+        Math.round(jitters.reduce((a, t) => a + t.speed_var, 0) / jitters.length * 1000) / 1000;
     }
 
     // === Inter-objective delay statistics ===
@@ -2036,7 +2022,7 @@
       stats.clinical_markers.impulsivity_ratio,                          // errors / moves
       Math.min(1, clinicalMetrics.overshootCount / Math.max(1, clinicalMetrics.totalMoves) * 10),  // dysmetria
       1 - stats.clinical_markers.movement_efficiency,                    // invalid moves ratio
-      Math.min(1, clinicalMetrics.tremorEvents.length / 20),             // tremor frequency
+      Math.min(1, clinicalMetrics.jitterEvents.length / 20),             // jitter event frequency
       Math.min(1, stats.clinical_markers.cable_stucks / 5)               // cable stucks
     ];
     stats.motor_markers.vel_oscilacion_index =
@@ -3637,7 +3623,7 @@
       + '</div>'
       + '<h3 style="font-size:0.9rem; color:#7c3aed; margin:0.8rem 0 0.4rem;">Motricidad Fina / Motor</h3>'
       + '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:0.4rem; font-size:0.82rem;">'
-      + metricItem('Temblor', (mm.tremor_event_count || 0) + ' eventos')
+      + metricItem('Jitter (eventos)', (mm.jitter_event_count || 0))
       + metricItem('Jitter Prom', (mm.jitter_reposo_px || 0).toFixed(2) + ' px')
       + metricItem('Dismetria', (mm.overshoot_count || 0) + ' overshoots')
       + metricItem('Cambios Rumbo', mm.direction_changes || 0)
@@ -5100,10 +5086,10 @@
     };
   }
 
-  // ---- TREMOR TRACKING (mouse/touch micro-movements) ----
+  // ---- JITTER TRACKING (mouse/touch micro-movements) ----
   (function() {
     let sampleCounter = 0;
-    function trackTremor(x, y) {
+    function trackJitter(x, y) {
       if (!gameRunning) return;
       sampleCounter++;
       if (sampleCounter % 3 !== 0) return; // Sample every 3rd event to reduce noise
@@ -5126,7 +5112,7 @@
           totalJitter += cross;
         }
         const avgJitter = totalJitter / (recent.length - 2);
-        // Record tremor event if jitter exceeds threshold (>3px avg deviation)
+        // Record jitter event if deviation exceeds threshold (>3px avg deviation)
         if (avgJitter > 3) {
           // Speed variance
           const speeds = [];
@@ -5138,7 +5124,7 @@
           }
           const avgSpd = speeds.reduce((a,b) => a+b, 0) / speeds.length;
           const spdVar = speeds.reduce((a,s) => a + (s-avgSpd)**2, 0) / speeds.length;
-          clinicalMetrics.tremorEvents.push({
+          clinicalMetrics.jitterEvents.push({
             jitter: Math.round(avgJitter * 100) / 100,
             speed_var: Math.round(spdVar * 1000) / 1000,
             t: now - clinicalMetrics.sessionStartTime
@@ -5146,9 +5132,9 @@
         }
       }
     }
-    document.addEventListener('mousemove', function(e) { trackTremor(e.clientX, e.clientY); }, { passive: true });
+    document.addEventListener('mousemove', function(e) { trackJitter(e.clientX, e.clientY); }, { passive: true });
     document.addEventListener('touchmove', function(e) {
-      if (e.touches && e.touches[0]) trackTremor(e.touches[0].clientX, e.touches[0].clientY);
+      if (e.touches && e.touches[0]) trackJitter(e.touches[0].clientX, e.touches[0].clientY);
     }, { passive: true });
   })();
 
@@ -5256,9 +5242,9 @@
       // Section 2: Motor / Fine Motor
       + '<h3 style="font-size:0.9rem; color:#7c3aed; margin:1rem 0 0.5rem;">Motricidad Fina / Perfil Motor</h3>'
       + '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:0.4rem; font-size:0.82rem;">'
-      + metricItem('Temblor (eventos)', mm.tremor_event_count || 0)
-      + metricItem('Temblor Jitter Prom', (mm.jitter_reposo_px || 0).toFixed(2) + ' px')
-      + metricItem('Temblor Max', (mm.tremor_max_jitter || 0).toFixed(2) + ' px')
+      + metricItem('Jitter (eventos)', mm.jitter_event_count || 0)
+      + metricItem('Jitter promedio', (mm.jitter_reposo_px || 0).toFixed(2) + ' px')
+      + metricItem('Jitter máximo', (mm.jitter_max_px || 0).toFixed(2) + ' px')
       + metricItem('Dismetria (overshoots)', mm.overshoot_count || 0)
       + metricItem('Ratio Dismetria', ((mm.dysmetria_ratio || 0) * 100).toFixed(1) + '%')
       + metricItem('Cambios Rumbo', mm.direction_changes || 0)
@@ -5568,7 +5554,7 @@
           try { var cs = calculateClinicalStats(); var cm = cs.clinical_markers||{}; var mm = cs.motor_markers||{}; var pm = cs.planning_markers||{};
             return { mean_rt_ms: cm.mean_reaction_time_ms, rt_cv: cm.rt_coefficient_of_variation,
               errores_comision: cm.commission_errors, errores_omision: cm.omission_errors,
-              movement_efficiency: cm.movement_efficiency, jitter_event_count: mm.tremor_event_count,
+              movement_efficiency: cm.movement_efficiency, jitter_event_count: mm.jitter_event_count,
               planificacion_ratio: pm.plan_efficiency, direction_changes: mm.direction_changes };
           } catch(e) { return {}; }
         })())
