@@ -648,6 +648,7 @@ function render(content, patient, data){
     renderKPIs(content, data.sessions);
   }
 
+
   // 5. LONGITUDINAL vs baseline propio
   if (data.sessions.length > 0){
     renderLongitudinal(content, data.sessions, data.baseline);
@@ -1013,8 +1014,7 @@ function renderPlacementAnalysis(content, placements){
     'El cuadrante dominante del sesgo espacial de deposicion se muestra visualmente; un sesgo >60% en un solo cuadrante sugiere patron sistematico (no aleatorio). ' +
     'Patron de movimiento y estrategia son clasificaciones descriptivas — el clinico interpreta en contexto.' +
     '</p>';
-  content.appendChild(sec);
-}
+  content.appendChild(sec);}
 
 function renderColors(content, colors){
   var sec = document.createElement('div');
