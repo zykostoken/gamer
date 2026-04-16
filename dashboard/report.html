@@ -617,7 +617,7 @@ function render(content, patient, data){
     var w = document.createElement('div');
     w.className = 'legacy-warn';
     w.innerHTML = '<strong>Deuda V4 detectada:</strong> ' + legacyGames.join(', ') +
-      ' todavía escriben nombres legacy (jitter prohibidos en Art IX, clinical_flags, etc). La RPC los traduce a canónicos V4 on-the-fly. Pendiente: migrar al engine canónico.';
+      ' todavía escriben nombres legacy (tremor_* prohibido en Art IX, clinical_flags, etc). La RPC los traduce a canónicos V4 on-the-fly. Pendiente: migrar al engine canónico.';
     content.appendChild(w);
   }
 
