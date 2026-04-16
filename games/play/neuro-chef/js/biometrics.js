@@ -244,7 +244,7 @@ const Biometrics = {
             eficacia_tercio_1:      +(actT1 / maxAct).toFixed(3),
             eficacia_tercio_2:      +(actT2 / maxAct).toFixed(3),
             eficacia_tercio_3:      +(actT3 / maxAct).toFixed(3),
-            decaimiento_vigilancia: actT1 > 0 ? +(actT3 / actT1).toFixed(3) : null,
+            vigor_mental_h1_h2:     actT1 > 0 ? +(actT3 / actT1).toFixed(3) : null,
 
             // Raw para análisis diferido
             _raw_action_log:        this.actionLog,

@@ -551,24 +551,7 @@ function finishGame() {
     const safetyPct = Math.round(Math.max(0, 100 - (safetyViolations.length * 25)));
     const overallScore = Math.round((placementPct * 0.4) + (categoryPct * 0.3) + (safetyPct * 0.3));
     
-    // CLINICAL FLAGS
-    let clinicalFlags = [];
-    if (safetyViolations.some(v => v.type === 'toxic_with_food')) {
-        clinicalFlags.push({ flag: 'SAFETY_JUDGMENT', severity: 'critical', 
-            desc: 'Mezcla productos tóxicos con alimentos — evaluar juicio y AVD' });
-    }
-    if (safetyViolations.some(v => v.type === 'cross_contamination')) {
-        clinicalFlags.push({ flag: 'FOOD_SAFETY', severity: 'moderate',
-            desc: 'Contaminación cruzada — posible déficit en conocimiento procedimental' });
-    }
-    if (correctPlacements < 10) {
-        clinicalFlags.push({ flag: 'SEMANTIC_MEMORY', severity: 'moderate',
-            desc: 'Menos del 50% correcto — evaluar memoria semántica y categorización' });
-    }
-    if (gameState.hesitations.length > 5) {
-        clinicalFlags.push({ flag: 'PROCESSING_SPEED', severity: 'low',
-            desc: 'Múltiples pausas prolongadas — posible lentitud de procesamiento' });
-    }
+    // [V4] Se eliminó el bloque CLINICAL FLAGS — la interpretación clínica queda para el psiquiatra (Constitución V4 Art XI).
     
     // RENDER RESULTS
     const resultsDiv = document.getElementById('results');
@@ -657,7 +640,6 @@ function finishGame() {
         safety_pct: safetyPct,
         correct_placements: correctPlacements,
         safety_violations: safetyViolations,
-        clinical_flags: clinicalFlags,
         total_time_ms: totalTime,
         hesitation_count: gameState.hesitations.length,
         action_count: gameState.actionLog.length,

@@ -839,80 +839,10 @@ async function finishGame() {
     // Self-correction ratio
     var selfCorrectionRatio = actionLog.length > 0 ? Math.round(removals / actionLog.length * 100) : 0;
 
-    // ---- CLINICAL FLAGS ----
-    var clinicalFlags = [];
-    if (!coreComplete) {
-        clinicalFlags.push({ flag: 'INCOMPLETE_PLANNING', severity: 'high',
-            desc: 'No completó ingredientes esenciales — déficit en memoria de trabajo / planificación' });
-    }
-    if (gotErrors.length > 0) {
-        clinicalFlags.push({ flag: 'PLANNING_ERRORS', severity: gotErrors.length > 2 ? 'high' : 'moderate',
-            desc: 'Seleccionó ' + gotErrors.length + ' item(s) irrelevantes — posible perseveración o falla ejecutiva' });
-    }
-    if (gotAdvanced.length === 0 && coreComplete) {
-        clinicalFlags.push({ flag: 'CONCRETE_ONLY', severity: 'low',
-            desc: 'Solo ingredientes literales — pensamiento concreto, baja abstracción' });
-    }
-    if (gotAdvanced.length >= 8) {
-        clinicalFlags.push({ flag: 'EXECUTIVE_PRESERVED', severity: 'positive',
-            desc: 'Excelente planificación con detalles finos — funciones ejecutivas preservadas' });
-    }
-    if (cart.indexOf('nuez_moscada') >= 0 || cart.indexOf('escarbadientes') >= 0 || cart.indexOf('ajo') >= 0) {
-        var detailItems = [];
-        if (cart.indexOf('nuez_moscada') >= 0) detailItems.push('nuez moscada');
-        if (cart.indexOf('escarbadientes') >= 0) detailItems.push('escarbadientes');
-        if (cart.indexOf('ajo') >= 0) detailItems.push('ajo');
-        clinicalFlags.push({ flag: 'DETAIL_ORIENTATION', severity: 'positive',
-            desc: 'Items de detalle fino (' + detailItems.join(', ') + ') — pensamiento abstracto y previsión' });
-    }
-    if (overBudgetAttempts > 2) {
-        clinicalFlags.push({ flag: 'IMPULSE_CONTROL', severity: 'moderate',
-            desc: 'Intentó pagar ' + overBudgetAttempts + ' veces sin saldo — posible falla en inhibición' });
-    }
-    if (priceCheckCount >= 3) {
-        clinicalFlags.push({ flag: 'COGNITIVE_FLEXIBILITY', severity: 'positive',
-            desc: 'Ajustó carrito ' + priceCheckCount + ' veces — buena flexibilidad cognitiva' });
-    }
-    if (budgetUsePct >= 70 && budgetUsePct <= 95 && gotErrors.length === 0 && gotAdvanced.length >= 4) {
-        clinicalFlags.push({ flag: 'ECONOMIC_REASONING', severity: 'positive',
-            desc: 'Optimizó presupuesto maximizando items relevantes — razonamiento económico preservado' });
-    }
-    if (gotNeutral.length > 5) {
-        clinicalFlags.push({ flag: 'TASK_FOCUS', severity: 'moderate',
-            desc: 'Seleccionó ' + gotNeutral.length + ' items neutros — dificultad para mantenerse en la consigna' });
-    }
-    if (firstClickSec > 15) {
-        clinicalFlags.push({ flag: 'INITIATIVE_DELAY', severity: 'moderate',
-            desc: 'Latencia de inicio: ' + firstClickSec + 's — posible dificultad de iniciativa o exploración lenta' });
-    } else if (firstClickSec <= 5 && firstClickSec > 0) {
-        clinicalFlags.push({ flag: 'QUICK_START', severity: 'positive',
-            desc: 'Inicio rápido (' + firstClickSec + 's) — buena iniciativa y orientación a la tarea' });
-    }
-    if (avgHesitation > 8) {
-        clinicalFlags.push({ flag: 'SLOW_PROCESSING', severity: 'low',
-            desc: 'Hesitación promedio alta (' + avgHesitation + 's) — velocidad de procesamiento reducida' });
-    }
-    if (scanScore >= 70) {
-        clinicalFlags.push({ flag: 'SYSTEMATIC_SCANNING', severity: 'positive',
-            desc: 'Recorrido organizado por góndolas (' + scanScore + '%) — escaneo visual sistemático' });
-    } else if (scanScore <= 20 && gondolaVisitOrder.length >= 3) {
-        clinicalFlags.push({ flag: 'DISORGANIZED_SCANNING', severity: 'low',
-            desc: 'Recorrido desorganizado (' + scanScore + '%) — escaneo visual errático' });
-    }
-    if (removals >= 4) {
-        clinicalFlags.push({ flag: 'HIGH_SELF_CORRECTION', severity: 'low',
-            desc: removals + ' items removidos — indecisión o excesiva autocorrección' });
-    }
-    // Recipe recall
-    if (recipeRecallDone) {
-        if (recipeRecallScore === 1) {
-            clinicalFlags.push({ flag: 'RECIPE_RECALL_OK', severity: 'positive',
-                desc: 'Recordó correctamente la receta asignada (' + (activeRecipe ? activeRecipe.name : '?') + ')' });
-        } else {
-            clinicalFlags.push({ flag: 'RECIPE_RECALL_FAIL', severity: 'high',
-                desc: 'No recordó la receta asignada — posible déficit de memoria de trabajo' });
-        }
-    }
+    // [V4] Se eliminó el bloque CLINICAL FLAGS — la interpretación clínica queda para el psiquiatra (Constitución V4 Art XI).
+    // Las variables crudas (coreComplete, gotErrors, gotAdvanced, overBudgetAttempts, priceCheckCount,
+    //  budgetUsePct, gotNeutral, firstClickSec, avgHesitation, scanScore, removals, recipeRecallDone,
+    //  recipeRecallScore, gondolaVisitOrder) ya se emiten al DB como métricas crudas; el clínico las lee.
 
     // ---- RENDER RESULTS ----
     document.getElementById('consigna').style.display = 'none';
@@ -1049,7 +979,6 @@ async function finishGame() {
         scan_score: scanScore,
         gondola_visit_order: gondolaVisitOrder,
         total_actions: actionLog.length,
-        clinical_flags: clinicalFlags,
         action_log: actionLog,
         // Dominios cognitivos explícitos
         errores_omision: essentialTotal - essentialCompleteCount,

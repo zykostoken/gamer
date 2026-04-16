@@ -80,8 +80,8 @@ var METRIC_DICTIONARY = {
         desc:'Protocolo A1. rt_cv > 0.25 sugiere irregularidad atencional. TDAH correlación g=0.76.' },
     iiv_consecutiva:        { domain:'ATENCION', construct:'Variabilidad intraindividual consecutiva (IIV)', unit:'ms', range:[0,500],
         desc:'Protocolo A1. SD de las diferencias entre RT de ensayos consecutivos. Sensible a fluctuaciones atencionales.' },
-    decaimiento_vigilancia: { domain:'ATENCION', construct:'Decaimiento de vigilancia', unit:'ratio', range:[0.5,3],
-        desc:'Protocolo A1: RT 2da mitad / RT 1ra mitad. >1 = fatiga de vigilancia sostenida. Calculado post-hoc.' },
+    vigor_mental_h1_h2:     { domain:'ATENCION', construct:'Vigor mental H1/H2', unit:'ratio', range:[0.3,2],
+        desc:'V4 canónico (reemplaza decaimiento_vigilancia): RT 1ra mitad / RT 2da mitad. >1 = warm-up/mejora temporal. <1 = fatigabilidad. Calculado post-hoc por agente-rt / biomet.' },
 
     // Fatigabilidad y distribucion temporal — tercios, transversal a todos los juegos
     // A2 Fatiga — protocolo clínico v1 (calculados en análisis diferido SQL)
