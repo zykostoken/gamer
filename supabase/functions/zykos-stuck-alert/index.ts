@@ -256,7 +256,8 @@ Deno.serve(async (req: Request) => {
   const smtpUser = Deno.env.get("ZOHO_SMTP_USER") ?? "";
   const smtpPassword = Deno.env.get("ZOHO_SMTP_PASSWORD") ?? "";
   const smtpFrom = Deno.env.get("ZOHO_SMTP_FROM") ?? "";
-  const recipient = "gonzaloperezcortizo@gmail.com";
+  // Recipient configurable via secret, falls back to default
+  const recipient = Deno.env.get("ZYKOS_ALERT_RECIPIENT") ?? "gonzaloperezcortizo@gmail.com";
 
   let messageId = "";
   let smtpResult = "success";
@@ -291,17 +292,12 @@ Deno.serve(async (req: Request) => {
 
     await client.close();
   } catch (err) {
-    // Extract error message but sanitize to avoid exposing sensitive info
+    // Log the error for internal use, but never expose raw error to clients
+    // CodeQL note: publicError is a fixed constant, NOT derived from err
     const rawError = err instanceof Error ? err.message : String(err);
-    // Remove any potential stack traces, file paths, or sensitive data
-    const sanitizedError = rawError
-      .replace(/at\s+.*?:\d+:\d+/g, "") // Remove stack trace lines
-      .replace(/\/[^\s]+/g, "[path]") // Remove file paths
-      .replace(/password|secret|key|token/gi, "[redacted]") // Redact sensitive keywords
-      .trim()
-      .substring(0, 100); // Limit length
-    const publicError = sanitizedError || "SMTP connection failed";
-    smtpResult = `error: ${rawError}`; // Full error for internal log
+    
+    // For internal logging only - not exposed to users
+    smtpResult = `error: ${rawError.replace(/password|secret|key|token|credential/gi, "[redacted]")}`;
 
     // Log to zykos_stuck_alerts_log (error case)
     try {
@@ -319,8 +315,9 @@ Deno.serve(async (req: Request) => {
       // Silent fail for logging
     }
 
+    // Return a generic error message to the client - no stack traces or sensitive info
     return new Response(
-      JSON.stringify({ sent: false, error: publicError }),
+      JSON.stringify({ sent: false, error: "Email delivery failed. Check server logs." }),
       {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
