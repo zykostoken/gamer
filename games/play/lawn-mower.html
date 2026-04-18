@@ -259,6 +259,7 @@
       transition: all 0.2s;
       text-align: left;
       font-size: 0.95rem;
+      position: relative;
     }
     .level-btn:hover { border-color: var(--primary); background: #eff6ff; }
     .level-num {
@@ -276,6 +277,76 @@
     .level-info { flex: 1; }
     .level-name { font-weight: 700; color: var(--text); }
     .level-desc { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* Art XIII level gating styles */
+    .level-btn.level-locked {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .level-btn.level-locked .level-num {
+      background: #94a3b8;
+    }
+    .level-btn.level-locked::after {
+      content: "";
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-left: auto;
+      flex-shrink: 0;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>');
+      background-size: contain;
+      background-repeat: no-repeat;
+    }
+    .level-btn.level-completed {
+      opacity: 0.72;
+      cursor: not-allowed;
+      pointer-events: none;
+      border-color: rgba(74, 222, 128, 0.4);
+      background: rgba(74, 222, 128, 0.08);
+    }
+    .level-btn.level-completed .level-num {
+      background: #4ade80;
+    }
+    .level-btn.level-completed .level-name {
+      color: #22c55e;
+    }
+    .level-btn.level-completed::after {
+      content: "";
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-left: auto;
+      flex-shrink: 0;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%234ade80" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>');
+      background-size: contain;
+      background-repeat: no-repeat;
+    }
+    .level-btn.level-current {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.08);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+    .level-btn.level-current .level-name {
+      color: var(--primary);
+    }
+    .level-status {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .level-btn.level-current .level-status {
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .level-btn.level-completed .level-status {
+      color: #22c55e;
+    }
+    .level-btn.level-locked .level-status {
+      color: #94a3b8;
+    }
 
     /* Result modal */
     .result-title {
@@ -1298,6 +1369,121 @@
   const lmParams = new URLSearchParams(window.location.search);
   // DNI is the universal identifier
   const lmPatientDni = lmParams.get('dni') || (function(){ try { return localStorage.getItem('zykos_patient_dni'); } catch(e){ return null; } })() || window.ZYKOS_DNI;
+
+  // ---- ART XIII: LEVEL PROGRESSION GATING ----
+  // Constitution V4 mandates: sequential progression, no skipping, persistent state.
+  // The LEVEL_ORDER array defines the canonical sequence; backend zykos_level_sequences
+  // may declare jumps (e.g., 20->21 is a "scale jump" not a "level skip").
+  const GAME_SLUG = 'lawn-mower';
+  let artXiiiUnlockedLevel = 1;        // Level id (from LEVEL_ORDER) currently unlocked
+  let artXiiiCompletedLevels = [];     // Array of level ids already passed
+  let artXiiiNextLevel = null;         // Backend-provided next level after pass
+  let artXiiiIsFinalLevel = false;     // True if current level is the last in sequence
+
+  // Fetch unlocked level from backend; fallback to level 1 if unavailable
+  async function fetchArtXiiiUnlockedLevel() {
+    try {
+      if (!getLmSupa() || !lmPatientDni) return;
+      var r = await getLmSupa().rpc('zykos_get_unlocked_level', {
+        p_dni: lmPatientDni, p_game_slug: GAME_SLUG
+      });
+      if (r.error) { console.warn('[lawn-mower] Art XIII get_unlocked_level error:', r.error.message); return; }
+      if (!r.data || r.data.error) { console.warn('[lawn-mower] Art XIII:', r.data && r.data.error); return; }
+      artXiiiUnlockedLevel = r.data.unlocked_level || 1;
+      artXiiiCompletedLevels = r.data.levels_completed || [];
+      artXiiiIsFinalLevel = !!r.data.is_final_level;
+    } catch (e) { console.warn('[lawn-mower] fetchArtXiiiUnlockedLevel:', e.message); }
+  }
+
+  // Apply Art XIII gating styles to level buttons
+  function applyArtXiiiLevelGating() {
+    document.querySelectorAll('.level-btn').forEach(function(btn) {
+      var levelNum = parseInt(btn.getAttribute('data-level'));
+      if (isNaN(levelNum)) return;
+      // Remove any existing gating classes
+      btn.classList.remove('level-locked', 'level-completed', 'level-current');
+      // Remove any existing status span
+      var existingStatus = btn.querySelector('.level-status');
+      if (existingStatus) existingStatus.remove();
+      // Determine state
+      var statusText = '';
+      if (artXiiiCompletedLevels.indexOf(levelNum) >= 0) {
+        btn.classList.add('level-completed');
+        statusText = 'completado';
+      } else if (levelNum === artXiiiUnlockedLevel) {
+        btn.classList.add('level-current');
+        statusText = 'nivel actual';
+      } else {
+        btn.classList.add('level-locked');
+        statusText = 'bloqueado';
+      }
+      // Add status indicator
+      var levelInfo = btn.querySelector('.level-info');
+      if (levelInfo) {
+        var statusEl = document.createElement('div');
+        statusEl.className = 'level-status';
+        statusEl.textContent = statusText;
+        levelInfo.appendChild(statusEl);
+      }
+    });
+  }
+
+  // Register level attempt with backend Art XIII RPC
+  // n_errors = flowersHit + poolHits + cableStucks
+  // n_actions = grassCut + flowersWatered (all evaluable actions completed)
+  async function registerArtXiiiLevelAttempt(levelNum, completed) {
+    var artXiiiResult = null;
+    try {
+      if (!getLmSupa() || !lmPatientDni) return null;
+      var nErrors = flowersHit + poolHits + cableStucks;
+      var nActions = grassCut + flowersWatered; // All positive actions taken
+      // Ensure at least 1 action to avoid division errors
+      if (nActions < 1) nActions = 1;
+      var r = await getLmSupa().rpc('zykos_register_level_attempt', {
+        p_dni: lmPatientDni,
+        p_game_slug: GAME_SLUG,
+        p_level: levelNum,
+        p_completed: completed,
+        p_n_errors: nErrors,
+        p_n_actions: nActions
+      });
+      if (r.error) { console.warn('[lawn-mower] Art XIII register_level_attempt error:', r.error.message); return null; }
+      artXiiiResult = r.data;
+      // Log alert if triggered
+      if (artXiiiResult && artXiiiResult.should_send_alert) {
+        console.warn('[lawn-mower] Art XIII alert triggered:', artXiiiResult.alert_reason);
+      }
+    } catch (e) { console.warn('[lawn-mower] registerArtXiiiLevelAttempt:', e.message); }
+    return artXiiiResult;
+  }
+
+  // Delay constants for SDK initialization timing
+  const SUPABASE_INIT_DELAY_MS = 300;
+  const SUPABASE_RETRY_DELAY_MS = 200;
+
+  // Initialize Art XIII on DOM ready (runs before level select is shown)
+  // Called from DOMContentLoaded or after Supabase is ready
+  function initArtXiii() {
+    // Only fetch if Supabase is available
+    if (typeof getSupabaseClient !== 'function') {
+      // Supabase not loaded yet; retry after short delay
+      setTimeout(initArtXiii, SUPABASE_RETRY_DELAY_MS);
+      return;
+    }
+    fetchArtXiiiUnlockedLevel().then(function() {
+      applyArtXiiiLevelGating();
+    });
+  }
+
+  // Schedule Art XIII init after DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      // Small delay to ensure Supabase SDK is loaded
+      setTimeout(initArtXiii, SUPABASE_INIT_DELAY_MS);
+    });
+  } else {
+    setTimeout(initArtXiii, SUPABASE_INIT_DELAY_MS);
+  }
 
   // [V4] lmGetOrCreatePatient eliminada — zykos_patients no existe, DNI es identificador universal
 
@@ -4662,25 +4848,56 @@
     const clinicalStats = calculateClinicalStats();
     saveMetricsToHistory(currentLevel, clinicalStats);
 
-    showResultScreen(true, completionBonus, speedBonus);
+    // Art XIII: register level attempt and control next level
+    registerArtXiiiLevelAttempt(currentLevel, true).then(function(artXiii) {
+      // Art XIII: 'passed' = completed consigna AND error rate <=49% (backend canonical threshold)
+      // Default to true (level was completed), but backend verdict overrides
+      var passed = true;
+      if (artXiii && typeof artXiii.passed === 'boolean') {
+        passed = artXiii.passed;
+      }
+      // Update Art XIII state for next level navigation
+      if (artXiii) {
+        artXiiiNextLevel = artXiii.next_level || null;
+        artXiiiIsFinalLevel = !!artXiii.is_final_level;
+      } else {
+        artXiiiNextLevel = getNextLevel(currentLevel);
+        artXiiiIsFinalLevel = !artXiiiNextLevel;
+      }
+      showResultScreen(true, completionBonus, speedBonus, passed, artXiii);
+    });
+
     showCelebration();
     saveResult(true);
     // Also save to Supabase for longitudinal tracking
     lmSaveToSupabase(true, score, calculateClinicalStats());
   }
 
-  function showResultScreen(won, completionBonus, speedBonus) {
+  function showResultScreen(won, completionBonus, speedBonus, artXiiiPassed, artXiiiData) {
     resultScreen.classList.remove('hidden');
-    resultTitle.textContent = won ? 'Completado! Muy bien!' : 'Juego terminado';
+    // Art XIII: adjust title based on whether level was "passed" (<=49% errors)
+    var titleText = 'Completado! Muy bien!';
+    if (won && artXiiiPassed === false) {
+      titleText = 'Nivel finalizado';
+    } else if (!won) {
+      titleText = 'Juego terminado';
+    }
+    resultTitle.textContent = titleText;
     resultTitle.className = 'result-title ' + (won ? 'win' : 'lose');
 
-    // Show/hide next level button
+    // Art XIII: Show next level button only if passed AND there is a next level
     const nextLevelBtn = document.getElementById('nextLevelBtn');
-    if (won && getNextLevel(currentLevel)) {
-      nextLevelBtn.style.display = 'inline-block';
-    } else {
-      nextLevelBtn.style.display = 'none';
+    var showNext = false;
+    if (won && artXiiiPassed !== false) {
+      // Check if Art XIII provided next level
+      if (artXiiiData && artXiiiData.next_level != null && !artXiiiData.is_final_level) {
+        showNext = true;
+      } else if (!artXiiiData && getNextLevel(currentLevel)) {
+        // Fallback: no Art XIII response, use legacy logic
+        showNext = true;
+      }
     }
+    nextLevelBtn.style.display = showNext ? 'inline-block' : 'none';
 
     completionBonus = completionBonus || 0;
     speedBonus = speedBonus || 0;
@@ -4840,6 +5057,10 @@
   // ---- LEVEL SELECT ----
   document.querySelectorAll('.level-btn').forEach(btn => {
     btn.addEventListener('click', function() {
+      // Art XIII: prevent clicking on locked or completed levels
+      if (this.classList.contains('level-locked') || this.classList.contains('level-completed')) {
+        return;
+      }
       const level = parseInt(this.getAttribute('data-level'));
       levelSelectScreen.classList.add('hidden');
       // V3: game starts FIRST, mood modal fires AFTER in background
@@ -4869,6 +5090,8 @@
     restartBtn.classList.remove('visible');
     if (gameTickId) { clearInterval(gameTickId); gameTickId = null; }
     document.getElementById('restartBtn').style.display = 'none';
+    // Art XIII: refresh level gating before showing level select
+    fetchArtXiiiUnlockedLevel().then(applyArtXiiiLevelGating);
     levelSelectScreen.classList.remove('hidden');
   });
   document.getElementById('retryBtn').addEventListener('click', function() {
@@ -4885,6 +5108,8 @@
     clearInterval(blockedCheckInterval);
     restartBtn.classList.remove('visible');
     document.getElementById('restartBtn').style.display = 'none';
+    // Art XIII: refresh level gating before showing level select
+    fetchArtXiiiUnlockedLevel().then(applyArtXiiiLevelGating);
     levelSelectScreen.classList.remove('hidden');
   });
 
@@ -4903,7 +5128,8 @@
   document.getElementById('nextLevelBtn').addEventListener('click', function() {
     cancelAnimationFrame(celebAnimId);
     celebCanvas.classList.add('hidden');
-    const next = getNextLevel(currentLevel);
+    // Art XIII: use canonical next level from backend if available
+    var next = artXiiiNextLevel != null ? artXiiiNextLevel : getNextLevel(currentLevel);
     if (next) {
       // Bloqueo demo: no pasar del nivel máximo permitido
       if (window._DEMO_MODE && next > window._DEMO_MAX_LEVEL) {
