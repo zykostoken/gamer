@@ -463,6 +463,70 @@
         } catch(e) { console.warn('[pill-organizer] Supabase init failed:', e.message); }
 
         // ===========================================
+        // ART XIII: LEVEL PROGRESSION GATING
+        // Constitution V4 mandates sequential progression
+        // ===========================================
+        const GAME_SLUG = 'pill-organizer';
+        let artXiiiUnlockedLevel = 1;
+        let artXiiiCompletedLevels = [];
+        let artXiiiNextLevel = null;
+        let artXiiiIsFinalLevel = false;
+        let artXiiiPassed = null; // Result from last level attempt
+
+        // Fetch unlocked level from backend
+        async function fetchArtXiiiUnlockedLevel() {
+            try {
+                var dni = window.ZYKOS_DNI || (function(){try{return localStorage.getItem('zykos_patient_dni')}catch(e){return null}})()
+                    || new URLSearchParams(window.location.search).get('dni');
+                if (!dni || !sb) return;
+                var r = await sb.rpc('zykos_get_unlocked_level', {
+                    p_dni: dni, p_game_slug: GAME_SLUG
+                });
+                if (r.error) { console.warn('[pill-organizer] Art XIII get_unlocked_level error:', r.error.message); return; }
+                if (!r.data || r.data.error) { console.warn('[pill-organizer] Art XIII:', r.data && r.data.error); return; }
+                artXiiiUnlockedLevel = r.data.unlocked_level || 1;
+                artXiiiCompletedLevels = r.data.levels_completed || [];
+                artXiiiIsFinalLevel = !!r.data.is_final_level;
+            } catch (e) { console.warn('[pill-organizer] fetchArtXiiiUnlockedLevel:', e.message); }
+        }
+
+        // Register level attempt with Art XIII RPC
+        // n_errors = totalErrors (commission errors - wrong placements)
+        // n_actions = totalMoves (all placements attempted)
+        async function registerArtXiiiLevelAttempt(levelId, completed) {
+            var artXiiiResult = null;
+            try {
+                var dni = sessionState.patientDni;
+                if (!dni || !sb) return null;
+                var nErrors = sessionState.totalErrors;
+                var nActions = sessionState.totalMoves;
+                if (nActions < 1) nActions = 1;
+                var r = await sb.rpc('zykos_register_level_attempt', {
+                    p_dni: dni,
+                    p_game_slug: GAME_SLUG,
+                    p_level: levelId,
+                    p_completed: completed,
+                    p_n_errors: nErrors,
+                    p_n_actions: nActions
+                });
+                if (r.error) { console.warn('[pill-organizer] Art XIII register_level_attempt error:', r.error.message); return null; }
+                artXiiiResult = r.data;
+                if (artXiiiResult && artXiiiResult.should_send_alert) {
+                    console.warn('[pill-organizer] Art XIII alert triggered:', artXiiiResult.alert_reason);
+                }
+            } catch (e) { console.warn('[pill-organizer] registerArtXiiiLevelAttempt:', e.message); }
+            return artXiiiResult;
+        }
+
+        // Update start button to show correct unlocked level
+        function updateStartButtonLevel() {
+            var btn = document.getElementById('btn-start');
+            if (btn) {
+                btn.textContent = 'COMENZAR NIVEL ' + artXiiiUnlockedLevel;
+            }
+        }
+
+        // ===========================================
         // CONFIGURACIÓN DE NIVELES
         // ===========================================
 
@@ -654,6 +718,9 @@
                 if (sb) {
                     // [V4 fix] patientDni es el identificador universal — no se necesita patientId numérico ni gameId
                     console.log('[pill-organizer] init OK, DNI:', sessionState.patientDni);
+                    // Art XIII: fetch unlocked level and update start button
+                    await fetchArtXiiiUnlockedLevel();
+                    updateStartButtonLevel();
                 }
             } catch(err) {
                 console.error('[pill-organizer] Init failed:', err);
@@ -670,7 +737,9 @@
                 document.getElementById('start-screen').style.display = 'none';
                 document.getElementById('game-container').style.display = 'block';
                 document.getElementById('results-overlay').style.display = 'none';
-                loadLevel(0);
+                // Art XIII: start at unlocked level (0-indexed)
+                var startLevelIndex = Math.max(0, artXiiiUnlockedLevel - 1);
+                loadLevel(startLevelIndex);
                 if (!sessionState.dragSetup) {
                     setupDragAndDrop();
                     sessionState.dragSetup = true;
@@ -1581,6 +1650,19 @@
 
             // [V4] zykos_game_sessions UPDATE eliminado — schema mismatch, datos de sesión van en zykos_game_metrics
 
+            // Art XIII: register level attempt and get pass/fail verdict
+            var artXiiiResult = await registerArtXiiiLevelAttempt(LEVELS[sessionState.currentLevelIndex].id, true);
+            if (artXiiiResult) {
+                artXiiiPassed = artXiiiResult.passed;
+                artXiiiNextLevel = artXiiiResult.next_level || null;
+                artXiiiIsFinalLevel = !!artXiiiResult.is_final_level;
+            } else {
+                // Fallback: use local logic if RPC unavailable
+                artXiiiPassed = (accuracy >= 60 && completeness >= 50);
+                artXiiiNextLevel = sessionState.currentLevelIndex < LEVELS.length - 1 ? LEVELS[sessionState.currentLevelIndex + 1].id : null;
+                artXiiiIsFinalLevel = sessionState.currentLevelIndex >= LEVELS.length - 1;
+            }
+
             // === MOSTRAR MODAL DE RESULTADOS ===
             var omissions = Math.max(0, expected - sessionState.correctPlacements);
             var commissions = sessionState.totalErrors;
@@ -1593,8 +1675,10 @@
         // ===========================================
         function showResultsModal(score, accuracy, completeness, stability, hesitation, pathEff, duration, expected, omissions, commissions, perseverations) {
             const level = LEVELS[sessionState.currentLevelIndex];
-            const hasNextLevel = sessionState.currentLevelIndex < LEVELS.length - 1;
-            const passed = accuracy >= 60 && completeness >= 50;
+            // Art XIII: use backend verdict if available, otherwise fallback to local logic
+            const passed = artXiiiPassed !== null ? artXiiiPassed : (accuracy >= 60 && completeness >= 50);
+            // Art XIII: show next level button only if passed AND there is a next level
+            const showNextBtn = passed && artXiiiNextLevel != null && !artXiiiIsFinalLevel;
 
             let stabilityLabel;
             if (stability < 1.2) stabilityLabel = 'Excelente';
@@ -1608,8 +1692,8 @@
 
             const card = document.getElementById('results-card');
             card.innerHTML = `
-                <div class="text-5xl mb-3">${passed ? '' : ''}</div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-1">${passed ? '¡Nivel Completado!' : 'Nivel Finalizado'}</h2>
+                <div class="text-5xl mb-3"></div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-1">${passed ? 'Nivel Superado' : 'Seguimos practicando'}</h2>
                 <p class="text-sm text-gray-500 mb-4">${level.name}</p>
 
                 <div class="score-ring ${scoreColor}">
@@ -1694,16 +1778,16 @@
                 </div>
 
                 <div class="space-y-3">
-                    ${hasNextLevel && passed ? `
+                    ${showNextBtn ? `
                         <button onclick="goNextLevel()" class="w-full py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white font-bold rounded-2xl hover:shadow-xl transition-all text-lg">
-                            ▶ Siguiente Nivel (${LEVELS[sessionState.currentLevelIndex + 1].name})
+                            Siguiente Nivel
                         </button>
                     ` : ''}
                     <button onclick="retryLevel()" class="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-2xl hover:shadow-xl transition-all">
                          Reintentar ${level.name}
                     </button>
                     <button onclick="goToPortal()" class="w-full py-2 bg-gray-200 text-gray-700 font-bold rounded-2xl hover:bg-gray-300 transition-all text-sm">
-                        ← Volver al Portal
+                        Volver al Portal
                     </button>
                 </div>
 
@@ -1723,7 +1807,21 @@
             if (sessionState.timerInterval) { clearInterval(sessionState.timerInterval); sessionState.timerInterval = null; }
             sessionState.gameActive = false;
             sessionState.sessionId = null;
-            loadLevel(sessionState.currentLevelIndex + 1);
+            // Art XIII: use canonical next level from backend if available
+            var nextLevelIndex = sessionState.currentLevelIndex + 1;
+            if (artXiiiNextLevel != null) {
+                // Find the index of the next level by id
+                for (var i = 0; i < LEVELS.length; i++) {
+                    if (LEVELS[i].id === artXiiiNextLevel) {
+                        nextLevelIndex = i;
+                        break;
+                    }
+                }
+            }
+            // Reset Art XIII state for new level
+            artXiiiPassed = null;
+            artXiiiNextLevel = null;
+            loadLevel(nextLevelIndex);
             startGameSession();
         }
 
