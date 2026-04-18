@@ -201,13 +201,43 @@ var DICT = {
   },
   'fatiga_ratio_h2_h1': {
     label:'Fatiga temporal (H2 / H1)',
-    what:'Cuanto se enlentece el paciente en la segunda mitad de la sesion comparado con la primera.',
+    what:'Cuanto se enlentece el paciente en la segunda mitad de la sesion comparado con la primera. Alias legacy de vigor_mental_h1_h2 (son inversos: fatiga = 1 / vigor).',
     how:'AVG(rt_ms) en segunda mitad / AVG(rt_ms) en primera mitad',
     high:'>1.15 indica enlentecimiento progresivo. >1.30 es marcado. Compatible con fatiga central, agotamiento atencional, inicio de sedacion.',
     low:'<1.00 = se acelera (warm-up, efecto de practica intra-sesion).',
     unit:'ratio (1.0 = sin cambio)',
     domain:'ATENCION',
     agent:'engine-post-hoc-analysis (Art. Temporalidad Canonica)'
+  },
+  'vigor_mental_h1_h2': {
+    label:'Vigor mental (H1 / H2)',
+    what:'Ratio del RT medio de la primera mitad sobre la segunda. Metrica canonica V4. >1 indica mantenimiento o aceleracion en la segunda mitad; <1 indica enlentecimiento (fatiga).',
+    how:'AVG(rt_ms) H1 / AVG(rt_ms) H2',
+    high:'>1.10 = acelera con la practica (efecto de aprendizaje intra-sesion).',
+    low:'<0.87 indica fatiga significativa. <0.77 es marcado. Compatible con fatiga central, agotamiento atencional, inicio de sedacion, efecto farmacologico.',
+    unit:'ratio (1.0 = sin cambio)',
+    domain:'ATENCION',
+    agent:'engine-post-hoc-analysis (Art. Temporalidad Canonica)'
+  },
+  'rectificaciones_count': {
+    label:'Rectificaciones de trayectoria',
+    what:'Cantidad de cambios de direccion del cursor a lo largo del movimiento. Cada vez que el paciente invierte el eje horizontal del movimiento cuenta como una rectificacion.',
+    how:'count(sign(dx_t) != sign(dx_t-1)) sobre todos los samples',
+    high:'Planificacion motora deficiente, ajustes compensatorios, duda, dismetria.',
+    low:'Movimientos directos, pocas correcciones necesarias.',
+    unit:'count',
+    domain:'MOTOR',
+    agent:'engine-post-hoc-analysis'
+  },
+  'direction_changes_count': {
+    label:'Rectificaciones (alias legacy)',
+    what:'Alias legacy de rectificaciones_count. Preservado por compatibilidad del dashboard pero el nombre canonico V4 es rectificaciones_count.',
+    how:'ver rectificaciones_count',
+    high:'ver rectificaciones_count',
+    low:'ver rectificaciones_count',
+    unit:'count',
+    domain:'MOTOR',
+    agent:'engine-post-hoc-analysis'
   },
   'impulsividad_ratio': {
     label:'Ratio de impulsividad',
@@ -807,7 +837,7 @@ function renderGranularAnalysis(content, granular, rtRaw, movRaw){
     // Quarters Q1-Q4
     if (qCells){
       html += '<div class="card" style="background:var(--card2);padding:.8rem">' +
-              '<h3><span>Cuartos temporales ' + helpIcon('fatiga_ratio_h2_h1') + '</span><span class="unit">RT medio por Q</span></h3>' +
+              '<h3><span>Cuartos temporales ' + helpIcon('vigor_mental_h1_h2') + '</span><span class="unit">RT medio por Q</span></h3>' +
               '<div class="quarters">' + qCells + '</div>' +
               '<p style="font-size:.62rem;color:var(--dim);margin-top:.5rem;text-align:center">Q1→Q4: ' +
               (g.rt_q4_mean_ms && g.rt_q1_mean_ms && g.rt_q4_mean_ms > g.rt_q1_mean_ms * 1.15 ? '<span class="pill warn">enlentecimiento progresivo</span>' : g.rt_q4_mean_ms && g.rt_q1_mean_ms && g.rt_q4_mean_ms < g.rt_q1_mean_ms * 0.85 ? '<span class="pill ok">warm-up positivo</span>' : '<span class="pill info">estable</span>') + '</p>' +
@@ -825,21 +855,27 @@ function renderGranularAnalysis(content, granular, rtRaw, movRaw){
 
     html += '</div>';
 
-    // KPI strip de metricas clave
+    // KPI strip de metricas clave — Canon V4 naming
+    // Nota: la RPC zykos_dashboard_granular devuelve `vigor_mental_h1_h2` y
+    // `rectificaciones_count`. Los tiles conservan etiquetas clinicas legibles
+    // (`FATIGA_RATIO_H2_H1`, `DIRECTION_CHANGES_COUNT`) pero leen las keys V4.
+    // Art IX: naming unificado con el METRIC_DICTIONARY_V4.
     html += '<div class="kpi-row" style="margin-top:1rem">';
     [
-      ['rt_mean_ms', g.rt_mean_ms, 0, 'ms'],
-      ['rt_cv', g.rt_cv, 3, ''],
-      ['fatiga_ratio_h2_h1', g.fatiga_ratio_h2_h1, 2, ''],
-      ['impulsividad_ratio', g.impulsividad_ratio, 3, ''],
+      ['rt_mean_ms',             g.rt_mean_ms,             0, 'ms'],
+      ['rt_cv',                  g.rt_cv,                  3, ''],
+      ['vigor_mental_h1_h2',     g.vigor_mental_h1_h2,     2, ''],
+      ['impulsividad_ratio',     g.impulsividad_ratio,     3, ''],
       ['eficiencia_trayectoria', g.eficiencia_trayectoria, 3, ''],
-      ['direction_changes_count', g.direction_changes_count, 0, ''],
-      ['vel_cv', g.vel_cv, 3, '']
+      ['rectificaciones_count',  g.rectificaciones_count,  0, ''],
+      ['vel_cv',                 g.vel_cv,                 3, '']
     ].forEach(function(pair){
       var key = pair[0], v = pair[1], dec = pair[2], unit = pair[3];
       var cls = '';
       if (key === 'rt_cv' && v != null){ cls = v > 0.4 ? 'err' : v > 0.25 ? 'warn' : 'ok'; }
-      if (key === 'fatiga_ratio_h2_h1' && v != null){ cls = v > 1.3 ? 'err' : v > 1.15 ? 'warn' : 'ok'; }
+      // vigor_mental_h1_h2: <1 indica enlentecimiento en 2da mitad (fatiga).
+      // >1 indica aceleracion en 2da mitad (warmup o aprendizaje). Optimo ~1.
+      if (key === 'vigor_mental_h1_h2' && v != null){ cls = v < 0.77 ? 'err' : v < 0.87 ? 'warn' : 'ok'; }
       if (key === 'eficiencia_trayectoria' && v != null){ cls = v > 0.75 ? 'ok' : v > 0.4 ? 'warn' : 'err'; }
       html += '<div class="kpi ' + cls + '"><div class="v">' + fmt(v, dec) + (unit ? ' <span style="font-size:.75rem;color:var(--dim)">' + unit + '</span>' : '') + '</div><div class="l">' + key + ' ' + helpIcon(key) + '</div></div>';
     });
@@ -900,7 +936,7 @@ function renderLongitudinal(content, sessions, baseline){
     'rt_mean_ms', 'rt_cv', 'rt_sd_ms',
     'jitter_reposo_px', 'jitter_terminal_px', 'eficiencia_trayectoria',
     'vel_cv', 'hesitaciones_count', 'errores_omision', 'errores_comision',
-    'impulsividad_ratio', 'fatiga_ratio_h2_h1'
+    'impulsividad_ratio', 'vigor_mental_h1_h2'
   ].forEach(function(key){
     var b = bmap[key];
     if (!b) return;
