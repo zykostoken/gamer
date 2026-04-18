@@ -291,8 +291,17 @@ Deno.serve(async (req: Request) => {
 
     await client.close();
   } catch (err) {
-    const errorMsg = err instanceof Error ? err.message : String(err);
-    smtpResult = `error: ${errorMsg}`;
+    // Extract error message but sanitize to avoid exposing sensitive info
+    const rawError = err instanceof Error ? err.message : String(err);
+    // Remove any potential stack traces, file paths, or sensitive data
+    const sanitizedError = rawError
+      .replace(/at\s+.*?:\d+:\d+/g, "") // Remove stack trace lines
+      .replace(/\/[^\s]+/g, "[path]") // Remove file paths
+      .replace(/password|secret|key|token/gi, "[redacted]") // Redact sensitive keywords
+      .trim()
+      .substring(0, 100); // Limit length
+    const publicError = sanitizedError || "SMTP connection failed";
+    smtpResult = `error: ${rawError}`; // Full error for internal log
 
     // Log to zykos_stuck_alerts_log (error case)
     try {
@@ -311,7 +320,7 @@ Deno.serve(async (req: Request) => {
     }
 
     return new Response(
-      JSON.stringify({ sent: false, error: errorMsg }),
+      JSON.stringify({ sent: false, error: publicError }),
       {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
