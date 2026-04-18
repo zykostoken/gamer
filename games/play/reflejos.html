@@ -100,11 +100,27 @@
         .screen-card p { font-size:0.88rem; color:rgba(255,255,255,0.5); line-height:1.6; margin-bottom:16px; }
         
         .level-list { text-align:left; margin:20px 0; }
-        .level-item { padding:10px 16px; margin:6px 0; border-radius:12px; background:var(--card); border:1px solid rgba(255,255,255,0.05); font-size:0.82rem; display:flex; justify-content:space-between; align-items:center; }
+        .level-item { padding:10px 16px; margin:6px 0; border-radius:12px; background:var(--card); border:1px solid rgba(255,255,255,0.05); font-size:0.82rem; display:flex; justify-content:space-between; align-items:center; position:relative; }
         .level-item .lname { font-weight:700; color:#e2e8f0; }
         .level-item .ldesc { color:var(--dim); font-size:0.75rem; }
-        .level-item.locked { opacity:0.4; }
-        .level-item.current { border-color:var(--accent); background:rgba(244,63,94,0.08); }
+        .level-item .lstatus { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--dim); margin-top:3px; display:inline-block; }
+        .level-item.locked { opacity:0.38; }
+        .level-item.locked .lstatus { color:#94a3b8; }
+        .level-item.locked::after {
+            content:""; display:inline-block; width:18px; height:18px; margin-left:10px;
+            background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>');
+            background-size:contain; background-repeat:no-repeat;
+        }
+        .level-item.current { border-color:var(--accent); background:rgba(244,63,94,0.08); box-shadow:0 0 0 1px rgba(244,63,94,0.25); }
+        .level-item.current .lstatus { color:var(--accent); font-weight:700; }
+        .level-item.completed { opacity:0.72; border-color:rgba(74,222,128,0.35); background:rgba(74,222,128,0.06); }
+        .level-item.completed .lname { color:#86efac; }
+        .level-item.completed .lstatus { color:#4ade80; }
+        .level-item.completed::after {
+            content:""; display:inline-block; width:18px; height:18px; margin-left:10px;
+            background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%234ade80" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>');
+            background-size:contain; background-repeat:no-repeat;
+        }
         
         .btn { padding:14px 32px; border-radius:14px; border:none; cursor:pointer; font-weight:800; font-size:0.95rem; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
         .btn-primary { background:linear-gradient(135deg, var(--accent), var(--accent2)); color:white; }
@@ -340,17 +356,47 @@ var COLORS = {
 var MOOD_COLORS = ['red','blue','green','yellow','violet','orange','pink','cyan','lime','amber','rose','indigo'];
 
 // ======================== INIT ========================
+// Art XIII Constitucion V4: progresion forzada secuencial
+// STATE.unlockedLevelId guarda el id numerico del nivel desbloqueado (1..8).
+// Si no hay RPC disponible (sin sesion o error), cae al nivel 1.
 function init() {
     sb = getSupabaseClient();
-    renderLevelList();
+    STATE.unlockedLevelId = 1;
+    STATE.completedLevelIds = [];
+    fetchUnlockedLevel().then(function() {
+        renderLevelList();
+    });
+}
+
+async function fetchUnlockedLevel() {
+    try {
+        var dni = window.ZYKOS_DNI || new URLSearchParams(location.search).get('dni');
+        if (!dni || !sb) return;
+        var r = await sb.rpc('zykos_get_unlocked_level', {
+            p_dni: dni, p_game_slug: 'reflejos'
+        });
+        if (r.error) { console.warn('[reflejos] get_unlocked_level error:', r.error.message); return; }
+        if (!r.data || r.data.error) { console.warn('[reflejos] get_unlocked_level:', r.data && r.data.error); return; }
+        STATE.unlockedLevelId = r.data.unlocked_level || 1;
+        STATE.completedLevelIds = r.data.levels_completed || [];
+    } catch (e) { console.warn('[reflejos] fetchUnlockedLevel:', e.message); }
 }
 
 function renderLevelList() {
     var html = '';
-    LEVELS.forEach(function(lv, i) {
-        var cls = i === 0 ? 'current' : 'locked';
-        html += '<div class="level-item ' + cls + '">' +
-            '<div><span class="lname">Nivel ' + lv.id + ': ' + lv.name + '</span><br><span class="ldesc">' + lv.desc + '</span></div>' +
+    LEVELS.forEach(function(lv) {
+        var cls, label;
+        if (STATE.completedLevelIds.indexOf(lv.id) >= 0) {
+            cls = 'completed'; label = 'completado';
+        } else if (lv.id === STATE.unlockedLevelId) {
+            cls = 'current'; label = 'aqui seguis';
+        } else {
+            cls = 'locked'; label = 'bloqueado';
+        }
+        html += '<div class="level-item ' + cls + '" data-status="' + label + '">' +
+            '<div><span class="lname">Nivel ' + lv.id + ': ' + lv.name + '</span>' +
+            '<br><span class="ldesc">' + lv.desc + '</span>' +
+            '<br><span class="lstatus">' + label + '</span></div>' +
             '</div>';
     });
     document.getElementById('level-list').innerHTML = html;
@@ -360,7 +406,13 @@ function renderLevelList() {
 function beginGame() {
     initAudio();
     document.getElementById('start-screen').style.display = 'none';
-    STATE.level = 0;
+    // Art XIII: arrancar en el nivel desbloqueado, no en el 0 hardcoded.
+    // LEVELS es un array 0-indexed; unlockedLevelId es el id "humano" (1..8).
+    var targetIdx = 0;
+    for (var i = 0; i < LEVELS.length; i++) {
+        if (LEVELS[i].id === STATE.unlockedLevelId) { targetIdx = i; break; }
+    }
+    STATE.level = targetIdx;
     STATE.score = 0;
     startLevel();
 }
@@ -1123,8 +1175,7 @@ function endLevel() {
             duration_seconds:   Math.round(duration),
             constructs:         lv.constructs
         };
-        saveMetrics(metrics7);
-        showResults(metrics7, lv);
+        saveMetrics(metrics7).then(function(art) { showResults(metrics7, lv, art); });
         return;
     }
     if (mode === 'choose_target' && STATE.chooseTargetMetrics) {
@@ -1142,8 +1193,7 @@ function endLevel() {
             duration_seconds:   Math.round(duration),
             constructs:         lv.constructs
         };
-        saveMetrics(metrics8);
-        showResults(metrics8, lv);
+        saveMetrics(metrics8).then(function(art) { showResults(metrics8, lv, art); });
         return;
     }
 
@@ -1255,19 +1305,17 @@ function endLevel() {
         constructs: lv.constructs
     };
     
-    // Save to Supabase
-    saveMetrics(metrics);
-    
-    // Show results
-    showResults(metrics, lv);
+    // Save to Supabase y aplicar regla Art XIII
+    saveMetrics(metrics).then(function(art) { showResults(metrics, lv, art); });
 }
 
 // ======================== SAVE METRICS ========================
 async function saveMetrics(metrics) {
-    if (!sb) return;
+    var artXiiiResult = null;
+    if (!sb) return artXiiiResult;
     try {
         var dni = window.ZYKOS_DNI || new URLSearchParams(location.search).get('dni');
-        if (!dni) return;
+        if (!dni) return artXiiiResult;
         
         var userId = null;
         try {
@@ -1299,13 +1347,45 @@ async function saveMetrics(metrics) {
                 return { i:s.index, c:s.color, sh:s.shape, act:s.action, rt:s.respondedAt?Math.round(s.respondedAt-s.appearedAt):null, resp:s.response, ok:s.correct, sz:s.size, audio:s.audioSignal, dist:s.clickDistance||null, offX:s.clickOffsetX||0, offY:s.clickOffsetY||0 };
             })}
         });
+
+        // Art XIII — registrar intento canonico.
+        // n_errors = omisiones + comisiones; n_actions_evaluable = total de estimulos.
+        // La RPC aplica el umbral 0.49 y retorna passed/next_level/should_send_alert.
+        var nErrors  = (metrics.omissions || metrics.errores_omision || 0) + (metrics.commissions || metrics.errores_comision || 0);
+        var nActions = metrics.total_stimuli || (metrics.hits + (metrics.omissions||0) + (metrics.commissions||0) + (metrics.correct_rejections||0)) || 0;
+        var completed = nActions > 0;
+        var r = await sb.rpc('zykos_register_level_attempt', {
+            p_dni: dni, p_game_slug: GAME_SLUG, p_level: metrics.level,
+            p_completed: completed, p_n_errors: nErrors, p_n_actions: nActions
+        });
+        if (r.error) { console.warn('[reflejos] register_level_attempt error:', r.error.message); }
+        else { artXiiiResult = r.data; }
+
+        // Alerta: 3 intentos consecutivos fallidos.
+        // Por ahora solo loguea; la Edge Function zykos-stuck-alert queda pendiente (audit id=92).
+        if (artXiiiResult && artXiiiResult.should_send_alert) {
+            console.warn('[reflejos] Art XIII alert:', artXiiiResult.alert_reason);
+        }
     } catch(e) { console.warn('[reflejos] Save error:', e.message); }
+    return artXiiiResult;
 }
 
 // ======================== SHOW RESULTS ========================
-function showResults(m, lv) {
-    var passed = m.hit_rate >= 0.6 && m.commissions <= m.total_stimuli * 0.3;
-    var hasNext = STATE.level < LEVELS.length - 1;
+function showResults(m, lv, artXiii) {
+    // Art XIII: si el backend respondio, su veredicto manda (umbral canonico 0.49).
+    // Si no hay respuesta (RPC sin DNI, offline, etc.), fallback al umbral legacy interno.
+    var passed;
+    if (artXiii && typeof artXiii.passed === 'boolean') {
+        passed = artXiii.passed;
+    } else {
+        passed = m.hit_rate >= 0.6 && m.commissions <= m.total_stimuli * 0.3;
+    }
+    // hasNext ahora solo es true si hay siguiente nivel segun la secuencia canonica.
+    // El backend informa next_level; si no hay, es el nivel final.
+    var hasNext = artXiii ? (artXiii.next_level != null && !artXiii.is_final_level) : (STATE.level < LEVELS.length - 1);
+    // Guardar next_level canonico en STATE para que nextLevel() lo use.
+    STATE.nextLevelId = (artXiii && artXiii.next_level != null) ? artXiii.next_level : null;
+    STATE.isFinalLevel = artXiii ? !!artXiii.is_final_level : false;
     
     var rtClass = m.rt_mean_ms < 400 ? 'good' : m.rt_mean_ms < 600 ? 'warn' : 'bad';
     var hrClass = m.hit_rate >= 0.8 ? 'good' : m.hit_rate >= 0.6 ? 'warn' : 'bad';
@@ -1360,7 +1440,18 @@ function nextLevel() {
     var arena = document.getElementById('arena');
     var stims = arena.querySelectorAll('.stimulus');
     stims.forEach(function(s) { s.remove(); });
-    STATE.level++;
+    // Art XIII: si hay next_level canonico del backend, saltar a ese id (respetando saltos declarados en zykos_level_sequences).
+    // Fallback: incremento lineal del indice en LEVELS[].
+    if (STATE.nextLevelId != null) {
+        var targetIdx = -1;
+        for (var i = 0; i < LEVELS.length; i++) {
+            if (LEVELS[i].id === STATE.nextLevelId) { targetIdx = i; break; }
+        }
+        if (targetIdx >= 0) { STATE.level = targetIdx; }
+        else { STATE.level++; }
+    } else {
+        STATE.level++;
+    }
     startLevel();
 }
 
