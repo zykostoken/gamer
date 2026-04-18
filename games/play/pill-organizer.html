@@ -1657,7 +1657,10 @@
                 artXiiiNextLevel = artXiiiResult.next_level || null;
                 artXiiiIsFinalLevel = !!artXiiiResult.is_final_level;
             } else {
-                // Fallback: use local logic if RPC unavailable
+                // Fallback when RPC unavailable: use legacy local thresholds.
+                // Note: backend canonical threshold is 0.49 error rate, but legacy UI
+                // used accuracy >= 60% AND completeness >= 50%. When backend is available,
+                // its verdict takes precedence.
                 artXiiiPassed = (accuracy >= 60 && completeness >= 50);
                 artXiiiNextLevel = sessionState.currentLevelIndex < LEVELS.length - 1 ? LEVELS[sessionState.currentLevelIndex + 1].id : null;
                 artXiiiIsFinalLevel = sessionState.currentLevelIndex >= LEVELS.length - 1;
@@ -1692,8 +1695,7 @@
 
             const card = document.getElementById('results-card');
             card.innerHTML = `
-                <div class="text-5xl mb-3"></div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-1">${passed ? 'Nivel Superado' : 'Seguimos practicando'}</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-1 mt-4">${passed ? 'Nivel Superado' : 'Seguimos practicando'}</h2>
                 <p class="text-sm text-gray-500 mb-4">${level.name}</p>
 
                 <div class="score-ring ${scoreColor}">
