@@ -227,6 +227,7 @@ Deno.serve(async (req: Request) => {
   }
 
   // Get last 3 session_summary metrics for this patient/game/level
+  // The level is stored inside metric_data JSON field
   let metricRows: MetricRow[] = [];
   try {
     const { data: metricsData } = await supabase
@@ -235,6 +236,7 @@ Deno.serve(async (req: Request) => {
       .eq("patient_dni", patient_dni)
       .eq("game_slug", game_slug)
       .eq("metric_type", "session_summary")
+      .eq("metric_data->>level", String(level)) // Filter by level inside JSON
       .order("created_at", { ascending: false })
       .limit(3);
 
@@ -250,14 +252,25 @@ Deno.serve(async (req: Request) => {
   const htmlBody = buildEmailHtml(displayName, patient_dni, game_slug, level, consecutive_fails, error_rates, metricRows);
   const plainBody = buildEmailPlain(displayName, patient_dni, game_slug, level, consecutive_fails, error_rates, metricRows);
 
-  // SMTP credentials
+  // SMTP credentials - required for sending email
   const smtpHost = Deno.env.get("ZOHO_SMTP_HOST") ?? "smtp.zoho.com";
   const smtpPort = Number(Deno.env.get("ZOHO_SMTP_PORT") ?? "465");
-  const smtpUser = Deno.env.get("ZOHO_SMTP_USER") ?? "";
-  const smtpPassword = Deno.env.get("ZOHO_SMTP_PASSWORD") ?? "";
-  const smtpFrom = Deno.env.get("ZOHO_SMTP_FROM") ?? "";
-  // Recipient configurable via secret, falls back to default
+  const smtpUser = Deno.env.get("ZOHO_SMTP_USER");
+  const smtpPassword = Deno.env.get("ZOHO_SMTP_PASSWORD");
+  const smtpFrom = Deno.env.get("ZOHO_SMTP_FROM");
+  // Recipient: default to direccion medica per Articulo XIII spec
   const recipient = Deno.env.get("ZYKOS_ALERT_RECIPIENT") ?? "gonzaloperezcortizo@gmail.com";
+
+  // Validate required SMTP credentials
+  if (!smtpUser || !smtpPassword || !smtpFrom) {
+    return new Response(
+      JSON.stringify({ sent: false, error: "SMTP credentials not configured" }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }
 
   let messageId = "";
   let smtpResult = "success";
@@ -269,14 +282,14 @@ Deno.serve(async (req: Request) => {
         port: smtpPort,
         tls: true,
         auth: {
-          username: smtpUser,
-          password: smtpPassword,
+          username: smtpUser!, // Validated above
+          password: smtpPassword!, // Validated above
         },
       },
     });
 
     const sendResult = await client.send({
-      from: smtpFrom,
+      from: smtpFrom!, // Validated above
       to: recipient,
       subject: subject,
       content: plainBody,
