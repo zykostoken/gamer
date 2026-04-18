@@ -294,6 +294,93 @@ El texto generado se muestra en el dashboard antes de las metricas individuales,
 
 ---
 
+## ARTICULO 13 — PROGRESION DE NIVELES
+
+**Promulgado:** 18 de abril de 2026.
+**Reemplaza:** nada (articulo nuevo).
+
+### 13.1 Principio rector
+
+Todo juego ZYKOS con multiples niveles organiza el acceso bajo **progresion forzada secuencial**. El paciente no elige libremente por que nivel jugar: el sistema le asigna el nivel que le corresponde segun su historia personal en ese juego. La soberania no es del paciente sobre el juego; es del sistema sobre la secuencia de observacion.
+
+### 13.2 Primera sesion
+
+Cualquier paciente, en su primera sesion con un juego dado, comienza siempre por el **nivel de entrada** de ese juego declarado en `zykos_level_sequences.is_entry_level = true`. No existe "elegir un nivel mas dificil para probar". No existe "saltar el tutorial".
+
+### 13.3 Avance — dos condiciones simultaneas
+
+Un nivel queda *superado* si y solo si:
+
+1. **Completitud de consigna.** El paciente llega al final del nivel segun la logica interna del juego. No importa el tiempo empleado, no importa el puntaje bruto.
+2. **Tasa de errores menor o igual al 49%.** La proporcion de errores sobre las acciones evaluables no excede 0.49. El 50% no desbloquea; el 49% si.
+
+La metrica sigue siendo soberana y ajena a la decision de avance en todo lo demas. Jitter, velocidad, latencia, variabilidad atencional, perseveraciones: ninguna de estas variables condiciona el desbloqueo. Un paciente lento pero con error rate <= 0.49 avanza. Un paciente rapido pero con error rate >= 0.50 no avanza y se queda en el nivel hasta mejorar. El umbral del 49% es el piso operacional que separa "transite la consigna" de "domine minimamente la consigna".
+
+### 13.4 Tasa de errores — definicion operacional por juego
+
+Cada juego define que cuenta como "error evaluable" y "accion evaluable" en su nivel. El numerador y el denominador son declarados por el juego en su evento de cierre de nivel al stream crudo (Art. 1.2). El agente de analisis calcula la proporcion; el RPC `zykos_register_level_attempt` aplica el umbral del 49%. La Constitucion no define que es "error" para cada juego — eso es soberania de la logica interna. La Constitucion solo declara que el umbral agregado es **0.49**.
+
+### 13.5 Desbloqueo y bloqueo
+
+Al superar un nivel, el juego desbloquea el siguiente y **bloquea el anterior**. El paciente no puede volver a jugar un nivel ya superado. Esto evita el refugio evitativo en la tarea facil ya dominada, patron semiologico documentado en Art. 1.5 como dato clinico primario.
+
+### 13.6 Estructura de la secuencia
+
+Los niveles no tienen que ser numericamente secuenciales. La tabla `zykos_level_sequences` declara el orden canonico de cada juego. El codigo del juego avanza segun `sequence_order`, no segun `level_number`. Esto permite secuencias con saltos o agrupamientos por escalas (ej: lawn-mower con escalas de cuadros progresivamente mas pequenos).
+
+### 13.7 Persistencia entre sesiones
+
+El estado de progresion persiste entre sesiones. No se pierde al cerrar el navegador, al cambiar de dispositivo, ni al expirar la sesion. El paciente retoma el juego exactamente donde lo dejo. Consecuencia directa de Art. 1.5 (captura continua) y Art. 1.6 (baseline individual longitudinal).
+
+### 13.8 Irreversibilidad del progreso
+
+**El progreso es historico y no se borra.** Ni el paciente, ni el clinico, ni el superadmin pueden resetear el progreso de un paciente en un juego. Una vez superado un nivel, queda superado para siempre. Fundamento clinico: la historia de superacion es parte de la biografia digital del paciente, y su borrado equivale a una amnesia inducida en el sistema de observacion. Lo que ZYKOS observo, ZYKOS lo recuerda.
+
+### 13.9 No progresion como dato clinico
+
+Un paciente que no logra superar un nivel tras multiples intentos no "falla en un test". Es un paciente cuyo comportamiento esta siendo observado por la plataforma en su incapacidad semiologica de progresar. Este hallazgo es dato clinico primario. Derivaciones esperables del agente de analisis sobre este patron incluyen: fatigabilidad progresiva, disociacion motor-cognitiva, retraccion evitativa. La interpretacion es del clinico.
+
+### 13.10 Umbral de alerta a direccion medica
+
+Cuando un paciente acumula **tres (3) intentos consecutivos fallidos en el mismo nivel**, el sistema dispara una alerta automatica por correo electronico a direccion medica (direccionmedica@clinicajoseingenieros.ar). Un intento fallido: completo la consigna pero error rate > 0.49, o abandono antes de completar.
+
+La alerta contiene: DNI del paciente, juego, nivel, fechas de los tres intentos, y resumen de metricas relevantes. El clinico interpreta; el sistema solo alerta.
+
+Los contadores se reinician cuando: el paciente supera el nivel, el paciente no juega ese juego por mas de 30 dias, o el clinico marca la alerta como atendida desde el dashboard profesional.
+
+### 13.11 Independencia entre juegos
+
+La progresion en un juego es independiente de la progresion en otro. Un paciente puede estar en el nivel 5 de lawn-mower y en el nivel 1 de reflejos simultaneamente. No hay progresion global cruzada. Respeta Art. 1.5 (dominios transversales, no exclusivos) y Art. 1.6 (baseline individual por juego × por dominio).
+
+### 13.12 Implementacion — referencia no normativa
+
+Detalles operativos que son implementacion, no constitucion, y pueden variar sin reforma:
+
+- Tabla `zykos_level_sequences` — declara la secuencia canonica.
+- Tabla `zykos_player_progress` — cache materializado del progreso, derivado del stream crudo.
+- RPCs `zykos_get_unlocked_level`, `zykos_register_level_attempt`, `zykos_rebuild_progress_from_stream` — unica via de lectura/escritura del estado.
+- Edge Function `zykos-stuck-alert` — envia el mail cuando 3 intentos consecutivos fallan.
+
+### 13.13 Separacion constitucional vs implementacion
+
+Son constitucionales y requieren enmienda formal: el umbral **0.49**, el numero **3** de intentos para alerta, la **irreversibilidad** del progreso, y el principio de **primera sesion obligatoriamente al nivel de entrada**.
+
+Son implementacion: nombres de tabla, nombres de RPC, mecanismo de envio de mail, frecuencia de chequeo, formato del mail.
+
+---
+
 *Este documento es la fuente de verdad arquitectonica de ZYKOS GAMER.*
 *Toda decision de diseno, toda linea de codigo, todo output clinico debe ser consistente con estos articulos.*
 *Promulgado: 8 de abril de 2026 — Necochea, Argentina.*
+*Articulo 13 incorporado: 18 de abril de 2026.*
+
+---
+
+## FIRMA
+
+**Dr. Gonzalo Joaquin Perez Cortizo**
+Director Medico — Clinica Psiquiatrica Privada Jose Ingenieros SRL
+Necochea, Provincia de Buenos Aires, Argentina
+Matricula M.P.
+Autor y propietario de ZYKOS GAMER
+18 de abril de 2026
