@@ -52,18 +52,67 @@
 .ctx-menu-item:hover { background:rgba(99,102,241,.15); }
 .ctx-menu-item.active { color:#a78bfa;font-weight:600; }
 .pill-source {
-            cursor: grab;
+            cursor: pointer;
             transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
             -webkit-user-select: none;
             user-select: none;
             -webkit-touch-callout: none;
-            touch-action: none;
+            touch-action: manipulation;
+            position: relative;
         }
         .pill-source:active {
-            cursor: grabbing;
-            transform: scale(1.15) rotate(8deg);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.35);
+            transform: scale(0.94);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+        }
+        .pill-source.has-stack {
+            box-shadow: 0 0 0 4px #fbbf24, 0 6px 12px rgba(251, 191, 36, 0.45);
+            animation: stackPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes stackPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .pill-stack-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            min-width: 28px;
+            height: 28px;
+            padding: 0 6px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: white;
+            font-size: 0.85rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+            z-index: 10;
+            border: 2px solid white;
+        }
+        .pill-fraction-label {
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            font-weight: 900;
+            color: white;
+            background: rgba(139, 92, 246, 0.95);
+            padding: 2px 8px;
+            border-radius: 10px;
+            z-index: 11;
+            pointer-events: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+        .pill-source.fraction-mode-hint {
+            outline: 3px dashed #fbbf24;
+            outline-offset: 4px;
         }
 
         .slot {
@@ -230,6 +279,192 @@
             font-size: 0.9rem;
         }
         .metric-row:last-child { border-bottom: none; }
+
+        /* ============================================================
+           V4 CANONICAL LAYOUT — dispensador y pastillero en UN marco
+           Escritorio: flex horizontal, sin scroll vertical entre zonas
+           Movil: landscape-first con orientation lock + fallback portrait
+           Objetivo: paciente siempre ve ambas areas en la misma vista
+           ============================================================ */
+
+        /* Marco unificado que contiene dispensador + pastillero */
+        .playframe-v4 {
+            display: grid;
+            grid-template-columns: minmax(160px, 1fr) minmax(0, 3fr);
+            gap: 1rem;
+            align-items: start;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0.5rem;
+        }
+
+        /* Panel dispensador: compacto, siempre visible */
+        .playframe-v4 > .dispenser-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 1rem;
+            padding: 1rem;
+            border-top: 4px solid #0d9488;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        /* Panel pastillero: expandido horizontalmente */
+        .playframe-v4 > .organizer-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 1rem;
+            padding: 1rem;
+            border-top: 4px solid #4f46e5;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Indicador global de stack en mano */
+        .global-stack-indicator {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            max-width: 92vw;
+        }
+        .global-stack-indicator.active {
+            display: flex;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translate(-50%, 20px); opacity: 0; }
+            to   { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        /* Mensaje de orientacion movil */
+        .orientation-warning {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 118, 110, 0.96);
+            color: white;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 2rem;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        .orientation-warning svg {
+            width: 80px;
+            height: 80px;
+            animation: rotateHint 2s ease-in-out infinite;
+            margin-bottom: 1rem;
+        }
+        @keyframes rotateHint {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(90deg); }
+        }
+
+        /* MOBILE: landscape first, tight grid, pastillero compacto */
+        @media (max-width: 960px) {
+            body { font-size: 14px; }
+            header { padding: 0.5rem 0.75rem; }
+            header h1 { font-size: 1.1rem; }
+            header .text-3xl { font-size: 1.25rem; }
+            #start-screen > div { padding: 1.5rem; max-width: 94vw; }
+            #start-screen h2 { font-size: 1.5rem; }
+
+            .playframe-v4 {
+                grid-template-columns: minmax(110px, 0.8fr) minmax(0, 3.2fr);
+                gap: 0.5rem;
+                padding: 0.25rem;
+            }
+            .playframe-v4 > .dispenser-panel,
+            .playframe-v4 > .organizer-panel {
+                padding: 0.5rem;
+                border-radius: 0.75rem;
+                max-height: none;
+            }
+            .slot {
+                min-height: 42px !important;
+                padding: 2px !important;
+            }
+            .pill-source {
+                width: 40px !important;
+                height: 40px !important;
+            }
+            .pill-stack-badge {
+                min-width: 22px;
+                height: 22px;
+                font-size: 0.7rem;
+                top: -7px;
+                right: -7px;
+            }
+            .pill-fraction-label {
+                font-size: 0.55rem;
+                padding: 1px 5px;
+                bottom: -6px;
+            }
+            /* Headers dias mas compactos */
+            #organizer-grid .day-header {
+                font-size: 0.65rem;
+                padding: 4px 2px;
+            }
+            /* Panel metricas colapsa en un toggle abajo del dispensador */
+            #metrics-panel-wrap {
+                margin-top: 0.5rem;
+                font-size: 0.7rem;
+                padding: 0.5rem !important;
+            }
+        }
+
+        /* Portrait extremo: orientation warning en movil vertical */
+        @media (max-width: 720px) and (orientation: portrait) {
+            #game-container .playframe-v4 {
+                grid-template-columns: 1fr;
+            }
+            .playframe-v4 > .dispenser-panel {
+                max-height: 30vh;
+                overflow-x: auto;
+                overflow-y: auto;
+            }
+            .playframe-v4 > .organizer-panel {
+                max-height: 60vh;
+                overflow: auto;
+            }
+        }
+
+        /* Reset-pill botoncito en cada pastilla origen */
+        .reset-fraction-btn {
+            position: absolute;
+            bottom: -8px;
+            right: -8px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.95);
+            color: white;
+            font-size: 0.75rem;
+            border: 2px solid white;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 12;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .pill-source.has-custom-fraction .reset-fraction-btn {
+            display: flex;
+        }
     </style>
   <!-- mood-modals.js se carga desde mood-modals.html (shared) -->
 </head>
@@ -261,59 +496,177 @@
     <!-- PANTALLA DE INICIO -->
     <!-- ========================================= -->
     <div id="start-screen" class="flex-grow flex items-center justify-center p-6">
-        <div class="bg-white/95 backdrop-blur-sm p-10 rounded-3xl shadow-2xl max-w-lg w-full text-center">
-            <div class="text-7xl mb-4">[+]</div>
-            <h2 class="text-3xl font-bold text-gray-800 mb-2">Organizador de Medicación</h2>
-            <p class="text-gray-500 text-sm mb-6">Evaluación de Motricidad Fina · Planificación · Precisión</p>
-
-            <div class="bg-teal-50 border-2 border-teal-200 rounded-2xl p-5 mb-6 text-left">
-                <h3 class="font-bold text-teal-800 mb-3 text-sm">[L] CONSIGNA GENERAL</h3>
-                <p class="text-gray-700 text-sm mb-3">Organizá la medicación semanal arrastrando cada pastilla al casillero correcto (día y horario).</p>
-                <p class="text-gray-700 text-sm mb-2"><strong>5 niveles de dificultad:</strong></p>
-                <ul class="text-sm text-gray-600 space-y-1 ml-4 list-disc">
-                    <li><strong>Nivel 1:</strong> 2 medicamentos, esquema simple</li>
-                    <li><strong>Nivel 2:</strong> 3 medicamentos, uno solo días hábiles</li>
-                    <li><strong>Nivel 3:</strong> 4 medicamentos, algunos solo ciertos días</li>
-                    <li><strong>Nivel 4:</strong> 5 medicamentos, horarios alternados</li>
-                    <li><strong>Nivel 5:</strong> 6 medicamentos, esquema complejo</li>
-                </ul>
+        <div class="bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl max-w-2xl w-full">
+            <div class="text-center mb-4">
+                <div class="text-5xl mb-2">[+]</div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-1">Organizador de Medicacion</h2>
+                <p class="text-gray-500 text-xs">ZYKOS GAMER - Planificacion, memoria de trabajo, control motor</p>
             </div>
 
-            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-3 text-sm text-blue-800 font-medium">
-                ️ <strong>Cómo mover:</strong> Hacé click sobre la pastilla, mantenelo apretado y arrastrala hasta el casillero. Soltá para colocarla.
-                <span class="block mt-1 text-xs text-blue-600 font-normal">En tablet: mantené el dedo apoyado y deslizá sin levantar.</span>
+            <!-- V4 TUTORIAL: doctrina tap-get-tap-release -->
+            <div id="tutorial-desktop" class="border-2 border-teal-200 bg-teal-50 rounded-2xl p-4 mb-4" style="display:none;">
+                <h3 class="font-bold text-teal-800 text-sm mb-3 flex items-center gap-2">
+                    <span>[COMPUTADORA]</span> Como jugar
+                </h3>
+                <div class="space-y-2 text-sm text-gray-700">
+                    <div class="flex items-start gap-2">
+                        <span class="inline-block min-w-[72px] px-2 py-1 bg-teal-600 text-white rounded text-xs font-bold text-center">CLICK DER</span>
+                        <span>sobre la pastilla la <strong>toma</strong>. 7 clicks = 7 pastillas en mano.</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="inline-block min-w-[72px] px-2 py-1 bg-purple-600 text-white rounded text-xs font-bold text-center">CLICK IZQ</span>
+                        <span>sobre la pastilla <strong>avanza fraccion</strong>. 1 click -> &frac12;, 2 -> &#8531;, 3 -> &frac14;, 4 -> entera.</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="inline-block min-w-[72px] px-2 py-1 bg-indigo-600 text-white rounded text-xs font-bold text-center">MANTENER<br>IZQ</span>
+                        <span><strong>Reset a entera</strong> (si te pasaste de clicks, escape limpio).</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="inline-block min-w-[72px] px-2 py-1 bg-amber-600 text-white rounded text-xs font-bold text-center">CLICK DER<br>SLOT</span>
+                        <span><strong>Suelta 1</strong> con la fraccion actual. Sale la primera que entro.</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-purple-50 border border-purple-200 rounded-xl p-3 mb-6 text-xs text-purple-700">
-                <strong>[X] Se evaluará:</strong> Precisión motora (temblor durante la presión sostenida), redireccionamientos, hesitaciones, errores de ubicación y tiempo total.
+            <div id="tutorial-mobile" class="border-2 border-teal-200 bg-teal-50 rounded-2xl p-4 mb-4" style="display:none;">
+                <h3 class="font-bold text-teal-800 text-sm mb-3 flex items-center gap-2">
+                    <span>[TELEFONO]</span> Como jugar
+                </h3>
+                <div class="bg-amber-100 border border-amber-300 rounded-lg p-2 mb-3 text-xs text-amber-900">
+                    <strong>Gira tu telefono horizontal</strong> para ver el pastillero completo.
+                </div>
+                <div class="space-y-2 text-sm text-gray-700">
+                    <div class="flex items-start gap-2">
+                        <span class="inline-block min-w-[72px] px-2 py-1 bg-teal-600 text-white rounded text-xs font-bold text-center">TAP</span>
+                        <span>sobre la pastilla = <strong>toma 1</strong>. 7 taps = 7 pastillas en mano.</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="inline-block min-w-[72px] px-2 py-1 bg-purple-600 text-white rounded text-xs font-bold text-center">BOTON<br>TIJERA</span>
+                        <span>Abajo de cada pastilla avanza fraccion: &frac12;, &#8531;, &frac14;.</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="inline-block min-w-[72px] px-2 py-1 bg-indigo-600 text-white rounded text-xs font-bold text-center">MANTENER<br>TIJERA</span>
+                        <span><strong>Reset a entera</strong>. Si te perdiste, sostenes tijera 1 segundo y vuelve.</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="inline-block min-w-[72px] px-2 py-1 bg-amber-600 text-white rounded text-xs font-bold text-center">TAP<br>SLOT</span>
+                        <span><strong>Suelta 1</strong> con la fraccion actual. Sale la primera que entro.</span>
+                    </div>
+                </div>
             </div>
 
-            <button id="btn-start" onclick="startGame()"
-                    class="w-full py-4 bg-gradient-to-r from-teal-500 to-cyan-600 text-white text-xl font-bold rounded-2xl hover:shadow-2xl hover:scale-105 transition-all">
-                ▶ COMENZAR NIVEL 1
-            </button>
+            <div class="bg-purple-50 border border-purple-200 rounded-xl p-3 mb-4 text-xs text-purple-700">
+                <strong>Se evalua:</strong> planificacion anticipatoria (cuantas tomas antes de soltar), control motor, memoria de trabajo, comprension farmacologica, autocorreccion.
+            </div>
+
+            <div class="flex items-center justify-between gap-3">
+                <button id="btn-show-help"
+                        class="flex-none px-4 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 text-sm"
+                        title="Ver las instrucciones otra vez">
+                    ? Ayuda
+                </button>
+                <button id="btn-start" onclick="startGame()"
+                        class="flex-grow py-4 bg-gradient-to-r from-teal-500 to-cyan-600 text-white text-lg font-bold rounded-2xl hover:shadow-2xl hover:scale-[1.02] transition-all">
+                    COMENZAR NIVEL 1
+                </button>
+            </div>
         </div>
+    </div>
+
+    <!-- Orientation warning (mobile portrait) -->
+    <div id="orientation-warning" class="orientation-warning">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="5" y="2" width="14" height="20" rx="2"/>
+            <line x1="12" y1="18" x2="12" y2="18.01"/>
+        </svg>
+        <h3 class="text-xl font-bold mb-2">Gira tu telefono</h3>
+        <p class="opacity-90">Este juego necesita pantalla horizontal para mostrar dispensador y pastillero juntos.</p>
+    </div>
+
+    <!-- Global stack indicator (siempre visible si hay stack) -->
+    <div id="global-stack" class="global-stack-indicator">
+        <span style="font-size:1.3rem;">[MANO]</span>
+        <span id="global-stack-text">0 pastillas en mano</span>
     </div>
 
     <!-- ========================================= -->
     <!-- MAIN GAME INTERFACE -->
     <!-- ========================================= -->
-    <main id="game-container" class="flex-grow p-6 max-w-7xl mx-auto w-full" style="display:none;">
+    <main id="game-container" class="flex-grow p-2 mx-auto w-full" style="display:none;max-width:1440px;">
 
         <!-- CONSIGNA DEL NIVEL (visible durante gameplay) -->
         <div id="level-consigna" class="consigna-banner"></div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="playframe-v4">
 
             <!-- DISPENSADOR DE MEDICACIÓN (dinámico) -->
-            <div class="bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border-t-6 border-teal-600">
-                <h3 class="text-2xl font-bold text-gray-700 mb-2 flex items-center gap-2">
+            <div class="dispenser-panel">
+                <h3 class="text-lg font-bold text-gray-700 mb-1 flex items-center gap-2">
                     <span>[+]</span> Dispensador
                 </h3>
-                <p class="text-sm text-gray-600 mb-6">Arrastrá cada medicación al casillero correcto</p>
+                <p class="text-xs text-gray-500 mb-4">Tap = toma 1 - Tijera = parte</p>
 
-                <div id="dispensador-meds" class="space-y-6"></div>
-                <div id="click-hint"> Tocá un casillero para colocar la pastilla seleccionada</div>
+                <div id="dispensador-meds" class="space-y-4"></div>
+                <div id="click-hint" style="display:none;margin-top:8px;padding:6px 10px;background:rgba(99,102,241,0.1);border-radius:8px;font-size:.75rem;color:#4338ca;"> Tocá un casillero para soltar 1 pastilla</div>
+
+                <!-- PANEL DE METRICAS EN TIEMPO REAL -->
+                <div id="metrics-panel-wrap" class="mt-4 p-3 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-200 shadow-inner">
+                    <h4 class="text-xs font-bold text-purple-900 mb-2 flex items-center gap-2">
+                        <span>[D]</span> Metricas
+                    </h4>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Estabilidad:</span>
+                            <span id="stability-display" class="font-bold text-purple-700">--</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Movs:</span>
+                            <span id="moves-count" class="font-bold text-gray-800">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Correctas:</span>
+                            <span id="accuracy-display" class="font-bold text-teal-700">0/0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Omisiones:</span>
+                            <span id="omission-display" class="font-bold text-amber-700">--</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Comisiones:</span>
+                            <span id="commission-display" class="font-bold text-red-700">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Hesitac.:</span>
+                            <span id="hesitation-display" class="font-bold text-gray-700">--</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Efic.:</span>
+                            <span id="efficiency-display" class="font-bold text-indigo-700">--</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Perseverac:</span>
+                            <span id="perseveration-display" class="font-bold text-gray-700">0</span>
+                        </div>
+                        <!-- V4 NEW -->
+                        <div class="flex justify-between items-center" style="border-top:1px dashed rgba(99,102,241,.3);margin-top:4px;padding-top:4px;">
+                            <span class="text-gray-700">Pickup max:</span>
+                            <span id="pickup-max-display" class="font-bold text-amber-700">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">En mano:</span>
+                            <span id="stack-now-display" class="font-bold text-orange-700">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Cambios frac:</span>
+                            <span id="frac-changes-display" class="font-bold text-purple-700">0</span>
+                        </div>
+                        <!-- hidden displays preserved for legacy metrics -->
+                        <span id="dropoffset-display" style="display:none;">--</span>
+                        <span id="redirections-display" style="display:none;">--</span>
+                        <div id="clinical-hint" class="mt-1 p-1 rounded text-xs leading-tight" style="display:none;background:rgba(99,102,241,0.08);color:#4338ca;font-size:.7rem;"></div>
+                    </div>
+                </div>
+            </div><!-- /dispenser-panel -->
 
                 <!-- PANEL DE METRICAS EN TIEMPO REAL -->
                 <div class="mt-8 p-6 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl border-2 border-purple-200 shadow-inner">
@@ -442,7 +795,6 @@
                 </div>
                 </div><!-- close scroll wrapper -->
             </div>
-        </div>
     </main>
 
     <!-- ========================================= -->
@@ -536,26 +888,29 @@
         // El nivel define la estructura. El pool provee el contenido.
         // ================================================================
         const MED_POOL = [
-            { id:'risperidona',   name:'Risperidona',   dotColor:'#ef4444', colors:{from:'from-red-400',to:'to-red-600',border:'border-red-700',bgFrom:'from-red-50',bgTo:'to-red-100',borderCard:'border-red-300'}, shape:'redondo',   size:'pequeño' },
-            { id:'clonazepam',    name:'Clonazepam',    dotColor:'#3b82f6', colors:{from:'from-blue-400',to:'to-blue-600',border:'border-blue-700',bgFrom:'from-blue-50',bgTo:'to-blue-100',borderCard:'border-blue-300'}, shape:'redondo',   size:'pequeño' },
-            { id:'sertralina',    name:'Sertralina',    dotColor:'#22c55e', colors:{from:'from-green-400',to:'to-green-600',border:'border-green-700',bgFrom:'from-green-50',bgTo:'to-green-100',borderCard:'border-green-300'}, shape:'ovalado',   size:'mediano' },
-            { id:'melatonina',    name:'Melatonina',    dotColor:'#a855f7', colors:{from:'from-purple-400',to:'to-purple-600',border:'border-purple-700',bgFrom:'from-purple-50',bgTo:'to-purple-100',borderCard:'border-purple-300'}, shape:'redondo',   size:'pequeño' },
-            { id:'litio',         name:'Litio',         dotColor:'#eab308', colors:{from:'from-yellow-400',to:'to-yellow-600',border:'border-yellow-700',bgFrom:'from-yellow-50',bgTo:'to-yellow-100',borderCard:'border-yellow-300'}, shape:'ovalado',   size:'grande' },
-            { id:'sertralina50',  name:'Sertralina 50', dotColor:'#16a34a', colors:{from:'from-emerald-400',to:'to-emerald-600',border:'border-emerald-700',bgFrom:'from-emerald-50',bgTo:'to-emerald-100',borderCard:'border-emerald-300'}, shape:'ovalado',   size:'mediano' },
-            { id:'haloperidol',   name:'Haloperidol',   dotColor:'#f97316', colors:{from:'from-orange-400',to:'to-orange-600',border:'border-orange-700',bgFrom:'from-orange-50',bgTo:'to-orange-100',borderCard:'border-orange-300'}, shape:'redondo',   size:'pequeño' },
-            { id:'quetiapina',    name:'Quetiapina',    dotColor:'#06b6d4', colors:{from:'from-cyan-400',to:'to-cyan-600',border:'border-cyan-700',bgFrom:'from-cyan-50',bgTo:'to-cyan-100',borderCard:'border-cyan-300'}, shape:'ovalado',   size:'grande' },
-            { id:'olanzapina',    name:'Olanzapina',    dotColor:'#ec4899', colors:{from:'from-pink-400',to:'to-pink-600',border:'border-pink-700',bgFrom:'from-pink-50',bgTo:'to-pink-100',borderCard:'border-pink-300'}, shape:'redondo',   size:'mediano' },
-            { id:'levotiroxina',  name:'Levotiroxina',  dotColor:'#8b5cf6', colors:{from:'from-violet-400',to:'to-violet-600',border:'border-violet-700',bgFrom:'from-violet-50',bgTo:'to-violet-100',borderCard:'border-violet-300'}, shape:'redondo',   size:'pequeño' },
-            { id:'atenolol',      name:'Atenolol',      dotColor:'#64748b', colors:{from:'from-slate-400',to:'to-slate-600',border:'border-slate-700',bgFrom:'from-slate-50',bgTo:'to-slate-100',borderCard:'border-slate-300'}, shape:'redondo',   size:'mediano' },
-            { id:'metformina',    name:'Metformina',    dotColor:'#92400e', colors:{from:'from-amber-600',to:'to-amber-800',border:'border-amber-900',bgFrom:'from-amber-50',bgTo:'to-amber-100',borderCard:'border-amber-300'}, shape:'oblongo',   size:'grande' },
-            { id:'enalapril',     name:'Enalapril',     dotColor:'#065f46', colors:{from:'from-teal-400',to:'to-teal-600',border:'border-teal-700',bgFrom:'from-teal-50',bgTo:'to-teal-100',borderCard:'border-teal-300'}, shape:'redondo',   size:'pequeño' },
-            { id:'omeprazol',     name:'Omeprazol',     dotColor:'#7c3aed', colors:{from:'from-purple-500',to:'to-purple-700',border:'border-purple-800',bgFrom:'from-purple-50',bgTo:'to-purple-100',borderCard:'border-purple-300'}, shape:'capsula',   size:'mediano' },
-            { id:'amlodipina',    name:'Amlodipina',    dotColor:'#be123c', colors:{from:'from-rose-400',to:'to-rose-600',border:'border-rose-700',bgFrom:'from-rose-50',bgTo:'to-rose-100',borderCard:'border-rose-300'}, shape:'redondo',   size:'pequeño' },
-            { id:'gabapentin',    name:'Gabapentin',    dotColor:'#0891b2', colors:{from:'from-sky-400',to:'to-sky-600',border:'border-sky-700',bgFrom:'from-sky-50',bgTo:'to-sky-100',borderCard:'border-sky-300'}, shape:'capsula',   size:'grande' },
-            { id:'lamotrigina',   name:'Lamotrigina',   dotColor:'#d97706', colors:{from:'from-yellow-500',to:'to-yellow-700',border:'border-yellow-800',bgFrom:'from-yellow-50',bgTo:'to-yellow-100',borderCard:'border-yellow-300'}, shape:'ovalado',   size:'mediano' },
-            { id:'valproato',     name:'Valproato',     dotColor:'#4f46e5', colors:{from:'from-indigo-400',to:'to-indigo-600',border:'border-indigo-700',bgFrom:'from-indigo-50',bgTo:'to-indigo-100',borderCard:'border-indigo-300'}, shape:'comprimido', size:'grande' },
-            { id:'lorazepam',     name:'Lorazepam',     dotColor:'#0f766e', colors:{from:'from-teal-500',to:'to-teal-700',border:'border-teal-800',bgFrom:'from-teal-50',bgTo:'to-teal-100',borderCard:'border-teal-300'}, shape:'redondo',   size:'pequeño' },
-            { id:'aripiprazol',   name:'Aripiprazol',   dotColor:'#b45309', colors:{from:'from-amber-500',to:'to-amber-700',border:'border-amber-800',bgFrom:'from-amber-50',bgTo:'to-amber-100',borderCard:'border-amber-300'}, shape:'ovalado',   size:'mediano' }
+            // V4 canonical: splittable (ranurada / partible) + release_type (inmediata|prolongada|retardada)
+            // Datos farmacologicos argentinos reales - referencia clinica psiquiatrica
+            { id:'risperidona',   name:'Risperidona',   dotColor:'#ef4444', colors:{from:'from-red-400',to:'to-red-600',border:'border-red-700',bgFrom:'from-red-50',bgTo:'to-red-100',borderCard:'border-red-300'}, shape:'redondo',   size:'pequeño', splittable:true,  release_type:'immediate' },
+            { id:'clonazepam',    name:'Clonazepam',    dotColor:'#3b82f6', colors:{from:'from-blue-400',to:'to-blue-600',border:'border-blue-700',bgFrom:'from-blue-50',bgTo:'to-blue-100',borderCard:'border-blue-300'}, shape:'redondo',   size:'pequeño', splittable:true,  release_type:'immediate' },
+            { id:'sertralina',    name:'Sertralina',    dotColor:'#22c55e', colors:{from:'from-green-400',to:'to-green-600',border:'border-green-700',bgFrom:'from-green-50',bgTo:'to-green-100',borderCard:'border-green-300'}, shape:'ovalado',   size:'mediano', splittable:true,  release_type:'immediate' },
+            { id:'melatonina',    name:'Melatonina',    dotColor:'#a855f7', colors:{from:'from-purple-400',to:'to-purple-600',border:'border-purple-700',bgFrom:'from-purple-50',bgTo:'to-purple-100',borderCard:'border-purple-300'}, shape:'redondo',   size:'pequeño', splittable:false, release_type:'prolonged' },  // LP
+            { id:'litio',         name:'Litio',         dotColor:'#eab308', colors:{from:'from-yellow-400',to:'to-yellow-600',border:'border-yellow-700',bgFrom:'from-yellow-50',bgTo:'to-yellow-100',borderCard:'border-yellow-300'}, shape:'ovalado',   size:'grande', splittable:false, release_type:'prolonged' },  // Carbolit LP
+            { id:'sertralina50',  name:'Sertralina 50', dotColor:'#16a34a', colors:{from:'from-emerald-400',to:'to-emerald-600',border:'border-emerald-700',bgFrom:'from-emerald-50',bgTo:'to-emerald-100',borderCard:'border-emerald-300'}, shape:'ovalado',   size:'mediano', splittable:true,  release_type:'immediate' },
+            { id:'haloperidol',   name:'Haloperidol',   dotColor:'#f97316', colors:{from:'from-orange-400',to:'to-orange-600',border:'border-orange-700',bgFrom:'from-orange-50',bgTo:'to-orange-100',borderCard:'border-orange-300'}, shape:'redondo',   size:'pequeño', splittable:true,  release_type:'immediate' },
+            { id:'quetiapina',    name:'Quetiapina',    dotColor:'#06b6d4', colors:{from:'from-cyan-400',to:'to-cyan-600',border:'border-cyan-700',bgFrom:'from-cyan-50',bgTo:'to-cyan-100',borderCard:'border-cyan-300'}, shape:'ovalado',   size:'grande', splittable:false, release_type:'prolonged' },  // Seroquel XR
+            { id:'olanzapina',    name:'Olanzapina',    dotColor:'#ec4899', colors:{from:'from-pink-400',to:'to-pink-600',border:'border-pink-700',bgFrom:'from-pink-50',bgTo:'to-pink-100',borderCard:'border-pink-300'}, shape:'redondo',   size:'mediano', splittable:false, release_type:'prolonged' },
+            { id:'levotiroxina',  name:'Levotiroxina',  dotColor:'#8b5cf6', colors:{from:'from-violet-400',to:'to-violet-600',border:'border-violet-700',bgFrom:'from-violet-50',bgTo:'to-violet-100',borderCard:'border-violet-300'}, shape:'redondo',   size:'pequeño', splittable:true,  release_type:'immediate' },
+            { id:'atenolol',      name:'Atenolol',      dotColor:'#64748b', colors:{from:'from-slate-400',to:'to-slate-600',border:'border-slate-700',bgFrom:'from-slate-50',bgTo:'to-slate-100',borderCard:'border-slate-300'}, shape:'redondo',   size:'mediano', splittable:true,  release_type:'immediate' },
+            { id:'metformina',    name:'Metformina',    dotColor:'#92400e', colors:{from:'from-amber-600',to:'to-amber-800',border:'border-amber-900',bgFrom:'from-amber-50',bgTo:'to-amber-100',borderCard:'border-amber-300'}, shape:'oblongo',   size:'grande', splittable:false, release_type:'prolonged' },  // Glucofage XR
+            { id:'enalapril',     name:'Enalapril',     dotColor:'#065f46', colors:{from:'from-teal-400',to:'to-teal-600',border:'border-teal-700',bgFrom:'from-teal-50',bgTo:'to-teal-100',borderCard:'border-teal-300'}, shape:'redondo',   size:'pequeño', splittable:true,  release_type:'immediate' },
+            { id:'omeprazol',     name:'Omeprazol',     dotColor:'#7c3aed', colors:{from:'from-purple-500',to:'to-purple-700',border:'border-purple-800',bgFrom:'from-purple-50',bgTo:'to-purple-100',borderCard:'border-purple-300'}, shape:'capsula',   size:'mediano', splittable:false, release_type:'delayed' },     // capsula entérica
+            { id:'amlodipina',    name:'Amlodipina',    dotColor:'#be123c', colors:{from:'from-rose-400',to:'to-rose-600',border:'border-rose-700',bgFrom:'from-rose-50',bgTo:'to-rose-100',borderCard:'border-rose-300'}, shape:'redondo',   size:'pequeño', splittable:true,  release_type:'immediate' },
+            { id:'gabapentin',    name:'Gabapentin',    dotColor:'#0891b2', colors:{from:'from-sky-400',to:'to-sky-600',border:'border-sky-700',bgFrom:'from-sky-50',bgTo:'to-sky-100',borderCard:'border-sky-300'}, shape:'capsula',   size:'grande', splittable:false, release_type:'immediate' },    // cápsula
+            { id:'lamotrigina',   name:'Lamotrigina',   dotColor:'#d97706', colors:{from:'from-yellow-500',to:'to-yellow-700',border:'border-yellow-800',bgFrom:'from-yellow-50',bgTo:'to-yellow-100',borderCard:'border-yellow-300'}, shape:'ovalado',   size:'mediano', splittable:true,  release_type:'immediate' },
+            { id:'valproato',     name:'Valproato',     dotColor:'#4f46e5', colors:{from:'from-indigo-400',to:'to-indigo-600',border:'border-indigo-700',bgFrom:'from-indigo-50',bgTo:'to-indigo-100',borderCard:'border-indigo-300'}, shape:'comprimido', size:'grande', splittable:false, release_type:'prolonged' },   // Depakote ER
+            { id:'lorazepam',     name:'Lorazepam',     dotColor:'#0f766e', colors:{from:'from-teal-500',to:'to-teal-700',border:'border-teal-800',bgFrom:'from-teal-50',bgTo:'to-teal-100',borderCard:'border-teal-300'}, shape:'redondo',   size:'pequeño', splittable:true,  release_type:'immediate' },
+            { id:'aripiprazol',   name:'Aripiprazol',   dotColor:'#b45309', colors:{from:'from-amber-500',to:'to-amber-700',border:'border-amber-800',bgFrom:'from-amber-50',bgTo:'to-amber-100',borderCard:'border-amber-300'}, shape:'ovalado',   size:'mediano', splittable:true,  release_type:'immediate' },
+            { id:'pregabalina',   name:'Pregabalina 75', dotColor:'#db2777', colors:{from:'from-fuchsia-400',to:'to-fuchsia-600',border:'border-fuchsia-700',bgFrom:'from-fuchsia-50',bgTo:'to-fuchsia-100',borderCard:'border-fuchsia-300'}, shape:'capsula',  size:'mediano', splittable:false, release_type:'immediate' }  // capsula — no se parte, pero tercios requieren apertura (clinicamente complejo)
         ];
 
         // Patrones de schedule por complejidad
@@ -631,7 +986,10 @@
                     half:        sch.half || false,
                     schedule:    { am: sch.am, pm: sch.pm, days: sch.days },
                     dosisDesc:   sch.desc,
-                    note:        sch.note || null
+                    note:        sch.note || null,
+                    // V4 canonical: farmacologia real
+                    splittable:  med.splittable !== false,
+                    release_type: med.release_type || 'immediate'
                 };
             });
         }
@@ -703,7 +1061,27 @@
             inputDevice: 'unknown',
             gameActive: false,
             dragSetup: false,
-            activePill: null
+            activePill: null,
+
+            // ===== V4 CANONICAL STATE (tap-get-tap-release) =====
+            // Pickup stack: cola FIFO con items {medType, fraction}
+            // Puede ser mixto: [{med:'ibu', frac:1}, {med:'ibu', frac:1}, {med:'rispe', frac:0.5}]
+            pickupStack: [],
+            // Fraccion activa por medicacion (se acumula al stack cuando toma)
+            fractionByMed: {},
+            // Contadores V4
+            v4_pickupStackMax: 0,
+            v4_fractionChangesCount: 0,
+            v4_fractionResetsCount: 0,
+            v4_nonsplittableAttempts: 0,
+            v4_fractionErrors: 0,
+            v4_mixedFractionEvents: 0,
+            v4_pickupEvents: [],
+            v4_sequenceLog: [],   // orden de medicaciones pickupeadas
+            v4_longPressTimer: null,
+            v4_lastClickTime: 0,
+            v4_lastClickMed: null,
+            v4_fractionTimers: {}   // para detectar doble-click y cycle timeout
         };
 
         // ===========================================
@@ -715,15 +1093,56 @@
                 sessionState.patientDni = urlParams.get('dni') || (function(){try{return localStorage.getItem('zykos_patient_dni')}catch(e){return null}})() || window.ZYKOS_DNI;
                 document.getElementById('patient-display').textContent = 'Paciente: ' + sessionState.patientDni;
 
+                // V4: detect device, show correct tutorial
+                var isMobile = window.matchMedia('(max-width: 960px)').matches || ('ontouchstart' in window && navigator.maxTouchPoints > 1);
+                document.getElementById('tutorial-desktop').style.display = isMobile ? 'none' : 'block';
+                document.getElementById('tutorial-mobile').style.display   = isMobile ? 'block' : 'none';
+
+                // Botón ayuda: vuelve a mostrar el tutorial
+                var helpBtn = document.getElementById('btn-show-help');
+                if (helpBtn) {
+                    helpBtn.addEventListener('click', function() {
+                        document.getElementById('start-screen').scrollIntoView({ behavior: 'smooth' });
+                    });
+                }
+
+                // V4: orientation lock best-effort en mobile
+                if (isMobile) {
+                    try {
+                        if (screen.orientation && screen.orientation.lock) {
+                            screen.orientation.lock('landscape').catch(function() {
+                                // iOS Safari rechaza, mostramos warning en vez
+                                checkOrientation();
+                            });
+                        } else {
+                            checkOrientation();
+                        }
+                    } catch (e) { checkOrientation(); }
+                    window.addEventListener('orientationchange', checkOrientation);
+                    window.addEventListener('resize', checkOrientation);
+                }
+
                 if (sb) {
-                    // [V4 fix] patientDni es el identificador universal — no se necesita patientId numérico ni gameId
                     console.log('[pill-organizer] init OK, DNI:', sessionState.patientDni);
-                    // Art XIII: fetch unlocked level and update start button
                     await fetchArtXiiiUnlockedLevel();
                     updateStartButtonLevel();
                 }
             } catch(err) {
                 console.error('[pill-organizer] Init failed:', err);
+            }
+        }
+
+        function checkOrientation() {
+            var warn = document.getElementById('orientation-warning');
+            if (!warn) return;
+            var isPortrait = window.innerHeight > window.innerWidth;
+            var isMobileSize = window.innerWidth < 720;
+            // sólo warning en mobile + portrait + durante gameplay
+            var playing = document.getElementById('game-container').style.display === 'block';
+            if (isMobileSize && isPortrait && playing) {
+                warn.style.display = 'flex';
+            } else {
+                warn.style.display = 'none';
             }
         }
 
@@ -741,7 +1160,7 @@
                 var startLevelIndex = Math.max(0, artXiiiUnlockedLevel - 1);
                 loadLevel(startLevelIndex);
                 if (!sessionState.dragSetup) {
-                    setupDragAndDrop();
+                    setupTapGetTapRelease();
                     sessionState.dragSetup = true;
                 }
                 startGameSession();
@@ -801,35 +1220,60 @@
             var _btnConsigna = document.getElementById('btn-ver-consigna');
             if (_btnConsigna) { _btnConsigna.style.display = 'none'; _btnConsigna.textContent = 'Ver indicacion'; }
 
-            // Render dispensador
+            // Render dispensador V4 canonical
             const dispEl = document.getElementById('dispensador-meds');
+            const isMobileUI = window.matchMedia('(max-width: 960px)').matches || ('ontouchstart' in window);
             dispEl.innerHTML = level.medications.map(m => {
-                // Visualizacion de media pastilla: semicirculo con linea de corte
                 const isHalf = m.half === true || m.half === 'am' || m.half === 'pm';
-                const pillStyle = isHalf
-                    ? `width:48px;height:48px;border-radius:50%;background:linear-gradient(90deg,var(--fallback) 50%,white 50%);position:relative;overflow:hidden;`
-                    : '';
                 const pillShape = isHalf
                     ? `<div class="pill-source" data-med="${m.id}" data-half="${m.half}"
-                        style="width:48px;height:48px;border-radius:50%;overflow:hidden;position:relative;cursor:grab;">
+                        style="width:48px;height:48px;border-radius:50%;overflow:hidden;position:relative;">
                         <div style="position:absolute;left:0;top:0;width:50%;height:100%;background:linear-gradient(to bottom right,var(--tw-gradient-from,#ef4444),var(--tw-gradient-to,#dc2626));"></div>
                         <div style="position:absolute;right:0;top:0;width:50%;height:100%;background:white;"></div>
                         <div style="position:absolute;left:50%;top:0;width:2px;height:100%;background:rgba(0,0,0,.15);"></div>
                       </div>`
-                    : `<div class="pill-source w-12 h-12 rounded-full bg-gradient-to-br ${m.colorFrom} ${m.colorTo} border-3 ${m.borderColor}" data-med="${m.id}" data-fraction="1" title="Click derecho para partir"><span class="fraction-label">1</span></div>`;
+                    : `<div class="pill-source w-12 h-12 rounded-full bg-gradient-to-br ${m.colorFrom} ${m.colorTo} border-3 ${m.borderColor}" data-med="${m.id}" data-fraction="1" title="${isMobileUI ? 'Tap = toma' : 'Click derecho = toma, click izq = cicla fracción, mantener izq = reset'}"></div>`;
                 const noteHtml = m.note ? `<span class="text-xs font-bold" style="color:#f97316;display:block;margin-top:2px">${m.note}</span>` : '';
+                // Botón tijera (sólo móvil, sólo si splittable)
+                const scissorsBtn = (isMobileUI && m.splittable !== false && !isHalf)
+                    ? `<button class="v4-scissors-btn" data-med="${m.id}" aria-label="Partir pastilla"
+                         style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(139,92,246,0.15);border:2px solid #8b5cf6;color:#6d28d9;font-size:1rem;margin-top:6px;touch-action:manipulation;">
+                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+                       </button>`
+                    : '';
+                const lpHint = (m.splittable === false)
+                    ? `<span style="display:inline-block;margin-top:4px;padding:1px 6px;background:rgba(239,68,68,0.15);color:#b91c1c;border-radius:8px;font-size:.55rem;font-weight:800;letter-spacing:.04em;">LP NO PARTIR</span>`
+                    : '';
                 return `
-                <div class="bg-gradient-to-br ${m.bgFrom} ${m.bgTo} p-5 rounded-2xl border-3 ${m.borderCard} shadow-md">
-                    <div class="w-20 h-20 mx-auto bg-white rounded-full flex items-center justify-center mb-3 shadow-xl">
+                <div class="bg-gradient-to-br ${m.bgFrom} ${m.bgTo} p-3 rounded-xl border-2 ${m.borderCard} shadow-sm">
+                    <div class="w-14 h-14 mx-auto bg-white rounded-full flex items-center justify-center mb-2 shadow-md" style="overflow:visible;">
                         ${pillShape}
                     </div>
                     <div class="text-center">
-                        <span class="font-bold text-gray-800 block">${m.name}</span>
-                        ${isHalf ? '<span style="font-size:.7rem;font-weight:700;color:#8b5cf6;display:block">½ pastilla</span>' : ''}
-                        <span class="text-xs text-gray-600 block mt-1">${m.dosisDesc}</span>
+                        <span class="font-bold text-gray-800 block text-xs">${m.name}</span>
+                        ${isHalf ? '<span style="font-size:.65rem;font-weight:700;color:#8b5cf6;display:block">½ pastilla</span>' : ''}
+                        <span class="text-xs text-gray-600 block">${m.dosisDesc}</span>
                         ${noteHtml}
+                        ${lpHint}
+                        ${scissorsBtn}
                     </div>
                 </div>`;}).join('');
+
+            // V4: reset fraction state para el nuevo nivel
+            sessionState.fractionByMed = {};
+            sessionState.pickupStack = [];
+            sessionState.v4_pickupStackMax = 0;
+            sessionState.v4_fractionChangesCount = 0;
+            sessionState.v4_fractionResetsCount = 0;
+            sessionState.v4_nonsplittableAttempts = 0;
+            sessionState.v4_fractionErrors = 0;
+            sessionState.v4_mixedFractionEvents = 0;
+            sessionState.v4_pickupEvents = [];
+            sessionState.v4_sequenceLog = [];
+            // refrescar badges/labels
+            if (window._v4_updatePillVisual) {
+                level.medications.forEach(function(m) { window._v4_updatePillVisual(m.id); });
+            }
 
             // Reset metrics display
             document.getElementById('stability-display').textContent = '--';
@@ -864,398 +1308,367 @@
         // Uses bounding-rect collision instead of elementFromPoint
         // Supports: drag+drop, click-to-select then click-to-place
         // ===========================================
-        function setupDragAndDrop() {
-            let ghostEl = null;
-            let lastGoodX = 0, lastGoodY = 0;
-            let selectedMed = null; // for click-to-place fallback
+        // =================================================================
+        // V4 CANONICAL INTERACTION - tap-get-tap-release
+        // Doctrina: sin drag-and-drop. Pickup acumulativo, release pill-a-pill.
+        // Desktop: click der toma, click izq cicla fraccion, long-press izq reset.
+        // Movil:   tap toma, boton tijera cicla fraccion, long-press tijera reset.
+        // Stack mixto FIFO (mezcla de medicaciones y fracciones simultaneas).
+        // =================================================================
+        function setupTapGetTapRelease() {
+            const LONG_PRESS_MS = 500;
+            const FRACTION_CYCLE = [1, 0.5, 1/3, 0.25]; // entera, 1/2, 1/3, 1/4
+            const FRACTION_LABELS = ['', '1/2', '1/3', '1/4']; // vacio para entera
 
-            function createGhost(pill, x, y) {
-                removeGhost();
-                ghostEl = pill.cloneNode(true);
-                ghostEl.classList.remove('pill-source');
-                ghostEl.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;opacity:0.85;transform:scale(1.4) rotate(12deg);border-radius:50%;transition:none;';
-                ghostEl.style.width = pill.offsetWidth + 'px';
-                ghostEl.style.height = pill.offsetHeight + 'px';
-                ghostEl.style.left = (x - pill.offsetWidth / 2) + 'px';
-                ghostEl.style.top  = (y - pill.offsetHeight / 2) + 'px';
-                document.body.appendChild(ghostEl);
-            }
-            function moveGhost(x, y) {
-                if (!ghostEl) return;
-                ghostEl.style.left = (x - parseInt(ghostEl.style.width) / 2) + 'px';
-                ghostEl.style.top  = (y - parseInt(ghostEl.style.height) / 2) + 'px';
-            }
-            function removeGhost() {
-                if (ghostEl) { ghostEl.remove(); ghostEl = null; }
+            function fractionLabelFor(frac) {
+                if (frac >= 0.99) return '';
+                if (Math.abs(frac - 0.5) < 0.01) return '1/2';
+                if (Math.abs(frac - 1/3) < 0.01) return '1/3';
+                if (Math.abs(frac - 0.25) < 0.01) return '1/4';
+                return frac.toFixed(2);
             }
 
-            // Robust slot detection via bounding rect collision
-            function findSlotAt(x, y) {
-                var slots = document.querySelectorAll('.slot');
-                for (var i = 0; i < slots.length; i++) {
-                    var r = slots[i].getBoundingClientRect();
-                    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
-                        return slots[i];
-                    }
+            function currentFractionFor(medType) {
+                return sessionState.fractionByMed[medType] || 1;
+            }
+
+            function getMedDef(medType) {
+                // V4 - leer del catalogo del nivel vigente
+                const level = LEVELS[sessionState.currentLevelIndex];
+                if (!level || !level.medications) return null;
+                for (let i = 0; i < level.medications.length; i++) {
+                    if (level.medications[i].id === medType) return level.medications[i];
                 }
                 return null;
             }
 
-            function clearHighlights() {
-                document.querySelectorAll('.slot.drag-over').forEach(function(s) {
-                    s.classList.remove('drag-over');
+            function isSplittable(medType) {
+                const md = getMedDef(medType);
+                if (!md) return true;
+                return md.splittable !== false;
+            }
+
+            function updatePillVisual(medType) {
+                const pills = document.querySelectorAll('.pill-source[data-med="' + medType + '"]');
+                pills.forEach(function(pill) {
+                    const frac = currentFractionFor(medType);
+                    const stackCount = sessionState.pickupStack.filter(function(s) { return s.med === medType; }).length;
+
+                    // fraction label
+                    let label = pill.querySelector('.pill-fraction-label');
+                    const fracText = fractionLabelFor(frac);
+                    if (fracText) {
+                        if (!label) {
+                            label = document.createElement('div');
+                            label.className = 'pill-fraction-label';
+                            pill.appendChild(label);
+                        }
+                        label.textContent = fracText;
+                        pill.classList.add('has-custom-fraction');
+                    } else {
+                        if (label) label.remove();
+                        pill.classList.remove('has-custom-fraction');
+                    }
+
+                    // stack badge (count por med)
+                    let badge = pill.querySelector('.pill-stack-badge');
+                    if (stackCount > 0) {
+                        if (!badge) {
+                            badge = document.createElement('div');
+                            badge.className = 'pill-stack-badge';
+                            pill.appendChild(badge);
+                        }
+                        badge.textContent = 'x' + stackCount;
+                        pill.classList.add('has-stack');
+                    } else {
+                        if (badge) badge.remove();
+                        pill.classList.remove('has-stack');
+                    }
                 });
+                updateGlobalStackIndicator();
             }
 
-            // ---- Inicio drag ----
-            function onDragBegin(pill, clientX, clientY, device) {
-                if (!sessionState.gameActive) return;
-                // Cancel any click-to-place selection
-                deselectMed();
-                var cd = sessionState.currentDrag;
-                cd.active = true;
-                cd.medType = pill.dataset.med;
-                cd.startX = clientX;
-                cd.startY = clientY;
-                cd.startTime = Date.now();
-                cd.lastMoveTime = cd.startTime;
-                cd.pathPoints = [{ x: clientX, y: clientY, t: cd.startTime }];
-                lastGoodX = clientX;
-                lastGoodY = clientY;
-                if (!sessionState.inputDevice || sessionState.inputDevice === 'unknown') {
-                    sessionState.inputDevice = device || 'mouse';
-                }
-                sessionState.activePill = pill;
-                pill.style.opacity = '0.4';
-                createGhost(pill, clientX, clientY);
-            }
-
-            // ---- Move ----
-            function onDragMove(clientX, clientY) {
-                if (!sessionState.currentDrag.active) return;
-                var now = Date.now();
-                sessionState.currentDrag.pathPoints.push({ x: clientX, y: clientY, t: now });
-                sessionState.currentDrag.lastMoveTime = now;
-                lastGoodX = clientX;
-                lastGoodY = clientY;
-                moveGhost(clientX, clientY);
-                clearHighlights();
-                var s = findSlotAt(clientX, clientY);
-                if (s) s.classList.add('drag-over');
-            }
-
-            // ---- Place pill in slot (shared by drag and click) ----
-            function placePill(slot, medType, cd) {
-                var endTime = Date.now();
-                var dropX = lastGoodX, dropY = lastGoodY;
-
-                // Drop precision: distancia del punto de soltar al centro del slot
-                var slotRect = slot.getBoundingClientRect();
-                var slotCenterX = slotRect.left + slotRect.width / 2;
-                var slotCenterY = slotRect.top + slotRect.height / 2;
-                var dropOffsetX = dropX - slotCenterX;
-                var dropOffsetY = dropY - slotCenterY;
-                var dropOffsetPx = Math.sqrt(dropOffsetX * dropOffsetX + dropOffsetY * dropOffsetY);
-                var slotRadius = Math.min(slotRect.width, slotRect.height) / 2;
-                var dropPrecision = slotRadius > 0 ? Math.max(0, 1 - (dropOffsetPx / slotRadius)) : 1;
-                var dropQuadrant = (dropOffsetX >= 0 ? (dropOffsetY >= 0 ? 'SE' : 'NE') : (dropOffsetY >= 0 ? 'SW' : 'NW'));
-
-                var directDist = Math.sqrt(
-                    Math.pow(dropX - cd.startX, 2) +
-                    Math.pow(dropY - cd.startY, 2)
-                );
-
-                var pathLength = 0;
-                for (var i = 1; i < cd.pathPoints.length; i++) {
-                    var p1 = cd.pathPoints[i - 1];
-                    var p2 = cd.pathPoints[i];
-                    pathLength += Math.sqrt(
-                        Math.pow(p2.x - p1.x, 2) +
-                        Math.pow(p2.y - p1.y, 2)
-                    );
-                }
-
-                var jitterIndex = pathLength / (directDist || 1);
-
-                var hesitationMs = 0, hesitationCount = 0;
-                for (var i = 1; i < cd.pathPoints.length; i++) {
-                    var gap = cd.pathPoints[i].t - cd.pathPoints[i - 1].t;
-                    if (gap > 300) { hesitationMs += gap; hesitationCount++; }
-                }
-
-                var abruptRedirections = 0;
-                for (var i = 2; i < cd.pathPoints.length; i++) {
-                    var p0 = cd.pathPoints[i - 2];
-                    var pp1 = cd.pathPoints[i - 1];
-                    var pp2 = cd.pathPoints[i];
-                    var d1 = { x: pp1.x - p0.x, y: pp1.y - p0.y };
-                    var d2 = { x: pp2.x - pp1.x, y: pp2.y - pp1.y };
-                    var len1 = Math.sqrt(d1.x * d1.x + d1.y * d1.y);
-                    var len2 = Math.sqrt(d2.x * d2.x + d2.y * d2.y);
-                    if (len1 < 3 || len2 < 3) continue;
-                    var cos = (d1.x * d2.x + d1.y * d2.y) / (len1 * len2);
-                    var angle = Math.acos(Math.max(-1, Math.min(1, cos))) * 180 / Math.PI;
-                    if (angle > 60) abruptRedirections++;
-                }
-
-                var durationMs = endTime - cd.startTime;
-                var avgSpeed = durationMs > 0 ? pathLength / durationMs : 0;
-
-                var isCorrect = validatePlacement(medType, slot.dataset.day, slot.dataset.time);
-                if (!isCorrect) sessionState.totalErrors++;
-                else sessionState.correctPlacements++
-    // Reportar al agente de media para correlacion afecto-rendimiento
-    if (typeof window.ZykosMediaAgent !== 'undefined') window.ZykosMediaAgent.reportGameEvent('hit');
-;
-                sessionState.totalMoves++;
-
-                // consigna se oculta por timer al cargar el nivel (ver loadLevel)
-
-                var movement = {
-                    from_compartment: 'medication_area_' + medType,
-                    to_compartment: 'day' + slot.dataset.day + '-' + slot.dataset.time,
-                    med: medType,
-                    durationMs: durationMs,
-                    jitterIndex: parseFloat(jitterIndex.toFixed(3)),
-                    pathLength: Math.round(pathLength),
-                    directDistance: Math.round(directDist),
-                    pathEfficiency: pathLength > 0 ? parseFloat((directDist / pathLength).toFixed(3)) : 1,
-                    hesitationMs: hesitationMs,
-                    hesitationCount: hesitationCount,
-                    abruptRedirections: abruptRedirections,
-                    avgSpeed: parseFloat(avgSpeed.toFixed(3)),
-                    dropOffsetPx: parseFloat(dropOffsetPx.toFixed(1)),
-                    dropOffsetX: parseFloat(dropOffsetX.toFixed(1)),
-                    dropOffsetY: parseFloat(dropOffsetY.toFixed(1)),
-                    dropPrecision: parseFloat(dropPrecision.toFixed(3)),
-                    dropQuadrant: dropQuadrant,
-                    isCorrect: isCorrect,
-                    input_device: sessionState.inputDevice || 'mouse',
-                    timestamp: new Date().toISOString()
-                };
-
-                sessionState.movements.push(movement);
-
-                // RENDER PRIMERO — nunca bloquear UI por telemetría
-                renderPillInSlot(slot, medType, isCorrect, dropOffsetX, dropOffsetY);
-                updateRealTimeMetrics();
-
-                // V3 fix: proper await, game_session_id -> session_id
-                if (sb && sessionState.patientDni && sessionState.patientDni !== null) {
-                    (async function() {
-                        try {
-                            var _ppPayload = {
-                                patient_dni: sessionState.patientDni,
-                                session_id: sessionState.sessionId,
-                                game_slug: 'pill-organizer',
-                                metric_type: 'pill_placement',
-                                metric_value: jitterIndex,  // jitterIndex = jitter_reposo_px local
-                                metric_data: movement
-                            };
-                            if (typeof ZykosEvidence !== 'undefined') {
-                                _ppPayload = await ZykosEvidence.prepare(_ppPayload);
-                            }
-                            var r = await sb.from('zykos_game_metrics').insert(_ppPayload);
-                            if (r.error) console.warn('[pill] placement:', r.error.message);
-                        } catch(e) { console.warn('[pill] placement:', e.message); }
-                    })();
-                }
-            }
-
-            // ---- Soltar (drag drop) ----
-            function onDrop(clientX, clientY) {
-                var cd = sessionState.currentDrag;
-                if (!cd.active) return;
-                cd.active = false;
-
-                // Use provided coords, fallback to last known good position
-                var dropX = clientX || lastGoodX;
-                var dropY = clientY || lastGoodY;
-
-                try {
-                    removeGhost();
-                    clearHighlights();
-
-                    if (sessionState.activePill) {
-                        sessionState.activePill.style.opacity = '1';
-                        sessionState.activePill = null;
-                    }
-
-                    var slot = findSlotAt(dropX, dropY);
-                    if (!slot) return;
-
-                    placePill(slot, cd.medType, cd);
-                } catch (err) {
-                    console.error('[pill-organizer] onDrop error:', err);
-                    removeGhost();
-                    if (sessionState.activePill) {
-                        sessionState.activePill.style.opacity = '1';
-                        sessionState.activePill = null;
-                    }
-                }
-            }
-
-            // ---- Click-to-place fallback ----
-            function deselectMed() {
-                if (selectedMed) {
-                    document.querySelectorAll('.pill-source').forEach(function(p) {
-                        p.classList.remove('selected-pill');
+            function updateGlobalStackIndicator() {
+                const el = document.getElementById('global-stack');
+                const txt = document.getElementById('global-stack-text');
+                const total = sessionState.pickupStack.length;
+                if (total > 0 && el) {
+                    const meds = {};
+                    sessionState.pickupStack.forEach(function(s) {
+                        const key = s.med + (s.frac < 1 ? ' (' + fractionLabelFor(s.frac) + ')' : '');
+                        meds[key] = (meds[key] || 0) + 1;
                     });
-                    selectedMed = null;
-                    var hint = document.getElementById('click-hint');
-                    if (hint) hint.style.display = 'none';
+                    const parts = Object.keys(meds).map(function(k) { return meds[k] + ' ' + k; });
+                    txt.textContent = parts.join(' + ') + ' en mano';
+                    el.classList.add('active');
+                } else if (el) {
+                    el.classList.remove('active');
+                }
+                // update live metric displays
+                const stackNow = document.getElementById('stack-now-display');
+                if (stackNow) stackNow.textContent = total;
+                const pickMax = document.getElementById('pickup-max-display');
+                if (pickMax) pickMax.textContent = sessionState.v4_pickupStackMax;
+                const fcDisp = document.getElementById('frac-changes-display');
+                if (fcDisp) fcDisp.textContent = sessionState.v4_fractionChangesCount;
+            }
+
+            function pickupOne(medType, sourceEvent) {
+                if (!sessionState.gameActive) return;
+                const frac = currentFractionFor(medType);
+                sessionState.pickupStack.push({ med: medType, frac: frac, t: Date.now() });
+                if (sessionState.pickupStack.length > sessionState.v4_pickupStackMax) {
+                    sessionState.v4_pickupStackMax = sessionState.pickupStack.length;
+                }
+                // detectar mixed fraction: si el stack tiene medicaciones distintas o fracciones distintas
+                const uniqMeds = new Set(sessionState.pickupStack.map(function(s) { return s.med + '|' + s.frac; }));
+                if (uniqMeds.size > 1) sessionState.v4_mixedFractionEvents++;
+
+                sessionState.v4_pickupEvents.push({
+                    t: Date.now(), action: 'pickup', med: medType, frac: frac, stack_after: sessionState.pickupStack.length
+                });
+                sessionState.v4_sequenceLog.push(medType);
+                updatePillVisual(medType);
+
+                // hint visual: ocultar consigna despues del primer pickup
+                if (!window._firstMoveDone) {
+                    window._firstMoveDone = true;
+                    if (window._hideConsigna) window._hideConsigna();
                 }
             }
 
-            function selectMed(pill) {
-                deselectMed();
-                selectedMed = pill.dataset.med;
-                pill.classList.add('selected-pill');
-                var hint = document.getElementById('click-hint');
-                if (hint) hint.style.display = 'block';
-                // Start tracking for click-to-place (minimal biometrics)
-                var cd = sessionState.currentDrag;
-                cd.medType = pill.dataset.med;
-                cd.startX = 0; cd.startY = 0;
-                cd.startTime = Date.now();
-                cd.lastMoveTime = cd.startTime;
-                cd.pathPoints = [{ x: 0, y: 0, t: cd.startTime }];
-                if (!sessionState.inputDevice || sessionState.inputDevice === 'unknown') {
-                    sessionState.inputDevice = 'click';
+            function cycleFraction(medType) {
+                const md = getMedDef(medType);
+                if (md && md.splittable === false) {
+                    // LP/no ranurada: bloquear + shake silencioso
+                    sessionState.v4_nonsplittableAttempts++;
+                    const pills = document.querySelectorAll('.pill-source[data-med="' + medType + '"]');
+                    pills.forEach(function(p) {
+                        p.style.animation = 'shake 0.35s ease';
+                        setTimeout(function() { p.style.animation = ''; }, 380);
+                        p.style.borderColor = '#ef4444';
+                        setTimeout(function() { p.style.borderColor = ''; }, 400);
+                    });
+                    return;
                 }
+                const cur = currentFractionFor(medType);
+                let idx = FRACTION_CYCLE.findIndex(function(f) { return Math.abs(f - cur) < 0.01; });
+                if (idx < 0) idx = 0;
+                const nextIdx = (idx + 1) % FRACTION_CYCLE.length;
+                sessionState.fractionByMed[medType] = FRACTION_CYCLE[nextIdx];
+                sessionState.v4_fractionChangesCount++;
+                sessionState.v4_pickupEvents.push({
+                    t: Date.now(), action: 'fraction_cycle', med: medType, frac_new: FRACTION_CYCLE[nextIdx]
+                });
+                updatePillVisual(medType);
             }
 
-            function onSlotClick(slot) {
-                if (!sessionState.gameActive || !selectedMed) return;
-                var cd = sessionState.currentDrag;
-                // Add endpoint to path
-                var r = slot.getBoundingClientRect();
-                lastGoodX = r.left + r.width / 2;
-                lastGoodY = r.top + r.height / 2;
-                cd.pathPoints.push({ x: lastGoodX, y: lastGoodY, t: Date.now() });
-                placePill(slot, selectedMed, cd);
-                // Keep selected for rapid multi-placement
+            function resetFraction(medType) {
+                if (currentFractionFor(medType) === 1) return; // ya esta en entera
+                sessionState.fractionByMed[medType] = 1;
+                sessionState.v4_fractionResetsCount++;
+                sessionState.v4_pickupEvents.push({
+                    t: Date.now(), action: 'fraction_reset', med: medType
+                });
+                updatePillVisual(medType);
             }
 
-            // ---- MOUSE events ----
-            var dragStarted = false;
+            function releaseOneOnSlot(slot) {
+                if (!sessionState.gameActive) return;
+                if (sessionState.pickupStack.length === 0) return; // no-op silencioso
+
+                const item = sessionState.pickupStack.shift(); // FIFO
+                const medType = item.med;
+                const frac = item.frac;
+                const day = parseInt(slot.dataset.day, 10);
+                const time = slot.dataset.time;
+
+                // validacion canonical
+                const isCorrect = validatePlacement(medType, day, time);
+
+                // detectar error de fraccion: si la receta pedia X frac y el paciente solto otra
+                const md = getMedDef(medType);
+                let fracExpected = 1;
+                if (md && md.fractions && md.fractions[day + '-' + time]) {
+                    fracExpected = md.fractions[day + '-' + time];
+                }
+                if (Math.abs(frac - fracExpected) > 0.01) {
+                    sessionState.v4_fractionErrors++;
+                }
+
+                sessionState.v4_pickupEvents.push({
+                    t: Date.now(), action: 'release', med: medType, frac: frac,
+                    day: day, time: time, correct: isCorrect, fraction_correct: Math.abs(frac - fracExpected) < 0.01,
+                    stack_after: sessionState.pickupStack.length
+                });
+
+                // simular currentDrag para placePill legacy API
+                const cd = sessionState.currentDrag;
+                const rect = slot.getBoundingClientRect();
+                cd.medType = medType;
+                cd.startX = rect.left + rect.width/2;
+                cd.startY = rect.top + rect.height/2;
+                cd.startTime = Date.now() - 50;
+                cd.lastMoveTime = Date.now();
+                cd.pathPoints = [{ x: rect.left + rect.width/2, y: rect.top + rect.height/2, t: Date.now() }];
+                cd.active = true;
+
+                // placePill es la funcion legacy que incrementa correctPlacements, totalErrors, etc.
+                if (typeof placePill === 'function') {
+                    placePill(slot, medType, cd);
+                }
+
+                cd.active = false;
+                updatePillVisual(medType);
+            }
+
+            // ========== GESTURE HANDLERS ==========
+
+            // Desktop: context menu (click der) sobre pastilla origen = pickup
+            document.addEventListener('contextmenu', function(e) {
+                const pill = e.target.closest('.pill-source');
+                const slot = e.target.closest('.slot');
+                if (!pill && !slot) return;
+                e.preventDefault();
+                if (pill) {
+                    sessionState.inputDevice = 'mouse';
+                    pickupOne(pill.dataset.med, e);
+                } else if (slot && sessionState.pickupStack.length > 0) {
+                    // click derecho en slot = release (alternativa a click corto)
+                    releaseOneOnSlot(slot);
+                }
+            });
+
+            // Desktop: mousedown izquierdo = arranca timer para distinguir click corto vs long-press
+            let leftMouseDownPill = null;
+            let leftMouseDownTime = 0;
+            let longPressFired = false;
 
             document.addEventListener('mousedown', function(e) {
                 if (e.button !== 0) return;
-                var pill = e.target.closest('.pill-source');
+                const pill = e.target.closest('.pill-source');
                 if (!pill) return;
                 e.preventDefault();
-                dragStarted = false;
-                onDragBegin(pill, e.clientX, e.clientY, 'mouse');
-            });
-
-            document.addEventListener('mousemove', function(e) {
-                if (!sessionState.currentDrag.active) return;
-                dragStarted = true;
-                // Ocultar consigna al primer movimiento real
-                if (!window._firstMoveDone) {
-                    window._firstMoveDone = true;
-                    window._hideConsigna();
-                }
-                onDragMove(e.clientX, e.clientY);
+                sessionState.inputDevice = 'mouse';
+                leftMouseDownPill = pill;
+                leftMouseDownTime = Date.now();
+                longPressFired = false;
+                if (sessionState.v4_longPressTimer) clearTimeout(sessionState.v4_longPressTimer);
+                sessionState.v4_longPressTimer = setTimeout(function() {
+                    longPressFired = true;
+                    if (leftMouseDownPill) {
+                        resetFraction(leftMouseDownPill.dataset.med);
+                    }
+                }, LONG_PRESS_MS);
             });
 
             document.addEventListener('mouseup', function(e) {
                 if (e.button !== 0) return;
+                if (sessionState.v4_longPressTimer) {
+                    clearTimeout(sessionState.v4_longPressTimer);
+                    sessionState.v4_longPressTimer = null;
+                }
+                if (!leftMouseDownPill) return;
+                if (!longPressFired) {
+                    // click izq corto sobre pastilla = cycle fraction
+                    cycleFraction(leftMouseDownPill.dataset.med);
+                }
+                leftMouseDownPill = null;
+                longPressFired = false;
+            });
 
-                if (sessionState.currentDrag.active) {
-                    if (dragStarted) {
-                        // Real drag — drop it
-                        onDrop(e.clientX, e.clientY);
-                    } else {
-                        // Click without move — select for click-to-place
-                        sessionState.currentDrag.active = false;
-                        removeGhost();
-                        if (sessionState.activePill) {
-                            sessionState.activePill.style.opacity = '1';
-                            var pill = sessionState.activePill;
-                            sessionState.activePill = null;
-                            selectMed(pill);
-                        }
-                    }
-                    dragStarted = false;
+            // Desktop: click izquierdo normal sobre SLOT (si hay stack) = release 1
+            document.addEventListener('click', function(e) {
+                const slot = e.target.closest('.slot');
+                if (slot && sessionState.pickupStack.length > 0) {
+                    e.preventDefault();
+                    releaseOneOnSlot(slot);
                     return;
                 }
-
-                // If a med is selected, check if we clicked a slot
-                if (selectedMed && sessionState.gameActive) {
-                    var slot = e.target.closest('.slot');
-                    if (slot) {
-                        onSlotClick(slot);
-                        return;
-                    }
-                    // Clicked elsewhere — deselect
-                    if (!e.target.closest('.pill-source')) {
-                        deselectMed();
-                    }
+                // tambien: click en reset btn
+                const rb = e.target.closest('.reset-fraction-btn');
+                if (rb) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const pill = rb.closest('.pill-source');
+                    if (pill) resetFraction(pill.dataset.med);
                 }
             });
 
-            // ---- TOUCH events ----
-            var touchMoved = false;
+            // ===== MOBILE TOUCH HANDLERS =====
+            // Tap sobre pastilla = pickup. Tap sobre slot = release. Long-press tijera = reset.
+            let touchStartTime = 0;
+            let touchStartTarget = null;
+            let touchMoved = false;
+            let touchLongPressFired = false;
 
             document.addEventListener('touchstart', function(e) {
-                var pill = e.target.closest('.pill-source');
-                if (!pill) return;
+                const pill = e.target.closest('.pill-source');
+                const scissors = e.target.closest('.v4-scissors-btn');
+                const slot = e.target.closest('.slot');
+                const rb = e.target.closest('.reset-fraction-btn');
+                if (!pill && !slot && !scissors && !rb) return;
                 e.preventDefault();
+                sessionState.inputDevice = 'touch';
+                touchStartTime = Date.now();
+                touchStartTarget = e.target;
                 touchMoved = false;
-                var t = e.touches[0];
-                onDragBegin(pill, t.clientX, t.clientY, 'touch');
+                touchLongPressFired = false;
+
+                // long-press solo aplica a la tijera (reset fraccion)
+                if (scissors) {
+                    const medType = scissors.dataset.med;
+                    if (sessionState.v4_longPressTimer) clearTimeout(sessionState.v4_longPressTimer);
+                    sessionState.v4_longPressTimer = setTimeout(function() {
+                        touchLongPressFired = true;
+                        resetFraction(medType);
+                    }, LONG_PRESS_MS);
+                }
             }, { passive: false });
 
             document.addEventListener('touchmove', function(e) {
-                if (!sessionState.currentDrag.active) return;
-                e.preventDefault();
-                touchMoved = true;
-                // Ocultar consigna al primer movimiento real
-                if (!window._firstMoveDone) {
-                    window._firstMoveDone = true;
-                    window._hideConsigna();
-                }
-                var t = e.touches[0];
-                onDragMove(t.clientX, t.clientY);
-            }, { passive: false });
+                const t = e.touches[0];
+                if (!t) return;
+                const dx = Math.abs(t.clientX - (touchStartTarget ? touchStartTarget.getBoundingClientRect().left + 10 : 0));
+                if (dx > 15) touchMoved = true;
+            }, { passive: true });
 
             document.addEventListener('touchend', function(e) {
-                if (!sessionState.currentDrag.active) return;
-                e.preventDefault();
-
-                if (touchMoved) {
-                    // Real drag — use last good position (more reliable than changedTouches)
-                    onDrop(lastGoodX, lastGoodY);
-                } else {
-                    // Tap without move — select for tap-to-place
-                    sessionState.currentDrag.active = false;
-                    removeGhost();
-                    if (sessionState.activePill) {
-                        sessionState.activePill.style.opacity = '1';
-                        var pill = sessionState.activePill;
-                        sessionState.activePill = null;
-                        selectMed(pill);
-                    }
+                if (sessionState.v4_longPressTimer) {
+                    clearTimeout(sessionState.v4_longPressTimer);
+                    sessionState.v4_longPressTimer = null;
                 }
+                if (!touchStartTarget) return;
+                const dur = Date.now() - touchStartTime;
+                const pill = touchStartTarget.closest ? touchStartTarget.closest('.pill-source') : null;
+                const scissors = touchStartTarget.closest ? touchStartTarget.closest('.v4-scissors-btn') : null;
+                const slot = touchStartTarget.closest ? touchStartTarget.closest('.slot') : null;
+                const rb = touchStartTarget.closest ? touchStartTarget.closest('.reset-fraction-btn') : null;
+
+                if (touchLongPressFired) {
+                    // long-press ya disparo reset, no hacer nada mas
+                } else if (pill && !touchMoved && dur < 600) {
+                    // tap corto en pastilla = pickup
+                    pickupOne(pill.dataset.med, e);
+                } else if (scissors && !touchMoved && dur < 600) {
+                    // tap corto en tijera = cycle fraction
+                    cycleFraction(scissors.dataset.med);
+                } else if (slot && !touchMoved && dur < 700 && sessionState.pickupStack.length > 0) {
+                    // tap en slot = release 1
+                    releaseOneOnSlot(slot);
+                } else if (rb && !touchMoved) {
+                    const p2 = rb.closest('.pill-source');
+                    if (p2) resetFraction(p2.dataset.med);
+                }
+
+                touchStartTarget = null;
                 touchMoved = false;
-            }, { passive: false });
-
-            // Tap on slot for touch click-to-place
-            document.addEventListener('click', function(e) {
-                if (!selectedMed || !sessionState.gameActive) return;
-                var slot = e.target.closest('.slot');
-                if (slot) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onSlotClick(slot);
-                    return;
-                }
-                if (!e.target.closest('.pill-source')) {
-                    deselectMed();
-                }
+                touchLongPressFired = false;
             });
+
+            // Expose para que loadLevel agregue botones tijera a cada pastilla movil
+            window._v4_updatePillVisual = updatePillVisual;
+            window._v4_currentFractionFor = currentFractionFor;
         }
 
         // ===========================================
@@ -1637,7 +2050,45 @@
                                         && mvs[i].med === mvs[i-1].med) count++;
                                 }
                                 return count;
-                            })()
+                            })(),
+                            // ============================================================
+                            // V4 CANONICAL METRICS — tap-get-tap-release doctrine
+                            // ============================================================
+                            pickup_stack_max: sessionState.v4_pickupStackMax || 0,
+                            pickup_stack_mean: (function(){
+                                var evs = (sessionState.v4_pickupEvents||[]).filter(function(e){ return e.action === 'pickup'; });
+                                if (!evs.length) return 0;
+                                var sum = evs.reduce(function(s, e){ return s + (e.stack_after||0); }, 0);
+                                return parseFloat((sum / evs.length).toFixed(2));
+                            })(),
+                            pickup_stack_final_unused: (sessionState.pickupStack||[]).length,
+                            fraction_changes_count: sessionState.v4_fractionChangesCount || 0,
+                            fraction_error_pct: (function(){
+                                var rels = (sessionState.v4_pickupEvents||[]).filter(function(e){ return e.action === 'release'; });
+                                if (!rels.length) return 0;
+                                var wrong = rels.filter(function(e){ return e.fraction_correct === false; }).length;
+                                return parseFloat((wrong / rels.length * 100).toFixed(1));
+                            })(),
+                            fraction_reset_count: sessionState.v4_fractionResetsCount || 0,
+                            mixed_fraction_stack_events: sessionState.v4_mixedFractionEvents || 0,
+                            nonsplittable_split_attempts: sessionState.v4_nonsplittableAttempts || 0,
+                            pickup_sequence_strategy: (function(){
+                                var seq = sessionState.v4_sequenceLog || [];
+                                if (seq.length < 3) return 'insufficient_data';
+                                // Cuenta de cuantos cambios de med hay consecutivos
+                                var medChanges = 0;
+                                for (var i = 1; i < seq.length; i++) {
+                                    if (seq[i] !== seq[i-1]) medChanges++;
+                                }
+                                var ratio = medChanges / (seq.length - 1);
+                                // Alto ratio = alterna medicaciones; bajo = agrupa la misma med
+                                if (ratio < 0.3) return 'by_medication';
+                                if (ratio > 0.7) return 'by_day';
+                                return 'mixed';
+                            })(),
+                            v4_pickup_events_log: (sessionState.v4_pickupEvents||[]).slice(-200),
+                            v4_sequence_log: (sessionState.v4_sequenceLog||[]).slice(-200),
+                            v4_interaction_mode: 'tap_get_tap_release'
                         }
                     };
                     if (typeof ZykosEvidence !== 'undefined') {
