@@ -350,6 +350,31 @@ async function recordCellCompleted(cellRecord) {
     var upd = await sb.from('zykos_rokola_sessions')
       .update({ cells_completed: completed }).eq('session_id', state.sessionId);
     if (upd.error) throw upd.error;
+
+    // ====================================================================
+    // INTEGRACION DE METRICAS — audit #115
+    // Marca todas las metricas del paciente (zykos_game_metrics,
+    // zykos_metrics_canonical, zykos_raw_stream) insertadas durante la
+    // ventana temporal de esta celda con el rokola_session_id + cell_slug.
+    // Asi las metricas viejas (pre-Rokola) y nuevas quedan integradas en
+    // la sesion Rokola sin que los juegos tengan que saber de ella.
+    // ====================================================================
+    try {
+      var cellInfo = state.prescription[state.currentIndex];
+      var cellEngine = cellInfo && cellInfo.cell_engine ? cellInfo.cell_engine : null;
+      var rpc = await sb.rpc('zykos_rokola_mark_cell_metrics', {
+        p_session_id:  state.sessionId,
+        p_cell_slug:   cellRecord.cell_slug,
+        p_patient_dni: state.patientDni,
+        p_cell_engine: cellEngine,
+        p_started_at:  cellRecord.started_at,
+        p_ended_at:    cellRecord.ended_at
+      });
+      if (rpc.error) console.warn('[rokola] mark_cell_metrics failed:', rpc.error.message);
+      else console.log('[rokola] metrics integrated:', rpc.data);
+    } catch (e) {
+      console.warn('[rokola] mark_cell_metrics threw:', e && e.message);
+    }
   } catch (e) {
     console.warn('[rokola] recordCellCompleted failed:', e);
   }
