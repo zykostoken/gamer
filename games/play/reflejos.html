@@ -1643,7 +1643,7 @@ async function saveMetrics(metrics) {
         }
 
         var payload = {
-            patient_id: userId,
+            user_id: userId,
             patient_dni: dni,
             game_slug: GAME_SLUG,
             metric_type: 'session_summary',
@@ -1671,7 +1671,7 @@ async function saveMetrics(metrics) {
 
         // Save individual trial data for deep analysis
         var ins2 = await sb.from('zykos_game_metrics').insert({
-            patient_id: userId,
+            user_id: userId,
             patient_dni: dni,
             game_slug: GAME_SLUG,
             metric_type: 'trial_data_level_' + metrics.level,
