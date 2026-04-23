@@ -164,6 +164,21 @@ async function end() {
         }
     }
 
+    // --- Si estamos dentro de la Rokola, notificar al parent para avanzar celda ---
+    // Un solo punto: no hay que tocar los 8 juegos individualmente.
+    if (typeof global.RokolaClient !== 'undefined' && global.RokolaClient.isInsideRokola()) {
+        try {
+            var summary = engineMetrics ? {
+                completed: true,
+                session_duration_ms: engineMetrics.session_duration_ms || null,
+                agents_active: engineMetrics.agents_active || null
+            } : { completed: true };
+            global.RokolaClient.notifyCompleted(summary);
+        } catch (e) {
+            console.warn('[zykos-bootstrap] RokolaClient.notifyCompleted threw:', e && e.message);
+        }
+    }
+
     _booted = false;
     _bootContext = null;
     return engineMetrics;
