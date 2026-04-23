@@ -57,6 +57,18 @@ header { background:var(--surface); border-bottom:1px solid var(--border); paddi
     <h1 id="greeting">Cargando...</h1>
     <p>Selecciona un juego. Cada sesion evalua funciones cognitivas distintas.</p>
   </div>
+
+  <!-- ROKOLA V1 MVP — entrypoint destacado (audit #115) -->
+  <div id="rokola-hero" style="margin-bottom:24px;background:linear-gradient(135deg,#12121a 0%,#1a1a24 100%);border:1px solid rgba(241,255,59,0.25);border-radius:14px;padding:20px 22px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all 0.2s;" onclick="location.href='/games/play/rokola.html'">
+    <div style="flex:0 0 auto;width:54px;height:54px;border-radius:12px;background:#f1ff3b;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#0a0a0f;box-shadow:0 0 24px rgba(241,255,59,0.4);">R</div>
+    <div style="flex:1;">
+      <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:2px;color:#f1ff3b;font-weight:800;margin-bottom:3px;">Tu sesion de hoy</div>
+      <div style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:2px;">La Rokola</div>
+      <div style="font-size:0.8rem;color:var(--dim);">Una secuencia intercalada de 6 actividades. No tenes que elegir, la Rokola te va sirviendo.</div>
+    </div>
+    <div style="flex:0 0 auto;color:#f1ff3b;font-size:1.5rem;">→</div>
+  </div>
+
   <div id="games-area">
     <div class="games-grid" id="games-grid"></div>
   </div>

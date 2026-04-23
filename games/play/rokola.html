@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>La Rokola — ZYKOS</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<!--
+  ROKOLA V1 MVP — shell orquestador.
+  Dr. Gonzalo Perez Cortizo. Audit #108 (doctrina), #112 (consigna), #115 (ejecucion), #114 (DNI-NO-ID).
+
+  DOCTRINA:
+    - El paciente NO ELIGE juego. La Rokola prescribe secuencia intercalada.
+    - Motores existentes se invocan por iframe. Escriben sus metricas como siempre.
+    - Agregan 'rokola_session_id' y 'rokola_cell_slug' a su metric_data via query param.
+    - Al terminar, cada motor hace postMessage({type:'rokola:cell_completed'}) al parent.
+    - Las 104+ metricas canonicas V4 no se tocan. DNI es unica identificacion (#114).
+
+  SECUENCIA CLINICA V1 (firmada #115):
+    1. motor breve (warmup)        — lawn-mower L1-L3
+    2. memoria receta (encoding)   — neuro-chef L1-L3
+    3. razonamiento + motor fino   — pill-organizer L1-L2
+    4. ENGANCHE motor              — lawn-mower L4-L10
+    5. seriacion                   — classify-carniceria
+    6. calculo + recall diferido   — super-market
+-->
+<style>
+:root {
+  --rk-bg: #0a0a0f;
+  --rk-surface: #12121a;
+  --rk-accent: #f1ff3b;
+  --rk-accent-dim: #a8b025;
+  --rk-text: #f5f5f0;
+  --rk-text-dim: #8a8a85;
+  --rk-ok: #4ade80;
+  --rk-warn: #fbbf24;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--rk-bg); color: var(--rk-text); }
+body { display: flex; flex-direction: column; }
+
+#rk-header {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  background: var(--rk-surface);
+  border-bottom: 1px solid rgba(241, 255, 59, 0.1);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 13px;
+}
+#rk-progress { display: flex; gap: 6px; }
+.rk-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); transition: background 0.3s;
+}
+.rk-dot.done { background: var(--rk-ok); }
+.rk-dot.current { background: var(--rk-accent); box-shadow: 0 0 10px var(--rk-accent); }
+#rk-cell-label { color: var(--rk-text-dim); font-weight: 500; flex: 1; text-align: center; padding: 0 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#rk-abort {
+  background: none; border: 1px solid rgba(255,255,255,0.2); color: var(--rk-text-dim);
+  padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer;
+}
+#rk-abort:hover { color: var(--rk-accent); border-color: var(--rk-accent-dim); }
+
+#rk-stage {
+  flex: 1 1 auto; position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+#rk-iframe { width: 100%; height: 100%; border: 0; background: var(--rk-bg); }
+
+.rk-screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px; text-align: center;
+  background: var(--rk-bg);
+  animation: rk-fade 0.4s ease-out;
+}
+@keyframes rk-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.rk-title {
+  font-size: 32px; font-weight: 900; letter-spacing: 2px;
+  color: var(--rk-accent); text-transform: uppercase;
+  margin-bottom: 16px;
+  text-shadow: 0 0 20px rgba(241, 255, 59, 0.4);
+}
+.rk-subtitle {
+  font-size: 16px; color: var(--rk-text-dim);
+  margin-bottom: 32px; max-width: 480px; line-height: 1.4;
+}
+.rk-btn-primary {
+  background: var(--rk-accent); color: var(--rk-bg);
+  border: 0; padding: 16px 40px; border-radius: 6px;
+  font-size: 18px; font-weight: 700; letter-spacing: 1px;
+  cursor: pointer; text-transform: uppercase; transition: transform 0.15s;
+}
+.rk-btn-primary:active { transform: scale(0.96); }
+.rk-btn-primary:hover { box-shadow: 0 0 30px rgba(241, 255, 59, 0.5); }
+.rk-btn-primary:disabled { opacity: 0.5; cursor: wait; }
+.rk-btn-secondary {
+  margin-top: 16px;
+  background: none; color: var(--rk-text-dim);
+  border: 1px solid rgba(255,255,255,0.15); padding: 10px 24px; border-radius: 6px;
+  font-size: 13px; cursor: pointer;
+}
+
+.rk-sequence-preview {
+  margin-top: 24px; font-size: 13px; color: var(--rk-text-dim);
+  max-width: 500px;
+}
+.rk-sequence-preview ol { list-style: none; padding: 0; text-align: left; display: inline-block; }
+.rk-sequence-preview li {
+  padding: 4px 0; font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+.rk-sequence-preview li::before { content: "▸ "; color: var(--rk-accent-dim); }
+
+#rk-transition-title { font-size: 20px; color: var(--rk-text); margin-bottom: 24px; }
+#rk-transition-dots { display: flex; gap: 8px; }
+#rk-transition-dots span {
+  width: 12px; height: 12px; border-radius: 50%; background: var(--rk-accent);
+  animation: rk-bounce 1.2s infinite ease-in-out both;
+}
+#rk-transition-dots span:nth-child(1) { animation-delay: -0.32s; }
+#rk-transition-dots span:nth-child(2) { animation-delay: -0.16s; }
+@keyframes rk-bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+.rk-hidden { display: none !important; }
+
+@media (min-width: 768px) {
+  .rk-title { font-size: 48px; }
+  .rk-subtitle { font-size: 18px; }
+}
+</style>
+</head>
+<body>
+
+<div id="rk-header" class="rk-hidden">
+  <div id="rk-progress"></div>
+  <div id="rk-cell-label">—</div>
+  <button id="rk-abort" type="button">Finalizar</button>
+</div>
+
+<div id="rk-stage">
+  <div id="rk-welcome" class="rk-screen">
+    <div class="rk-title">La Rokola</div>
+    <div class="rk-subtitle">
+      Tu sesión de hoy está lista. Una serie de actividades intercaladas para cuidar cómo pensás, recordás y te movés.
+    </div>
+    <button class="rk-btn-primary" id="rk-start-btn" type="button">Empezar</button>
+    <div class="rk-sequence-preview rk-hidden" id="rk-preview">
+      <div style="margin-bottom: 8px;">Secuencia de hoy:</div>
+      <ol id="rk-preview-list"></ol>
+    </div>
+  </div>
+
+  <div id="rk-transition" class="rk-screen rk-hidden">
+    <div id="rk-transition-title">Siguiente actividad...</div>
+    <div id="rk-transition-dots"><span></span><span></span><span></span></div>
+  </div>
+
+  <div id="rk-complete" class="rk-screen rk-hidden">
+    <div class="rk-title">¡Listo!</div>
+    <div class="rk-subtitle">Completaste tu sesión de hoy. Los datos ya están guardados.</div>
+    <button class="rk-btn-primary" id="rk-home-btn" type="button">Volver al inicio</button>
+    <button class="rk-btn-secondary" id="rk-new-session-btn" type="button">Nueva sesión</button>
+  </div>
+
+  <div id="rk-error" class="rk-screen rk-hidden">
+    <div class="rk-title" style="color: var(--rk-warn);">Hola</div>
+    <div class="rk-subtitle" id="rk-error-msg">
+      Para empezar tu Rokola, ingresá primero desde el portal.
+    </div>
+    <button class="rk-btn-primary" id="rk-to-portal-btn" type="button">Ir al portal</button>
+  </div>
+
+  <iframe id="rk-iframe" class="rk-hidden" allow="camera; microphone; autoplay; clipboard-write"></iframe>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/games/shared/config.js"></script>
+<script>
+(function() {
+'use strict';
+
+var state = {
+  sessionId: null, patientDni: null,
+  prescription: [], currentIndex: 0,
+  startedAt: null, cellStartedAt: null
+};
+
+function $(id) { return document.getElementById(id); }
+function show(id) { $(id).classList.remove('rk-hidden'); }
+function hide(id) { $(id).classList.add('rk-hidden'); }
+
+function getSupabase() {
+  if (typeof window.getSupabaseClient === 'function') return window.getSupabaseClient();
+  if (typeof window.SUPABASE_URL !== 'undefined' && typeof window.SUPABASE_ANON_KEY !== 'undefined') {
+    return window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  }
+  console.error('[rokola] Supabase no disponible');
+  return null;
+}
+
+function getDni() {
+  // DNI-NO-ID (#114): unica identificacion del paciente.
+  return window.ZYKOS_DNI ||
+         new URLSearchParams(location.search).get('dni') ||
+         (function() { try { return localStorage.getItem('zykos_patient_dni'); } catch(e) { return null; } })() ||
+         null;
+}
+
+async function loadPrescription() {
+  var sb = getSupabase();
+  if (!sb) return null;
+
+  var dni = getDni();
+  if (!dni) {
+    show('rk-error');
+    $('rk-error-msg').textContent = 'Para empezar tu Rokola, ingresá primero desde el portal.';
+    return null;
+  }
+  state.patientDni = dni;
+
+  try {
+    var rpcRes = await sb.rpc('zykos_rokola_prescribe_default', { p_patient_dni: dni });
+    if (rpcRes.error) throw rpcRes.error;
+
+    var prescription = rpcRes.data || [];
+    if (!prescription.length) {
+      show('rk-error');
+      $('rk-error-msg').textContent = 'No hay celdas disponibles. Contactá al profesional.';
+      return null;
+    }
+
+    var slugs = prescription.map(function(p) { return p.cell_slug; });
+    var cellsRes = await sb
+      .from('zykos_rokola_cells')
+      .select('cell_slug, cell_label, cell_launch_url, cell_engine, cell_primary_domain, cell_duration_target_s')
+      .in('cell_slug', slugs);
+    if (cellsRes.error) throw cellsRes.error;
+
+    var cellMap = {};
+    cellsRes.data.forEach(function(c) { cellMap[c.cell_slug] = c; });
+
+    state.prescription = prescription.map(function(p) {
+      var cell = cellMap[p.cell_slug] || {};
+      return {
+        cell_slug: p.cell_slug,
+        position: p.position,
+        role: p.role,
+        cell_label: cell.cell_label || p.cell_slug,
+        launch_url: cell.cell_launch_url,
+        engine: cell.cell_engine,
+        domain: cell.cell_primary_domain,
+        duration_target_s: cell.cell_duration_target_s
+      };
+    }).sort(function(a, b) { return a.position - b.position; });
+
+    return state.prescription;
+  } catch (e) {
+    console.error('[rokola] loadPrescription failed:', e);
+    show('rk-error');
+    $('rk-error-msg').textContent = 'Error al cargar tu sesión: ' + (e.message || e);
+    return null;
+  }
+}
+
+async function createSession() {
+  var sb = getSupabase();
+  if (!sb) return false;
+  try {
+    var ins = await sb.from('zykos_rokola_sessions').insert({
+      patient_dni: state.patientDni,
+      cell_sequence: state.prescription.map(function(p) { return p.cell_slug; }),
+      started_at: new Date().toISOString(),
+      session_status: 'in_progress',
+      device_metadata: {
+        ua: navigator.userAgent,
+        viewport: { w: innerWidth, h: innerHeight },
+        dpr: devicePixelRatio || 1
+      },
+      cells_completed: []
+    }).select('session_id').single();
+    if (ins.error) throw ins.error;
+    state.sessionId = ins.data.session_id;
+    state.startedAt = Date.now();
+    console.log('[rokola] Session created:', state.sessionId);
+    return true;
+  } catch (e) {
+    console.error('[rokola] createSession failed:', e);
+    return false;
+  }
+}
+
+function launchCurrentCell() {
+  if (state.currentIndex >= state.prescription.length) return completeSession();
+
+  var cell = state.prescription[state.currentIndex];
+  state.cellStartedAt = Date.now();
+
+  var sep = cell.launch_url.indexOf('?') >= 0 ? '&' : '?';
+  var url = cell.launch_url + sep
+    + 'rokola_session_id=' + encodeURIComponent(state.sessionId)
+    + '&rokola_cell_slug=' + encodeURIComponent(cell.cell_slug)
+    + '&rokola_position=' + cell.position
+    + '&dni=' + encodeURIComponent(state.patientDni);
+
+  renderProgress();
+  $('rk-cell-label').textContent = (state.currentIndex + 1) + '/' + state.prescription.length + ' · ' + cell.cell_label;
+
+  hide('rk-welcome'); hide('rk-transition'); hide('rk-complete'); hide('rk-error');
+  show('rk-header');
+
+  var iframe = $('rk-iframe');
+  iframe.src = url;
+  show('rk-iframe');
+
+  console.log('[rokola] Launching cell', state.currentIndex + 1, '/', state.prescription.length, '-', cell.cell_slug);
+}
+
+window.addEventListener('message', function(ev) {
+  if (!ev.data || typeof ev.data !== 'object') return;
+  if (ev.data.type !== 'rokola:cell_completed') return;
+
+  var cell = state.prescription[state.currentIndex];
+  if (!cell) return;
+
+  console.log('[rokola] cell_completed received:', cell.cell_slug, ev.data);
+  recordCellCompleted({
+    cell_slug: cell.cell_slug,
+    position: cell.position,
+    started_at: new Date(state.cellStartedAt).toISOString(),
+    ended_at: new Date().toISOString(),
+    duration_ms: Date.now() - state.cellStartedAt,
+    completed: ev.data.completed !== false,
+    session_summary: ev.data.session_summary || null
+  }).then(function() {
+    state.currentIndex++;
+    advanceToNext();
+  });
+});
+
+async function recordCellCompleted(cellRecord) {
+  var sb = getSupabase();
+  if (!sb || !state.sessionId) return;
+  try {
+    var read = await sb.from('zykos_rokola_sessions')
+      .select('cells_completed').eq('session_id', state.sessionId).single();
+    if (read.error) throw read.error;
+    var completed = read.data.cells_completed || [];
+    completed.push(cellRecord);
+    var upd = await sb.from('zykos_rokola_sessions')
+      .update({ cells_completed: completed }).eq('session_id', state.sessionId);
+    if (upd.error) throw upd.error;
+  } catch (e) {
+    console.warn('[rokola] recordCellCompleted failed:', e);
+  }
+}
+
+function advanceToNext() {
+  hide('rk-iframe');
+  show('rk-transition');
+  $('rk-iframe').src = 'about:blank';
+  if (state.currentIndex >= state.prescription.length) return setTimeout(completeSession, 800);
+  setTimeout(launchCurrentCell, 1500);
+}
+
+async function completeSession() {
+  var sb = getSupabase();
+  if (sb && state.sessionId) {
+    try {
+      await sb.from('zykos_rokola_sessions').update({
+        session_status: 'completed',
+        ended_at: new Date().toISOString(),
+        total_duration_ms: Date.now() - state.startedAt
+      }).eq('session_id', state.sessionId);
+    } catch (e) { console.warn('[rokola] completeSession update failed:', e); }
+  }
+  hide('rk-iframe'); hide('rk-transition'); hide('rk-header');
+  show('rk-complete');
+}
+
+async function abortSession() {
+  var ok = confirm('¿Seguro que querés finalizar la sesión?');
+  if (!ok) return;
+  var sb = getSupabase();
+  if (sb && state.sessionId) {
+    try {
+      await sb.from('zykos_rokola_sessions').update({
+        session_status: 'abandoned',
+        ended_at: new Date().toISOString(),
+        total_duration_ms: Date.now() - state.startedAt
+      }).eq('session_id', state.sessionId);
+    } catch (e) {}
+  }
+  hide('rk-iframe'); hide('rk-header'); hide('rk-transition');
+  show('rk-complete');
+}
+
+function renderProgress() {
+  var container = $('rk-progress');
+  container.innerHTML = '';
+  for (var i = 0; i < state.prescription.length; i++) {
+    var dot = document.createElement('div');
+    dot.className = 'rk-dot';
+    if (i < state.currentIndex) dot.classList.add('done');
+    else if (i === state.currentIndex) dot.classList.add('current');
+    container.appendChild(dot);
+  }
+}
+
+function renderPreview() {
+  var list = $('rk-preview-list');
+  list.innerHTML = '';
+  state.prescription.forEach(function(p) {
+    var li = document.createElement('li');
+    li.textContent = p.cell_label + ' · ' + p.domain;
+    list.appendChild(li);
+  });
+  show('rk-preview');
+}
+
+async function init() {
+  $('rk-abort').addEventListener('click', abortSession);
+  $('rk-to-portal-btn').addEventListener('click', function() { location.href = '/games/portal/index.html'; });
+  $('rk-home-btn').addEventListener('click', function() { location.href = '/games/portal/index.html'; });
+  $('rk-new-session-btn').addEventListener('click', function() { location.reload(); });
+
+  $('rk-start-btn').addEventListener('click', async function() {
+    $('rk-start-btn').disabled = true;
+    $('rk-start-btn').textContent = 'Preparando...';
+    var ok = await createSession();
+    if (!ok) {
+      alert('Error al crear sesión. Intentá de nuevo.');
+      $('rk-start-btn').disabled = false;
+      $('rk-start-btn').textContent = 'Empezar';
+      return;
+    }
+    launchCurrentCell();
+  });
+
+  var rx = await loadPrescription();
+  if (!rx) return;
+  renderPreview();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+
+</body>
+</html>
