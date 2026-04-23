@@ -724,8 +724,59 @@ function presentNextStimulus() {
         'animation:stimAppear 0.12s ease-out;';
     el.id = 'stim-' + stim.index;
     
-    // Click handler
-    el.addEventListener('click', function(e) { handleResponse('tap', e); });
+    // Click handler V4 — ventana temporal propia, NO dblclick nativo.
+    //
+    // Por que: el listener nativo 'click' dispara ANTES que 'dblclick'. En
+    // targets que requieren doble click (action='double'), el primer click
+    // llegaba a handleResponse('tap') y marcaba error antes de que el paciente
+    // pudiera dar el segundo. Bug detectado por Gonzalo en Nivel 5 (Velocidad).
+    //
+    // Nueva logica:
+    //   - Click en target que espera 'tap' o 'left'/'right': evalua inmediato.
+    //   - Click en target que espera 'double': NO evalua, abre ventana de 350ms
+    //     esperando el segundo click. Si llega en la ventana -> 'double'.
+    //     Si no llega -> 'tap' (fallo: solo hizo un click cuando eran dos).
+    //   - Click en target que espera 'inhibit': evalua inmediato (es error de
+    //     todas formas, responder a un no-go siempre falla).
+    el.addEventListener('click', function(e) {
+        // Acceso al stim actual mediante STATE.currentStim (lo setea presentNextStimulus)
+        var currentStim = STATE.currentStim;
+        if (!currentStim || currentStim.respondedAt) return;
+
+        var expectedAction = currentStim.action;
+
+        // Caso 1: accion esperada es 'double' -> ventana de espera.
+        if (expectedAction === 'double') {
+            if (!currentStim._firstClickAt) {
+                // Primer click sobre un target double. NO EVALUAR AUN.
+                currentStim._firstClickAt = performance.now();
+                currentStim._firstClickEvent = {
+                    clientX: e.clientX, clientY: e.clientY
+                };
+                // Feedback visual opcional: marca que registramos el primer click
+                el.style.filter = 'brightness(1.3)';
+                // Timer: si no llega segundo click en 350ms, evalua como tap
+                currentStim._dblTimeout = setTimeout(function() {
+                    if (currentStim.respondedAt) return;
+                    // No llego el segundo click: evalua como tap (error, era double)
+                    handleResponse('tap', currentStim._firstClickEvent);
+                }, 350);
+                return;
+            } else {
+                // Segundo click dentro de la ventana -> es double OK
+                clearTimeout(currentStim._dblTimeout);
+                handleResponse('double', e);
+                return;
+            }
+        }
+
+        // Caso 2: accion esperada es 'tap' (o 'left'/'right' lateralizado)
+        // -> evalua inmediato, pero tratamos doble clicks accidentales como tap.
+        handleResponse('tap', e);
+    });
+    // dblclick nativo conservado como safety net por si el navegador lo dispara
+    // y el primer click no se registro (casos raros). Si ya respondimos via la
+    // ventana propia, handleResponse retorna early.
     el.addEventListener('dblclick', function(e) { handleResponse('double', e); });
     
     document.getElementById('arena').appendChild(el);
