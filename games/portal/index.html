@@ -298,6 +298,23 @@ async function init() {
       updateBadge(data.sessions_remaining);
     }
 
+    // ============================================================
+    // DOCTRINA ROKOLA ENGLOBA TODO (audit #115, 23-abr 2026):
+    // Paciente solo ve la Rokola. Grid de juegos individuales oculto.
+    // Superadmin/admin conservan el grid para debug y testing.
+    // ============================================================
+    var isSuperOrAdmin = data.role === 'superadmin' || data.role === 'admin';
+    if (!isSuperOrAdmin) {
+      var gridArea = document.getElementById('games-area');
+      if (gridArea) gridArea.style.display = 'none';
+      // Hacer el hero de la Rokola mas grande cuando es lo unico visible
+      var hero = document.getElementById('rokola-hero');
+      if (hero) {
+        hero.style.padding = '32px 28px';
+        hero.style.marginTop = '16px';
+      }
+    }
+
     // Dashboard visible at milestone sessions: 3, 5, 8, 12, 15
     var milestones = [3, 5, 8, 12, 15];
     var sessionsPlayed = data.sessions_total || 0;
