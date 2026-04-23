@@ -360,11 +360,47 @@ var MOOD_COLORS = ['red','blue','green','yellow','violet','orange','pink','cyan'
 // STATE.unlockedLevelId guarda el id numerico del nivel desbloqueado (1..8).
 // Si no hay RPC disponible (sin sesion o error), cae al nivel 1.
 function init() {
-    sb = getSupabaseClient();
+    try {
+        sb = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
+    } catch (e) {
+        console.warn('[reflejos] getSupabaseClient threw:', e.message);
+        sb = null;
+    }
     STATE.unlockedLevelId = 1;
     STATE.completedLevelIds = [];
+
+    // Render lista inmediatamente con defaults — si el fetch tarda o falla,
+    // el paciente ve algo util igual (boton Comenzar funcional arranca en nivel 1).
+    renderLevelList();
+
+    // Beacon de diagnostico: marca entrada al juego.
+    // Si cero filas aparecen en zykos_game_metrics con metric_type='game_entry_beacon',
+    // significa que los pacientes NUNCA estan llegando al handler de DOMContentLoaded.
+    try {
+        var dni = window.ZYKOS_DNI || new URLSearchParams(location.search).get('dni');
+        if (sb && dni) {
+            sb.from('zykos_game_metrics').insert({
+                patient_dni: dni,
+                game_slug: 'reflejos',
+                metric_type: 'game_entry_beacon',
+                metric_value: null,
+                metric_data: {
+                    t: new Date().toISOString(),
+                    ua: navigator.userAgent.substring(0, 200),
+                    viewport: window.innerWidth + 'x' + window.innerHeight,
+                    has_sb: !!sb,
+                    has_auth: !window.ZYKOS_AUTH_BLOCKED
+                }
+            }).then(function(){}, function(e){ console.warn('[reflejos] beacon failed:', e); });
+        }
+    } catch (e) { /* silent */ }
+
+    // Art XIII: fetch unlocked level (async, no bloquea UI)
     fetchUnlockedLevel().then(function() {
-        renderLevelList();
+        renderLevelList(); // re-render con data real
+    }).catch(function(e) {
+        console.warn('[reflejos] fetchUnlockedLevel promise rejected:', e && e.message);
+        // lista ya esta renderizada con defaults, seguimos
     });
 }
 
@@ -384,6 +420,12 @@ async function fetchUnlockedLevel() {
 
 function renderLevelList() {
     var html = '';
+    var levelListEl = document.getElementById('level-list');
+    if (!levelListEl) return;
+    if (!LEVELS || !LEVELS.length) {
+        levelListEl.innerHTML = '<div style="padding:12px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:8px;color:#fecaca;font-size:.85rem">Error cargando niveles. Recarga la pagina o volve al portal.</div>';
+        return;
+    }
     LEVELS.forEach(function(lv) {
         var cls, label;
         if (STATE.completedLevelIds.indexOf(lv.id) >= 0) {
@@ -399,22 +441,50 @@ function renderLevelList() {
             '<br><span class="lstatus">' + label + '</span></div>' +
             '</div>';
     });
-    document.getElementById('level-list').innerHTML = html;
+    levelListEl.innerHTML = html;
 }
 
 // ======================== GAME START ========================
 function beginGame() {
-    initAudio();
-    document.getElementById('start-screen').style.display = 'none';
-    // Art XIII: arrancar en el nivel desbloqueado, no en el 0 hardcoded.
-    // LEVELS es un array 0-indexed; unlockedLevelId es el id "humano" (1..8).
-    var targetIdx = 0;
-    for (var i = 0; i < LEVELS.length; i++) {
-        if (LEVELS[i].id === STATE.unlockedLevelId) { targetIdx = i; break; }
+    try {
+        // Beacon: "el paciente clicko Comenzar". Diagnostico de donde se caen las sesiones.
+        try {
+            var dni = window.ZYKOS_DNI || new URLSearchParams(location.search).get('dni');
+            if (sb && dni) {
+                sb.from('zykos_game_metrics').insert({
+                    patient_dni: dni,
+                    game_slug: 'reflejos',
+                    metric_type: 'begin_game_clicked',
+                    metric_value: null,
+                    metric_data: {
+                        t: new Date().toISOString(),
+                        unlocked_level: STATE.unlockedLevelId || 1
+                    }
+                }).then(function(){}, function(){});
+            }
+        } catch (e) { /* silent */ }
+
+        initAudio();
+        var startEl = document.getElementById('start-screen');
+        if (startEl) startEl.style.display = 'none';
+        // Art XIII: arrancar en el nivel desbloqueado, no en el 0 hardcoded.
+        // LEVELS es un array 0-indexed; unlockedLevelId es el id "humano" (1..8).
+        var targetIdx = 0;
+        var unlockedId = (STATE && STATE.unlockedLevelId) || 1;
+        for (var i = 0; i < LEVELS.length; i++) {
+            if (LEVELS[i].id === unlockedId) { targetIdx = i; break; }
+        }
+        STATE.level = targetIdx;
+        STATE.score = 0;
+        startLevel();
+    } catch (err) {
+        console.error('[reflejos] beginGame failed:', err);
+        // Mostrar error visible al paciente en vez de pantalla en blanco
+        var startEl2 = document.getElementById('start-screen');
+        if (startEl2) {
+            startEl2.innerHTML = '<div class="screen-card"><h2 style="color:#fecaca">Algo fallo al iniciar</h2><p style="color:#fecaca">' + (err.message || 'Error desconocido') + '</p><button class="btn btn-primary" onclick="location.reload()">Recargar</button></div>';
+        }
     }
-    STATE.level = targetIdx;
-    STATE.score = 0;
-    startLevel();
 }
 
 function startLevel() {
