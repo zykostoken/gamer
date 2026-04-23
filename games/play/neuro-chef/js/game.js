@@ -208,6 +208,10 @@ function setupPreGameModal() {
 
 // ========== GAME START ==========
 async function startGame() {
+    // V4 wiring
+    if (typeof ZykosBootstrap !== 'undefined' && !ZykosBootstrap.isBooted()) {
+        try { ZykosBootstrap.start('neuro-chef'); } catch(e) { console.warn('[neuro-chef] bootstrap.start failed:', e && e.message); }
+    }
     // Pre-game: calibration → mood color → mood questions → then start
     if (typeof showPreGameChat === 'function' && !window._preGameDone) {
         window._preGameDone = true;
@@ -961,6 +965,10 @@ async function savePostMoodAndFinish() {
 
 // ========== FINISH ==========
 async function finishGame() {
+    // V4 wiring: cierra engine + corsario (session_biomet + raw_stream)
+    if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
+        ZykosBootstrap.end().catch(function(e) { console.warn('[neuro-chef] bootstrap.end failed:', e && e.message); });
+    }
     console.log('[Neuro-Chef] Finished!');
     if(gameState._timerInterval)clearInterval(gameState._timerInterval);
     const totalTime = Date.now()-gameState.startTime;

@@ -1153,6 +1153,10 @@
             if (sessionState.gameActive) return;
             try {
                 console.log('[pill-organizer] startGame() called');
+                // V4 wiring: activa ZYKOS engine + 11 agentes + corsario
+                if (typeof ZykosBootstrap !== 'undefined') {
+                    try { ZykosBootstrap.start('pill-organizer'); } catch(e) { console.warn('[pill-organizer] bootstrap.start failed:', e && e.message); }
+                }
                 document.getElementById('start-screen').style.display = 'none';
                 document.getElementById('game-container').style.display = 'block';
                 document.getElementById('results-overlay').style.display = 'none';
@@ -1887,6 +1891,10 @@
         window.showMetricsModal = function() {};
 
         async function completeSession() {
+            // V4 wiring: cierra ZYKOS engine + corsario (escribe session_biomet + raw_stream)
+            if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
+                ZykosBootstrap.end().catch(function(e) { console.warn('[pill-organizer] bootstrap.end failed:', e && e.message); });
+            }
             const duration = Math.floor(((sessionState.endTime || Date.now()) - (sessionState.levelStartTime || sessionState.startTime)) / 1000);
 
             const avgJitter = sessionState.movements.length > 0
@@ -2479,6 +2487,8 @@ window._toggleConsigna = function() {
 
 <!-- ZYKOS ENGINE + AGENTES — carga pasiva, cero interferencia con el juego -->
 <script src="/games/shared/zykos-engine.js"></script>
+<script src="/games/shared/corsario.js"></script>
+<script src="/games/shared/zykos-bootstrap.js"></script>
 <script src="/games/shared/agents/agent-motor.js"></script>
 <script src="/games/shared/agents/agent-rt.js"></script>
 <script src="/games/shared/agents/agent-presence.js"></script>

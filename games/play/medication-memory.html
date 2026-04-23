@@ -2282,6 +2282,10 @@
   }
   // ==================== GAME FLOW ====================
   async function startGame(levelId) {
+    // V4 wiring
+    if (typeof ZykosBootstrap !== 'undefined' && !ZykosBootstrap.isBooted()) {
+        try { ZykosBootstrap.start('medication-memory'); } catch(e) { console.warn('[medication-memory] bootstrap.start failed:', e && e.message); }
+    }
     // Pre-game: calibration → mood color → mood questions → then start
     if (typeof showPreGameChat === 'function' && !window._preGameDone) {
         window._preGameDone = true;
@@ -2566,6 +2570,10 @@
     return { score: totalScore, maxScore, breakdown, correctMeds, wrongMeds, missedMeds, totalMeds, allPerfect, per_position };
   }
   function showResults(results) {
+    // V4 wiring: cierra engine + corsario
+    if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
+        ZykosBootstrap.end().catch(function(e) { console.warn('[medication-memory] bootstrap.end failed:', e && e.message); });
+    }
     const durationSeconds = Math.round((Date.now() - state.startTime) / 1000);
     const viewTimeSeconds = state.currentLevel.viewTime;
     state.score = results.score;
@@ -3172,6 +3180,8 @@ if (typeof registerAutoSave === 'function') {
 
 <!-- ZYKOS ENGINE + AGENTES — carga pasiva, cero interferencia con el juego -->
 <script src="/games/shared/zykos-engine.js"></script>
+<script src="/games/shared/corsario.js"></script>
+<script src="/games/shared/zykos-bootstrap.js"></script>
 <script src="/games/shared/agents/agent-motor.js"></script>
 <script src="/games/shared/agents/agent-rt.js"></script>
 <script src="/games/shared/agents/agent-presence.js"></script>

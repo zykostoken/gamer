@@ -351,6 +351,10 @@ function beginGame() {
     _beginGameReal();
 }
 function _beginGameReal() {
+    // V4 wiring
+    if (typeof ZykosBootstrap !== 'undefined' && !ZykosBootstrap.isBooted()) {
+        try { ZykosBootstrap.start('daily-routine'); } catch(e) { console.warn('[daily-routine] bootstrap.start failed:', e && e.message); }
+    }
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('game-area').style.display = 'block';
     document.getElementById('progress-wrap').style.display = 'flex';
@@ -697,6 +701,10 @@ function advanceToNext(scene) {
 // SCORING & RESULTS
 // ================================================================
 function finishGame() {
+    // V4 wiring: cierra engine + corsario
+    if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
+        ZykosBootstrap.end().catch(function(e) { console.warn('[daily-routine] bootstrap.end failed:', e && e.message); });
+    }
     clearInterval(state.timerInterval);
     document.getElementById('game-area').style.display = 'none';
     document.getElementById('progress-wrap').style.display = 'none';
@@ -875,6 +883,8 @@ if (typeof registerAutoSave === 'function') {
 
 <!-- ZYKOS ENGINE + AGENTES — carga pasiva, cero interferencia con el juego -->
 <script src="/games/shared/zykos-engine.js"></script>
+<script src="/games/shared/corsario.js"></script>
+<script src="/games/shared/zykos-bootstrap.js"></script>
 <script src="/games/shared/agents/agent-motor.js"></script>
 <script src="/games/shared/agents/agent-rt.js"></script>
 <script src="/games/shared/agents/agent-presence.js"></script>

@@ -258,6 +258,10 @@ function beginGame() {
 function _beginGameReal() {
     try {
         console.log('[fridge-logic] beginGame() called');
+        // V4 wiring
+        if (typeof ZykosBootstrap !== 'undefined') {
+            try { ZykosBootstrap.start('fridge-logic'); } catch(e) { console.warn('[fridge-logic] bootstrap.start failed:', e && e.message); }
+        }
         document.getElementById('start-screen').style.display = 'none';
         document.getElementById('consigna').style.display = 'block';
         document.getElementById('game-area').style.display = 'block';
@@ -497,6 +501,10 @@ function logAction(type, data) {
 
 // ========== EVALUATION ==========
 function finishGame() {
+    // V4 wiring: cierra engine + corsario
+    if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
+        ZykosBootstrap.end().catch(function(e) { console.warn('[fridge-logic] bootstrap.end failed:', e && e.message); });
+    }
     clearInterval(timerInterval);
     const totalTime = Date.now() - gameState.startTime;
     
@@ -751,6 +759,8 @@ if (typeof registerAutoSave === 'function') {
 
 <!-- ZYKOS ENGINE + AGENTES — carga pasiva, cero interferencia con el juego -->
 <script src="/games/shared/zykos-engine.js"></script>
+<script src="/games/shared/corsario.js"></script>
+<script src="/games/shared/zykos-bootstrap.js"></script>
 <script src="/games/shared/agents/agent-motor.js"></script>
 <script src="/games/shared/agents/agent-rt.js"></script>
 <script src="/games/shared/agents/agent-presence.js"></script>

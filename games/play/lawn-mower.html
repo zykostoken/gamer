@@ -1721,6 +1721,10 @@
   let _lmSaved = false;
   async function lmSaveToSupabase(completed, finalScore, clinicalStats) {
     if (_lmSaved) return; _lmSaved = true;
+    // V4 wiring: cierra ZYKOS engine + corsario (session_biomet + raw_stream)
+    if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
+      ZykosBootstrap.end().catch(function(e) { console.warn('[lawn-mower] bootstrap.end failed:', e && e.message); });
+    }
     if (!getLmSupa() || !lmPatientDni) return;
     const cm = clinicalStats.clinical_markers || {};
     const mm = clinicalStats.motor_markers || {};
@@ -4266,6 +4270,11 @@
 
   // Wrapper that shows instructions first, then starts the game
   function startLevel(level) {
+    // V4 wiring: activa ZYKOS engine + 11 agentes + corsario
+    if (typeof ZykosBootstrap !== 'undefined' && !ZykosBootstrap.isBooted()) {
+      try { ZykosBootstrap.start('lawn-mower'); } catch(e) { console.warn('[lawn-mower] bootstrap.start failed:', e && e.message); }
+    }
+    _lmSaved = false; // reset flag por si es nuevo nivel
     showInstructions(level, function() {
       initGame(level);
     });
@@ -6083,6 +6092,8 @@ if (typeof registerAutoSave === 'function') {
 
 <!-- ZYKOS ENGINE + AGENTES — carga pasiva, cero interferencia con el juego -->
 <script src="/games/shared/zykos-engine.js"></script>
+<script src="/games/shared/corsario.js"></script>
+<script src="/games/shared/zykos-bootstrap.js"></script>
 <script src="/games/shared/agents/agent-motor.js"></script>
 <script src="/games/shared/agents/agent-rt.js"></script>
 <script src="/games/shared/agents/agent-presence.js"></script>
