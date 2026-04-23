@@ -101,7 +101,7 @@ function notifyCompleted(summary) {
       completed: summary && summary.completed !== false,
       session_summary: summary || null,
       ts: Date.now()
-    }, global.location.origin);
+    }, window.location.origin);
     console.log('[rokola-client] cell_completed posted to parent for', ctx.cellSlug);
     return true;
   } catch (e) {
