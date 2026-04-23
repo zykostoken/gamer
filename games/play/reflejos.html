@@ -473,6 +473,12 @@ function beginGame() {
         } catch (e) { /* silent */ }
 
         initAudio();
+        // ZYKOS V4 wiring: activa el engine + 11 agentes + corsario. Escribe
+        // session_biomet y raw_stream cuando se llama ZykosBootstrap.end() al
+        // completar el nivel.
+        if (typeof ZykosBootstrap !== 'undefined') {
+            try { ZykosBootstrap.start('reflejos'); } catch(e) { console.warn('[reflejos] bootstrap.start failed:', e && e.message); }
+        }
         var startEl = document.getElementById('start-screen');
         if (startEl) startEl.style.display = 'none';
         // Art XIII: arrancar en el nivel desbloqueado, no en el 0 hardcoded.
@@ -1441,6 +1447,9 @@ function endLevel() {
             duration_seconds:   Math.round(duration),
             constructs:         lv.constructs
         };
+        if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
+            ZykosBootstrap.end().catch(function(e) { console.warn('[reflejos] bootstrap.end failed:', e && e.message); });
+        }
         saveMetrics(metrics7).then(function(art) { showResults(metrics7, lv, art); });
         return;
     }
@@ -1459,6 +1468,9 @@ function endLevel() {
             duration_seconds:   Math.round(duration),
             constructs:         lv.constructs
         };
+        if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
+            ZykosBootstrap.end().catch(function(e) { console.warn('[reflejos] bootstrap.end failed:', e && e.message); });
+        }
         saveMetrics(metrics8).then(function(art) { showResults(metrics8, lv, art); });
         return;
     }
@@ -1587,6 +1599,10 @@ function endLevel() {
         metrics.errores_comision = (metrics.errores_comision || metrics.commissions || 0) + breakEvents;
     }
 
+    // V4 wiring: cierra ZYKOS engine + corsario (escribe session_biomet + flush raw_stream)
+    if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
+        ZykosBootstrap.end().catch(function(e) { console.warn('[reflejos] bootstrap.end failed:', e && e.message); });
+    }
     // Save to Supabase y aplicar regla Art XIII
     saveMetrics(metrics).then(function(art) { showResults(metrics, lv, art); });
 }
@@ -1855,6 +1871,8 @@ document.addEventListener('DOMContentLoaded', init);
 
 <!-- ZYKOS ENGINE + AGENTES — carga pasiva, cero interferencia con el juego -->
 <script src="/games/shared/zykos-engine.js"></script>
+<script src="/games/shared/corsario.js"></script>
+<script src="/games/shared/zykos-bootstrap.js"></script>
 <script src="/games/shared/agents/agent-motor.js"></script>
 <script src="/games/shared/agents/agent-rt.js"></script>
 <script src="/games/shared/agents/agent-presence.js"></script>

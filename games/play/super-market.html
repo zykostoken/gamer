@@ -421,6 +421,10 @@ function initGame() {
     _initGameReal();
 }
 function _initGameReal() {
+    // V4 wiring
+    if (typeof ZykosBootstrap !== 'undefined' && !ZykosBootstrap.isBooted()) {
+        try { ZykosBootstrap.start('super-market'); } catch(e) { console.warn('[super-market] bootstrap.start failed:', e && e.message); }
+    }
     startTime = Date.now();
     var urlParams = new URLSearchParams(window.location.search);
     patientId = urlParams.get('dni') || localStorage.getItem('zykos_patient_dni') || window.ZYKOS_DNI;
@@ -1033,6 +1037,10 @@ function goToPortal() {
 // ========== SUPABASE ==========
 // FIX: Function was called as saveSupermarketResult but defined as saveResults
 async function saveSupermarketResult(metrics) {
+    // V4 wiring: cierra engine + corsario
+    if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
+        ZykosBootstrap.end().catch(function(e) { console.warn('[super-market] bootstrap.end failed:', e && e.message); });
+    }
     try {
         var supabaseClient = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
         if (!supabaseClient) { console.warn('[super-market] No Supabase client'); return; }
@@ -1109,6 +1117,8 @@ if (typeof registerAutoSave === 'function') {
 
 <!-- ZYKOS ENGINE + AGENTES — carga pasiva, cero interferencia con el juego -->
 <script src="/games/shared/zykos-engine.js"></script>
+<script src="/games/shared/corsario.js"></script>
+<script src="/games/shared/zykos-bootstrap.js"></script>
 <script src="/games/shared/agents/agent-motor.js"></script>
 <script src="/games/shared/agents/agent-rt.js"></script>
 <script src="/games/shared/agents/agent-presence.js"></script>
