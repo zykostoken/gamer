@@ -13,7 +13,7 @@
  *
  * SOLUCION:
  * Una sola funcion que el juego llama al iniciar y al terminar, que:
- *   - Activa ZYKOS.startSession con el gameSlug + DNI + userId reales.
+ *   - Activa ZYKOS.startSession con el gameSlug + DNI real.
  *   - Inicializa ZykosCorsario con el mismo sessionId del engine.
  *   - Al terminar, llama ZYKOS.endSession (recolecta agentes + persiste) y
  *     stop del corsario (flush final del raw stream).
@@ -37,8 +37,12 @@
  * El bootstrap se autodescubre:
  *   - Lee el DNI desde window.ZYKOS_DNI (seteado por require-auth.js) o
  *     desde ?dni= en la URL.
- *   - Lee el userId desde localStorage.zykos_user.
  *   - Obtiene el Supabase client via window.getSupabaseClient().
+ *
+ * DOCTRINA DNI-NO-ID (firmada 23-abr 2026, audit #114):
+ *   DNI es la UNICA identificacion del paciente en el pipeline V4. No se usa
+ *   user_id ni patient_id ni ningun ID numerico. ID sigue siendo PK interna
+ *   de tablas, pero NO identifica personas en inserts de captura.
  *
  * Si falta algo, NO revienta: loguea un warning y sigue. Los juegos tienen que
  * poder seguir jugando aunque el engine falle.
@@ -63,21 +67,13 @@ function start(gameSlug) {
         return;
     }
 
-    // --- Autodiscovery: DNI, userId, Supabase client ---
+    // --- Autodiscovery: DNI, Supabase client ---
+    // DOCTRINA DNI-NO-ID (audit #114): solo DNI identifica al paciente.
     var dni = null;
     try {
         dni = global.ZYKOS_DNI ||
               new URLSearchParams(location.search).get('dni') ||
               null;
-    } catch (e) {}
-
-    var userId = null;
-    try {
-        var rawUser = localStorage.getItem('zykos_user');
-        if (rawUser) {
-            var user = JSON.parse(rawUser);
-            userId = user.user_id || user.id || null;
-        }
     } catch (e) {}
 
     var sb = null;
@@ -97,11 +93,10 @@ function start(gameSlug) {
     // --- Start engine (activa agentes registrados) ---
     if (typeof global.ZYKOS !== 'undefined' && typeof global.ZYKOS.startSession === 'function') {
         try {
-            global.ZYKOS.startSession(gameSlug, dni, userId);
+            global.ZYKOS.startSession(gameSlug, dni);
             _bootContext = {
                 gameSlug: gameSlug,
                 dni: dni,
-                userId: userId,
                 sessionId: (global.ZYKOS.meta && global.ZYKOS.meta.session_id) || null,
                 startedAt: Date.now()
             };

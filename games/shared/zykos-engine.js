@@ -396,7 +396,9 @@ var _agents = {};
 var ZYKOS = {
 
     // --- Session management ---
-    startSession: function(gameSlug, patientDni, patientId) {
+    // DOCTRINA DNI-NO-ID (audit #114, 23-abr 2026): DNI es la UNICA identificacion
+    // del paciente. patientId quedo deprecado y removido.
+    startSession: function(gameSlug, patientDni) {
         _sessionId = 'zs_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
         _sessionStart = performance.now();
         _eventBuffer = [];
@@ -404,7 +406,6 @@ var ZYKOS = {
         ZYKOS.meta = {
             game_slug: gameSlug,
             patient_dni: patientDni,
-            patient_id: patientId,
             session_id: _sessionId,
             started_at: new Date().toISOString(),
             user_agent: navigator.userAgent,
@@ -503,7 +504,6 @@ var ZYKOS = {
             session_id: _sessionId,
             game_slug: ZYKOS.meta.game_slug,
             patient_dni: ZYKOS.meta.patient_dni,
-            patient_id: ZYKOS.meta.patient_id,
             session_duration_ms: Math.round(duration),
             agents_active: Object.keys(agentResults),
             timestamp: new Date().toISOString()
@@ -583,9 +583,9 @@ var ZYKOS = {
             } catch(e) { /* no bloquear si falla */ }
 
             // Evidence hash chain
+            // DNI-NO-ID (audit #114): user_id eliminado del payload de captura.
             var payload = {
                 patient_dni: metrics.patient_dni,
-                user_id: metrics.patient_id,
                 game_slug: metrics.game_slug,
                 metric_type: 'session_biomet',
                 metric_data: {
@@ -644,7 +644,6 @@ var ZYKOS = {
             if (_eventBuffer.length > 0) {
                 var rawPayload = {
                     patient_dni: metrics.patient_dni,
-                    user_id: metrics.patient_id,
                     game_slug: metrics.game_slug,
                     metric_type: 'raw_events',
                     metric_data: { events: _eventBuffer, count: _eventBuffer.length },
@@ -674,10 +673,9 @@ var ZYKOS = {
 // ================================================================
 document.addEventListener('DOMContentLoaded', function() {
     // Extract patient info from URL/localStorage
+    // DNI-NO-ID (audit #114): solo DNI como identificacion del paciente.
     var params = new URLSearchParams(window.location.search);
     var dni = params.get('dni') || localStorage.getItem('zykos_patient_dni') || null;
-    var userId = null;
-    try { userId = JSON.parse(localStorage.getItem('zykos_user') || '{}').user_id || null; } catch(e) {}
     
     // Detect game slug from URL
     var path = window.location.pathname;
@@ -692,7 +690,7 @@ document.addEventListener('DOMContentLoaded', function() {
         function tryStart() {
             if (started) return;
             started = true;
-            ZYKOS.startSession(slug, dni, userId);
+            ZYKOS.startSession(slug, dni);
         }
         document.addEventListener('zykos:agents-ready', tryStart, { once: true });
         setTimeout(tryStart, 300);

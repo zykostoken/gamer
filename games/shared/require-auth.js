@@ -18,8 +18,10 @@
 'use strict';
 
 function setGlobalsAndBadge(user) {
+  // DNI-NO-ID (audit #114, 23-abr 2026): DNI es la UNICA identificacion de paciente.
+  // ZYKOS_USER_ID quedo deprecado. Se preserva el campo solo por si algun modulo
+  // legacy lo lee; nuevos modulos deben usar ZYKOS_DNI.
   window.ZYKOS_DNI = user.dni || null;
-  window.ZYKOS_USER_ID = user.user_id || user.id || null;
   window.ZYKOS_USER = {
     dni: user.dni || null,
     name: user.display_name || user.name || null,
