@@ -1351,6 +1351,27 @@ function endLevel() {
     var lv = LEVELS[STATE.level];
     var duration = (performance.now() - STATE.startTime) / 1000;
 
+    // Beacon: llegamos al endLevel. Si esto aparece pero save_attempted no,
+    // el problema esta entre endLevel y saveMetrics (mode branching, throw, etc)
+    try {
+        var dniE = window.ZYKOS_DNI || new URLSearchParams(location.search).get('dni');
+        if (sb && dniE) {
+            sb.from('zykos_game_metrics').insert({
+                patient_dni: dniE,
+                game_slug: 'reflejos',
+                metric_type: 'level_completed_reached',
+                metric_value: Math.round(duration),
+                metric_data: {
+                    level: lv.id, level_name: lv.name,
+                    mode: lv.rules && lv.rules.mode,
+                    duration_seconds: Math.round(duration),
+                    n_stimuli_processed: (STATE.stimuli || []).length,
+                    t: new Date().toISOString()
+                }
+            }).then(function(){}, function(){});
+        }
+    } catch (e) {}
+
     // Niveles 7 y 8 — métricas propias, no CPT
     var mode = lv.rules && lv.rules.mode;
     if (mode === 'car_rain' && STATE.carRainMetrics) {
