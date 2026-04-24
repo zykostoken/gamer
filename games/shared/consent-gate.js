@@ -238,8 +238,35 @@ function signConsent(dni, overlay) {
         version: CONSENT_VERSION, status: 'OK',
         flags: global.ZYKOS_CONSENT, signed_at: new Date().toISOString()
       }));
+      // LEGACY COMPAT: escribir zykos_media_consent_v1 para que media-init.js
+      // arranque agent-media y agent-og-media automaticamente (cam/mic).
+      // Sin esto, aunque el paciente autorice cam/mic, los agents no se activan.
+      localStorage.setItem('zykos_media_consent_v1', JSON.stringify({
+        cam: get('cam'), mic: get('mic'),
+        skipped: false,
+        signed_at: new Date().toISOString(),
+        version: 'V1_2026_04'
+      }));
     } catch(e){}
     console.log('[consent-gate] SIGNED:', global.ZYKOS_CONSENT);
+
+    // Arrancar agents de cam/mic inmediatamente si el paciente los autorizo
+    // y los scripts estan cargados en la pagina
+    try {
+      if (get('cam') || get('mic')) {
+        if (typeof global.ZykosOgMediaAgent !== 'undefined' && global.ZykosOgMediaAgent.setConsent) {
+          global.ZykosOgMediaAgent.setConsent(get('cam'), get('mic'));
+          global.ZykosOgMediaAgent.start().catch(function(e){ console.warn('[consent-gate] og start:', e && e.message); });
+          console.log('[consent-gate] ZykosOgMediaAgent started');
+        }
+        if (get('cam') && typeof global.ZykosMediaAgent !== 'undefined' && global.ZykosMediaAgent.setConsent) {
+          global.ZykosMediaAgent.setConsent(get('cam'), get('mic'));
+          global.ZykosMediaAgent.start().catch(function(e){ console.warn('[consent-gate] media start:', e && e.message); });
+          console.log('[consent-gate] ZykosMediaAgent started');
+        }
+      }
+    } catch(e) { console.warn('[consent-gate] agent bootstrap failed:', e); }
+
     overlay.remove();
     document.body.style.overflow = '';
   });
