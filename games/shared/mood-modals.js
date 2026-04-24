@@ -62,8 +62,9 @@ function _moodSaveToSupabase(type, data, context) {
         if (!pDni) { try { pDni = localStorage.getItem('zykos_patient_dni'); } catch(e){} }
 
         // Guardar en zykos_mood_entries — registro clínico puro
+        // DNI-NO-ID (#114): patient_id eliminado.
+        // NOTA: tabla zykos_mood_entries no existe en DB aun (audit #115).
         var entryRow = {
-            patient_id: null,
             patient_dni: pDni,
             color_hex: (data && data.color) ? data.color : null,
             color_id: (data && data.color_name) ? data.color_name : null,
