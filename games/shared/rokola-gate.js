@@ -161,20 +161,23 @@
     /**
      * Envia postMessage cell_completed al parent (Rokola orchestrator).
      * Debe llamarse al terminar un nivel cuando mode='rokola_patient'.
+     * El prefijo 'rokola:' matchea el listener en rokola.html.
      */
     reportCellCompleted: function(extraData) {
       if (mode !== 'rokola_patient') return;
       try {
         var payload = {
-          type: 'zykos:cell_completed',
+          type: 'rokola:cell_completed',
           rokola_session_id: rokolaSessionId,
+          session_id: rokolaSessionId,    // alias por si el listener usa este nombre
           cell_slug: cellSlug,
           level: requestedLevel,
-          timestamp: new Date().toISOString(),
-          data: extraData || {}
+          completed: (extraData && extraData.completed !== false),
+          session_summary: extraData || null,
+          ts: Date.now()
         };
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage(payload, location.origin);
+          window.parent.postMessage(payload, '*');
         } else {
           // Si no hay parent (no es iframe), navegar a Rokola con flag
           console.log('[rokola-gate] No iframe parent; navigating back to Rokola with cell_completed flag.');
@@ -192,14 +195,15 @@
       if (mode !== 'rokola_patient') return;
       try {
         var payload = {
-          type: 'zykos:cell_abandoned',
+          type: 'rokola:cell_abandoned',
           rokola_session_id: rokolaSessionId,
+          session_id: rokolaSessionId,
           cell_slug: cellSlug,
           reason: reason || 'user_exit',
-          timestamp: new Date().toISOString()
+          ts: Date.now()
         };
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage(payload, location.origin);
+          window.parent.postMessage(payload, '*');
         }
       } catch(e) {}
     }

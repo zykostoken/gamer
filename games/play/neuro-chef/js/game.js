@@ -969,6 +969,16 @@ async function finishGame() {
     if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
         ZykosBootstrap.end().catch(function(e) { console.warn('[neuro-chef] bootstrap.end failed:', e && e.message); });
     }
+    // ROKOLA Art XVII (audit #154): notificar al shell padre
+    try {
+        if (typeof RokolaGate !== 'undefined' && RokolaGate.mode === 'rokola_patient') {
+            RokolaGate.reportCellCompleted({
+                correct: gameState.totalCorrect,
+                errors: gameState.totalErrors,
+                completed: true
+            });
+        }
+    } catch(e) { console.warn('[neuro-chef] reportCellCompleted:', e.message); }
     console.log('[Neuro-Chef] Finished!');
     if(gameState._timerInterval)clearInterval(gameState._timerInterval);
     const totalTime = Date.now()-gameState.startTime;
