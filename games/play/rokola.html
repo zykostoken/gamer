@@ -180,6 +180,10 @@ body { display: flex; flex-direction: column; }
 <!-- V4.2 audit #162: consent informado digital + calibracion hardware session-level -->
 <script src="/games/shared/consent-gate.js"></script>
 <script src="/games/shared/hw-calibration.js"></script>
+<!-- V4.2 audit #162: agentes cam/mic (activos solo si consent cam_authorized o mic_authorized) -->
+<script src="/games/shared/agents/agent-og-media.js"></script>
+<script src="/games/shared/agents/agent-media.js"></script>
+<script src="/games/shared/media-init.js"></script>
 <script>
 (function() {
 'use strict';
