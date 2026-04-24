@@ -1907,6 +1907,15 @@
             if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
                 ZykosBootstrap.end().catch(function(e) { console.warn('[pill-organizer] bootstrap.end failed:', e && e.message); });
             }
+            // ROKOLA Art XVII (audit #154): notificar al orquestador
+            if (typeof RokolaGate !== 'undefined' && RokolaGate.mode === 'rokola_patient') {
+                try {
+                    RokolaGate.reportCellCompleted({
+                        score: sessionState.score || 0,
+                        errors: sessionState.errors || 0
+                    });
+                } catch(e) { console.warn('[pill-organizer] reportCellCompleted:', e.message); }
+            }
             const duration = Math.floor(((sessionState.endTime || Date.now()) - (sessionState.levelStartTime || sessionState.startTime)) / 1000);
 
             const avgJitter = sessionState.movements.length > 0
@@ -2514,13 +2523,21 @@ window._toggleConsigna = function() {
     <script src="/games/shared/agents/agent-media.js"></script>
     <script src="/games/shared/media-init.js"></script>
 <script>
-// ROKOLA AUTO-LAUNCH (audit #115 PR A): si viene de Rokola, saltar start-screen y arrancar.
-// pill-organizer lee el nivel internamente desde URL o progreso propio.
-if (typeof RokolaClient !== 'undefined') {
-  RokolaClient.autoLaunch({
-    levelSelector: '#start-screen',
-    startFn: 'startGame',
-    withoutLevel: true
+// ROKOLA SOBERANA Art XVII (audit #154, #155)
+// Reemplaza al RokolaClient legacy (nunca implementado).
+if (typeof RokolaGate !== 'undefined') {
+  RokolaGate.onReady(function(mode) {
+    if (mode !== 'rokola_patient') return;
+    // Ocultar start-screen, forzar arranque directo
+    var startScreen = document.getElementById('start-screen');
+    if (startScreen) startScreen.style.display = 'none';
+    console.log('[pill-organizer] Rokola mode — auto-start requested level:', RokolaGate.requestedLevel);
+    // Pequeno delay para que el DOM + Supabase esten listos
+    setTimeout(function() {
+      try {
+        if (typeof startGame === 'function') startGame();
+      } catch(e) { console.error('[pill-organizer] Rokola autostart:', e.message); }
+    }, 400);
   });
 }
 </script>

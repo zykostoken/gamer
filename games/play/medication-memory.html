@@ -2575,6 +2575,15 @@
     if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
         ZykosBootstrap.end().catch(function(e) { console.warn('[medication-memory] bootstrap.end failed:', e && e.message); });
     }
+    // ROKOLA Art XVII (audit #154): notificar al shell padre
+    try {
+        if (typeof RokolaGate !== 'undefined' && RokolaGate.mode === 'rokola_patient') {
+            RokolaGate.reportCellCompleted({
+                score: results.score || 0,
+                completed: true
+            });
+        }
+    } catch(e) { console.warn('[medication-memory] reportCellCompleted:', e.message); }
     const durationSeconds = Math.round((Date.now() - state.startTime) / 1000);
     const viewTimeSeconds = state.currentLevel.viewTime;
     state.score = results.score;
@@ -3195,5 +3204,21 @@ if (typeof registerAutoSave === 'function') {
     <script src="/games/shared/agents/agent-og-media.js"></script>
     <script src="/games/shared/agents/agent-media.js"></script>
     <script src="/games/shared/media-init.js"></script>
+<script>
+// ROKOLA Art XVII (audit #154): paciente Rokola → ocultar menu + arrancar nivel solicitado
+if (typeof RokolaGate !== 'undefined') {
+  RokolaGate.onReady(function(mode) {
+    if (mode !== 'rokola_patient') return;
+    var menu = document.getElementById('screenLevelSelect');
+    if (menu) menu.classList.remove('active');
+    var lvl = RokolaGate.requestedLevel || 1;
+    console.log('[medication-memory] Rokola mode — auto startGame lvl', lvl);
+    setTimeout(function() {
+      try { if (typeof startGame === 'function') startGame(lvl); }
+      catch(e) { console.warn('[medication-memory] auto startGame:', e.message); }
+    }, 400);
+  });
+}
+</script>
 </body>
 </html>

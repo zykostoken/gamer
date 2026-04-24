@@ -1042,6 +1042,15 @@ async function saveSupermarketResult(metrics) {
     if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
         ZykosBootstrap.end().catch(function(e) { console.warn('[super-market] bootstrap.end failed:', e && e.message); });
     }
+    // ROKOLA Art XVII (audit #154): notificar al shell padre
+    try {
+        if (typeof RokolaGate !== 'undefined' && RokolaGate.mode === 'rokola_patient') {
+            RokolaGate.reportCellCompleted({
+                score: metrics.score || 0,
+                completed: true
+            });
+        }
+    } catch(e) { console.warn('[super-market] reportCellCompleted:', e.message); }
     try {
         var supabaseClient = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null;
         if (!supabaseClient) { console.warn('[super-market] No Supabase client'); return; }
@@ -1049,8 +1058,8 @@ async function saveSupermarketResult(metrics) {
         if (!dni) { console.warn('[super-market] No DNI, skipping save'); return; }
 
         // Métricas canónicas del METRIC_DICTIONARY
+        // DNI-NO-ID (#114): patient_id eliminado del payload.
         var payload = {
-            patient_id:   null,
             patient_dni:  dni,
             game_slug:    'super-market',
             metric_type:  'session_summary',
