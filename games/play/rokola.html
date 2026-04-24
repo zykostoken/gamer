@@ -264,8 +264,22 @@ async function loadPrescription() {
 }
 
 async function createSession() {
+  // Retorna {ok:true, session_id} en exito,
+  // o {ok:false, error:'mensaje legible'} para que el caller muestre causa real.
+  // Audit #120: el alert generico 'Error al crear sesion' ocultaba la causa raiz.
+
+  if (!state.patientDni) {
+    return { ok:false, error:'DNI no disponible. Volvé al portal e ingresá de nuevo.' };
+  }
+  if (!Array.isArray(state.prescription) || state.prescription.length === 0) {
+    return { ok:false, error:'Prescripción vacía. Contactá al profesional.' };
+  }
+
   var sb = getSupabase();
-  if (!sb) return false;
+  if (!sb) {
+    return { ok:false, error:'Cliente Supabase no inicializado (revisá conexión).' };
+  }
+
   try {
     var ins = await sb.from('zykos_rokola_sessions').insert({
       patient_dni: state.patientDni,
@@ -279,14 +293,26 @@ async function createSession() {
       },
       cells_completed: []
     }).select('session_id').single();
-    if (ins.error) throw ins.error;
+
+    if (ins.error) {
+      console.error('[rokola] Supabase error en createSession:', ins.error);
+      var msg = ins.error.message || 'error desconocido';
+      var hint = ins.error.hint ? (' — hint: ' + ins.error.hint) : '';
+      var code = ins.error.code ? (' [' + ins.error.code + ']') : '';
+      return { ok:false, error:'Supabase' + code + ': ' + msg + hint };
+    }
+
+    if (!ins.data || !ins.data.session_id) {
+      return { ok:false, error:'INSERT exitoso pero no retornó session_id.' };
+    }
+
     state.sessionId = ins.data.session_id;
     state.startedAt = Date.now();
     console.log('[rokola] Session created:', state.sessionId);
-    return true;
+    return { ok:true, session_id: state.sessionId };
   } catch (e) {
-    console.error('[rokola] createSession failed:', e);
-    return false;
+    console.error('[rokola] createSession threw:', e);
+    return { ok:false, error:'Excepción: ' + (e && e.message ? e.message : String(e)) };
   }
 }
 
@@ -452,9 +478,10 @@ async function init() {
   $('rk-start-btn').addEventListener('click', async function() {
     $('rk-start-btn').disabled = true;
     $('rk-start-btn').textContent = 'Preparando...';
-    var ok = await createSession();
-    if (!ok) {
-      alert('Error al crear sesión. Intentá de nuevo.');
+    var res = await createSession();
+    if (!res || !res.ok) {
+      var detail = (res && res.error) ? res.error : 'causa desconocida';
+      alert('No se pudo crear la sesión.\n\n' + detail + '\n\nSi persiste, contactá soporte.');
       $('rk-start-btn').disabled = false;
       $('rk-start-btn').textContent = 'Empezar';
       return;
