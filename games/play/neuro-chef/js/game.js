@@ -606,12 +606,12 @@ function loadLevel6_Habitacion() {
     document.getElementById('level-description').innerHTML='Guardá la ropa limpia en el lugar correcto: <strong>placard, cajón o zapatera</strong>';
     const ga=document.getElementById('game-area');const ar=shuffleArray(Object.values(ROPA));
     ga.innerHTML=`<div class="habitacion-container"><div class="canasto-ropa"><h3>Canasto de Ropa Limpia</h3><div class="canasto-grid" id="ropa-source">
-        ${ar.map(i=>`<div class="ropa-item" draggable="true" data-id="${i.id}" data-destino="${i.destino}"><span class="ropa-emoji">${i.emoji}</span><div class="label">${i.nombre}</div></div>`).join('')}
+        ${ar.map(i=>`<div class="ropa-item" draggable="true" data-id="${i.id}" data-destino="${i.destino}"><span class="ropa-svg">${i.svg||''}</span><div class="label">${i.nombre}</div></div>`).join('')}
     </div></div><div class="muebles">
-        <div class="mueble" data-destino="placard" id="dest-placard"><h4>Placard (colgar)</h4><div class="mueble-slots"></div></div>
-        <div class="mueble" data-destino="cajon" id="dest-cajon"><h4>Cajón (doblar)</h4><div class="mueble-slots"></div></div>
-        <div class="mueble" data-destino="zapatera" id="dest-zapatera"><h4>Zapatera</h4><div class="mueble-slots"></div></div>
-        <div class="mueble mueble-descarte" data-destino="NO_VA" id="dest-NO_VA"><h4>No va acá</h4><div class="mueble-slots"></div></div>
+        <div class="mueble" data-destino="placard" id="dest-placard"><h4><span class="mueble-svg">${MUEBLE_SVG.placard}</span> Placard <small>(colgar)</small></h4><div class="mueble-slots"></div></div>
+        <div class="mueble" data-destino="cajon" id="dest-cajon"><h4><span class="mueble-svg">${MUEBLE_SVG.cajon}</span> Cajón <small>(doblar)</small></h4><div class="mueble-slots"></div></div>
+        <div class="mueble" data-destino="zapatera" id="dest-zapatera"><h4><span class="mueble-svg">${MUEBLE_SVG.zapatera}</span> Zapatera</h4><div class="mueble-slots"></div></div>
+        <div class="mueble mueble-descarte" data-destino="NO_VA" id="dest-NO_VA"><h4><span class="mueble-svg">${MUEBLE_SVG.NO_VA}</span> No va acá</h4><div class="mueble-slots"></div></div>
     </div></div>`;
     setupRopaDragDrop();
     document.getElementById('btn-verify').onclick=()=>{Biometrics.logVerify();verifyLevel6()};
@@ -628,7 +628,7 @@ function setupRopaDragDrop() {
         mueble.addEventListener('dragleave',()=>mueble.classList.remove('drag-over'));
         mueble.addEventListener('drop',e=>{
             e.preventDefault();mueble.classList.remove('drag-over');const id=e.dataTransfer.getData('text/plain');const item=ROPA[id];if(!item)return;
-            const b=document.createElement('div');b.className='ropa-placed';b.dataset.id=id;b.innerHTML=`${item.emoji} ${item.nombre}`;
+            const b=document.createElement('div');b.className='ropa-placed';b.dataset.id=id;b.innerHTML=`<span class="ropa-svg-small">${item.svg||''}</span> ${item.nombre}`;
             mueble.querySelector('.mueble-slots').appendChild(b);
             const o=document.querySelector(`.ropa-item[data-id="${id}"]`);if(o)o.style.display='none';
             Biometrics.logDrop(id,mueble.dataset.destino,item.destino===mueble.dataset.destino);
@@ -636,7 +636,7 @@ function setupRopaDragDrop() {
         mueble.addEventListener('click',e=>{
             if(e.target.closest('.ropa-placed'))return;const sel=document.querySelector('.ropa-item.selected');if(!sel)return;
             const id=sel.dataset.id;const item=ROPA[id];if(!item)return;
-            const b=document.createElement('div');b.className='ropa-placed';b.dataset.id=id;b.innerHTML=`${item.emoji} ${item.nombre}`;
+            const b=document.createElement('div');b.className='ropa-placed';b.dataset.id=id;b.innerHTML=`<span class="ropa-svg-small">${item.svg||''}</span> ${item.nombre}`;
             mueble.querySelector('.mueble-slots').appendChild(b);sel.style.display='none';sel.classList.remove('selected');
             Biometrics.logClick(id,mueble.dataset.destino);
         });
