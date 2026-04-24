@@ -635,22 +635,52 @@ const ELEMENTOS_MESA = {
 };
 
 // ========== HABITACIÓN: ROPA ==========
+// ============================================================
+// SVG Icons para el Nivel 6 - Habitacion (V5.2, audit #164 offshoot)
+// Gonzalo: 'esto tiene q ser grafico'. Line-art icons dibujados
+// a mano, sin dependencias, sin emojis. Estilo minimalista.
+// ============================================================
+const ROPA_SVG = {
+    camisa:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4l-4 3v3l3-1v11h10V9l3 1V7l-4-3-2 2h-4z"/></svg>',
+    pantalon:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10l-1 18h-3l-1-10-1 10H8z"/><path d="M7 3h10"/></svg>',
+    campera:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4l-4 3v3l3-1v11h10V9l3 1V7l-4-3"/><path d="M12 4v18"/><path d="M10 4h4"/></svg>',
+    vestido:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l1 4-1 2 3 12H6l3-12-1-2z"/></svg>',
+    remera:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5l-3 3v2l2-1v10h10V9l2 1V8l-3-3h-3a2 2 0 01-4 0z"/></svg>',
+    medias:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3h5v12l-2 5h-5l5-5V3"/></svg>',
+    ropa_interior:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16l-2 6-4-3h-4l-4 3z"/></svg>',
+    pijama:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3l-2 2v2l2-1v4h10V6l2 1V5l-2-2h-3l-1 1h-2l-1-1z"/><path d="M7 13h10l-1 8h-3l-1-5-1 5H8z"/></svg>',
+    zapatos:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15c0-1 1-2 2-2l5-5 4 1 5 4c2 1 2 3 2 4H3z"/><path d="M3 17h18"/></svg>',
+    zapatillas:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15c0-1 1-2 2-2l5-5 3 2 3 1 4 3c2 1 2 3 2 4H3z"/><path d="M8 11l2 2M10 9l2 2M12 10l2 2"/></svg>',
+    ojotas:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="17" rx="8" ry="3"/><path d="M12 14V7l-3-2M12 7l3-2"/></svg>',
+    botas:        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h4v10l5 3c2 1 2 3 2 4H7c-1 0-2-1-2-2V7z"/><path d="M7 19h14"/></svg>',
+    paraguas:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12a10 10 0 0120 0z"/><path d="M12 2v10M12 12v7a2 2 0 002 2"/></svg>',
+    toalla:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 8h16M4 12h16M4 16h16"/></svg>'
+};
+
+// SVG icons para los MUEBLES (destinos de drop)
+const MUEBLE_SVG = {
+    placard:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M12 3v18M8 12h0.01M16 12h0.01"/></svg>',
+    cajon:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 12h18M10 9h4M10 16h4"/></svg>',
+    zapatera:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 9h18M3 14h18M3 19h18"/></svg>',
+    NO_VA:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5 5l14 14"/></svg>'
+};
+
 const ROPA = {
-    camisa: { id: 'camisa', nombre: 'Camisa', emoji: '', destino: 'placard' },
-    pantalon: { id: 'pantalon', nombre: 'Pantalón', emoji: '', destino: 'placard' },
-    campera: { id: 'campera', nombre: 'Campera', emoji: '', destino: 'placard' },
-    vestido: { id: 'vestido', nombre: 'Vestido', emoji: '', destino: 'placard' },
-    remera: { id: 'remera', nombre: 'Remera', emoji: '', destino: 'cajon' },
-    medias: { id: 'medias', nombre: 'Medias', emoji: '', destino: 'cajon' },
-    ropa_interior: { id: 'ropa_interior', nombre: 'Ropa interior', emoji: '', destino: 'cajon' },
-    pijama: { id: 'pijama', nombre: 'Pijama', emoji: '', destino: 'cajon' },
-    zapatos: { id: 'zapatos', nombre: 'Zapatos', emoji: '', destino: 'zapatera' },
-    zapatillas: { id: 'zapatillas', nombre: 'Zapatillas', emoji: '', destino: 'zapatera' },
-    ojotas: { id: 'ojotas', nombre: 'Ojotas', emoji: '', destino: 'zapatera' },
-    botas: { id: 'botas', nombre: 'Botas', emoji: '', destino: 'zapatera' },
+    camisa:       { id: 'camisa',       nombre: 'Camisa',        destino: 'placard',  svg: ROPA_SVG.camisa },
+    pantalon:     { id: 'pantalon',     nombre: 'Pantalón',      destino: 'placard',  svg: ROPA_SVG.pantalon },
+    campera:      { id: 'campera',      nombre: 'Campera',       destino: 'placard',  svg: ROPA_SVG.campera },
+    vestido:      { id: 'vestido',      nombre: 'Vestido',       destino: 'placard',  svg: ROPA_SVG.vestido },
+    remera:       { id: 'remera',       nombre: 'Remera',        destino: 'cajon',    svg: ROPA_SVG.remera },
+    medias:       { id: 'medias',       nombre: 'Medias',        destino: 'cajon',    svg: ROPA_SVG.medias },
+    ropa_interior:{ id: 'ropa_interior',nombre: 'Ropa interior', destino: 'cajon',    svg: ROPA_SVG.ropa_interior },
+    pijama:       { id: 'pijama',       nombre: 'Pijama',        destino: 'cajon',    svg: ROPA_SVG.pijama },
+    zapatos:      { id: 'zapatos',      nombre: 'Zapatos',       destino: 'zapatera', svg: ROPA_SVG.zapatos },
+    zapatillas:   { id: 'zapatillas',   nombre: 'Zapatillas',    destino: 'zapatera', svg: ROPA_SVG.zapatillas },
+    ojotas:       { id: 'ojotas',       nombre: 'Ojotas',        destino: 'zapatera', svg: ROPA_SVG.ojotas },
+    botas:        { id: 'botas',        nombre: 'Botas',         destino: 'zapatera', svg: ROPA_SVG.botas },
     // Distractores - NO va en ninguno
-    paraguas: { id: 'paraguas', nombre: 'Paraguas', emoji: '️', destino: 'NO_VA' },
-    toalla: { id: 'toalla', nombre: 'Toalla', emoji: '', destino: 'NO_VA' }
+    paraguas:     { id: 'paraguas',     nombre: 'Paraguas',      destino: 'NO_VA',    svg: ROPA_SVG.paraguas },
+    toalla:       { id: 'toalla',       nombre: 'Toalla',        destino: 'NO_VA',    svg: ROPA_SVG.toalla }
 };
 
 // ========== ESTADO DEL JUEGO ==========
