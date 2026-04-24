@@ -1502,6 +1502,24 @@
                 sessionState.v4_sequenceLog.push(medType);
                 updatePillVisual(medType);
 
+                // Art 3.6: emitir evento semantico al stream via agente pirata.
+                // El juego declara la intencion. El analizador cruza post-hoc.
+                try {
+                    if (typeof ZYKOS !== 'undefined' && typeof ZYKOS.emit === 'function') {
+                        ZYKOS.emit('pill_pickup', {
+                            med: medType,
+                            frac: frac,
+                            stack_size_after: sessionState.pickupStack.length,
+                            stack_max_so_far: sessionState.v4_pickupStackMax,
+                            mixed_fraction_count: sessionState.v4_mixedFractionEvents,
+                            input_device: sessionState.inputDevice || 'unknown',
+                            source_x: sourceEvent && typeof sourceEvent.clientX === 'number' ? sourceEvent.clientX : null,
+                            source_y: sourceEvent && typeof sourceEvent.clientY === 'number' ? sourceEvent.clientY : null,
+                            t_ms: Date.now()
+                        });
+                    }
+                } catch (e) { /* nunca romper el juego por telemetria */ }
+
                 // hint visual: ocultar consigna despues del primer pickup
                 if (!window._firstMoveDone) {
                     window._firstMoveDone = true;
@@ -1521,6 +1539,17 @@
                         p.style.borderColor = '#ef4444';
                         setTimeout(function() { p.style.borderColor = ''; }, 400);
                     });
+                    // Art 3.6: evento semantico — paciente intento fraccionar lo que no corresponde.
+                    // Dominio candidato: COMPRENSION (desconoce contraindicacion) o EJECUTIVO (no reviso).
+                    try {
+                        if (typeof ZYKOS !== 'undefined' && typeof ZYKOS.emit === 'function') {
+                            ZYKOS.emit('pill_nonsplittable_attempt', {
+                                med: medType,
+                                total_attempts: sessionState.v4_nonsplittableAttempts,
+                                t_ms: Date.now()
+                            });
+                        }
+                    } catch (e) {}
                     return;
                 }
                 const cur = currentFractionFor(medType);
@@ -1533,16 +1562,44 @@
                     t: Date.now(), action: 'fraction_cycle', med: medType, frac_new: FRACTION_CYCLE[nextIdx]
                 });
                 updatePillVisual(medType);
+
+                // Art 3.6: evento semantico — click izquierdo corto cicla fraccion.
+                // Dominio candidato: CALCULO + COMPRENSION (entiende dosis fraccionaria).
+                try {
+                    if (typeof ZYKOS !== 'undefined' && typeof ZYKOS.emit === 'function') {
+                        ZYKOS.emit('pill_cycle_fraction', {
+                            med: medType,
+                            frac_from: cur,
+                            frac_to: FRACTION_CYCLE[nextIdx],
+                            total_fraction_changes: sessionState.v4_fractionChangesCount,
+                            t_ms: Date.now()
+                        });
+                    }
+                } catch (e) {}
             }
 
             function resetFraction(medType) {
                 if (currentFractionFor(medType) === 1) return; // ya esta en entera
+                const fracBefore = currentFractionFor(medType);
                 sessionState.fractionByMed[medType] = 1;
                 sessionState.v4_fractionResetsCount++;
                 sessionState.v4_pickupEvents.push({
                     t: Date.now(), action: 'fraction_reset', med: medType
                 });
                 updatePillVisual(medType);
+
+                // Art 3.6: evento semantico — long-press o boton reset.
+                // Dominio candidato: EJECUTIVO (autocorreccion reflexiva).
+                try {
+                    if (typeof ZYKOS !== 'undefined' && typeof ZYKOS.emit === 'function') {
+                        ZYKOS.emit('pill_reset_fraction', {
+                            med: medType,
+                            frac_before: fracBefore,
+                            total_fraction_resets: sessionState.v4_fractionResetsCount,
+                            t_ms: Date.now()
+                        });
+                    }
+                } catch (e) {}
             }
 
             function releaseOneOnSlot(slot) {
@@ -1573,6 +1630,31 @@
                     day: day, time: time, correct: isCorrect, fraction_correct: Math.abs(frac - fracExpected) < 0.01,
                     stack_after: sessionState.pickupStack.length
                 });
+
+                // Art 3.6: evento semantico mas rico del juego.
+                // El paciente tomo una decision compuesta: dosis + horario + dia + cantidad.
+                // Dominios candidatos (el clinico decide):
+                //   EJECUTIVO: orden correcto, secuencia dia/hora
+                //   MEMORIA: recuerda prescripcion
+                //   CALCULO: fraccion correcta
+                //   COMPRENSION: leyo la receta
+                try {
+                    if (typeof ZYKOS !== 'undefined' && typeof ZYKOS.emit === 'function') {
+                        ZYKOS.emit('pill_release', {
+                            med: medType,
+                            frac_placed: frac,
+                            frac_expected: fracExpected,
+                            fraction_correct: Math.abs(frac - fracExpected) < 0.01,
+                            day: day,
+                            time: time,
+                            placement_correct: isCorrect,
+                            stack_size_after: sessionState.pickupStack.length,
+                            input_device: sessionState.inputDevice || 'unknown',
+                            total_fraction_errors: sessionState.v4_fractionErrors,
+                            t_ms: Date.now()
+                        });
+                    }
+                } catch (e) {}
 
                 // simular currentDrag para placePill legacy API
                 const cd = sessionState.currentDrag;
