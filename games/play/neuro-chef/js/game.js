@@ -343,7 +343,7 @@ function verifyLevel1() {
     const m = { level:1, level_name:'supermercado', score, correct:hits, errors:misses+falseAlarms, missing, wrong, biometrics:bio, timestamp:new Date().toISOString() };
     gameState.levelMetrics.push(m); gameState.biometricData.push(bio);
     updateMetrics(hits, misses+falseAlarms); saveLevelMetrics(m); saveBiometrics(bio);
-    showEducationalModal('nivel_1_supermercado', score, { missing_ingredients:missing, wrong_items:wrong, recetaKey:recetaKey });
+    showEducationalModal('nivel_1_supermercado', score, { missing_ingredients:missing, wrong_items:wrong, recetaKey:recetaKey, selected_items: selectedItems.map(id => ALIMENTOS[id]?.nombre || id) });
 }
 
 // ========== NIVEL 2: HELADERA ==========
