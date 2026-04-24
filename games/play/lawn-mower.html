@@ -1578,8 +1578,27 @@
 
   // Get patient DNI from URL params or localStorage
   const lmParams = new URLSearchParams(window.location.search);
-  // DNI is the universal identifier
-  const lmPatientDni = lmParams.get('dni') || (function(){ try { return localStorage.getItem('zykos_patient_dni'); } catch(e){ return null; } })() || window.ZYKOS_DNI;
+  // DNI is the universal identifier.
+  // FIX 24-abr-2026: DNI lazy-read. require-auth.js setea window.ZYKOS_DNI
+  // ASINCRONO despues de validar el token. Si lo cacheamos en una const al
+  // parse-time del script, queda null para siempre y NINGUNA metrica clinica
+  // se guarda. Por eso en las ultimas 24h solo hubo event_tab_* y cero
+  // session_summary en DB para DNI 30542195.
+  function getLmDni() {
+    var p = new URLSearchParams(location.search).get('dni');
+    if (p) return p;
+    try {
+      var ls = localStorage.getItem('zykos_patient_dni');
+      if (ls) return ls;
+    } catch(e){}
+    return window.ZYKOS_DNI || null;
+  }
+  // Getter compatible con codigo viejo que lee `lmPatientDni` como variable.
+  // Cualquier acceso re-invoca getLmDni() para tomar el valor fresco.
+  Object.defineProperty(window, 'lmPatientDni', {
+    get: getLmDni,
+    configurable: true
+  });
 
   // ---- ART XIII: LEVEL PROGRESSION GATING ----
   // Constitution V4 mandates: sequential progression, no skipping, persistent state.
