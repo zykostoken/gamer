@@ -406,9 +406,25 @@ function init() {
     // Art XIII: fetch unlocked level (async, no bloquea UI)
     fetchUnlockedLevel().then(function() {
         renderLevelList(); // re-render con data real
+        // ROKOLA auto-launch (audit #115): si Rokola forced, saltar pantalla inicial
+        try {
+          if (typeof RokolaClient !== 'undefined' && RokolaClient.isForced()) {
+            console.log('[reflejos] ROKOLA auto-launch detected, skipping start screen');
+            setTimeout(function() {
+              try { beginGame(); } catch(e) { console.warn('[reflejos] rokola auto beginGame:', e); }
+            }, 200);
+          }
+        } catch(e) {}
     }).catch(function(e) {
         console.warn('[reflejos] fetchUnlockedLevel promise rejected:', e && e.message);
         // lista ya esta renderizada con defaults, seguimos
+        try {
+          if (typeof RokolaClient !== 'undefined' && RokolaClient.isForced()) {
+            setTimeout(function() {
+              try { beginGame(); } catch(e) { console.warn('[reflejos] rokola auto beginGame:', e); }
+            }, 200);
+          }
+        } catch(e) {}
     });
 }
 
@@ -481,12 +497,27 @@ function beginGame() {
         }
         var startEl = document.getElementById('start-screen');
         if (startEl) startEl.style.display = 'none';
-        // Art XIII: arrancar en el nivel desbloqueado, no en el 0 hardcoded.
-        // LEVELS es un array 0-indexed; unlockedLevelId es el id "humano" (1..8).
+        // ROKOLA override (audit #115): si la Rokola pidio un nivel especifico,
+        // ignorar art XIII/unlockedLevelId y arrancar en el nivel pedido.
         var targetIdx = 0;
-        var unlockedId = (STATE && STATE.unlockedLevelId) || 1;
-        for (var i = 0; i < LEVELS.length; i++) {
+        var rokolaLevel = null;
+        try {
+          if (typeof RokolaClient !== 'undefined' && RokolaClient.isForced()) {
+            var pLv = new URLSearchParams(location.search).get('level');
+            if (pLv) rokolaLevel = parseInt(pLv, 10);
+          }
+        } catch(e) {}
+        if (rokolaLevel) {
+          for (var k = 0; k < LEVELS.length; k++) {
+            if (LEVELS[k].id === rokolaLevel) { targetIdx = k; break; }
+          }
+          console.log('[reflejos] ROKOLA forced level', rokolaLevel, '-> idx', targetIdx);
+        } else {
+          // Art XIII: arrancar en el nivel desbloqueado, no en el 0 hardcoded.
+          var unlockedId = (STATE && STATE.unlockedLevelId) || 1;
+          for (var i = 0; i < LEVELS.length; i++) {
             if (LEVELS[i].id === unlockedId) { targetIdx = i; break; }
+          }
         }
         STATE.level = targetIdx;
         STATE.score = 0;
@@ -1647,11 +1678,7 @@ async function saveMetrics(metrics) {
     }
 
     try {
-        var userId = null;
-        try {
-            var u = JSON.parse(localStorage.getItem('zykos_user') || '{}');
-            userId = u.user_id || null;
-        } catch(e) {}
+        // DNI-NO-ID (audit #114): no usamos user_id. DNI unica identificacion.
 
         // Inyectar consigna_read_time_ms si esta disponible
         if (STATE.consignaReadTimeMs && metrics) {
@@ -1659,7 +1686,6 @@ async function saveMetrics(metrics) {
         }
 
         var payload = {
-            user_id: userId,
             patient_dni: dni,
             game_slug: GAME_SLUG,
             metric_type: 'session_summary',
@@ -1687,7 +1713,6 @@ async function saveMetrics(metrics) {
 
         // Save individual trial data for deep analysis
         var ins2 = await sb.from('zykos_game_metrics').insert({
-            user_id: userId,
             patient_dni: dni,
             game_slug: GAME_SLUG,
             metric_type: 'trial_data_level_' + metrics.level,
@@ -1724,6 +1749,18 @@ async function saveMetrics(metrics) {
         console.error('[reflejos] Save error:', e);
         saveBeacon('exception', { error: e && e.message, stack: e && e.stack && e.stack.substring(0, 400) });
     }
+
+    // ROKOLA wiring (audit #115): notificar al shell padre
+    try {
+      if (typeof RokolaClient !== 'undefined' && RokolaClient.isInsideRokola()) {
+        RokolaClient.notifyCompleted({
+          completed: (metrics && (metrics.total_stimuli || 0) > 0),
+          score: (metrics && metrics.score) || 0,
+          level: metrics && metrics.level
+        });
+      }
+    } catch(e) { console.warn('[reflejos] RokolaClient.notifyCompleted:', e && e.message); }
+
     return artXiiiResult;
 }
 

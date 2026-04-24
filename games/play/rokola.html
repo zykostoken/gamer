@@ -328,6 +328,7 @@ function launchCurrentCell() {
     + 'rokola_session_id=' + encodeURIComponent(state.sessionId)
     + '&rokola_cell_slug=' + encodeURIComponent(cell.cell_slug)
     + '&rokola_position=' + cell.position
+    + '&rokola_forced=1'
     + '&dni=' + encodeURIComponent(state.patientDni);
 
   renderProgress();

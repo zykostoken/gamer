@@ -41,6 +41,7 @@ function detect() {
       sessionId: sessionId,
       cellSlug: params.get('rokola_cell_slug') || null,
       position: parseInt(params.get('rokola_position') || '0', 10) || null,
+      forced: params.get('rokola_forced') === '1',
       dni: params.get('dni') || null,
       isIframe: (global.self !== global.top)
     };
@@ -53,6 +54,19 @@ function detect() {
 
 function isInsideRokola() {
   return detect() !== null;
+}
+
+/**
+ * Indica si la Rokola pidio este juego en modo "forced":
+ * el juego debe ignorar su historial personal (niveles completados, bloqueos por
+ * progresion propia) y jugar exactamente el nivel pedido por el query param.
+ * El progreso individual del paciente NO se pierde — lawn-mower sigue sabiendo
+ * que paso nivel 3. Pero cuando la Rokola lo llama a jugar L2 de nuevo,
+ * no lo bloquea por "ya lo completaste".
+ */
+function isForced() {
+  var ctx = detect();
+  return !!(ctx && ctx.forced);
 }
 
 function getContext() {
@@ -113,6 +127,7 @@ function notifyCompleted(summary) {
 // Expose
 global.RokolaClient = {
   isInsideRokola: isInsideRokola,
+  isForced: isForced,
   getContext: getContext,
   enrichPayload: enrichPayload,
   notifyCompleted: notifyCompleted
