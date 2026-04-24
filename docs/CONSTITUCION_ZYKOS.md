@@ -92,6 +92,26 @@ Referencia en runtime: `games/shared/zykos-engine.js` → `METRIC_DICTIONARY`
 
 **3.5 Baseline individual.** Minimo 5-10 sesiones antes de calcular Z-scores intra-sujeto. Cero cutoffs externos hardcodeados en el juego o el engine.
 
+**3.6 Distincion entre evento bruto, evento semantico y metrica clinica.**
+
+El diccionario canonico contiene metricas clinicas con definicion operacional. NO contiene eventos del juego. Una metrica clinica se distingue de un evento por lo siguiente:
+
+- **Evento bruto.** Accion o estado observable sin interpretacion clinica asignada. Ejemplos: `cable_stuck`, `bag_full`, `pool_overflow`, `click_event`, `keystroke`, `touch_end`, `scroll`. Vive exclusivamente en `zykos_raw_stream` con tipo, timestamp, coordenadas y contexto. Cuenta aislada no tiene valor clinico — un cable atascado puede ser falla atencional, torpeza motora, perseveracion o ninguno. Requiere cruce post-hoc para resolver dominio.
+
+- **Evento semantico.** Evento bruto al que el juego asigna intencion declarada por diseno de la mecanica. Ejemplos: en pill-organizer, click derecho = "dosis entera", click izquierdo = "fraccion"; en super-market, tap largo = "agregar al carrito". Vive en `zykos_raw_stream` como `event_type` especifico (p. ej. `pill_dispense_intention`, `cart_add`) con la intencion como campo de datos. El evento semantico capta la decision conductual del paciente y es dato clinico primario, pero no es metrica — es la unidad de analisis de la que se derivan metricas.
+
+- **Metrica clinica.** Indicador con definicion operacional, unidad, rango plausible, dominio asignado y referencia de validacion. Se calcula SIEMPRE post-hoc por `zykos-post-session-analyzer` a partir de eventos brutos y/o semanticos, potencialmente cruzados con otras senales (jitter, focus, RT). Ejemplos: `prescription_match_ratio`, `multiclick_ratio`, `obstacle_detection_failure_ratio`. Vive en `zykos_metrics_canonical`. Figura en el diccionario. La inferencia del dominio la hace el analizador, nunca el juego.
+
+**Consecuencias operativas:**
+
+1. Los eventos del juego (p. ej. `cable_stucks`, `bag_full_events`) **no se agregan al diccionario canonico** ni aunque se observen como claves en `metric_data`. Si aparecen ahi hoy es deuda arquitectonica — migran a `zykos_raw_stream` con `event_type='game_event'` y subtipo. Metadata de sesion (nivel, score, duracion, completado) vive como atributos de `zykos_sessions`, no como metricas.
+
+2. Los eventos de input (click, teclado, touch) se capturan con resolucion clinicamente suficiente: boton (0/1/2), `detail` (simple/doble/triple/cuadruple), `target_id`, `target_was_active`, `delta_previous_ms`. Sin esos campos el analizador no puede discriminar impulsividad de tremor de dismetria.
+
+3. Cuando una mecanica del juego asigna significado declarado a un gesto (como click der/izq en pill-organizer), el juego emite un `event_type` nombrado con semantica (`pill_dispense_intention` con `intention: 'whole'|'half'|'quarter'`), no un `click_event` crudo. La intencion declarada es parte del evento, no una derivacion.
+
+4. La clasificacion de la falla (atencional vs motora vs ejecutiva vs afectiva) que un mismo evento puede revelar es responsabilidad del detector de sintomas post-hoc. El sistema expone la evidencia cruzada. El clinico interpreta. El juego no clasifica. (Art 1.5 + Art 1.6)
+
 ### Dominios (alineados con MATRICS MCCB — FDA gold standard)
 
 | # | Dominio ZYKOS | Equivalente MATRICS | ICC | Metricas |
