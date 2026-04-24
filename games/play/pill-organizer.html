@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/supabase-config.js"></script>
 <script src="/games/shared/require-auth.js"></script>
+    <script src="/games/shared/rokola-gate.js"></script>
 <script src="/games/shared/evidence-hash.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
     <script src="/js/sanitize.js"></script>
@@ -1162,6 +1163,17 @@
                 document.getElementById('results-overlay').style.display = 'none';
                 // Art XIII: start at unlocked level (0-indexed)
                 var startLevelIndex = Math.max(0, artXiiiUnlockedLevel - 1);
+                // ROKOLA FORCED: si viene de la Rokola con ?level=N, respetar ese nivel
+                // bypasseando el progreso personal del paciente (audit #115 PR A).
+                try {
+                    if (typeof RokolaClient !== 'undefined' && RokolaClient.isForced()) {
+                        var rokolaLv = parseInt(new URLSearchParams(location.search).get('level') || '0', 10);
+                        if (rokolaLv > 0) {
+                            startLevelIndex = rokolaLv - 1;
+                            console.log('[pill-organizer] ROKOLA forced level:', rokolaLv);
+                        }
+                    }
+                } catch(e) {}
                 loadLevel(startLevelIndex);
                 if (!sessionState.dragSetup) {
                     setupTapGetTapRelease();
@@ -2501,5 +2513,16 @@ window._toggleConsigna = function() {
     <script src="/games/shared/agents/agent-og-media.js"></script>
     <script src="/games/shared/agents/agent-media.js"></script>
     <script src="/games/shared/media-init.js"></script>
+<script>
+// ROKOLA AUTO-LAUNCH (audit #115 PR A): si viene de Rokola, saltar start-screen y arrancar.
+// pill-organizer lee el nivel internamente desde URL o progreso propio.
+if (typeof RokolaClient !== 'undefined') {
+  RokolaClient.autoLaunch({
+    levelSelector: '#start-screen',
+    startFn: 'startGame',
+    withoutLevel: true
+  });
+}
+</script>
 </body>
 </html>
