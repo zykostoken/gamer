@@ -503,5 +503,35 @@ document.addEventListener('DOMContentLoaded', init);
 })();
 </script>
 
+<!-- V5.1 audit #164: acceso directo al Informe Clinico para superadmin -->
+<script>
+(function(){
+  function addReportBtn(){
+    if (!window.ZYKOS_USER || window.ZYKOS_USER.role !== 'superadmin') return;
+    if (document.getElementById('zykos-informe-btn')) return;
+    var btn = document.createElement('a');
+    btn.id = 'zykos-informe-btn';
+    btn.href = '/informe/?dni=' + (window.ZYKOS_DNI || '');
+    btn.textContent = 'Informe clinico v5.1';
+    btn.style.cssText = [
+      'position:fixed', 'bottom:18px', 'right:18px', 'z-index:9998',
+      'padding:10px 14px', 'background:#4f46e5', 'color:white',
+      'border-radius:8px', 'font-family:system-ui,sans-serif',
+      'font-size:0.82rem', 'font-weight:600', 'text-decoration:none',
+      'box-shadow:0 4px 20px rgba(79,70,229,0.35)',
+      'border:1px solid rgba(255,255,255,0.1)',
+      'transition:transform 0.15s'
+    ].join(';');
+    btn.onmouseover = function(){ btn.style.transform = 'translateY(-2px)'; };
+    btn.onmouseout = function(){ btn.style.transform = 'translateY(0)'; };
+    document.body.appendChild(btn);
+  }
+  var tries = 0;
+  var iv = setInterval(function(){
+    if (window.ZYKOS_USER || tries > 30) { clearInterval(iv); addReportBtn(); }
+    tries++;
+  }, 500);
+})();
+</script>
 </body>
 </html>
