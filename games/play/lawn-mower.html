@@ -299,11 +299,15 @@
       background-repeat: no-repeat;
     }
     .level-btn.level-completed {
-      opacity: 0.72;
-      cursor: not-allowed;
-      pointer-events: none;
+      opacity: 0.85;
+      cursor: pointer;
       border-color: rgba(74, 222, 128, 0.4);
       background: rgba(74, 222, 128, 0.08);
+    }
+    .level-btn.level-completed:hover {
+      opacity: 1;
+      border-color: rgba(74, 222, 128, 0.7);
+      background: rgba(74, 222, 128, 0.14);
     }
     .level-btn.level-completed .level-num {
       background: #4ade80;
@@ -1640,7 +1644,7 @@
       var statusText = '';
       if (artXiiiCompletedLevels.indexOf(levelNum) >= 0) {
         btn.classList.add('level-completed');
-        statusText = 'completado';
+        statusText = 'completado - rejugar';
       } else if (levelNum === artXiiiUnlockedLevel) {
         btn.classList.add('level-current');
         statusText = 'nivel actual';
@@ -5310,8 +5314,10 @@
     btn.addEventListener('click', function() {
       // Rokola forced (audit #115): ignorar bloqueos, la Rokola dosifica el nivel
       var _rokolaForced = (typeof RokolaClient !== 'undefined' && RokolaClient.isForced());
-      // Art XIII: prevent clicking on locked or completed levels
-      if (!_rokolaForced && (this.classList.contains('level-locked') || this.classList.contains('level-completed'))) {
+      // Art XIII (audit #151): Los niveles BLOQUEADOS no se pueden jugar (progresion
+      // secuencial). Los COMPLETADOS SI se pueden rejugar — el paciente necesita
+      // poder repetir para mejorar, y el profesional necesita poder testear.
+      if (!_rokolaForced && this.classList.contains('level-locked')) {
         return;
       }
       const level = parseInt(this.getAttribute('data-level'));
@@ -6132,8 +6138,14 @@ if (typeof registerAutoSave === 'function') {
     // Esperar DOM y que las funciones del juego existan
     function go() {
       if (typeof startLevel !== 'function') { return setTimeout(go, 100); }
-      var screen = document.getElementById('level-select-screen');
-      if (screen) screen.classList.add('hidden');
+      // El ID real en el DOM es levelSelectScreen (camelCase), no level-select-screen.
+      // Aceptamos ambos por resiliencia ante futuros refactors.
+      var screen = document.getElementById('levelSelectScreen') 
+                 || document.getElementById('level-select-screen');
+      if (screen) {
+        screen.classList.add('hidden');
+        screen.style.display = 'none';
+      }
       console.log('[lawn-mower] ROKOLA auto-launch level', lv);
       startLevel(lv);
     }

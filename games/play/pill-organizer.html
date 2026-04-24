@@ -1496,33 +1496,50 @@
                 if (md && md.fractions && md.fractions[day + '-' + time]) {
                     fracExpected = md.fractions[day + '-' + time];
                 }
-                if (Math.abs(frac - fracExpected) > 0.01) {
+                const fracCorrect = Math.abs(frac - fracExpected) < 0.01;
+                if (!fracCorrect) {
                     sessionState.v4_fractionErrors++;
                 }
 
                 sessionState.v4_pickupEvents.push({
                     t: Date.now(), action: 'release', med: medType, frac: frac,
-                    day: day, time: time, correct: isCorrect, fraction_correct: Math.abs(frac - fracExpected) < 0.01,
+                    day: day, time: time, correct: isCorrect, fraction_correct: fracCorrect,
                     stack_after: sessionState.pickupStack.length
                 });
 
-                // simular currentDrag para placePill legacy API
-                const cd = sessionState.currentDrag;
-                const rect = slot.getBoundingClientRect();
-                cd.medType = medType;
-                cd.startX = rect.left + rect.width/2;
-                cd.startY = rect.top + rect.height/2;
-                cd.startTime = Date.now() - 50;
-                cd.lastMoveTime = Date.now();
-                cd.pathPoints = [{ x: rect.left + rect.width/2, y: rect.top + rect.height/2, t: Date.now() }];
-                cd.active = true;
-
-                // placePill es la funcion legacy que incrementa correctPlacements, totalErrors, etc.
-                if (typeof placePill === 'function') {
-                    placePill(slot, medType, cd);
+                // ============================================================
+                // AUDIT #152 FIX (23-abr-2026):
+                // Antes, esta funcion delegaba a placePill() que NO EXISTE como
+                // funcion global — solo se hacia `if (typeof placePill === 'function')`
+                // y el branch nunca se ejecutaba. Resultado: el tap-release decrementaba
+                // el stack pero NO colocaba la pill en el slot ni incrementaba
+                // correctPlacements. Todas las metricas pill_placement desde 18-abr
+                // quedaron en 0.
+                //
+                // Ahora escribimos el contador + render inline, usando la infra que
+                // ya existe (renderPillInSlot, validatePlacement, sessionState).
+                // ============================================================
+                sessionState.totalMoves++;
+                if (isCorrect && fracCorrect) {
+                    sessionState.correctPlacements++;
+                } else {
+                    sessionState.totalErrors = (sessionState.totalErrors || 0) + 1;
                 }
 
-                cd.active = false;
+                // Render visual en el slot (pill visible adentro)
+                // Si es correcto Y la celda no esta ya ocupada, poner la pill
+                if (isCorrect && fracCorrect && !slot.classList.contains('filled')) {
+                    renderPillInSlot(slot, medType, true, 0, 0);
+                } else if (!isCorrect || !fracCorrect) {
+                    // render flash rojo/shake + dejar pill disponible para reintento
+                    renderPillInSlot(slot, medType, false, 0, 0);
+                }
+
+                // Actualizar metricas en vivo
+                if (typeof updateRealTimeMetrics === 'function') {
+                    updateRealTimeMetrics();
+                }
+
                 updatePillVisual(medType);
             }
 
@@ -1895,6 +1912,17 @@
             if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
                 ZykosBootstrap.end().catch(function(e) { console.warn('[pill-organizer] bootstrap.end failed:', e && e.message); });
             }
+            // Rokola wiring: notificar al shell padre si estamos dentro de Rokola
+            try {
+                if (typeof RokolaClient !== 'undefined' && RokolaClient.isInsideRokola()) {
+                    RokolaClient.notifyCompleted({
+                        completed: true,
+                        score: sessionState.correctPlacements,
+                        accuracy_pct: sessionState.totalMoves > 0 ? (sessionState.correctPlacements / sessionState.totalMoves) * 100 : 0,
+                        duration_ms: Date.now() - (sessionState.levelStartTime || sessionState.startTime)
+                    });
+                }
+            } catch(e) { console.warn('[pill-organizer] RokolaClient.notifyCompleted:', e && e.message); }
             const duration = Math.floor(((sessionState.endTime || Date.now()) - (sessionState.levelStartTime || sessionState.startTime)) / 1000);
 
             const avgJitter = sessionState.movements.length > 0
@@ -2501,5 +2529,26 @@ window._toggleConsigna = function() {
     <script src="/games/shared/agents/agent-og-media.js"></script>
     <script src="/games/shared/agents/agent-media.js"></script>
     <script src="/games/shared/media-init.js"></script>
+<!-- ROKOLA AUTO-LAUNCH: si el juego corre dentro de Rokola con forced=1,
+     saltar la pantalla de inicio y arrancar el juego directo. -->
+<script>
+(function(){
+  try {
+    if (typeof RokolaClient === 'undefined' || !RokolaClient.isForced()) return;
+    function go() {
+      if (typeof startGame !== 'function') { return setTimeout(go, 100); }
+      var s = document.getElementById('start-screen');
+      if (s) s.style.display = 'none';
+      console.log('[pill-organizer] ROKOLA auto-launch');
+      startGame();
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function(){ setTimeout(go, 300); });
+    } else {
+      setTimeout(go, 300);
+    }
+  } catch(e) { console.warn('[pill-organizer] rokola auto-launch error:', e && e.message); }
+})();
+</script>
 </body>
 </html>
