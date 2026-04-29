@@ -7,7 +7,7 @@ Fuente única de verdad para coordinar entre los distintos agentes IA que trabaj
 ZYKOS opera con varios agentes IA en paralelo. Cada uno tiene scope distinto:
 - **Claude.ai (chat web)** — arquitectura, doctrina, escribe prompts, revisa resultados.
 - **Claude Code** (terminal local) — ejecutor pesado, sesiones largas en el repo.
-- **GitHub Copilot Opus 4.5** — ejecutor con PRs, tareas concretas en `github.com`.
+- **GitHub Copilot Sonnet 4.5 (preferido por cuota) o Opus 4.5** — ejecutor con PRs, tareas concretas en `github.com`.
 - **Claude para Chrome** — ejecutor browser, tareas en UIs (Supabase, Netlify, GitHub).
 
 Los prompts viven acá para que **cualquier instancia futura de cualquier agente** pueda leerlos y ejecutar sin necesitar contexto de chat anterior.
@@ -18,7 +18,7 @@ Los prompts viven acá para que **cualquier instancia futura de cualquier agente
 |---|---|---|
 | `00_MODELO_TRABAJO.md` | Define quién hace qué, cómo se coordina, qué pasa si se corta una sesión | Lectura obligatoria primera |
 | `PROMPT_156_DASHBOARD.md` | Tarea grande de dashboard 174 métricas | Claude Code |
-| `PROMPT_166_TRES_BUGS.md` | Tres bugs separados (informe SDK, charts, rokola resume) | Copilot Opus 4.5 |
+| `PROMPT_166_TRES_BUGS.md` | Tres bugs separados (informe SDK, charts, rokola resume) | Copilot Sonnet 4.5 (preferido por cuota) o Opus 4.5 |
 
 ## Reglas de la carpeta
 

@@ -1,17 +1,19 @@
 # PROMPT — AUDIT #166 — Tres bugs (informe SDK + juegos gráficos + rokola resume)
 
-**EJECUTOR:** GitHub Copilot Opus 4.5 en modo Agent (en `github.com/Psykostoken/gamer`).
+**EJECUTOR:** GitHub Copilot Sonnet 4.5 (preferido por cuota) o Opus 4.5 en modo Agent (en `github.com/Psykostoken/gamer`).
 
 **CÓMO LO PEGÁS:**
 1. Andá a `https://github.com/Psykostoken/gamer`.
 2. Abrí Copilot Chat (panel lateral o tecla atajo).
-3. Cambiá el modelo a **Claude Opus 4.5**.
+3. Cambiá el modelo a **Claude Sonnet 4.5** (más cuota) o Opus 4.5 (más razonamiento).
 4. Activá modo **Agent** (no Ask, no Edit).
 5. Pegá TODO lo que está debajo del separador.
 
 **ALTERNATIVA:** Si preferís ejecutarlo desde Claude Code (terminal local), también funciona — solo ignorá las instrucciones específicas de Copilot.
 
 ---
+
+**MODELO RECOMENDADO:** **Sonnet 4.5** (más cuota, suficiente para esta tarea). Solo cambiar a Opus 4.5 si Sonnet falla repetidamente en el mismo paso.
 
 # CONTEXTO Y DOCTRINA
 
