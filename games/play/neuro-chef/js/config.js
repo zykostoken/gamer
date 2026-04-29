@@ -228,7 +228,7 @@ const ALIMENTOS = {
     mayonesa: {
         id: 'mayonesa',
         nombre: 'Mayonesa',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥫</text></svg>',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍶</text></svg>',
         categoria: 'aderezo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -237,7 +237,7 @@ const ALIMENTOS = {
     mostaza: {
         id: 'mostaza',
         nombre: 'Mostaza',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥫</text></svg>',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍯</text></svg>',
         categoria: 'aderezo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -342,7 +342,7 @@ const ALIMENTOS = {
     azucar: {
         id: 'azucar',
         nombre: 'Azúcar',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧂</text></svg>',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍬</text></svg>',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -407,7 +407,7 @@ const ALIMENTOS = {
     vinagre: {
         id: 'vinagre',
         nombre: 'Vinagre',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍶</text></svg>',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧴</text></svg>',
         categoria: 'aderezo',
         zona_heladera: 'afuera',
         temperatura: 20,
