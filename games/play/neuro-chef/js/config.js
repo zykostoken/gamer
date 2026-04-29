@@ -11,7 +11,7 @@ const ALIMENTOS = {
     carne_picada: {
         id: 'carne_picada',
         nombre: 'Carne Picada',
-        imagen: 'https://images.unsplash.com/photo-1603048297172-c92544798d5a?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥩</text></svg>',
         categoria: 'proteina_animal',
         estado: 'crudo',
         zona_heladera: 'fria',
@@ -24,7 +24,7 @@ const ALIMENTOS = {
     bife: {
         id: 'bife',
         nombre: 'Bife',
-        imagen: 'https://images.unsplash.com/photo-1546964124-0cce460f38ef?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥩</text></svg>',
         categoria: 'proteina_animal',
         estado: 'crudo',
         zona_heladera: 'fria',
@@ -36,7 +36,7 @@ const ALIMENTOS = {
     pollo: {
         id: 'pollo',
         nombre: 'Pollo',
-        imagen: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍗</text></svg>',
         categoria: 'proteina_animal',
         estado: 'crudo',
         zona_heladera: 'fria',
@@ -48,7 +48,7 @@ const ALIMENTOS = {
     pescado: {
         id: 'pescado',
         nombre: 'Pescado',
-        imagen: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🐟</text></svg>',
         categoria: 'proteina_animal',
         estado: 'crudo',
         zona_heladera: 'fria',
@@ -60,7 +60,7 @@ const ALIMENTOS = {
     salchichas: {
         id: 'salchichas',
         nombre: 'Salchichas',
-        imagen: 'https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🌭</text></svg>',
         categoria: 'proteina_procesada',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -69,7 +69,7 @@ const ALIMENTOS = {
     jamon: {
         id: 'jamon',
         nombre: 'Jamón Cocido',
-        imagen: 'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍖</text></svg>',
         categoria: 'proteina_procesada',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -78,7 +78,7 @@ const ALIMENTOS = {
     huevos: {
         id: 'huevos',
         nombre: 'Huevos',
-        imagen: 'https://images.unsplash.com/photo-1518569656558-1f25e69d93d7?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥚</text></svg>',
         categoria: 'proteina_animal',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -89,7 +89,7 @@ const ALIMENTOS = {
     leche: {
         id: 'leche',
         nombre: 'Leche',
-        imagen: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥛</text></svg>',
         categoria: 'lacteo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -98,7 +98,7 @@ const ALIMENTOS = {
     yogur: {
         id: 'yogur',
         nombre: 'Yogur',
-        imagen: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥛</text></svg>',
         categoria: 'lacteo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -107,7 +107,7 @@ const ALIMENTOS = {
     manteca: {
         id: 'manteca',
         nombre: 'Manteca',
-        imagen: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧈</text></svg>',
         categoria: 'lacteo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -116,7 +116,7 @@ const ALIMENTOS = {
     queso: {
         id: 'queso',
         nombre: 'Queso',
-        imagen: 'https://images.unsplash.com/photo-1452195100486-9cc805987862?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧀</text></svg>',
         categoria: 'lacteo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -125,7 +125,7 @@ const ALIMENTOS = {
     queso_rallado: {
         id: 'queso_rallado',
         nombre: 'Queso Rallado',
-        imagen: 'https://images.unsplash.com/photo-1618164436241-4473940d1f5c?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧀</text></svg>',
         categoria: 'lacteo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -134,7 +134,7 @@ const ALIMENTOS = {
     crema: {
         id: 'crema',
         nombre: 'Crema de Leche',
-        imagen: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥛</text></svg>',
         categoria: 'lacteo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -145,7 +145,7 @@ const ALIMENTOS = {
     lechuga: {
         id: 'lechuga',
         nombre: 'Lechuga',
-        imagen: 'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥬</text></svg>',
         categoria: 'verdura',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -154,7 +154,7 @@ const ALIMENTOS = {
     tomate: {
         id: 'tomate',
         nombre: 'Tomate',
-        imagen: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍅</text></svg>',
         categoria: 'verdura',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -163,7 +163,7 @@ const ALIMENTOS = {
     cebolla: {
         id: 'cebolla',
         nombre: 'Cebolla',
-        imagen: 'https://images.unsplash.com/photo-1518977822534-7049a61ee0c2?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧅</text></svg>',
         categoria: 'verdura',
         zona_heladera: 'afuera',
         temperatura: 18,
@@ -172,7 +172,7 @@ const ALIMENTOS = {
     zanahoria: {
         id: 'zanahoria',
         nombre: 'Zanahoria',
-        imagen: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥕</text></svg>',
         categoria: 'verdura',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -181,7 +181,7 @@ const ALIMENTOS = {
     pepino: {
         id: 'pepino',
         nombre: 'Pepino',
-        imagen: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥒</text></svg>',
         categoria: 'verdura',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -190,7 +190,7 @@ const ALIMENTOS = {
     morron: {
         id: 'morron',
         nombre: 'Morrón',
-        imagen: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🫑</text></svg>',
         categoria: 'verdura',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -199,7 +199,7 @@ const ALIMENTOS = {
     brocoli: {
         id: 'brocoli',
         nombre: 'Brócoli',
-        imagen: 'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥦</text></svg>',
         categoria: 'verdura',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -208,7 +208,7 @@ const ALIMENTOS = {
     papa: {
         id: 'papa',
         nombre: 'Papas',
-        imagen: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥔</text></svg>',
         categoria: 'verdura',
         zona_heladera: 'afuera',
         temperatura: 15,
@@ -217,7 +217,7 @@ const ALIMENTOS = {
     ajo: {
         id: 'ajo',
         nombre: 'Ajo',
-        imagen: 'https://images.unsplash.com/photo-1588165171080-c89acfa5ee83?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧄</text></svg>',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 18,
@@ -228,7 +228,7 @@ const ALIMENTOS = {
     mayonesa: {
         id: 'mayonesa',
         nombre: 'Mayonesa',
-        imagen: 'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍶</text></svg>',
         categoria: 'aderezo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -237,7 +237,7 @@ const ALIMENTOS = {
     mostaza: {
         id: 'mostaza',
         nombre: 'Mostaza',
-        imagen: 'https://images.unsplash.com/photo-1528750717929-32abb73d3bd9?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍯</text></svg>',
         categoria: 'aderezo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -246,7 +246,7 @@ const ALIMENTOS = {
     ketchup: {
         id: 'ketchup',
         nombre: 'Ketchup',
-        imagen: 'https://images.unsplash.com/photo-1472476443507-c7a5948772fc?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥫</text></svg>',
         categoria: 'aderezo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -255,7 +255,7 @@ const ALIMENTOS = {
     aceitunas: {
         id: 'aceitunas',
         nombre: 'Aceitunas',
-        imagen: 'https://images.unsplash.com/photo-1504544750208-dc0358e63f7f?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🫒</text></svg>',
         categoria: 'aderezo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -266,7 +266,7 @@ const ALIMENTOS = {
     hielo: {
         id: 'hielo',
         nombre: 'Hielo',
-        imagen: 'https://images.unsplash.com/photo-1514373941175-0a141072bbc8?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧊</text></svg>',
         categoria: 'freezer',
         zona_heladera: 'freezer',
         temperatura: -18,
@@ -275,7 +275,7 @@ const ALIMENTOS = {
     helado: {
         id: 'helado',
         nombre: 'Helado',
-        imagen: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍦</text></svg>',
         categoria: 'freezer',
         zona_heladera: 'freezer',
         temperatura: -18,
@@ -284,7 +284,7 @@ const ALIMENTOS = {
     vegetales_congelados: {
         id: 'vegetales_congelados',
         nombre: 'Vegetales Congelados',
-        imagen: 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥦</text></svg>',
         categoria: 'freezer',
         zona_heladera: 'freezer',
         temperatura: -18,
@@ -295,7 +295,7 @@ const ALIMENTOS = {
     jugo: {
         id: 'jugo',
         nombre: 'Jugo',
-        imagen: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧃</text></svg>',
         categoria: 'bebida',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -304,7 +304,7 @@ const ALIMENTOS = {
     gaseosa: {
         id: 'gaseosa',
         nombre: 'Gaseosa',
-        imagen: 'https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥤</text></svg>',
         categoria: 'bebida',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -315,7 +315,7 @@ const ALIMENTOS = {
     pan: {
         id: 'pan',
         nombre: 'Pan',
-        imagen: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍞</text></svg>',
         categoria: 'panificado',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -324,7 +324,7 @@ const ALIMENTOS = {
     pan_rallado: {
         id: 'pan_rallado',
         nombre: 'Pan Rallado',
-        imagen: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍞</text></svg>',
         categoria: 'cereal',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -333,7 +333,7 @@ const ALIMENTOS = {
     sal: {
         id: 'sal',
         nombre: 'Sal',
-        imagen: 'https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧂</text></svg>',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -342,7 +342,7 @@ const ALIMENTOS = {
     azucar: {
         id: 'azucar',
         nombre: 'Azúcar',
-        imagen: 'https://images.unsplash.com/photo-1581006852262-e4307cf6283a?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍬</text></svg>',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -351,7 +351,7 @@ const ALIMENTOS = {
     aceite: {
         id: 'aceite',
         nombre: 'Aceite',
-        imagen: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🛢️</text></svg>',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -362,7 +362,7 @@ const ALIMENTOS = {
     arroz: {
         id: 'arroz',
         nombre: 'Arroz',
-        imagen: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍚</text></svg>',
         categoria: 'cereal',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -371,7 +371,7 @@ const ALIMENTOS = {
     harina: {
         id: 'harina',
         nombre: 'Harina',
-        imagen: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🌾</text></svg>',
         categoria: 'cereal',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -380,7 +380,7 @@ const ALIMENTOS = {
     pasas_uva: {
         id: 'pasas_uva',
         nombre: 'Pasas de Uva',
-        imagen: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍇</text></svg>',
         categoria: 'fruto_seco',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -389,7 +389,7 @@ const ALIMENTOS = {
     canela: {
         id: 'canela',
         nombre: 'Canela',
-        imagen: 'https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🌰</text></svg>',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -398,7 +398,7 @@ const ALIMENTOS = {
     frutas_secas: {
         id: 'frutas_secas',
         nombre: 'Frutas Secas',
-        imagen: 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥜</text></svg>',
         categoria: 'fruto_seco',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -407,7 +407,7 @@ const ALIMENTOS = {
     vinagre: {
         id: 'vinagre',
         nombre: 'Vinagre',
-        imagen: 'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧴</text></svg>',
         categoria: 'aderezo',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -416,7 +416,7 @@ const ALIMENTOS = {
     limon: {
         id: 'limon',
         nombre: 'Limón',
-        imagen: 'https://images.unsplash.com/photo-1590502593747-42a996133562?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍋</text></svg>',
         categoria: 'fruta',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -425,7 +425,7 @@ const ALIMENTOS = {
     perejil: {
         id: 'perejil',
         nombre: 'Perejil',
-        imagen: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🌿</text></svg>',
         categoria: 'verdura',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -434,7 +434,7 @@ const ALIMENTOS = {
     nuez_moscada: {
         id: 'nuez_moscada',
         nombre: 'Nuez Moscada',
-        imagen: 'https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🌰</text></svg>',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -443,7 +443,7 @@ const ALIMENTOS = {
     ciruelas_pasas: {
         id: 'ciruelas_pasas',
         nombre: 'Ciruelas Pasas',
-        imagen: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🫐</text></svg>',
         categoria: 'fruto_seco',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -454,7 +454,7 @@ const ALIMENTOS = {
     banana: {
         id: 'banana',
         nombre: 'Banana',
-        imagen: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍌</text></svg>',
         categoria: 'fruta',
         zona_heladera: 'afuera',
         temperatura: 18,
@@ -463,7 +463,7 @@ const ALIMENTOS = {
     frutilla: {
         id: 'frutilla',
         nombre: 'Frutilla',
-        imagen: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍓</text></svg>',
         categoria: 'fruta',
         zona_heladera: 'verduras',
         temperatura: 4,
@@ -472,7 +472,7 @@ const ALIMENTOS = {
     mango: {
         id: 'mango',
         nombre: 'Mango',
-        imagen: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥭</text></svg>',
         categoria: 'fruta',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -481,7 +481,7 @@ const ALIMENTOS = {
     jugo_naranja: {
         id: 'jugo_naranja',
         nombre: 'Jugo de Naranja',
-        imagen: 'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=300',
+        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍊</text></svg>',
         categoria: 'bebida',
         zona_heladera: 'fria',
         temperatura: 4,
