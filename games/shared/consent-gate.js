@@ -32,7 +32,7 @@ var CONSENT_TEXT = {
       key: 'clinical_metrics',
       required: true,
       title: 'Metricas clinicas (OBLIGATORIO)',
-      text: 'Autorizo el registro de mis interacciones con la plataforma (clicks, movimientos del cursor, tiempos de reaccion, errores y aciertos en los juegos) como datos clinicos de caracter personal, para seguimiento terapeutico por profesionales matriculados de la Clinica Psiquiatrica Privada Jose Ingenieros.'
+      text: 'Autorizo el registro de mis interacciones con la plataforma (clicks, movimientos del cursor, tiempos de reaccion, errores y aciertos en los juegos) como datos clinicos de caracter personal, para seguimiento terapeutico por profesionales matriculados de la plataforma ZYKOS GAMER.'
     },
     {
       key: 'cam',

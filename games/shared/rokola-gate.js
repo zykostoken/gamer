@@ -177,7 +177,7 @@
           ts: Date.now()
         };
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage(payload, '*');
+          window.parent.postMessage(payload, window.location.origin);
         } else {
           // Si no hay parent (no es iframe), navegar a Rokola con flag
           console.log('[rokola-gate] No iframe parent; navigating back to Rokola with cell_completed flag.');
@@ -203,7 +203,7 @@
           ts: Date.now()
         };
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage(payload, '*');
+          window.parent.postMessage(payload, window.location.origin);
         }
       } catch(e) {}
     }

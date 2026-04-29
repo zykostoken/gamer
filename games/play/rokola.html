@@ -352,6 +352,7 @@ function launchCurrentCell() {
 }
 
 window.addEventListener('message', function(ev) {
+  if (ev.origin !== window.location.origin) return;
   if (!ev.data || typeof ev.data !== 'object') return;
   if (ev.data.type !== 'rokola:cell_completed') return;
 
