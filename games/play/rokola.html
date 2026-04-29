@@ -124,9 +124,42 @@ body { display: flex; flex-direction: column; }
 
 .rk-hidden { display: none !important; }
 
+.rk-modal {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(10, 10, 15, 0.92);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.rk-modal-content {
+  background: var(--rk-surface);
+  border: 1px solid rgba(241, 255, 59, 0.2);
+  border-radius: 8px;
+  padding: 32px;
+  max-width: 480px;
+  text-align: center;
+}
+.rk-modal-title {
+  font-size: 24px; font-weight: 700;
+  color: var(--rk-accent);
+  margin-bottom: 16px;
+}
+.rk-modal-text {
+  font-size: 15px; color: var(--rk-text);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+.rk-modal-buttons {
+  display: flex; gap: 12px;
+  flex-direction: column;
+}
+.rk-modal-buttons button {
+  width: 100%;
+}
+
 @media (min-width: 768px) {
   .rk-title { font-size: 48px; }
   .rk-subtitle { font-size: 18px; }
+  .rk-modal-buttons { flex-direction: row; }
 }
 </style>
 </head>
@@ -172,6 +205,21 @@ body { display: flex; flex-direction: column; }
   </div>
 
   <iframe id="rk-iframe" class="rk-hidden" allow="camera; microphone; autoplay; clipboard-write"></iframe>
+
+  <!-- Resume modal -->
+  <div id="rk-resume-modal" class="rk-modal rk-hidden">
+    <div class="rk-modal-content">
+      <div class="rk-modal-title">Sesión en progreso</div>
+      <div class="rk-modal-text">
+        Tenés una sesión de Rokola que no terminaste (iniciada hace <span id="rk-resume-time"></span>).
+        ¿Querés reanudarla o empezar una nueva?
+      </div>
+      <div class="rk-modal-buttons">
+        <button class="rk-btn-primary" id="rk-resume-btn" type="button">Reanudar sesión</button>
+        <button class="rk-btn-secondary" id="rk-new-btn" type="button">Empezar nueva</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -271,10 +319,87 @@ async function loadPrescription() {
   }
 }
 
+async function checkExistingSession() {
+  // Chequea si hay una sesión reciente (<2h) sin cerrar para el paciente actual.
+  // Retorna {exists: false} si no hay, o {exists: true, session: {...}} si hay.
+  
+  var sb = getSupabase();
+  if (!sb || !state.patientDni) return { exists: false };
+
+  try {
+    var twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    var res = await sb
+      .from('zykos_rokola_sessions')
+      .select('session_id, started_at, cell_sequence, cells_completed, session_status')
+      .eq('patient_dni', state.patientDni)
+      .eq('session_status', 'in_progress')
+      .gte('started_at', twoHoursAgo)
+      .order('started_at', { ascending: false })
+      .limit(1);
+
+    if (res.error) throw res.error;
+    if (!res.data || res.data.length === 0) return { exists: false };
+
+    return { exists: true, session: res.data[0] };
+  } catch (e) {
+    console.error('[rokola] checkExistingSession failed:', e);
+    return { exists: false };
+  }
+}
+
+async function resumeSession(sessionData) {
+  // Reanuda una sesión existente restaurando el estado.
+  state.sessionId = sessionData.session_id;
+  state.startedAt = new Date(sessionData.started_at).getTime();
+  
+  // Reconstruir prescription desde cell_sequence
+  var slugs = sessionData.cell_sequence || [];
+  if (slugs.length === 0) {
+    console.error('[rokola] Session has empty cell_sequence');
+    return { ok: false, error: 'Sesión sin secuencia de celdas.' };
+  }
+
+  var sb = getSupabase();
+  try {
+    var cellsRes = await sb
+      .from('zykos_rokola_cells')
+      .select('cell_slug, cell_label, cell_launch_url, cell_engine, cell_primary_domain, cell_duration_target_s')
+      .in('cell_slug', slugs);
+    if (cellsRes.error) throw cellsRes.error;
+
+    var cellMap = {};
+    cellsRes.data.forEach(function(c) { cellMap[c.cell_slug] = c; });
+
+    state.prescription = slugs.map(function(slug, idx) {
+      var cell = cellMap[slug] || {};
+      return {
+        cell_slug: slug,
+        position: idx + 1,
+        role: 'main',
+        cell_label: cell.cell_label || slug,
+        launch_url: cell.cell_launch_url,
+        engine: cell.cell_engine,
+        domain: cell.cell_primary_domain,
+        duration_target_s: cell.cell_duration_target_s
+      };
+    });
+
+    // Determinar índice actual basado en cells_completed
+    var completedSlugs = (sessionData.cells_completed || []).map(function(c) { return c.cell_slug; });
+    state.currentIndex = completedSlugs.length;
+
+    console.log('[rokola] Session resumed:', state.sessionId, '- at cell', state.currentIndex + 1, '/', state.prescription.length);
+    return { ok: true };
+  } catch (e) {
+    console.error('[rokola] resumeSession failed:', e);
+    return { ok: false, error: 'Error al reanudar sesión: ' + (e.message || e) };
+  }
+}
+
 async function createSession() {
   // Retorna {ok:true, session_id} en exito,
   // o {ok:false, error:'mensaje legible'} para que el caller muestre causa real.
-  // Audit #120: el alert generico 'Error al crear sesion' ocultaba la causa raiz.
+  // Audit #120 / #166: reemplaza insert directo frontend por RPC zykos_rokola_start_session.
 
   if (!state.patientDni) {
     return { ok:false, error:'DNI no disponible. Volvé al portal e ingresá de nuevo.' };
@@ -289,34 +414,32 @@ async function createSession() {
   }
 
   try {
-    var ins = await sb.from('zykos_rokola_sessions').insert({
-      patient_dni: state.patientDni,
-      cell_sequence: state.prescription.map(function(p) { return p.cell_slug; }),
-      started_at: new Date().toISOString(),
-      session_status: 'in_progress',
-      device_metadata: {
+    // Usar RPC en lugar de insert directo
+    var rpcRes = await sb.rpc('zykos_rokola_start_session', {
+      p_patient_dni: state.patientDni,
+      p_cell_sequence: state.prescription.map(function(p) { return p.cell_slug; }),
+      p_device_metadata: {
         ua: navigator.userAgent,
         viewport: { w: innerWidth, h: innerHeight },
         dpr: devicePixelRatio || 1
-      },
-      cells_completed: []
-    }).select('session_id').single();
+      }
+    });
 
-    if (ins.error) {
-      console.error('[rokola] Supabase error en createSession:', ins.error);
-      var msg = ins.error.message || 'error desconocido';
-      var hint = ins.error.hint ? (' — hint: ' + ins.error.hint) : '';
-      var code = ins.error.code ? (' [' + ins.error.code + ']') : '';
-      return { ok:false, error:'Supabase' + code + ': ' + msg + hint };
+    if (rpcRes.error) {
+      console.error('[rokola] RPC error en createSession:', rpcRes.error);
+      var msg = rpcRes.error.message || 'error desconocido';
+      var hint = rpcRes.error.hint ? (' — hint: ' + rpcRes.error.hint) : '';
+      var code = rpcRes.error.code ? (' [' + rpcRes.error.code + ']') : '';
+      return { ok:false, error:'RPC zykos_rokola_start_session' + code + ': ' + msg + hint };
     }
 
-    if (!ins.data || !ins.data.session_id) {
-      return { ok:false, error:'INSERT exitoso pero no retornó session_id.' };
+    if (!rpcRes.data || !rpcRes.data.session_id) {
+      return { ok:false, error:'RPC exitoso pero no retornó session_id.' };
     }
 
-    state.sessionId = ins.data.session_id;
+    state.sessionId = rpcRes.data.session_id;
     state.startedAt = Date.now();
-    console.log('[rokola] Session created:', state.sessionId);
+    console.log('[rokola] Session created via RPC:', state.sessionId);
     return { ok:true, session_id: state.sessionId };
   } catch (e) {
     console.error('[rokola] createSession threw:', e);
@@ -485,6 +608,43 @@ async function init() {
   $('rk-home-btn').addEventListener('click', function() { location.href = '/games/portal/index.html'; });
   $('rk-new-session-btn').addEventListener('click', function() { location.reload(); });
 
+  // Cargar prescripción primero
+  var rx = await loadPrescription();
+  if (!rx) return;
+  renderPreview();
+
+  // Chequear si hay sesión existente para reanudar
+  var existingCheck = await checkExistingSession();
+  
+  if (existingCheck.exists) {
+    // Mostrar modal de resume
+    var startedAt = new Date(existingCheck.session.started_at);
+    var elapsed = Math.floor((Date.now() - startedAt.getTime()) / (1000 * 60)); // minutos
+    var timeStr = elapsed < 60 ? elapsed + ' min' : Math.floor(elapsed / 60) + 'h ' + (elapsed % 60) + 'min';
+    $('rk-resume-time').textContent = timeStr;
+    show('rk-resume-modal');
+
+    $('rk-resume-btn').addEventListener('click', async function() {
+      hide('rk-resume-modal');
+      $('rk-start-btn').disabled = true;
+      $('rk-start-btn').textContent = 'Reanudando...';
+      var resumeRes = await resumeSession(existingCheck.session);
+      if (!resumeRes || !resumeRes.ok) {
+        var detail = (resumeRes && resumeRes.error) ? resumeRes.error : 'causa desconocida';
+        alert('No se pudo reanudar la sesión.\n\n' + detail + '\n\nEmpezá una nueva sesión.');
+        $('rk-start-btn').disabled = false;
+        $('rk-start-btn').textContent = 'Empezar';
+        return;
+      }
+      launchCurrentCell();
+    });
+
+    $('rk-new-btn').addEventListener('click', function() {
+      hide('rk-resume-modal');
+      // Continuar con el flujo normal de crear nueva sesión
+    });
+  }
+
   $('rk-start-btn').addEventListener('click', async function() {
     $('rk-start-btn').disabled = true;
     $('rk-start-btn').textContent = 'Preparando...';
@@ -498,10 +658,6 @@ async function init() {
     }
     launchCurrentCell();
   });
-
-  var rx = await loadPrescription();
-  if (!rx) return;
-  renderPreview();
 }
 
 document.addEventListener('DOMContentLoaded', init);
