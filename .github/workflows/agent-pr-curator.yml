@@ -106,11 +106,11 @@ jobs:
               deletedBranches.length === 0 ? '_Ninguna_' :
                 deletedBranches.map(b => `- ~~\`${b}\`~~ ✅ eliminada`).join('\n'),
               ``,
-              failedDeletes.length === 0 ? '' : [
+              ...(failedDeletes.length === 0 ? [] : [
                 `## Branches Copilot huérfanas (no se pudo eliminar)`,
                 failedDeletes.map(b => `- \`${b}\``).join('\n'),
                 ``
-              ].join('\n'),
+              ]),
               `## Dependabot alerts open`,
               dependabot.length === 0 ? '_Ninguna_' :
                 dependabot.slice(0,10).map(a => 
