@@ -15,6 +15,13 @@
  * - No analysis, no interpretation, no clinical labels
  * - No jitter detection, no hesitation counting
  * - Those are post-hoc in Supabase
+ *
+ * SEMANTIC EVENT INGRESS (Art 3.6 — eventos semanticos + eventos de juego):
+ * Games NEVER write to Supabase directly. Games call:
+ *   - ZykosCorsario.emit(eventType, data)        for semantic events
+ *   - ZykosCorsario.emitGameEvent(subtype, data) for raw game events
+ * Events are buffered and flushed with the same 2s cadence as DOM events.
+ * Single writer pattern: N games in parallel = 1 connection to raw_stream.
  */
 (function() {
   'use strict';
@@ -171,12 +178,88 @@
     _push('ctx', { context: ctx });
   }
 
+  // ==========================================================================
+  // SEMANTIC EVENT INGRESS — API publica para los juegos (Art 3.6 del Canon)
+  // ==========================================================================
+  //
+  // Los juegos NUNCA escriben a Supabase. Emiten aca. El corsario bufferea
+  // junto con los eventos DOM y flushea en chunks de 2s.
+  //
+  // Dos canales segun la doctrina:
+  //
+  //   emit(eventType, data)
+  //     Eventos semanticos: el juego asigna intencion declarada por diseno
+  //     de la mecanica. El eventType es el nombre canonico propuesto en
+  //     docs/GAME_INPUT_SEMANTICS.md (ej: 'pill_pickup', 'pill_cycle_fraction',
+  //     'reflex_response', 'cart_toggle', 'fridge_drop').
+  //     Son dato clinico primario. Vivo como `e: <eventType>` en el stream.
+  //
+  //   emitGameEvent(subtype, data)
+  //     Eventos del juego no-input: fenomenos del mundo del juego que
+  //     ocurren (cable_stuck, bag_full, pool_overflow, grass_cut) y que
+  //     sin cruce con otras senales no son metrica. Vivo como
+  //     `e: 'game_event'` con `d.subtype: <subtype>` para no contaminar
+  //     el espacio de tipos canonicos.
+  //
+  // Garantias:
+  //   - Validacion minima: eventType no vacio (warn si lo esta).
+  //   - No rechaza: captura todo (principio V5 "capturar todo antes de analizar").
+  //   - No interpreta: cero ratios, cero clasificacion, cero dominio.
+  //   - Idempotencia: mismos fields que _push — buffer + flush 2s.
+  //   - Si el corsario no esta activo (juego fuera del pipeline V4), loguea
+  //     un warning una sola vez y descarta — el juego sigue andando.
+  var _emitInactiveWarned = false;
+
+  function emit(eventType, data) {
+    if (!_active) {
+      if (!_emitInactiveWarned) {
+        console.warn('[corsario] emit() called with inactive session. Event dropped: ' + eventType);
+        _emitInactiveWarned = true;
+      }
+      return;
+    }
+    if (!eventType || typeof eventType !== 'string') {
+      console.warn('[corsario] emit(): eventType must be a non-empty string. Got:', eventType);
+      return;
+    }
+    // Eventos semanticos: el juego los nombra, nosotros los preservamos tal cual.
+    _push(eventType, data || {});
+  }
+
+  function emitGameEvent(subtype, data) {
+    if (!_active) {
+      if (!_emitInactiveWarned) {
+        console.warn('[corsario] emitGameEvent() called with inactive session. Event dropped: ' + subtype);
+        _emitInactiveWarned = true;
+      }
+      return;
+    }
+    if (!subtype || typeof subtype !== 'string') {
+      console.warn('[corsario] emitGameEvent(): subtype must be a non-empty string. Got:', subtype);
+      return;
+    }
+    // Eventos de juego: vivo como game_event con subtype, para no mezclar
+    // con tipos canonicos (m, t, click, focus, pill_pickup, etc).
+    var payload = Object.assign({ subtype: subtype }, data || {});
+    _push('game_event', payload);
+  }
+
   // --- EXPOSE ---
   window.ZykosCorsario = {
     init: init,
     stop: stop,
     setContext: setContext,
-    flush: _flush
+    flush: _flush,
+    emit: emit,
+    emitGameEvent: emitGameEvent
   };
+
+  // Alias en ZYKOS para los juegos que usan el objeto global del engine.
+  // No crea ciclo: si ZYKOS no esta cargado, simplemente no se adjunta.
+  // Si ZYKOS se carga despues, el bootstrap puede re-adjuntar (no critico).
+  if (typeof window.ZYKOS !== 'undefined') {
+    window.ZYKOS.emit = emit;
+    window.ZYKOS.emitGameEvent = emitGameEvent;
+  }
 
 })();

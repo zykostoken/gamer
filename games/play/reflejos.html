@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/supabase-config.js"></script>
 <script src="/games/shared/require-auth.js"></script>
+    <script src="/games/shared/rokola-gate.js"></script>
 <script src="/games/shared/evidence-hash.js"></script>
     <script src="/games/shared/input-calibration.js"></script>
     <script src="/games/shared/auto-save.js"></script>
@@ -406,23 +407,34 @@ function init() {
     // Art XIII: fetch unlocked level (async, no bloquea UI)
     fetchUnlockedLevel().then(function() {
         renderLevelList(); // re-render con data real
-        // ROKOLA auto-launch (audit #115): si Rokola forced, saltar pantalla inicial
+        // ROKOLA Art XVII (audit #154): si paciente viene de Rokola, ocultar menu + auto-start
         try {
-          if (typeof RokolaClient !== 'undefined' && RokolaClient.isForced()) {
-            console.log('[reflejos] ROKOLA auto-launch detected, skipping start screen');
-            setTimeout(function() {
-              try { beginGame(); } catch(e) { console.warn('[reflejos] rokola auto beginGame:', e); }
-            }, 200);
+          if (typeof RokolaGate !== 'undefined') {
+            RokolaGate.onReady(function(mode) {
+              if (mode !== 'rokola_patient') return;
+              var ss = document.getElementById('start-screen');
+              if (ss) ss.style.display = 'none';
+              // Nivel lo resuelve el motor interno de reflejos a partir del query param
+              // o del unlocked level; no forzamos nada aca
+              console.log('[reflejos] Rokola mode — auto beginGame');
+              setTimeout(function() {
+                try { beginGame(); } catch(e) { console.warn('[reflejos] rokola auto beginGame:', e); }
+              }, 200);
+            });
           }
         } catch(e) {}
     }).catch(function(e) {
         console.warn('[reflejos] fetchUnlockedLevel promise rejected:', e && e.message);
-        // lista ya esta renderizada con defaults, seguimos
         try {
-          if (typeof RokolaClient !== 'undefined' && RokolaClient.isForced()) {
-            setTimeout(function() {
-              try { beginGame(); } catch(e) { console.warn('[reflejos] rokola auto beginGame:', e); }
-            }, 200);
+          if (typeof RokolaGate !== 'undefined') {
+            RokolaGate.onReady(function(mode) {
+              if (mode !== 'rokola_patient') return;
+              var ss = document.getElementById('start-screen');
+              if (ss) ss.style.display = 'none';
+              setTimeout(function() {
+                try { beginGame(); } catch(e) { console.warn('[reflejos] rokola auto beginGame:', e); }
+              }, 200);
+            });
           }
         } catch(e) {}
     });
@@ -1750,16 +1762,16 @@ async function saveMetrics(metrics) {
         saveBeacon('exception', { error: e && e.message, stack: e && e.stack && e.stack.substring(0, 400) });
     }
 
-    // ROKOLA wiring (audit #115): notificar al shell padre
+    // ROKOLA Art XVII (audit #154): notificar al shell padre
     try {
-      if (typeof RokolaClient !== 'undefined' && RokolaClient.isInsideRokola()) {
-        RokolaClient.notifyCompleted({
+      if (typeof RokolaGate !== 'undefined' && RokolaGate.mode === 'rokola_patient') {
+        RokolaGate.reportCellCompleted({
           completed: (metrics && (metrics.total_stimuli || 0) > 0),
           score: (metrics && metrics.score) || 0,
           level: metrics && metrics.level
         });
       }
-    } catch(e) { console.warn('[reflejos] RokolaClient.notifyCompleted:', e && e.message); }
+    } catch(e) { console.warn('[reflejos] RokolaGate.reportCellCompleted:', e && e.message); }
 
     return artXiiiResult;
 }

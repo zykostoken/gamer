@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Informe Clinico v5.1 — ZYKOS</title>
+<style>
+  :root {
+    --bg: #0a0e14;
+    --bg-card: #141a24;
+    --bg-card-2: #1c2432;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-faint: #64748b;
+    --accent: #4f46e5;
+    --green: #10b981;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --cyan: #06b6d4;
+    --violet: #8b5cf6;
+    --mono: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace;
+  }
+  *, *:before, *:after { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; line-height: 1.5; }
+  a { color: var(--cyan); text-decoration: none; }
+
+  /* === HEADER === */
+  .header {
+    background: linear-gradient(180deg, #0a0e14 0%, #141a24 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 24px;
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: blur(10px);
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .header-title { font-size: 1.35rem; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
+  .header-title .version-tag { color: var(--accent); font-family: var(--mono); font-size: 0.75rem; margin-left: 8px; }
+  .header-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-dim); }
+  .header-meta span { font-family: var(--mono); }
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+  .header-input {
+    padding: 6px 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    width: 180px;
+  }
+  .header-input:focus { outline: 1px solid var(--accent); }
+  .header-btn {
+    padding: 6px 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+  .header-btn:hover { background: #6366f1; }
+  .header-btn.secondary { background: transparent; border: 1px solid var(--border-strong); }
+  .header-btn.secondary:hover { background: var(--bg-card); }
+
+  /* === CONTAINER === */
+  .container { max-width: 1180px; margin: 0 auto; padding: 24px; }
+
+  /* === SNAPSHOT BAR === */
+  .snapshot {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .snap-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .snap-label { font-size: 0.72rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .snap-value { font-size: 1.35rem; font-weight: 700; font-family: var(--mono); }
+  .snap-subtext { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; }
+  .snap-card.alert { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.05); }
+  .snap-card.warn { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.05); }
+  .snap-card.ok { border-color: rgba(16,185,129,0.3); }
+
+  /* === BLOCK SECTIONS === */
+  .block {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .block.priority-1 { border-left: 3px solid var(--accent); }
+  .block.priority-mood { border-left: 3px solid var(--violet); background: linear-gradient(180deg, rgba(139,92,246,0.04) 0%, var(--bg-card) 100%); }
+  .block.motor { opacity: 0.86; border-left: 3px solid var(--text-faint); margin-top: 32px; }
+  .block.motor .block-header { background: rgba(100,116,139,0.04); }
+
+  .block-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    transition: background 0.12s;
+  }
+  .block-header:hover { background: rgba(255,255,255,0.02); }
+  .block-header h2 {
+    margin: 0; font-size: 1.02rem; font-weight: 600; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .block-header-meta { font-size: 0.78rem; color: var(--text-dim); display: flex; gap: 14px; }
+  .block-header-meta .n-ses { font-family: var(--mono); color: var(--cyan); }
+  .block-toggle {
+    font-size: 0.9rem; color: var(--text-dim);
+    transition: transform 0.2s;
+  }
+  .block.collapsed .block-toggle { transform: rotate(-90deg); }
+  .block.collapsed .block-body { display: none; }
+
+  .block-desc {
+    padding: 8px 18px 0;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+  .block-note-ip {
+    padding: 8px 18px;
+    font-size: 0.75rem;
+    color: var(--violet);
+    background: rgba(139,92,246,0.08);
+    border-top: 1px solid rgba(139,92,246,0.15);
+    font-weight: 500;
+  }
+  .block-note-motor {
+    padding: 8px 18px;
+    font-size: 0.75rem;
+    color: var(--text-faint);
+    font-style: italic;
+  }
+  .block-body { padding: 14px 18px 18px; }
+
+  /* === METRIC TABLE === */
+  .metric-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+  }
+  .metric-table th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .metric-table td {
+    padding: 10px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: middle;
+  }
+  .metric-table tr:last-child td { border-bottom: none; }
+  .metric-table tr:hover { background: rgba(255,255,255,0.02); }
+  .metric-table tr.significant { background: rgba(79,70,229,0.04); }
+  .metric-table tr.no-data td { opacity: 0.55; }
+
+  .metric-label { font-weight: 500; color: var(--text); }
+  .metric-note {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    font-style: italic;
+    margin-top: 2px;
+  }
+  .metric-value {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--text);
+  }
+  .metric-value.bigger { font-size: 1.05rem; }
+  .metric-unit { color: var(--text-faint); font-weight: 400; margin-left: 3px; font-size: 0.75rem; }
+  .metric-baseline {
+    font-family: var(--mono);
+    color: var(--text-dim);
+    font-size: 0.82rem;
+  }
+  .metric-n { font-family: var(--mono); color: var(--text-faint); font-size: 0.78rem; }
+
+  .delta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 0.74rem;
+    font-family: var(--mono);
+    font-weight: 600;
+  }
+  .delta-chip.significant-up { background: rgba(245,158,11,0.14); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .delta-chip.significant-down { background: rgba(16,185,129,0.14); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+  .delta-chip.significant-negative { background: rgba(239,68,68,0.14); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .delta-chip.flat { color: var(--text-faint); }
+  .delta-chip.no-baseline { color: var(--text-faint); font-style: italic; font-weight: 400; }
+
+  /* === MOOD DELTA SPECIAL === */
+  .mood-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .mood-stat {
+    background: var(--bg-card-2);
+    border-radius: 6px;
+    padding: 10px 12px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .mood-stat-value { font-size: 1.2rem; font-weight: 700; font-family: var(--mono); }
+  .mood-stat-label { font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; margin-top: 2px; }
+  .mood-stat.same .mood-stat-value { color: var(--text-dim); }
+  .mood-stat.lightened .mood-stat-value { color: var(--amber); }
+  .mood-stat.darkened .mood-stat-value { color: var(--cyan); }
+  .mood-stat.shifted .mood-stat-value { color: var(--violet); }
+  .mood-stat.missing .mood-stat-value { color: var(--red); }
+
+  .mood-transitions {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+  .mood-transitions th { padding: 6px 8px; font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.05em; border-bottom: 1px solid var(--border); text-align: left; }
+  .mood-transitions td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .color-swatch { display: inline-block; width: 18px; height: 18px; border-radius: 50%; vertical-align: middle; border: 1px solid rgba(255,255,255,0.2); margin-right: 6px; }
+  .transition-arrow { color: var(--text-faint); margin: 0 8px; }
+  .cat-chip {
+    display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 0.7rem;
+    font-family: var(--mono); font-weight: 600; text-transform: lowercase;
+  }
+  .cat-chip.same { background: rgba(100,116,139,0.2); color: var(--text-dim); }
+  .cat-chip.lightened { background: rgba(245,158,11,0.2); color: var(--amber); }
+  .cat-chip.darkened { background: rgba(6,182,212,0.2); color: var(--cyan); }
+  .cat-chip.shifted { background: rgba(139,92,246,0.2); color: var(--violet); }
+  .cat-chip.post_missing { background: rgba(239,68,68,0.2); color: var(--red); }
+
+  /* === STATES === */
+  .loading, .empty, .error {
+    text-align: center;
+    padding: 80px 24px;
+    color: var(--text-dim);
+  }
+  .error { color: var(--red); }
+  .empty-icon { font-size: 2.5rem; opacity: 0.3; margin-bottom: 12px; }
+
+  /* === DISCLOSURE BANNER === */
+  .disclosure {
+    background: rgba(79,70,229,0.06);
+    border: 1px solid rgba(79,70,229,0.2);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    margin-bottom: 18px;
+    line-height: 1.55;
+  }
+  .disclosure strong { color: var(--text); }
+
+  /* === PRINT === */
+  @media print {
+    body { background: white; color: black; }
+    .header, .header-actions { display: none; }
+    .block { break-inside: avoid; page-break-inside: avoid; background: white; border: 1px solid #ccc; }
+    .block-body { display: block !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-top">
+    <div>
+      <h1 class="header-title">Informe Clinico <span class="version-tag">v5.1</span></h1>
+      <div class="header-meta">
+        <span id="meta-patient">--</span>
+        <span id="meta-generated">--</span>
+        <span id="meta-window">--</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <input id="dni-input" class="header-input" placeholder="DNI" />
+      <input id="window-input" class="header-input" type="number" min="1" max="365" placeholder="dias" value="30" style="width:70px;" />
+      <button id="load-btn" class="header-btn">Cargar</button>
+      <button id="print-btn" class="header-btn secondary" onclick="window.print()">PDF</button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <div id="app"><div class="loading">Cargando informe...</div></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/supabase-config.js"></script>
+<script src="/games/shared/require-auth.js"></script>
+<script>
+(function() {
+'use strict';
+
+var sb = null;
+function getSb() {
+  if (!sb) try { sb = getSupabaseClient(); } catch(e){}
+  return sb;
+}
+
+// ====================================================================
+// UTILIDADES
+// ====================================================================
+function fmtNum(v, decimals) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  var n = Number(v);
+  if (n === 0) return '0';
+  if (decimals === undefined) {
+    if (Math.abs(n) >= 100) decimals = 0;
+    else if (Math.abs(n) >= 10) decimals = 1;
+    else decimals = 2;
+  }
+  return n.toFixed(decimals);
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  try {
+    var d = new Date(iso);
+    return d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  } catch(e) { return iso; }
+}
+function fmtDateShort(iso) {
+  if (!iso) return '—';
+  try {
+    var d = new Date(iso);
+    return d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  } catch(e) { return iso; }
+}
+function fmtInterval(ms) {
+  if (!ms) return '—';
+  var s = Math.round(ms/1000);
+  if (s < 60) return s + 's';
+  return Math.round(s/60) + 'min';
+}
+function escHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ====================================================================
+// CALCULO Z-SCORE + VARIATION FLAG
+// ====================================================================
+function computeDelta(metric) {
+  // metric: { value_recent, baseline_mean, baseline_sd, n_values, clinical_note }
+  var recent = metric.value_recent;
+  var baseMean = metric.baseline_mean;
+  var baseSd = metric.baseline_sd;
+  var n = metric.n_values || 0;
+
+  if (recent === null || recent === undefined || isNaN(recent)) {
+    return { kind: 'no-data', label: '—' };
+  }
+  if (n < 3) {
+    return { kind: 'no-baseline', label: 'N<3 sesiones' };
+  }
+  if (baseMean === null || baseMean === undefined) {
+    return { kind: 'no-baseline', label: 'sin baseline' };
+  }
+  var diff = recent - baseMean;
+  if (baseSd && baseSd > 0) {
+    var z = diff / baseSd;
+    var absZ = Math.abs(z);
+    if (absZ < 0.5) return { kind: 'flat', label: '≈ baseline', z: z };
+    if (absZ > 1.96) {
+      var kind = z > 0 ? 'significant-up' : 'significant-down';
+      return { kind: kind, label: (z > 0 ? '+' : '') + z.toFixed(1) + 'SD', z: z };
+    }
+    return { kind: 'flat', label: (z > 0 ? '+' : '') + z.toFixed(1) + 'SD', z: z };
+  }
+  // Fallback: % change
+  if (baseMean !== 0) {
+    var pct = (diff / Math.abs(baseMean)) * 100;
+    if (Math.abs(pct) < 10) return { kind: 'flat', label: (pct > 0 ? '+' : '') + pct.toFixed(0) + '%' };
+    if (Math.abs(pct) > 20) {
+      var kind2 = pct > 0 ? 'significant-up' : 'significant-down';
+      return { kind: kind2, label: (pct > 0 ? '+' : '') + pct.toFixed(0) + '%' };
+    }
+    return { kind: 'flat', label: (pct > 0 ? '+' : '') + pct.toFixed(0) + '%' };
+  }
+  return { kind: 'flat', label: '=' };
+}
+
+// ====================================================================
+// RENDER METRIC TABLE (para cada bloque cognitivo)
+// ====================================================================
+function renderMetricsTable(metricsObj) {
+  if (!metricsObj || typeof metricsObj !== 'object') return '<p style="color:var(--text-faint);">Sin metricas</p>';
+  var rows = Object.keys(metricsObj).map(function(key) {
+    var m = metricsObj[key];
+    if (!m) return '';
+    var unit = m.unit || '';
+    var delta = computeDelta(m);
+    var hasData = (m.value_recent !== null && m.value_recent !== undefined && !isNaN(m.value_recent));
+    var rowClass = '';
+    if (delta.kind === 'significant-up' || delta.kind === 'significant-down') rowClass = 'significant';
+    if (!hasData) rowClass += ' no-data';
+
+    return [
+      '<tr class="', rowClass, '">',
+        '<td>',
+          '<div class="metric-label">', escHtml(m.label || key), '</div>',
+          m.clinical_note ? '<span class="metric-note">' + escHtml(m.clinical_note) + '</span>' : '',
+        '</td>',
+        '<td><span class="metric-value">', fmtNum(m.value_recent), '</span><span class="metric-unit">', escHtml(unit), '</span></td>',
+        '<td><span class="metric-baseline">', (m.baseline_mean !== null && m.baseline_mean !== undefined) ? fmtNum(m.baseline_mean) : '—', '</span></td>',
+        '<td><span class="delta-chip ', delta.kind, '">', escHtml(delta.label), '</span></td>',
+        '<td><span class="metric-n">n=', (m.n_values || 0), '</span></td>',
+      '</tr>'
+    ].join('');
+  }).join('');
+
+  return [
+    '<table class="metric-table">',
+      '<thead><tr>',
+        '<th>Metrica</th>',
+        '<th>Valor reciente</th>',
+        '<th>Baseline</th>',
+        '<th>Variacion</th>',
+        '<th>N</th>',
+      '</tr></thead>',
+      '<tbody>', rows, '</tbody>',
+    '</table>'
+  ].join('');
+}
+
+// ====================================================================
+// RENDER BLOCK (generico)
+// ====================================================================
+function renderBlock(dominioId, blockData, opts) {
+  opts = opts || {};
+  if (!blockData) return '';
+  var data = blockData;
+  var priorityClass = opts.motor ? 'motor' : (opts.mood ? 'priority-mood' : (opts.priority1 ? 'priority-1' : ''));
+  var titulo = data.titulo || dominioId;
+
+  var bodyHtml = '';
+  if (opts.mood) {
+    bodyHtml = renderMoodBody(data);
+  } else {
+    bodyHtml = renderMetricsTable(data.metricas);
+  }
+
+  var extraNote = '';
+  if (data.ip_note) extraNote = '<div class="block-note-ip">' + escHtml(data.ip_note) + '</div>';
+  if (data.priority_note) extraNote = '<div class="block-note-motor">' + escHtml(data.priority_note) + '</div>';
+
+  return [
+    '<section class="block ', priorityClass, '" data-dominio="', dominioId, '">',
+      '<div class="block-header" onclick="this.parentElement.classList.toggle(\'collapsed\')">',
+        '<h2>', escHtml(titulo), '</h2>',
+        '<div style="display:flex;align-items:center;gap:14px;">',
+          '<div class="block-header-meta">',
+            '<span class="n-ses">', (data.sessions_count || 0), ' ses</span>',
+          '</div>',
+          '<span class="block-toggle">▾</span>',
+        '</div>',
+      '</div>',
+      data.descripcion ? '<div class="block-desc">' + escHtml(data.descripcion) + '</div>' : '',
+      extraNote,
+      '<div class="block-body">', bodyHtml, '</div>',
+    '</section>'
+  ].join('');
+}
+
+// ====================================================================
+// RENDER MOOD DELTA BODY (especial)
+// ====================================================================
+function renderMoodBody(data) {
+  var summary = data.summary || {};
+  var transitions = data.transitions || [];
+
+  var summaryHtml = [
+    '<div class="mood-summary">',
+      '<div class="mood-stat same"><div class="mood-stat-value">', (summary.same_count || 0), '</div><div class="mood-stat-label">Iguales</div></div>',
+      '<div class="mood-stat lightened"><div class="mood-stat-value">', (summary.lightened_count || 0), '</div><div class="mood-stat-label">Aclarado</div></div>',
+      '<div class="mood-stat darkened"><div class="mood-stat-value">', (summary.darkened_count || 0), '</div><div class="mood-stat-label">Oscurecido</div></div>',
+      '<div class="mood-stat shifted"><div class="mood-stat-value">', (summary.shifted_count || 0), '</div><div class="mood-stat-label">Desplazado</div></div>',
+      '<div class="mood-stat missing"><div class="mood-stat-value">', (summary.post_missing_count || 0), '</div><div class="mood-stat-label">Sin post</div></div>',
+      '<div class="mood-stat"><div class="mood-stat-value">', fmtInterval(summary.avg_interval_ms), '</div><div class="mood-stat-label">Int medio</div></div>',
+    '</div>'
+  ].join('');
+
+  var transitionsRows = transitions.slice(0, 20).map(function(t) {
+    return [
+      '<tr>',
+        '<td style="color:var(--text-faint);font-family:var(--mono);font-size:0.78rem;">', fmtDateShort(t.pre_at), '</td>',
+        '<td><code style="color:var(--cyan);font-size:0.78rem;">', escHtml(t.game_slug || '—'), '</code></td>',
+        '<td>',
+          t.pre_color_hex ? '<span class="color-swatch" style="background:' + t.pre_color_hex + ';"></span>' : '',
+          '<span style="font-size:0.78rem;">', escHtml(t.pre_color_name || '—'), '</span>',
+        '</td>',
+        '<td>', 
+          t.post_color_hex ? '<span class="color-swatch" style="background:' + t.post_color_hex + ';"></span>' : '<span style="color:var(--red);">✗</span>',
+          '<span style="font-size:0.78rem;">', escHtml(t.post_color_name || 'sin post'), '</span>',
+        '</td>',
+        '<td><span class="cat-chip ', escHtml(t.delta_category || ''), '">', escHtml(t.delta_category || '—'), '</span></td>',
+        '<td style="color:var(--text-faint);font-family:var(--mono);font-size:0.78rem;">', fmtInterval(t.interval_ms), '</td>',
+      '</tr>'
+    ].join('');
+  }).join('');
+
+  var transitionsHtml = transitions.length > 0 ? [
+    '<table class="mood-transitions" style="margin-top:6px;">',
+      '<thead><tr><th>Fecha</th><th>Juego</th><th>Pre</th><th>Post</th><th>Delta</th><th>Tiempo</th></tr></thead>',
+      '<tbody>', transitionsRows, '</tbody>',
+    '</table>',
+    transitions.length > 20 ? '<p style="font-size:0.75rem;color:var(--text-faint);margin-top:10px;text-align:right;">Mostrando 20/' + transitions.length + ' transiciones</p>' : ''
+  ].join('') : '<p style="color:var(--text-faint);font-size:0.85rem;">Sin pares pre/post registrados en la ventana.</p>';
+
+  var metricsHtml = data.metricas ? renderMetricsTable(data.metricas) : '';
+
+  return summaryHtml + transitionsHtml + 
+    (metricsHtml ? '<div style="margin-top:18px;border-top:1px solid var(--border);padding-top:14px;"><h3 style="font-size:0.82rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-dim);margin:0 0 10px;">Composites afectivos</h3>' + metricsHtml + '</div>' : '');
+}
+
+// ====================================================================
+// RENDER SNAPSHOT (barra superior de KPIs)
+// ====================================================================
+function renderSnapshot(report) {
+  var ses = report.sessions || {};
+  var consent = report.consent;
+  var hw = report.hw_calibration;
+  var mood = (report.afecto_mood_delta && report.afecto_mood_delta.summary) || {};
+
+  var consentClass = 'ok', consentText = 'Firmado';
+  if (!consent || typeof consent !== 'object') { consentClass = 'alert'; consentText = 'Sin firmar'; }
+  else if (!consent.clinical_metrics_authorized) { consentClass = 'alert'; consentText = 'Sin clinical metrics'; }
+
+  var calClass = 'ok', calText = 'OK';
+  if (!hw || typeof hw !== 'object') { calClass = 'warn'; calText = 'Sin calibrar'; }
+
+  var abandonClass = 'ok';
+  var abandonRate = 0;
+  if (mood.total_pairs) {
+    abandonRate = Math.round((mood.post_missing_count || 0) * 100 / mood.total_pairs);
+    if (abandonRate > 30) abandonClass = 'alert';
+    else if (abandonRate > 10) abandonClass = 'warn';
+  }
+
+  return [
+    '<div class="snapshot">',
+      '<div class="snap-card"><div class="snap-label">Sesiones (ventana)</div><div class="snap-value">', (ses.total_sessions_window || 0), '</div><div class="snap-subtext">Hist: ', (ses.total_sessions_all_time || 0), '</div></div>',
+      '<div class="snap-card"><div class="snap-label">Juegos jugados</div><div class="snap-value">', (ses.distinct_games_played || 0), '</div><div class="snap-subtext">distintos</div></div>',
+      '<div class="snap-card"><div class="snap-label">Ultima sesion</div><div class="snap-value" style="font-size:0.95rem;">', fmtDateShort(ses.last_session_at), '</div><div class="snap-subtext">&nbsp;</div></div>',
+      '<div class="snap-card ', consentClass, '"><div class="snap-label">Consent</div><div class="snap-value" style="font-size:0.95rem;">', consentText, '</div><div class="snap-subtext">', consent ? 'cam:' + (consent.cam_authorized?'sí':'no') + ' mic:' + (consent.mic_authorized?'sí':'no') : '', '</div></div>',
+      '<div class="snap-card ', calClass, '"><div class="snap-label">HW calibrado</div><div class="snap-value" style="font-size:0.95rem;">', calText, '</div><div class="snap-subtext">', hw && hw.hw_idle_jitter_px !== undefined ? 'jitter ' + fmtNum(hw.hw_idle_jitter_px) + 'px' : '', '</div></div>',
+      '<div class="snap-card ', abandonClass, '"><div class="snap-label">Abandono mood</div><div class="snap-value">', abandonRate, '%</div><div class="snap-subtext">', (mood.post_missing_count || 0), '/', (mood.total_pairs || 0), ' sin post</div></div>',
+    '</div>'
+  ].join('');
+}
+
+// ====================================================================
+// MAIN RENDER
+// ====================================================================
+function render(report) {
+  if (!report) { document.getElementById('app').innerHTML = '<div class="error">Sin data</div>'; return; }
+  if (report.error) { document.getElementById('app').innerHTML = '<div class="error">' + escHtml(report.error) + '</div>'; return; }
+
+  // Meta header
+  var p = report.patient || {};
+  document.getElementById('meta-patient').textContent = 'Paciente: ' + (p.name || '—') + ' — DNI ' + (p.dni || '—');
+  document.getElementById('meta-generated').textContent = 'Generado: ' + fmtDateShort(report.generated_at);
+  document.getElementById('meta-window').textContent = 'Ventana: ' + ((report.sessions && report.sessions.window_days) || 30) + 'd';
+
+  // Disclosure
+  var disc = [
+    '<div class="disclosure">',
+      '<strong>Foco clinico psiquiatrico.</strong> Este informe prioriza dominios cognitivos (atencion, memoria, ejecutivo, razonamiento, comprension, afecto) como core. La semiologia motora aparece al final como complemento. El <strong>mood delta intra-celda</strong> es variable clinica diferenciadora: mide como la tarea modifica el estado afectivo subjetivo del paciente (IP ZYKOS).',
+      '<br><br>',
+      '<strong>Comparaciones intra-individuales</strong> exclusivamente (V4 Art X). Z-scores contra baseline del propio paciente. N<3 sesiones marca "insuficiente para baseline". |Z|>1.96 resalta variacion significativa.',
+    '</div>'
+  ].join('');
+
+  // 6 bloques cognitivos + 1 motor al final
+  var blocksHtml = [
+    renderBlock('atencion_velocidad',  report.atencion_velocidad,  { priority1: true }),
+    renderBlock('memoria_aprendizaje', report.memoria_aprendizaje, { priority1: true }),
+    renderBlock('funcion_ejecutiva',   report.funcion_ejecutiva,   { priority1: true }),
+    renderBlock('razonamiento',        report.razonamiento,        { priority1: true }),
+    renderBlock('comprension',         report.comprension,         { priority1: true }),
+    renderBlock('afecto_mood_delta',   report.afecto_mood_delta,   { mood: true }),
+    renderBlock('motor_semiologia',    report.motor_semiologia,    { motor: true })
+  ].join('');
+
+  document.getElementById('app').innerHTML = renderSnapshot(report) + disc + blocksHtml;
+}
+
+// ====================================================================
+// LOAD
+// ====================================================================
+function load(dni, windowDays) {
+  if (!dni) {
+    document.getElementById('app').innerHTML = '<div class="empty"><div class="empty-icon">—</div>Ingresa un DNI en el header para cargar.</div>';
+    return;
+  }
+  document.getElementById('app').innerHTML = '<div class="loading">Cargando informe de DNI ' + escHtml(dni) + '...</div>';
+  var client = getSb();
+  if (!client) { document.getElementById('app').innerHTML = '<div class="error">Sin Supabase client</div>'; return; }
+  client.rpc('zykos_get_clinical_report_v51', { p_dni: dni, p_window_days: windowDays || 30 })
+    .then(function(r) {
+      if (r.error) {
+        document.getElementById('app').innerHTML = '<div class="error">Error: ' + escHtml(r.error.message) + '</div>';
+        return;
+      }
+      render(r.data);
+    })
+    .catch(function(e) {
+      document.getElementById('app').innerHTML = '<div class="error">Excepcion: ' + escHtml(e.message) + '</div>';
+    });
+}
+
+// ====================================================================
+// INIT
+// ====================================================================
+function init() {
+  // Default: DNI del usuario logueado (o superadmin puede cargar otro)
+  var dniInput = document.getElementById('dni-input');
+  var winInput = document.getElementById('window-input');
+  var btn = document.getElementById('load-btn');
+
+  // Cargar DNI default desde query param ?dni= o ZYKOS_DNI
+  var urlDni = new URLSearchParams(location.search).get('dni');
+  var defaultDni = urlDni || window.ZYKOS_DNI || '';
+  dniInput.value = defaultDni;
+
+  btn.addEventListener('click', function() {
+    load(dniInput.value.trim(), parseInt(winInput.value, 10));
+  });
+  dniInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') btn.click();
+  });
+
+  // Auto-load si hay DNI
+  if (defaultDni) {
+    // Esperar auth + supabase ready
+    setTimeout(function(){ load(defaultDni, parseInt(winInput.value, 10)); }, 1000);
+  } else {
+    document.getElementById('app').innerHTML = '<div class="empty"><div class="empty-icon">—</div>Ingresa un DNI en el header para cargar.</div>';
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+})();
+</script>
+
+</body>
+</html>

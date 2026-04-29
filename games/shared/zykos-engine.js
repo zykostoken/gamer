@@ -820,6 +820,27 @@ document.addEventListener('visibilitychange', function() {
 global.ZYKOS = ZYKOS;
 global.METRIC_DICTIONARY = METRIC_DICTIONARY;
 
+// Art 3.6 — API publica de emision de eventos semanticos.
+// Son delegados al corsario. Si el corsario se carga despues, estos
+// metodos se re-adjuntaran desde corsario.js al ejecutarse su IIFE.
+// Aca exponemos stubs seguros que avisan si se llaman antes de tiempo.
+if (typeof ZYKOS.emit !== 'function') {
+    ZYKOS.emit = function(eventType, data) {
+        if (typeof global.ZykosCorsario !== 'undefined' && typeof global.ZykosCorsario.emit === 'function') {
+            return global.ZykosCorsario.emit(eventType, data);
+        }
+        console.warn('[zykos-engine] ZYKOS.emit(' + eventType + '): corsario not loaded — event dropped');
+    };
+}
+if (typeof ZYKOS.emitGameEvent !== 'function') {
+    ZYKOS.emitGameEvent = function(subtype, data) {
+        if (typeof global.ZykosCorsario !== 'undefined' && typeof global.ZykosCorsario.emitGameEvent === 'function') {
+            return global.ZykosCorsario.emitGameEvent(subtype, data);
+        }
+        console.warn('[zykos-engine] ZYKOS.emitGameEvent(' + subtype + '): corsario not loaded — event dropped');
+    };
+}
+
 console.log('[zykos-engine] Core loaded. Dictionary: ' + _dictCount + ' metrics defined.');
 
 })(typeof window !== 'undefined' ? window : this);

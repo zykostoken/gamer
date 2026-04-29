@@ -177,28 +177,39 @@ const EDUCATIONAL_TIPS_BASE = {
 };
 
 // Genera tips DINÁMICOS para Nivel 1, específicos de la receta seleccionada
-function generateRecipeTip(recetaKey) {
+// V5.1 (audit #164 + fix visual budin-ingles): separar claramente lo que el
+// paciente ELIGIO vs lo que ES la receta. Sin markers [ok]/[x] que confunden.
+function generateRecipeTip(recetaKey, selectedNames) {
     const receta = RECETAS[recetaKey];
     if (!receta) return null;
 
     const baseNames = receta.ingredientes_base.map(id => ALIMENTOS[id]?.nombre || id).join(', ');
-    const optNames = receta.ingredientes_opcionales.map(id => ALIMENTOS[id]?.nombre || id).join(', ');
+    const optNames  = receta.ingredientes_opcionales.map(id => ALIMENTOS[id]?.nombre || id).join(', ');
     const distNames = receta.distractores.map(id => ALIMENTOS[id]?.nombre || id).join(', ');
     const tipReceta = receta.tips_receta || {};
 
+    // Panel "Tu carrito" si se paso selectedNames
+    const seleccionHtml = (selectedNames && selectedNames.length > 0)
+        ? `<p style="margin-top:8px;"><strong>Tu carrito:</strong></p>
+           <ul><li>${selectedNames.join(', ')}</li></ul>`
+        : `<p style="margin-top:8px;"><strong>Tu carrito:</strong></p>
+           <ul><li><em>(sin elementos)</em></li></ul>`;
+
     return {
         type: 'success',
-        icon: '️',
-        title: `${receta.nombre.toUpperCase()} — Ingredientes`,
+        icon: '',
+        title: `Receta correcta — ${receta.nombre}`,
         content: `
-            <p><strong>BASE (imprescindibles):</strong></p>
-            <ul><li>[ok] ${baseNames}</li></ul>
-            <p><strong>EXTRAS (opcionales válidos):</strong></p>
-            <ul><li>[ok] ${optNames}</li></ul>
-            <p><strong>DISTRACTORES (NO van en esta receta):</strong></p>
-            <ul><li>[x] ${distNames}</li></ul>
-            ${tipReceta.consejo_clave ? `<p><strong> Consejo:</strong> ${tipReceta.consejo_clave}</p>` : ''}
-            ${tipReceta.logica ? `<p><strong>[B] Lógica:</strong> ${tipReceta.logica}</p>` : ''}
+            ${seleccionHtml}
+            <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:14px 0;" />
+            <p><strong>Ingredientes base (imprescindibles):</strong></p>
+            <ul><li>${baseNames}</li></ul>
+            <p><strong>Extras opcionales válidos:</strong></p>
+            <ul><li>${optNames}</li></ul>
+            <p><strong>NO van en esta receta:</strong></p>
+            <ul><li>${distNames}</li></ul>
+            ${tipReceta.consejo_clave ? `<p><strong>Consejo:</strong> ${tipReceta.consejo_clave}</p>` : ''}
+            ${tipReceta.logica ? `<p><strong>Lógica:</strong> ${tipReceta.logica}</p>` : ''}
         `
     };
 }
@@ -249,7 +260,7 @@ function generateEducationalHTML(levelId, score, errors = {}) {
 
     // Para Nivel 1: agregar tip dinámico de receta
     if (levelId === 'nivel_1_supermercado' && errors.recetaKey) {
-        const recipeTip = generateRecipeTip(errors.recetaKey);
+        const recipeTip = generateRecipeTip(errors.recetaKey, errors.selected_items);
         if (recipeTip) {
             html += `
                 <div class="educational-box ${recipeTip.type}">

@@ -290,7 +290,7 @@ function showSatisfactionColor(opts, onDone) {
         swatch.onmouseout  = function() { swatch.style.transform = 'scale(1)';    swatch.style.borderColor = 'transparent'; };
         swatch.onclick = function() {
             var payload = Object.assign({}, opts, { color: c.hex, color_name: c.name, skipped: false });
-            _moodSaveToSupabase('satisfaction_color', payload, context);
+            _moodSaveToSupabase('post_game', payload, context);
             closeColorModal();
             if (typeof onDone === 'function') onDone({ color: c.hex, color_name: c.name, context: context });
         };
@@ -299,7 +299,7 @@ function showSatisfactionColor(opts, onDone) {
 
     document.getElementById('mood-color-skip').onclick = function() {
         var payload = Object.assign({}, opts, { color: null, skipped: true });
-        _moodSaveToSupabase('satisfaction_color', payload, context);
+        _moodSaveToSupabase('post_game', payload, context);
         closeColorModal();
         if (typeof onDone === 'function') onDone({ skipped: true, context: context });
     };
