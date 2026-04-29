@@ -593,7 +593,7 @@ async function loadData(dni){
 
   // Todas las RPCs en paralelo
   var [sessRes, granularRes, placementRes, baselineRes, colorsRes, rawRes, rtRawRes, movRawRes,
-       vizRadarRes, vizLongRes, vizRtRes, vizJitterRes] = await Promise.all([
+       vizRadarRes, vizLongRes, vizRtRes, vizJitterRes, canonFullRes, findingsPackRes] = await Promise.all([
     sb.rpc('zykos_dashboard_sessions', { p_dni: dni, p_game_slug: game, p_days_back: days }),
     sb.rpc('zykos_dashboard_granular', { p_dni: dni, p_game_slug: game, p_days_back: days }),
     sb.rpc('zykos_dashboard_placement_analysis', { p_dni: dni, p_game_slug: game, p_days_back: days }),
@@ -623,7 +623,11 @@ async function loadData(dni){
     sb.rpc('zykos_viz_radar', { p_dni: dni, p_session_date: null }),
     sb.rpc('zykos_viz_longitudinal', { p_dni: dni, p_game_slug: game }),
     sb.rpc('zykos_viz_rt_timeline', { p_dni: dni, p_game_slug: game, p_session_date: null }),
-    sb.rpc('zykos_viz_jitter_pulse', { p_dni: dni, p_game_slug: game, p_session_date: null })
+    sb.rpc('zykos_viz_jitter_pulse', { p_dni: dni, p_game_slug: game, p_session_date: null }),
+    // Audit #156 — canon completo: 186 metricas x cada juego del paciente, captured/pendiente
+    sb.rpc('zykos_dashboard_canon_full', { p_dni: dni, p_days_back: days }),
+    // Audit #156 — agente post-sesion: hallazgos personalizados (zykos_metrics_canonical + z-score propio)
+    sb.rpc('zykos_patient_findings_pack', { p_dni: dni, p_days_back: days })
   ]);
 
   if (sessRes.error){ content.innerHTML = '<div class="err-box">Error: ' + sessRes.error.message + '</div>'; return; }
@@ -640,7 +644,9 @@ async function loadData(dni){
     vizRadar: (vizRadarRes && vizRadarRes.data) || [],
     vizLongitudinal: (vizLongRes && vizLongRes.data) || [],
     vizRtTimeline: (vizRtRes && vizRtRes.data) || [],
-    vizJitterPulse: (vizJitterRes && vizJitterRes.data) || []
+    vizJitterPulse: (vizJitterRes && vizJitterRes.data) || [],
+    canonFull: (canonFullRes && canonFullRes.data) || null,
+    findingsPack: (findingsPackRes && findingsPackRes.data) || null
   });
 }
 
@@ -700,8 +706,14 @@ function render(content, patient, data){
   // 6. COLORES proyectivos
   if (data.colors.length) renderColors(content, data.colors);
 
+  // 6b. HALLAZGOS PERSONALES (post-session-analyzer + z-score propio) — audit #156
+  if (data.findingsPack) renderFindingsPack(content, data.findingsPack);
+
   // 7. RAW
   renderRaw(content, data.rawMetrics);
+
+  // 7b. CANON COMPLETO V5 — audit #156: las 186 metricas canonicas x cada juego, captured/pendiente
+  if (data.canonFull) renderCanonFull(content, data.canonFull);
 
   // 8. GLOSARIO
   renderGlossary(content);
@@ -1526,6 +1538,370 @@ function renderVizJitterPulse(parent, row){
       }
     });
   }
+}
+
+// Audit #156 — Agente post-sesion empaquetador.
+// Lee zykos_patient_findings_pack (que a su vez lee zykos_metrics_canonical
+// poblada por el edge function zykos-post-session-analyzer) y arma:
+//   * KPIs de actividad
+//   * Status por los 8 dominios canonicos (con z propio Art X)
+//   * Top hallazgos significativos (|z|>=1.0) ordenados por |z|
+//   * Sparklines por metrica (line chart longitudinal con baseline propio)
+function renderFindingsPack(content, pack){
+  if (!pack) return;
+  var sec = document.createElement('div');
+  sec.className = 'section';
+
+  var summary = pack.summary || {};
+  var domains = pack.domains || [];
+  var findings = pack.findings || [];
+  var series = pack.series || {};
+  var sigCount = findings.filter(function(f){ return f.severity === 'significant' || f.severity === 'high'; }).length;
+
+  sec.innerHTML =
+    '<div class="section-title">' +
+      '<span class="dot" style="background:var(--mag)"></span>' +
+      'HALLAZGOS PERSONALES — agente post-sesion' +
+      '<span class="agent">' + escapeHtml(pack.analyzer_source || 'zykos_metrics_canonical') + ' · z-score baseline propio (Art X)</span>' +
+    '</div>';
+
+  // Summary KPIs
+  var kpis = document.createElement('div');
+  kpis.className = 'kpi-row';
+  kpis.style.marginBottom = '.9rem';
+  kpis.innerHTML =
+    '<div class="kpi"><div class="v">' + (summary.sessions_count || 0) + '</div><div class="l">Sesiones canonicas</div></div>' +
+    '<div class="kpi"><div class="v">' + (summary.games_played || 0) + '</div><div class="l">Juegos distintos</div></div>' +
+    '<div class="kpi"><div class="v">' + (summary.days_active || 0) + '</div><div class="l">Dias con actividad</div></div>' +
+    '<div class="kpi ' + (sigCount > 0 ? 'warn' : 'ok') + '"><div class="v">' + sigCount + '</div><div class="l">Hallazgos |z|≥1.96</div></div>';
+  sec.appendChild(kpis);
+
+  if ((summary.sessions_count || 0) === 0){
+    var em = document.createElement('div');
+    em.className = 'empty';
+    em.style.padding = '1.5rem 1rem';
+    em.innerHTML = 'Sin sesiones procesadas por el analyzer en este periodo.<div class="sub">El edge function zykos-post-session-analyzer corre cada 5 min y deriva las metricas canonicas a zykos_metrics_canonical. Si hay sesiones recientes y no aparecen aca, chequear los logs del analyzer.</div>';
+    sec.appendChild(em);
+    content.appendChild(sec);
+    return;
+  }
+
+  // Dominios
+  var domGrid = document.createElement('div');
+  domGrid.className = 'grid-4';
+  domGrid.style.marginBottom = '1rem';
+  domains.forEach(function(d){
+    var z = d.composite_z != null ? parseFloat(d.composite_z)
+          : (d.avg_latest_z != null ? parseFloat(d.avg_latest_z) : null);
+    var statusClass = d.status === 'significant' ? 'err'
+                    : d.status === 'attention' ? 'warn'
+                    : d.status === 'insufficient' ? 'neutral' : 'ok';
+    var card = document.createElement('div');
+    card.className = 'kpi ' + (statusClass === 'err' ? 'err' : statusClass === 'warn' ? 'warn' : statusClass === 'ok' ? 'ok' : '');
+    card.innerHTML =
+      '<div class="v">' + (z != null ? (z > 0 ? '+' : '') + z.toFixed(2) : '—') + '</div>' +
+      '<div class="l">' + escapeHtml(d.domain) + '</div>' +
+      '<div class="kpi-sub">' + (d.metrics_with_baseline || 0) + '/' + (d.metrics_with_data || 0) + ' c/baseline · <span class="pill ' + statusClass + '">' + (d.status || 'normal') + '</span></div>';
+    domGrid.appendChild(card);
+  });
+  sec.appendChild(domGrid);
+
+  // Top hallazgos
+  if (findings.length > 0){
+    var fH = document.createElement('div');
+    fH.style.cssText = 'font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:.08em;margin:.8rem 0 .4rem';
+    fH.innerHTML = 'Top hallazgos · ordenados por |z|';
+    sec.appendChild(fH);
+
+    var fGrid = document.createElement('div');
+    fGrid.className = 'grid-2';
+    findings.slice(0, 8).forEach(function(f){
+      var sevClass = f.severity === 'high' ? 'err' : f.severity === 'significant' ? 'warn' : 'neutral';
+      var dirIcon = f.direction === 'above' ? '▲' : f.direction === 'below' ? '▼' : '◆';
+      var favColor = f.is_favorable === true ? 'var(--ok)'
+                   : f.is_favorable === false ? 'var(--err)'
+                   : 'var(--mt)';
+      var zStr = f.z_score != null ? (f.z_score > 0 ? '+' : '') + parseFloat(f.z_score).toFixed(2) : '—';
+      var lastV = f.latest_value != null ? fmt(f.latest_value, 2) : '-';
+      var meanV = f.baseline_mean != null ? fmt(f.baseline_mean, 2) : '-';
+      var sdV = f.baseline_sd != null ? fmt(f.baseline_sd, 2) : '-';
+      var lastTs = f.latest_ts ? new Date(f.latest_ts).toLocaleDateString('es-AR') : '-';
+      var card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML =
+        '<h3><span style="color:' + favColor + ';font-weight:600">' + dirIcon + ' ' + escapeHtml(f.metric) + '</span>' +
+          '<span class="pill ' + sevClass + '">z=' + zStr + '</span></h3>' +
+        '<div class="kpi-sub">' + escapeHtml(f.domain) + ' · ' + escapeHtml(f.latest_game || '') + ' · ' + lastTs + '</div>' +
+        '<table class="raw-table" style="margin-top:.4rem;font-size:.66rem"><tbody>' +
+          '<tr><td class="g">ultimo</td><td><b>' + lastV + '</b></td>' +
+              '<td class="g">media propia</td><td>' + meanV + '</td></tr>' +
+          '<tr><td class="g">SD</td><td>' + sdV + '</td>' +
+              '<td class="g">n baseline</td><td>' + (f.baseline_n || 0) + '</td></tr>' +
+        '</tbody></table>';
+      fGrid.appendChild(card);
+    });
+    sec.appendChild(fGrid);
+  }
+
+  // Sparklines por metrica (Chart.js)
+  var seriesKeys = Object.keys(series).filter(function(k){
+    return series[k] && Array.isArray(series[k].points) && series[k].points.length >= 2;
+  });
+  if (seriesKeys.length > 0){
+    var sH = document.createElement('div');
+    sH.style.cssText = 'font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:.08em;margin:1rem 0 .4rem';
+    sH.innerHTML = 'Series longitudinales · cada panel es una metrica';
+    sec.appendChild(sH);
+
+    var sGrid = document.createElement('div');
+    sGrid.className = 'grid-3';
+    seriesKeys.sort().forEach(function(k, i){
+      var entry = series[k];
+      var pts = entry.points;
+      var card = document.createElement('div');
+      card.className = 'card';
+      var canvasId = 'fp-spark-' + i;
+      card.innerHTML =
+        '<h3>' + escapeHtml(k) + '<span class="unit">' + escapeHtml(entry.domain || '') + '</span></h3>' +
+        '<div class="chart-wrap" style="height:90px"><canvas id="' + canvasId + '"></canvas></div>';
+      sGrid.appendChild(card);
+
+      // Render diferido para asegurar que el canvas exista
+      setTimeout(function(){
+        var ctx = document.getElementById(canvasId);
+        if (!ctx || !window.Chart) return;
+        var labels = pts.map(function(p){ return new Date(p.t).toLocaleDateString('es-AR'); });
+        var values = pts.map(function(p){ return parseFloat(p.v); });
+        var mean = values.reduce(function(a,b){ return a+b; }, 0) / values.length;
+        if (_charts[canvasId]) _charts[canvasId].destroy();
+        _charts[canvasId] = new Chart(ctx.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: k, data: values,
+                borderColor: 'rgba(236,72,153,.9)',
+                backgroundColor: 'rgba(236,72,153,.12)',
+                tension: 0.3, fill: true,
+                pointRadius: 2, pointHoverRadius: 4, borderWidth: 1.5
+              },
+              {
+                label: 'media propia', data: labels.map(function(){ return mean; }),
+                borderColor: 'rgba(167,139,250,.5)',
+                borderDash: [4,3], pointRadius: 0, fill: false, borderWidth: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: {
+                ticks: { color: 'rgba(229,233,240,.4)', font: { size: 8 } },
+                grid: { color: 'rgba(255,255,255,.04)' }
+              },
+              x: {
+                ticks: { color: 'rgba(229,233,240,.35)', font: { size: 8 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 4 },
+                grid: { display: false }
+              }
+            }
+          }
+        });
+      }, 0);
+    });
+    sec.appendChild(sGrid);
+  }
+
+  content.appendChild(sec);
+}
+
+// Audit #156 — Doctrina firmada: el dataset completo (186 canon V5) se devuelve
+// y muestra siempre. La presentacion destaca lo capturado; lo pendiente queda
+// listado para que el clinico pueda ver cualquier metrica aunque no se haya
+// escrito todavia ("nadie sabe que van a buscar").
+function renderCanonFull(content, payload){
+  if (!payload || !payload.games) return;
+
+  var sec = document.createElement('div');
+  sec.className = 'section';
+  var games = payload.games || [];
+  var canonTotal = parseInt(payload.canon_total) || 0;
+  var totalCapturedAcrossGames = games.reduce(function(a,g){
+    return a + (parseInt(g.canon_captured) || 0);
+  }, 0);
+
+  sec.innerHTML =
+    '<div class="section-title">' +
+      '<span class="dot" style="background:var(--ac2)"></span>' +
+      'COBERTURA CANON V5 — todas las metricas por juego' +
+      '<span class="agent">audit #156 · zykos_dashboard_canon_full · dict ' + canonTotal + ' metricas</span>' +
+    '</div>';
+
+  if (games.length === 0){
+    var empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.style.padding = '1.5rem 1rem';
+    empty.innerHTML = 'Sin sesiones del paciente en la ventana actual.<div class="sub">Las 186 metricas del canon V5 aparecen aca cuando el paciente toque al menos un juego.</div>';
+    sec.appendChild(empty);
+    content.appendChild(sec);
+    return;
+  }
+
+  // Toggle global: mostrar/ocultar pendientes
+  var toolbar = document.createElement('div');
+  toolbar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem;margin-bottom:.8rem;font-size:.72rem;color:var(--mt)';
+  toolbar.innerHTML =
+    '<div>' + games.length + ' juego(s) · ' + totalCapturedAcrossGames + ' valores canonicos capturados de ' + (canonTotal * games.length) + ' posibles</div>' +
+    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer">' +
+      '<input type="checkbox" id="canon-hide-pending" style="cursor:pointer">' +
+      '<span>Ocultar pendientes</span>' +
+    '</label>';
+  sec.appendChild(toolbar);
+
+  games.forEach(function(g, gi){
+    var gameDet = document.createElement('details');
+    gameDet.open = (gi === 0); // primer juego abierto por defecto
+    gameDet.style.cssText = 'background:var(--card);border:1px solid var(--bd);border-radius:10px;margin-bottom:.6rem;overflow:hidden';
+
+    var captured = parseInt(g.canon_captured) || 0;
+    var totalForGame = parseInt(g.canon_total) || canonTotal;
+    var sessions = parseInt(g.sessions) || 0;
+    var pct = totalForGame > 0 ? Math.round(100 * captured / totalForGame) : 0;
+    var lastSeen = g.last_seen ? new Date(g.last_seen).toLocaleDateString('es-AR') : '-';
+
+    var summary = document.createElement('summary');
+    summary.style.cssText = 'cursor:pointer;padding:.7rem 1rem;background:var(--sf);display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap;font-size:.78rem;list-style:none';
+    summary.innerHTML =
+      '<span style="font-weight:600;color:var(--tx)">' + escapeHtml(g.game_slug) + '</span>' +
+      '<span style="color:var(--mt);font-size:.7rem">' +
+        sessions + ' sesion(es) · ult ' + lastSeen + ' · ' +
+        '<b style="color:var(--ac)">' + captured + '/' + totalForGame + '</b> canon (' + pct + '%)' +
+      '</span>';
+    gameDet.appendChild(summary);
+
+    var domWrap = document.createElement('div');
+    domWrap.style.padding = '.6rem .8rem .8rem';
+    var domains = g.domains || [];
+    domains.forEach(function(d){
+      var metrics = d.metrics || [];
+      if (metrics.length === 0) return;
+      var dCaptured = parseInt(d.captured) || 0;
+      var dTotal = parseInt(d.total) || metrics.length;
+
+      var dDet = document.createElement('details');
+      dDet.open = dCaptured > 0;
+      dDet.dataset.domainCaptured = dCaptured;
+      dDet.style.cssText = 'margin:.4rem 0;border:1px solid var(--bd);border-radius:8px;overflow:hidden';
+
+      var dSum = document.createElement('summary');
+      dSum.style.cssText = 'cursor:pointer;padding:.5rem .75rem;background:rgba(167,139,250,.04);font-size:.7rem;color:var(--tx);display:flex;justify-content:space-between;align-items:center;list-style:none';
+      dSum.innerHTML =
+        '<span style="text-transform:uppercase;letter-spacing:.06em;color:var(--ac2);font-weight:600">' + escapeHtml(d.domain || '') + '</span>' +
+        '<span style="color:var(--mt);font-size:.65rem"><b style="color:var(--tx)">' + dCaptured + '/' + dTotal + '</b> capturadas</span>';
+      dDet.appendChild(dSum);
+
+      var tbl = document.createElement('table');
+      tbl.className = 'raw-table';
+      tbl.style.cssText = 'margin:0;font-size:.66rem';
+      tbl.innerHTML =
+        '<thead><tr>' +
+          '<th style="min-width:170px">metrica</th>' +
+          '<th style="width:48px">unidad</th>' +
+          '<th style="width:80px">ultimo</th>' +
+          '<th style="width:80px">media</th>' +
+          '<th style="width:100px">min/max</th>' +
+          '<th style="width:40px">n</th>' +
+          '<th style="width:140px">trend Q1→Q4</th>' +
+          '<th>estado</th>' +
+        '</tr></thead><tbody></tbody>';
+      var tbody = tbl.querySelector('tbody');
+
+      metrics.forEach(function(m){
+        var captured_b = !!m.captured;
+        var tr = document.createElement('tr');
+        tr.dataset.captured = captured_b ? '1' : '0';
+        if (!captured_b) tr.style.opacity = '0.45';
+
+        var lastV = formatCanonValue(m.last_value);
+        var meanV = m.mean != null ? fmt(m.mean, 2) : '-';
+        var minMax = (m.min != null && m.max != null) ? (fmt(m.min, 2) + ' / ' + fmt(m.max, 2)) : '-';
+        var nVal = parseInt(m.n) || 0;
+        var qTrend = renderQuartileTrend(m.q1, m.q2, m.q3, m.q4);
+        var statusPill = captured_b
+          ? '<span class="pill ok">capturada</span>'
+          : '<span class="pill" style="background:rgba(167,139,250,.08);color:var(--dim)">pendiente</span>';
+
+        var desc = m.description ? ' · ' + escapeHtml(String(m.description).slice(0,80)) : '';
+        var nature = m.nature ? '<span style="color:var(--dim);font-size:.6rem"> [' + escapeHtml(m.nature) + ']</span>' : '';
+
+        tr.innerHTML =
+          '<td><b>' + escapeHtml(m.metric_key) + '</b>' + nature + '<div class="g">' + escapeHtml(desc.replace(/^ · /,'')) + '</div></td>' +
+          '<td class="g">' + escapeHtml(m.unit || '-') + '</td>' +
+          '<td>' + lastV + '</td>' +
+          '<td>' + meanV + '</td>' +
+          '<td class="g">' + minMax + '</td>' +
+          '<td>' + nVal + '</td>' +
+          '<td>' + qTrend + '</td>' +
+          '<td>' + statusPill + '</td>';
+        tbody.appendChild(tr);
+      });
+
+      dDet.appendChild(tbl);
+      domWrap.appendChild(dDet);
+    });
+
+    gameDet.appendChild(domWrap);
+    sec.appendChild(gameDet);
+  });
+
+  // Wire toggle
+  var hideCb = sec.querySelector('#canon-hide-pending');
+  hideCb.addEventListener('change', function(){
+    var hide = this.checked;
+    sec.querySelectorAll('tr[data-captured]').forEach(function(tr){
+      if (tr.dataset.captured === '0') tr.style.display = hide ? 'none' : '';
+    });
+  });
+
+  content.appendChild(sec);
+}
+
+function formatCanonValue(v){
+  if (v === null || v === undefined) return '<span class="g">-</span>';
+  if (typeof v === 'number') return fmt(v, 2);
+  if (typeof v === 'string'){
+    if (v.length > 20) return '<span title="' + escapeHtml(v) + '">' + escapeHtml(v.slice(0,18)) + '…</span>';
+    return escapeHtml(v);
+  }
+  if (typeof v === 'boolean') return v ? 'true' : 'false';
+  // object / array — render compact
+  var s = JSON.stringify(v);
+  if (s.length > 22) s = s.slice(0,20) + '…';
+  return '<span class="g" title="' + escapeHtml(JSON.stringify(v)) + '">' + escapeHtml(s) + '</span>';
+}
+
+function renderQuartileTrend(q1, q2, q3, q4){
+  var qs = [q1, q2, q3, q4].map(function(x){ return x == null ? null : parseFloat(x); });
+  var have = qs.filter(function(x){ return x != null && !isNaN(x); });
+  if (have.length === 0) return '<span class="g">-</span>';
+  var max = Math.max.apply(null, have);
+  var min = Math.min.apply(null, have);
+  var range = max - min;
+  return '<span style="display:inline-flex;gap:2px;align-items:flex-end;height:18px">' +
+    qs.map(function(q){
+      if (q == null || isNaN(q)) return '<span style="width:10px;height:2px;background:var(--bd);align-self:center"></span>';
+      var h = range > 0 ? Math.max(2, Math.round(16 * (q - min) / range)) : 8;
+      return '<span title="' + fmt(q,2) + '" style="width:10px;height:' + h + 'px;background:var(--ac);border-radius:1px"></span>';
+    }).join('') +
+  '</span>';
+}
+
+function escapeHtml(s){
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, function(c){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+  });
 }
 
 function renderGlossary(content){
