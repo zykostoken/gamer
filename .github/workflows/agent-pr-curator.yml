@@ -1,0 +1,109 @@
+name: agent-pr-curator
+# Meta-subagente TIER 2: audit diario de PRs estancados, branches huérfanas, dependabot alerts.
+# Escribe issue resumen si hay deuda relevante.
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # 09:00 UTC diario = 06:00 AR
+  workflow_dispatch:
+
+permissions:
+  pull-requests: read
+  issues: write
+  contents: read
+
+jobs:
+  curate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Audit PRs, branches y dependabot
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const repo = context.repo;
+            const now = new Date();
+            const sevenDaysAgo = new Date(now - 7*24*3600*1000);
+            const thirtyDaysAgo = new Date(now - 30*24*3600*1000);
+
+            // 1. PRs abiertos sin actividad >7d
+            const { data: prs } = await github.rest.pulls.list({
+              ...repo, state: 'open', per_page: 100
+            });
+            const stalePrs = prs.filter(pr => 
+              new Date(pr.updated_at) < sevenDaysAgo
+            );
+
+            // 2. Branches huérfanas (sin commits recientes, sin PR abierto)
+            const { data: branches } = await github.rest.repos.listBranches({
+              ...repo, per_page: 100
+            });
+            const openPrBranches = new Set(prs.map(p => p.head.ref));
+            const orphanCandidates = branches.filter(b => 
+              b.name !== 'main' && 
+              b.name.startsWith('copilot/') &&
+              !openPrBranches.has(b.name)
+            );
+
+            // 3. Dependabot alerts open
+            let dependabot = [];
+            try {
+              const { data } = await github.rest.dependabot.listAlertsForRepo({
+                ...repo, state: 'open', per_page: 50
+              });
+              dependabot = data;
+            } catch (e) {
+              core.warning('Dependabot alerts requires admin permission');
+            }
+
+            const summary = {
+              stale_prs: stalePrs.length,
+              orphan_copilot_branches: orphanCandidates.length,
+              dependabot_open: dependabot.length,
+              dependabot_critical: dependabot.filter(a => a.security_advisory?.severity === 'critical').length
+            };
+
+            console.log('Summary:', JSON.stringify(summary, null, 2));
+
+            // Si hay deuda relevante, crear/actualizar issue de tracking
+            const totalDebt = summary.stale_prs + summary.orphan_copilot_branches + summary.dependabot_open;
+
+            if (totalDebt < 3) {
+              console.log('Tech debt below threshold, no issue created.');
+              return;
+            }
+
+            const today = now.toISOString().slice(0, 10);
+            const issueTitle = `🤖 agent-pr-curator: tech debt report ${today}`;
+
+            const body = [
+              `# Reporte automático del agent-pr-curator`,
+              ``,
+              `Fecha: ${today}`,
+              ``,
+              `## PRs estancados (>7 días sin actividad)`,
+              stalePrs.length === 0 ? '_Ninguno_' : 
+                stalePrs.map(p => `- #${p.number} ${p.title} (último update ${p.updated_at.slice(0,10)})`).join('\n'),
+              ``,
+              `## Branches Copilot huérfanas (sin PR abierto)`,
+              orphanCandidates.length === 0 ? '_Ninguna_' :
+                orphanCandidates.slice(0,15).map(b => `- \`${b.name}\``).join('\n'),
+              ``,
+              `## Dependabot alerts open`,
+              dependabot.length === 0 ? '_Ninguna_' :
+                dependabot.slice(0,10).map(a => 
+                  `- [${a.security_advisory?.severity || '?'}] ${a.dependency?.package?.name}: ${a.security_advisory?.summary?.slice(0,80) || '?'}`
+                ).join('\n'),
+              ``,
+              `---`,
+              `Generado por \`.github/workflows/agent-pr-curator.yml\``,
+              `Doctrina: meta-subagentes V5 (docs/META_SUBAGENTES_V5.md)`
+            ].join('\n');
+
+            await github.rest.issues.create({
+              ...repo,
+              title: issueTitle,
+              body,
+              labels: ['tech-debt', 'auto-generated']
+            });
+
+            console.log(`Issue creado: ${issueTitle}`);

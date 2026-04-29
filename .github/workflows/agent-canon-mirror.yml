@@ -1,0 +1,73 @@
+name: agent-canon-mirror
+# Meta-subagente TIER 2: mirror desde GitHub que ejecuta el guardian de Supabase
+# y reporta el resultado en el repo (issue o summary).
+
+on:
+  schedule:
+    - cron: '15 6 * * *'  # 06:15 UTC diario (offset del audit-progress de Supabase)
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  mirror-guardian:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger guardian + capturar resultado
+        id: guardian
+        run: |
+          RESPONSE=$(curl -s -X POST 'https://aypljitzifwjosjkqsuu.supabase.co/functions/v1/zykos-guardian' \
+            -H "Content-Type: application/json" -d '{}')
+          
+          echo "$RESPONSE" > guardian_response.json
+          echo "Guardian response saved to guardian_response.json"
+          
+          # Contar checks fallidos
+          FAILED=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(sum(1 for c in d.get('checks',[]) if not c.get('ok')))")
+          CRITICAL=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(sum(1 for c in d.get('checks',[]) if c.get('severity')=='critical' and not c.get('ok')))")
+          
+          echo "failed=$FAILED" >> $GITHUB_OUTPUT
+          echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+          echo "Failed checks: $FAILED, Critical: $CRITICAL"
+
+      - name: Subir guardian response como artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: guardian-response-${{ github.run_id }}
+          path: guardian_response.json
+          retention-days: 30
+
+      - name: Crear issue si hay críticos
+        if: steps.guardian.outputs.critical != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const response = JSON.parse(fs.readFileSync('guardian_response.json', 'utf8'));
+            const today = new Date().toISOString().slice(0, 10);
+            
+            const failed = response.checks.filter(c => !c.ok);
+            const body = [
+              `# 🚨 Guardian critical alerts`,
+              `Fecha: ${today}`,
+              ``,
+              `## Checks fallidos (${failed.length})`,
+              ...failed.map(c => `- **${c.severity.toUpperCase()}** [\`${c.name}\`]: ${c.description}`),
+              ``,
+              `## Snapshot completo`,
+              '```json',
+              JSON.stringify(response, null, 2),
+              '```',
+              ``,
+              `---`,
+              `Auto-generado por \`.github/workflows/agent-canon-mirror.yml\``
+            ].join('\n');
+            
+            await github.rest.issues.create({
+              ...context.repo,
+              title: `🚨 agent-canon-mirror: ${failed.filter(c=>c.severity==='critical').length} critical checks failed (${today})`,
+              body,
+              labels: ['guardian-alert', 'auto-generated', 'priority-critical']
+            });

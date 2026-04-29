@@ -1,0 +1,69 @@
+name: agent-deploy-sentry
+# Meta-subagente TIER 2: smoke test del portal post-deploy.
+# Si zykos.ar no responde como debe, abre issue automático.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Esperar deploy de Netlify (90s)
+        run: sleep 90
+
+      - name: Smoke test zykos.ar
+        id: smoke
+        run: |
+          set +e
+          STATUS_HOME=$(curl -s -o /dev/null -w "%{http_code}" -L https://zykos.ar/)
+          STATUS_PORTAL=$(curl -s -o /dev/null -w "%{http_code}" -L https://zykos.ar/portal/)
+          STATUS_DASH=$(curl -s -o /dev/null -w "%{http_code}" -L https://zykos.ar/dashboard/report.html)
+          
+          echo "home=$STATUS_HOME" >> $GITHUB_OUTPUT
+          echo "portal=$STATUS_PORTAL" >> $GITHUB_OUTPUT
+          echo "dashboard=$STATUS_DASH" >> $GITHUB_OUTPUT
+          
+          echo "Home: $STATUS_HOME | Portal: $STATUS_PORTAL | Dashboard: $STATUS_DASH"
+          
+          # Falla si alguno no es 2xx
+          if [ "$STATUS_HOME" -ge 400 ] || [ "$STATUS_PORTAL" -ge 400 ] || [ "$STATUS_DASH" -ge 400 ]; then
+            echo "FAILURE_DETECTED=true" >> $GITHUB_ENV
+          fi
+
+      - name: Crear issue si smoke test falló
+        if: env.FAILURE_DETECTED == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = context.sha.slice(0, 8);
+            await github.rest.issues.create({
+              ...context.repo,
+              title: `🚨 agent-deploy-sentry: smoke test failure post-deploy ${sha}`,
+              body: [
+                `# Deploy smoke test failure`,
+                ``,
+                `Commit: ${context.sha}`,
+                `Workflow run: ${context.runId}`,
+                ``,
+                `## Status codes`,
+                `- zykos.ar/: ${{ steps.smoke.outputs.home }}`,
+                `- zykos.ar/portal/: ${{ steps.smoke.outputs.portal }}`,
+                `- zykos.ar/dashboard/report.html: ${{ steps.smoke.outputs.dashboard }}`,
+                ``,
+                `## Acción sugerida`,
+                `1. Verificar Netlify deploy logs`,
+                `2. Si el deploy falló: rollback al commit anterior`,
+                `3. Si el deploy fue exitoso pero rompió rutas: revisar redirects en netlify.toml`,
+                ``,
+                `---`,
+                `Auto-generado por \`.github/workflows/agent-deploy-sentry.yml\``
+              ].join('\n'),
+              labels: ['deploy-failure', 'auto-generated', 'priority-high']
+            });
