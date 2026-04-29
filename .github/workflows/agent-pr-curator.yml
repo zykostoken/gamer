@@ -10,7 +10,7 @@ on:
 permissions:
   pull-requests: read
   issues: write
-  contents: read
+  contents: write
 
 jobs:
   curate:
@@ -33,7 +33,7 @@ jobs:
               new Date(pr.updated_at) < sevenDaysAgo
             );
 
-            // 2. Branches huérfanas (sin commits recientes, sin PR abierto)
+            // 2. Branches huérfanas (sin PR abierto) — auto-delete
             const { data: branches } = await github.rest.repos.listBranches({
               ...repo, per_page: 100
             });
@@ -43,6 +43,23 @@ jobs:
               b.name.startsWith('copilot/') &&
               !openPrBranches.has(b.name)
             );
+
+            // Auto-delete orphaned copilot branches
+            const deletedBranches = [];
+            const failedDeletes = [];
+            for (const branch of orphanCandidates) {
+              try {
+                await github.rest.git.deleteRef({
+                  ...repo,
+                  ref: `heads/${branch.name}`
+                });
+                deletedBranches.push(branch.name);
+                console.log(`Deleted orphan branch: ${branch.name}`);
+              } catch (e) {
+                failedDeletes.push(branch.name);
+                core.warning(`Could not delete branch ${branch.name}: ${e.message}`);
+              }
+            }
 
             // 3. Dependabot alerts open
             let dependabot = [];
@@ -57,7 +74,8 @@ jobs:
 
             const summary = {
               stale_prs: stalePrs.length,
-              orphan_copilot_branches: orphanCandidates.length,
+              orphan_copilot_branches_deleted: deletedBranches.length,
+              orphan_copilot_branches_failed: failedDeletes.length,
               dependabot_open: dependabot.length,
               dependabot_critical: dependabot.filter(a => a.security_advisory?.severity === 'critical').length
             };
@@ -65,7 +83,7 @@ jobs:
             console.log('Summary:', JSON.stringify(summary, null, 2));
 
             // Si hay deuda relevante, crear/actualizar issue de tracking
-            const totalDebt = summary.stale_prs + summary.orphan_copilot_branches + summary.dependabot_open;
+            const totalDebt = summary.stale_prs + summary.orphan_copilot_branches_failed + summary.dependabot_open;
 
             if (totalDebt < 3) {
               console.log('Tech debt below threshold, no issue created.');
@@ -84,10 +102,15 @@ jobs:
               stalePrs.length === 0 ? '_Ninguno_' : 
                 stalePrs.map(p => `- #${p.number} ${p.title} (último update ${p.updated_at.slice(0,10)})`).join('\n'),
               ``,
-              `## Branches Copilot huérfanas (sin PR abierto)`,
-              orphanCandidates.length === 0 ? '_Ninguna_' :
-                orphanCandidates.slice(0,15).map(b => `- \`${b.name}\``).join('\n'),
+              `## Branches Copilot huérfanas eliminadas`,
+              deletedBranches.length === 0 ? '_Ninguna_' :
+                deletedBranches.map(b => `- ~~\`${b}\`~~ ✅ eliminada`).join('\n'),
               ``,
+              failedDeletes.length === 0 ? '' : [
+                `## Branches Copilot huérfanas (no se pudo eliminar)`,
+                failedDeletes.map(b => `- \`${b}\``).join('\n'),
+                ``
+              ].join('\n'),
               `## Dependabot alerts open`,
               dependabot.length === 0 ? '_Ninguna_' :
                 dependabot.slice(0,10).map(a => 
