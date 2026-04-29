@@ -222,7 +222,17 @@ function onMove(e) {
 
 function onClick(e) {
     if (!state.active) return;
+    // V4 FIX: onClick esta bind-eado a 'click' y 'touchstart' (ver start()).
+    // En TouchEvent la raiz no tiene clientX/Y — hay que leer changedTouches/touches.
+    // Si llegan coords no finitas, abortar silenciosamente en vez de crashear
+    // elementFromPoint con "non-finite double value".
     var x = e.clientX, y = e.clientY;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        var t = (e.changedTouches && e.changedTouches[0]) ||
+                (e.touches && e.touches[0]) || null;
+        if (t) { x = t.clientX; y = t.clientY; }
+    }
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
 
     if (state.preClickSamples.length >= 3) {
         var last5 = state.preClickSamples.slice(-5);

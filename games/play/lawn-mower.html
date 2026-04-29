@@ -278,30 +278,10 @@
     .level-name { font-weight: 700; color: var(--text); }
     .level-desc { font-size: 0.8rem; color: var(--text-muted); }
 
-    /* Art XIII level gating styles */
-    .level-btn.level-locked {
-      opacity: 0.45;
-      cursor: not-allowed;
-      pointer-events: none;
-    }
-    .level-btn.level-locked .level-num {
-      background: #94a3b8;
-    }
-    .level-btn.level-locked::after {
-      content: "";
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      margin-left: auto;
-      flex-shrink: 0;
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>');
-      background-size: contain;
-      background-repeat: no-repeat;
-    }
+    /* Art XIII informational styles (audit #151)
+       NO HAY GATE: todos los niveles clickeables.
+       level-completed: tinte verde suave pero jugable (util para rejugar). */
     .level-btn.level-completed {
-      opacity: 0.72;
-      cursor: not-allowed;
-      pointer-events: none;
       border-color: rgba(74, 222, 128, 0.4);
       background: rgba(74, 222, 128, 0.08);
     }
@@ -1598,8 +1578,27 @@
 
   // Get patient DNI from URL params or localStorage
   const lmParams = new URLSearchParams(window.location.search);
-  // DNI is the universal identifier
-  const lmPatientDni = lmParams.get('dni') || (function(){ try { return localStorage.getItem('zykos_patient_dni'); } catch(e){ return null; } })() || window.ZYKOS_DNI;
+  // DNI is the universal identifier.
+  // FIX 24-abr-2026: DNI lazy-read. require-auth.js setea window.ZYKOS_DNI
+  // ASINCRONO despues de validar el token. Si lo cacheamos en una const al
+  // parse-time del script, queda null para siempre y NINGUNA metrica clinica
+  // se guarda. Por eso en las ultimas 24h solo hubo event_tab_* y cero
+  // session_summary en DB para DNI 30542195.
+  function getLmDni() {
+    var p = new URLSearchParams(location.search).get('dni');
+    if (p) return p;
+    try {
+      var ls = localStorage.getItem('zykos_patient_dni');
+      if (ls) return ls;
+    } catch(e){}
+    return window.ZYKOS_DNI || null;
+  }
+  // Getter compatible con codigo viejo que lee `lmPatientDni` como variable.
+  // Cualquier acceso re-invoca getLmDni() para tomar el valor fresco.
+  Object.defineProperty(window, 'lmPatientDni', {
+    get: getLmDni,
+    configurable: true
+  });
 
   // ---- ART XIII: LEVEL PROGRESSION GATING ----
   // Constitution V4 mandates: sequential progression, no skipping, persistent state.
@@ -1626,35 +1625,40 @@
     } catch (e) { console.warn('[lawn-mower] fetchArtXiiiUnlockedLevel:', e.message); }
   }
 
-  // Apply Art XIII gating styles to level buttons
+  // Apply Art XIII informational styles to level buttons
+  // DOCTRINA 24-ABR 2026 (audit #151): Art XIII es INFORMATIVO, no gate.
+  // Todos los niveles siempre jugables. La dosificacion la hace la Rokola,
+  // no un selector de niveles estilo arcade. El clinico prescribe, el
+  // paciente NO tiene que "desbloquear" como en un juego movil.
   function applyArtXiiiLevelGating() {
     document.querySelectorAll('.level-btn').forEach(function(btn) {
       var levelNum = parseInt(btn.getAttribute('data-level'));
       if (isNaN(levelNum)) return;
-      // Remove any existing gating classes
+      // Remove any existing state classes
       btn.classList.remove('level-locked', 'level-completed', 'level-current');
       // Remove any existing status span
       var existingStatus = btn.querySelector('.level-status');
       if (existingStatus) existingStatus.remove();
-      // Determine state
+      // Determine INFORMATIONAL state (no longer a gate)
       var statusText = '';
       if (artXiiiCompletedLevels.indexOf(levelNum) >= 0) {
         btn.classList.add('level-completed');
-        statusText = 'completado';
+        statusText = 'jugado';
       } else if (levelNum === artXiiiUnlockedLevel) {
         btn.classList.add('level-current');
-        statusText = 'nivel actual';
-      } else {
-        btn.classList.add('level-locked');
-        statusText = 'bloqueado';
+        statusText = 'sugerido';
       }
-      // Add status indicator
-      var levelInfo = btn.querySelector('.level-info');
-      if (levelInfo) {
-        var statusEl = document.createElement('div');
-        statusEl.className = 'level-status';
-        statusEl.textContent = statusText;
-        levelInfo.appendChild(statusEl);
+      // else: sin clase, sin texto. Disponible como cualquier otro.
+
+      // Add status indicator only when there IS something to show
+      if (statusText) {
+        var levelInfo = btn.querySelector('.level-info');
+        if (levelInfo) {
+          var statusEl = document.createElement('div');
+          statusEl.className = 'level-status';
+          statusEl.textContent = statusText;
+          levelInfo.appendChild(statusEl);
+        }
       }
     });
   }
@@ -1714,6 +1718,43 @@
     });
   } else {
     setTimeout(initArtXiii, SUPABASE_INIT_DELAY_MS);
+  }
+
+  // ============================================================
+  // ROKOLA GATE (Constitucion V4 Art XVII, audit #154)
+  // Si viene con rokola_session_id, ocultamos el menu de niveles
+  // y auto-arrancamos el nivel pedido. Si no tiene rokola_session_id
+  // y no es admin, el helper ya redirigio a /jugar.
+  // ============================================================
+  if (typeof RokolaGate !== 'undefined') {
+    RokolaGate.onReady(function(mode) {
+      if (mode === 'rokola_patient') {
+        // Ocultar selector de niveles completo
+        var sel = document.getElementById('levelSelectScreen');
+        if (sel) sel.style.display = 'none';
+
+        // Cambiar boton "volver" de niveles por "volver a Rokola"
+        var backBtn = document.getElementById('levelSelectBackBtn');
+        if (backBtn) {
+          backBtn.textContent = '← Volver a mi Rokola';
+          backBtn.href = '/games/play/rokola.html';
+        }
+
+        // Auto-start del nivel pedido por la Rokola
+        var lvl = RokolaGate.requestedLevel || 1;
+        console.log('[lawn-mower] Rokola requested level:', lvl);
+        // Esperar a que Supabase + Art XIII esten listos para arrancar limpio
+        setTimeout(function() {
+          try {
+            startLevel(lvl);
+          } catch(e) {
+            console.error('[lawn-mower] Rokola autostart failed:', e.message);
+          }
+        }, SUPABASE_INIT_DELAY_MS + 200);
+      } else if (mode === 'admin_dev') {
+        console.log('[lawn-mower] Admin dev mode — level menu visible');
+      }
+    });
   }
 
   // [V4] lmGetOrCreatePatient eliminada — zykos_patients no existe, DNI es identificador universal
@@ -1983,6 +2024,17 @@
 
       console.log('[lawn-mower] Saved: session_summary + ' + rts.length + ' RTs + path samples');
     } catch(e) { console.warn('[lawn-mower] Supabase save fail:', e.message); }
+
+    // ---- ROKOLA WIRING (audit #115): notificar al shell padre al terminar ----
+    try {
+      if (typeof RokolaClient !== 'undefined' && RokolaClient.isInsideRokola()) {
+        RokolaClient.notifyCompleted({
+          completed: !!completed,
+          score: finalScore || 0,
+          level: gameState.level
+        });
+      }
+    } catch(e) { console.warn('[lawn-mower] RokolaClient.notifyCompleted:', e && e.message); }
   }
 
   // Observaciones de sesión — valores numéricos sin interpretación clínica
@@ -5295,12 +5347,12 @@
   });
 
   // ---- LEVEL SELECT ----
+  // DOCTRINA (audit #151): todos los niveles siempre jugables. No hay gate
+  // por progreso. El paciente puede rejugar completados (util para comparar
+  // longitudinalmente) y puede saltar a cualquier nivel (la Rokola o el
+  // clinico prescriben; el selector es manual override).
   document.querySelectorAll('.level-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-      // Art XIII: prevent clicking on locked or completed levels
-      if (this.classList.contains('level-locked') || this.classList.contains('level-completed')) {
-        return;
-      }
       const level = parseInt(this.getAttribute('data-level'));
       levelSelectScreen.classList.add('hidden');
       // V3: game starts FIRST, mood modal fires AFTER in background
@@ -6035,6 +6087,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/supabase-config.js"></script>
 <script src="/games/shared/require-auth.js"></script>
+    <script src="/games/shared/rokola-gate.js"></script>
 <script src="/games/shared/evidence-hash.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <script src="/js/sanitize.js"></script>
@@ -6106,5 +6159,31 @@ if (typeof registerAutoSave === 'function') {
     <script src="/games/shared/agents/agent-og-media.js"></script>
     <script src="/games/shared/agents/agent-media.js"></script>
     <script src="/games/shared/media-init.js"></script>
+
+<script>
+// ROKOLA AUTO-LAUNCH (audit #115): si viene con ?level=N&rokola_forced=1,
+// saltar el selector y arrancar directo el nivel pedido por la Rokola.
+(function(){
+  try {
+    if (typeof RokolaClient === 'undefined' || !RokolaClient.isForced()) return;
+    var p = new URLSearchParams(location.search);
+    var lv = parseInt(p.get('level') || '0', 10);
+    if (!lv || isNaN(lv)) return;
+    // Esperar DOM y que las funciones del juego existan
+    function go() {
+      if (typeof startLevel !== 'function') { return setTimeout(go, 100); }
+      var screen = document.getElementById('level-select-screen');
+      if (screen) screen.classList.add('hidden');
+      console.log('[lawn-mower] ROKOLA auto-launch level', lv);
+      startLevel(lv);
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function(){ setTimeout(go, 300); });
+    } else {
+      setTimeout(go, 300);
+    }
+  } catch(e) { console.warn('[lawn-mower] rokola auto-launch error:', e && e.message); }
+})();
+</script>
 </body>
 </html>

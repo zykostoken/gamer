@@ -62,8 +62,9 @@ function _moodSaveToSupabase(type, data, context) {
         if (!pDni) { try { pDni = localStorage.getItem('zykos_patient_dni'); } catch(e){} }
 
         // Guardar en zykos_mood_entries — registro clínico puro
+        // DNI-NO-ID (#114): patient_id eliminado.
+        // NOTA: tabla zykos_mood_entries no existe en DB aun (audit #115).
         var entryRow = {
-            patient_id: null,
             patient_dni: pDni,
             color_hex: (data && data.color) ? data.color : null,
             color_id: (data && data.color_name) ? data.color_name : null,
@@ -289,7 +290,7 @@ function showSatisfactionColor(opts, onDone) {
         swatch.onmouseout  = function() { swatch.style.transform = 'scale(1)';    swatch.style.borderColor = 'transparent'; };
         swatch.onclick = function() {
             var payload = Object.assign({}, opts, { color: c.hex, color_name: c.name, skipped: false });
-            _moodSaveToSupabase('satisfaction_color', payload, context);
+            _moodSaveToSupabase('post_game', payload, context);
             closeColorModal();
             if (typeof onDone === 'function') onDone({ color: c.hex, color_name: c.name, context: context });
         };
@@ -298,7 +299,7 @@ function showSatisfactionColor(opts, onDone) {
 
     document.getElementById('mood-color-skip').onclick = function() {
         var payload = Object.assign({}, opts, { color: null, skipped: true });
-        _moodSaveToSupabase('satisfaction_color', payload, context);
+        _moodSaveToSupabase('post_game', payload, context);
         closeColorModal();
         if (typeof onDone === 'function') onDone({ skipped: true, context: context });
     };

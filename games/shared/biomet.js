@@ -747,7 +747,6 @@ function save(extra_data) {
         if (!dni) { console.warn('[biomet] No DNI, skipping save'); return result; }
 
         client.from('zykos_game_metrics').insert({
-            patient_id:   null,
             patient_dni:  dni,
             game_slug:    result.game_slug,
             session_id:   BM.sessionId || null,

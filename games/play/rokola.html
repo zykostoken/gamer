@@ -175,7 +175,15 @@ body { display: flex; flex-direction: column; }
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/games/shared/config.js"></script>
+<script src="/js/supabase-config.js"></script>
+<script src="/games/shared/require-auth.js"></script>
+<!-- V4.2 audit #162: consent informado digital + calibracion hardware session-level -->
+<script src="/games/shared/consent-gate.js"></script>
+<script src="/games/shared/hw-calibration.js"></script>
+<!-- V4.2 audit #162: agentes cam/mic (activos solo si consent cam_authorized o mic_authorized) -->
+<script src="/games/shared/agents/agent-og-media.js"></script>
+<script src="/games/shared/agents/agent-media.js"></script>
+<script src="/games/shared/media-init.js"></script>
 <script>
 (function() {
 'use strict';
@@ -264,8 +272,22 @@ async function loadPrescription() {
 }
 
 async function createSession() {
+  // Retorna {ok:true, session_id} en exito,
+  // o {ok:false, error:'mensaje legible'} para que el caller muestre causa real.
+  // Audit #120: el alert generico 'Error al crear sesion' ocultaba la causa raiz.
+
+  if (!state.patientDni) {
+    return { ok:false, error:'DNI no disponible. Volvé al portal e ingresá de nuevo.' };
+  }
+  if (!Array.isArray(state.prescription) || state.prescription.length === 0) {
+    return { ok:false, error:'Prescripción vacía. Contactá al profesional.' };
+  }
+
   var sb = getSupabase();
-  if (!sb) return false;
+  if (!sb) {
+    return { ok:false, error:'Cliente Supabase no inicializado (revisá conexión).' };
+  }
+
   try {
     var ins = await sb.from('zykos_rokola_sessions').insert({
       patient_dni: state.patientDni,
@@ -279,14 +301,26 @@ async function createSession() {
       },
       cells_completed: []
     }).select('session_id').single();
-    if (ins.error) throw ins.error;
+
+    if (ins.error) {
+      console.error('[rokola] Supabase error en createSession:', ins.error);
+      var msg = ins.error.message || 'error desconocido';
+      var hint = ins.error.hint ? (' — hint: ' + ins.error.hint) : '';
+      var code = ins.error.code ? (' [' + ins.error.code + ']') : '';
+      return { ok:false, error:'Supabase' + code + ': ' + msg + hint };
+    }
+
+    if (!ins.data || !ins.data.session_id) {
+      return { ok:false, error:'INSERT exitoso pero no retornó session_id.' };
+    }
+
     state.sessionId = ins.data.session_id;
     state.startedAt = Date.now();
     console.log('[rokola] Session created:', state.sessionId);
-    return true;
+    return { ok:true, session_id: state.sessionId };
   } catch (e) {
-    console.error('[rokola] createSession failed:', e);
-    return false;
+    console.error('[rokola] createSession threw:', e);
+    return { ok:false, error:'Excepción: ' + (e && e.message ? e.message : String(e)) };
   }
 }
 
@@ -301,6 +335,7 @@ function launchCurrentCell() {
     + 'rokola_session_id=' + encodeURIComponent(state.sessionId)
     + '&rokola_cell_slug=' + encodeURIComponent(cell.cell_slug)
     + '&rokola_position=' + cell.position
+    + '&rokola_forced=1'
     + '&dni=' + encodeURIComponent(state.patientDni);
 
   renderProgress();
@@ -453,9 +488,10 @@ async function init() {
   $('rk-start-btn').addEventListener('click', async function() {
     $('rk-start-btn').disabled = true;
     $('rk-start-btn').textContent = 'Preparando...';
-    var ok = await createSession();
-    if (!ok) {
-      alert('Error al crear sesión. Intentá de nuevo.');
+    var res = await createSession();
+    if (!res || !res.ok) {
+      var detail = (res && res.error) ? res.error : 'causa desconocida';
+      alert('No se pudo crear la sesión.\n\n' + detail + '\n\nSi persiste, contactá soporte.');
       $('rk-start-btn').disabled = false;
       $('rk-start-btn').textContent = 'Empezar';
       return;
@@ -472,5 +508,35 @@ document.addEventListener('DOMContentLoaded', init);
 })();
 </script>
 
+<!-- V5.1 audit #164: acceso directo al Informe Clinico para superadmin -->
+<script>
+(function(){
+  function addReportBtn(){
+    if (!window.ZYKOS_USER || window.ZYKOS_USER.role !== 'superadmin') return;
+    if (document.getElementById('zykos-informe-btn')) return;
+    var btn = document.createElement('a');
+    btn.id = 'zykos-informe-btn';
+    btn.href = '/informe/?dni=' + (window.ZYKOS_DNI || '');
+    btn.textContent = 'Informe clinico v5.1';
+    btn.style.cssText = [
+      'position:fixed', 'bottom:18px', 'right:18px', 'z-index:9998',
+      'padding:10px 14px', 'background:#4f46e5', 'color:white',
+      'border-radius:8px', 'font-family:system-ui,sans-serif',
+      'font-size:0.82rem', 'font-weight:600', 'text-decoration:none',
+      'box-shadow:0 4px 20px rgba(79,70,229,0.35)',
+      'border:1px solid rgba(255,255,255,0.1)',
+      'transition:transform 0.15s'
+    ].join(';');
+    btn.onmouseover = function(){ btn.style.transform = 'translateY(-2px)'; };
+    btn.onmouseout = function(){ btn.style.transform = 'translateY(0)'; };
+    document.body.appendChild(btn);
+  }
+  var tries = 0;
+  var iv = setInterval(function(){
+    if (window.ZYKOS_USER || tries > 30) { clearInterval(iv); addReportBtn(); }
+    tries++;
+  }, 500);
+})();
+</script>
 </body>
 </html>

@@ -14,7 +14,8 @@
 // - error_crash — error JS no capturado
 //
 // Uso: window.registerAutoSave(getStateCallback)
-//   callback() debe retornar { patient_id, patient_dni, game_slug, partial_data }
+//   callback() debe retornar { patient_dni, game_slug, partial_data }
+//   DNI-NO-ID (#114): patient_id eliminado de la firma y del payload.
 // Llamar window.gameEvent(type, extra) para eventos manuales (reset, etc)
 // Llamar window.markAutoSaveComplete() después de save exitoso completo
 
@@ -40,7 +41,6 @@
 
     var state = _cb ? _cb() : {};
     var payload = {
-      patient_id: null,
       patient_dni: info.dni,
       game_slug: state.game_slug || window.location.pathname.split('/').pop().replace('.html',''),
       metric_type: 'event_' + eventType,

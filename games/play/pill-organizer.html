@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/supabase-config.js"></script>
 <script src="/games/shared/require-auth.js"></script>
+    <script src="/games/shared/rokola-gate.js"></script>
 <script src="/games/shared/evidence-hash.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
     <script src="/js/sanitize.js"></script>
@@ -441,6 +442,62 @@
                 max-height: 60vh;
                 overflow: auto;
             }
+        }
+
+        /* ============================================================
+           V5.2 SHRINK AGRESIVO — DESKTOP VENTANA CHICA (audit #167)
+           Gonzalo 24-abr: en desktop con ventana angostada, pastillas y
+           pastillero no caben en un mismo marco. Este bloque mantiene
+           el grid 2 cols y shrink-ea los componentes para que TODO
+           quepa sin scroll.
+           Aplica <=1200px (antes del breakpoint 960 ya existente).
+           ============================================================ */
+        @media (max-width: 1200px) and (min-width: 481px) {
+            #game-container .playframe-v4 {
+                padding: 0.25rem;
+                gap: 0.5rem;
+                grid-template-columns: minmax(130px, 1fr) minmax(0, 3.2fr) !important;
+            }
+            .playframe-v4 > .dispenser-panel,
+            .playframe-v4 > .organizer-panel {
+                padding: 0.6rem;
+                max-height: calc(100vh - 160px);
+            }
+            /* Pastillero grids: 600px hardcoded -> 440px */
+            #game-container [style*="min-width:600px"] {
+                min-width: 440px !important;
+            }
+            /* Gaps del grid 8-col: 0.75rem -> 0.375rem */
+            #game-container .grid.grid-cols-8.gap-3 {
+                gap: 0.375rem;
+            }
+            /* Pastillas del dispensador: Tailwind w-12 h-12 (48px) -> 40px */
+            .pill-source {
+                width: 40px !important;
+                height: 40px !important;
+            }
+            /* Slots del pastillero: apretar */
+            #game-container .slot {
+                min-height: 44px;
+            }
+            /* Fonts menores para labels de dias/hs */
+            #game-container .text-xs { font-size: 0.64rem; }
+            #game-container .text-sm { font-size: 0.75rem; }
+            /* Progress bar compacto */
+            #game-container main h2 { font-size: 1rem; margin-bottom: 0.4rem; }
+            /* Verify button compacto */
+            #btn-verify { padding: 0.5rem 1rem !important; font-size: 0.88rem !important; }
+        }
+
+        /* Ventana chica + altura baja: shrink aun mas */
+        @media (max-width: 1100px) and (max-height: 720px) {
+            .playframe-v4 > .dispenser-panel,
+            .playframe-v4 > .organizer-panel {
+                padding: 0.4rem;
+                max-height: calc(100vh - 130px);
+            }
+            .pill-source { width: 36px !important; height: 36px !important; }
+            #game-container .slot { min-height: 38px; }
         }
 
         /* Reset-pill botoncito en cada pastilla origen */
@@ -1162,6 +1219,17 @@
                 document.getElementById('results-overlay').style.display = 'none';
                 // Art XIII: start at unlocked level (0-indexed)
                 var startLevelIndex = Math.max(0, artXiiiUnlockedLevel - 1);
+                // ROKOLA FORCED: si viene de la Rokola con ?level=N, respetar ese nivel
+                // bypasseando el progreso personal del paciente (audit #115 PR A).
+                try {
+                    if (typeof RokolaClient !== 'undefined' && RokolaClient.isForced()) {
+                        var rokolaLv = parseInt(new URLSearchParams(location.search).get('level') || '0', 10);
+                        if (rokolaLv > 0) {
+                            startLevelIndex = rokolaLv - 1;
+                            console.log('[pill-organizer] ROKOLA forced level:', rokolaLv);
+                        }
+                    }
+                } catch(e) {}
                 loadLevel(startLevelIndex);
                 if (!sessionState.dragSetup) {
                     setupTapGetTapRelease();
@@ -1434,6 +1502,24 @@
                 sessionState.v4_sequenceLog.push(medType);
                 updatePillVisual(medType);
 
+                // Art 3.6: emitir evento semantico al stream via agente pirata.
+                // El juego declara la intencion. El analizador cruza post-hoc.
+                try {
+                    if (typeof ZYKOS !== 'undefined' && typeof ZYKOS.emit === 'function') {
+                        ZYKOS.emit('pill_pickup', {
+                            med: medType,
+                            frac: frac,
+                            stack_size_after: sessionState.pickupStack.length,
+                            stack_max_so_far: sessionState.v4_pickupStackMax,
+                            mixed_fraction_count: sessionState.v4_mixedFractionEvents,
+                            input_device: sessionState.inputDevice || 'unknown',
+                            source_x: sourceEvent && typeof sourceEvent.clientX === 'number' ? sourceEvent.clientX : null,
+                            source_y: sourceEvent && typeof sourceEvent.clientY === 'number' ? sourceEvent.clientY : null,
+                            t_ms: Date.now()
+                        });
+                    }
+                } catch (e) { /* nunca romper el juego por telemetria */ }
+
                 // hint visual: ocultar consigna despues del primer pickup
                 if (!window._firstMoveDone) {
                     window._firstMoveDone = true;
@@ -1453,6 +1539,17 @@
                         p.style.borderColor = '#ef4444';
                         setTimeout(function() { p.style.borderColor = ''; }, 400);
                     });
+                    // Art 3.6: evento semantico — paciente intento fraccionar lo que no corresponde.
+                    // Dominio candidato: COMPRENSION (desconoce contraindicacion) o EJECUTIVO (no reviso).
+                    try {
+                        if (typeof ZYKOS !== 'undefined' && typeof ZYKOS.emit === 'function') {
+                            ZYKOS.emit('pill_nonsplittable_attempt', {
+                                med: medType,
+                                total_attempts: sessionState.v4_nonsplittableAttempts,
+                                t_ms: Date.now()
+                            });
+                        }
+                    } catch (e) {}
                     return;
                 }
                 const cur = currentFractionFor(medType);
@@ -1465,16 +1562,44 @@
                     t: Date.now(), action: 'fraction_cycle', med: medType, frac_new: FRACTION_CYCLE[nextIdx]
                 });
                 updatePillVisual(medType);
+
+                // Art 3.6: evento semantico — click izquierdo corto cicla fraccion.
+                // Dominio candidato: CALCULO + COMPRENSION (entiende dosis fraccionaria).
+                try {
+                    if (typeof ZYKOS !== 'undefined' && typeof ZYKOS.emit === 'function') {
+                        ZYKOS.emit('pill_cycle_fraction', {
+                            med: medType,
+                            frac_from: cur,
+                            frac_to: FRACTION_CYCLE[nextIdx],
+                            total_fraction_changes: sessionState.v4_fractionChangesCount,
+                            t_ms: Date.now()
+                        });
+                    }
+                } catch (e) {}
             }
 
             function resetFraction(medType) {
                 if (currentFractionFor(medType) === 1) return; // ya esta en entera
+                const fracBefore = currentFractionFor(medType);
                 sessionState.fractionByMed[medType] = 1;
                 sessionState.v4_fractionResetsCount++;
                 sessionState.v4_pickupEvents.push({
                     t: Date.now(), action: 'fraction_reset', med: medType
                 });
                 updatePillVisual(medType);
+
+                // Art 3.6: evento semantico — long-press o boton reset.
+                // Dominio candidato: EJECUTIVO (autocorreccion reflexiva).
+                try {
+                    if (typeof ZYKOS !== 'undefined' && typeof ZYKOS.emit === 'function') {
+                        ZYKOS.emit('pill_reset_fraction', {
+                            med: medType,
+                            frac_before: fracBefore,
+                            total_fraction_resets: sessionState.v4_fractionResetsCount,
+                            t_ms: Date.now()
+                        });
+                    }
+                } catch (e) {}
             }
 
             function releaseOneOnSlot(slot) {
@@ -1505,6 +1630,31 @@
                     day: day, time: time, correct: isCorrect, fraction_correct: Math.abs(frac - fracExpected) < 0.01,
                     stack_after: sessionState.pickupStack.length
                 });
+
+                // Art 3.6: evento semantico mas rico del juego.
+                // El paciente tomo una decision compuesta: dosis + horario + dia + cantidad.
+                // Dominios candidatos (el clinico decide):
+                //   EJECUTIVO: orden correcto, secuencia dia/hora
+                //   MEMORIA: recuerda prescripcion
+                //   CALCULO: fraccion correcta
+                //   COMPRENSION: leyo la receta
+                try {
+                    if (typeof ZYKOS !== 'undefined' && typeof ZYKOS.emit === 'function') {
+                        ZYKOS.emit('pill_release', {
+                            med: medType,
+                            frac_placed: frac,
+                            frac_expected: fracExpected,
+                            fraction_correct: Math.abs(frac - fracExpected) < 0.01,
+                            day: day,
+                            time: time,
+                            placement_correct: isCorrect,
+                            stack_size_after: sessionState.pickupStack.length,
+                            input_device: sessionState.inputDevice || 'unknown',
+                            total_fraction_errors: sessionState.v4_fractionErrors,
+                            t_ms: Date.now()
+                        });
+                    }
+                } catch (e) {}
 
                 // simular currentDrag para placePill legacy API
                 const cd = sessionState.currentDrag;
@@ -1894,6 +2044,15 @@
             // V4 wiring: cierra ZYKOS engine + corsario (escribe session_biomet + raw_stream)
             if (typeof ZykosBootstrap !== 'undefined' && ZykosBootstrap.isBooted()) {
                 ZykosBootstrap.end().catch(function(e) { console.warn('[pill-organizer] bootstrap.end failed:', e && e.message); });
+            }
+            // ROKOLA Art XVII (audit #154): notificar al orquestador
+            if (typeof RokolaGate !== 'undefined' && RokolaGate.mode === 'rokola_patient') {
+                try {
+                    RokolaGate.reportCellCompleted({
+                        score: sessionState.score || 0,
+                        errors: sessionState.errors || 0
+                    });
+                } catch(e) { console.warn('[pill-organizer] reportCellCompleted:', e.message); }
             }
             const duration = Math.floor(((sessionState.endTime || Date.now()) - (sessionState.levelStartTime || sessionState.startTime)) / 1000);
 
@@ -2501,5 +2660,24 @@ window._toggleConsigna = function() {
     <script src="/games/shared/agents/agent-og-media.js"></script>
     <script src="/games/shared/agents/agent-media.js"></script>
     <script src="/games/shared/media-init.js"></script>
+<script>
+// ROKOLA SOBERANA Art XVII (audit #154, #155)
+// Reemplaza al RokolaClient legacy (nunca implementado).
+if (typeof RokolaGate !== 'undefined') {
+  RokolaGate.onReady(function(mode) {
+    if (mode !== 'rokola_patient') return;
+    // Ocultar start-screen, forzar arranque directo
+    var startScreen = document.getElementById('start-screen');
+    if (startScreen) startScreen.style.display = 'none';
+    console.log('[pill-organizer] Rokola mode — auto-start requested level:', RokolaGate.requestedLevel);
+    // Pequeno delay para que el DOM + Supabase esten listos
+    setTimeout(function() {
+      try {
+        if (typeof startGame === 'function') startGame();
+      } catch(e) { console.error('[pill-organizer] Rokola autostart:', e.message); }
+    }, 400);
+  });
+}
+</script>
 </body>
 </html>
