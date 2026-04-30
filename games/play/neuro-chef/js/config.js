@@ -11,7 +11,7 @@ const ALIMENTOS = {
     carne_picada: {
         id: 'carne_picada',
         nombre: 'Carne Picada',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥩</text></svg>',
+        emoji: '🥩',
         categoria: 'proteina_animal',
         estado: 'crudo',
         zona_heladera: 'fria',
@@ -24,7 +24,7 @@ const ALIMENTOS = {
     bife: {
         id: 'bife',
         nombre: 'Bife',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥩</text></svg>',
+        emoji: '🥩',
         categoria: 'proteina_animal',
         estado: 'crudo',
         zona_heladera: 'fria',
@@ -36,7 +36,7 @@ const ALIMENTOS = {
     pollo: {
         id: 'pollo',
         nombre: 'Pollo',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍗</text></svg>',
+        emoji: '🍗',
         categoria: 'proteina_animal',
         estado: 'crudo',
         zona_heladera: 'fria',
@@ -48,7 +48,7 @@ const ALIMENTOS = {
     pescado: {
         id: 'pescado',
         nombre: 'Pescado',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🐟</text></svg>',
+        emoji: '🐟',
         categoria: 'proteina_animal',
         estado: 'crudo',
         zona_heladera: 'fria',
@@ -60,7 +60,7 @@ const ALIMENTOS = {
     salchichas: {
         id: 'salchichas',
         nombre: 'Salchichas',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🌭</text></svg>',
+        emoji: '🌭',
         categoria: 'proteina_procesada',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -69,7 +69,7 @@ const ALIMENTOS = {
     jamon: {
         id: 'jamon',
         nombre: 'Jamón Cocido',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍖</text></svg>',
+        emoji: '🍖',
         categoria: 'proteina_procesada',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -78,7 +78,7 @@ const ALIMENTOS = {
     huevos: {
         id: 'huevos',
         nombre: 'Huevos',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥚</text></svg>',
+        emoji: '🥚',
         categoria: 'proteina_animal',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -89,7 +89,7 @@ const ALIMENTOS = {
     leche: {
         id: 'leche',
         nombre: 'Leche',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥛</text></svg>',
+        emoji: '🥛',
         categoria: 'lacteo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -98,7 +98,7 @@ const ALIMENTOS = {
     yogur: {
         id: 'yogur',
         nombre: 'Yogur',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥛</text></svg>',
+        emoji: '🥛',
         categoria: 'lacteo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -107,7 +107,7 @@ const ALIMENTOS = {
     manteca: {
         id: 'manteca',
         nombre: 'Manteca',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧈</text></svg>',
+        emoji: '🧈',
         categoria: 'lacteo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -116,7 +116,7 @@ const ALIMENTOS = {
     queso: {
         id: 'queso',
         nombre: 'Queso',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧀</text></svg>',
+        emoji: '🧀',
         categoria: 'lacteo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -125,7 +125,7 @@ const ALIMENTOS = {
     queso_rallado: {
         id: 'queso_rallado',
         nombre: 'Queso Rallado',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧀</text></svg>',
+        emoji: '🧀',
         categoria: 'lacteo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -134,7 +134,7 @@ const ALIMENTOS = {
     crema: {
         id: 'crema',
         nombre: 'Crema de Leche',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥛</text></svg>',
+        emoji: '🥛',
         categoria: 'lacteo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -145,7 +145,7 @@ const ALIMENTOS = {
     lechuga: {
         id: 'lechuga',
         nombre: 'Lechuga',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥬</text></svg>',
+        emoji: '🥬',
         categoria: 'verdura',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -154,7 +154,7 @@ const ALIMENTOS = {
     tomate: {
         id: 'tomate',
         nombre: 'Tomate',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍅</text></svg>',
+        emoji: '🍅',
         categoria: 'verdura',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -163,7 +163,7 @@ const ALIMENTOS = {
     cebolla: {
         id: 'cebolla',
         nombre: 'Cebolla',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧅</text></svg>',
+        emoji: '🧅',
         categoria: 'verdura',
         zona_heladera: 'afuera',
         temperatura: 18,
@@ -172,7 +172,7 @@ const ALIMENTOS = {
     zanahoria: {
         id: 'zanahoria',
         nombre: 'Zanahoria',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥕</text></svg>',
+        emoji: '🥕',
         categoria: 'verdura',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -181,7 +181,7 @@ const ALIMENTOS = {
     pepino: {
         id: 'pepino',
         nombre: 'Pepino',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥒</text></svg>',
+        emoji: '🥒',
         categoria: 'verdura',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -190,7 +190,7 @@ const ALIMENTOS = {
     morron: {
         id: 'morron',
         nombre: 'Morrón',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🫑</text></svg>',
+        emoji: '🫑',
         categoria: 'verdura',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -199,7 +199,7 @@ const ALIMENTOS = {
     brocoli: {
         id: 'brocoli',
         nombre: 'Brócoli',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥦</text></svg>',
+        emoji: '🥦',
         categoria: 'verdura',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -208,7 +208,7 @@ const ALIMENTOS = {
     papa: {
         id: 'papa',
         nombre: 'Papas',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥔</text></svg>',
+        emoji: '🥔',
         categoria: 'verdura',
         zona_heladera: 'afuera',
         temperatura: 15,
@@ -217,7 +217,7 @@ const ALIMENTOS = {
     ajo: {
         id: 'ajo',
         nombre: 'Ajo',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧄</text></svg>',
+        emoji: '🧄',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 18,
@@ -228,7 +228,7 @@ const ALIMENTOS = {
     mayonesa: {
         id: 'mayonesa',
         nombre: 'Mayonesa',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍶</text></svg>',
+        emoji: '🍶',
         categoria: 'aderezo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -237,7 +237,7 @@ const ALIMENTOS = {
     mostaza: {
         id: 'mostaza',
         nombre: 'Mostaza',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍯</text></svg>',
+        emoji: '🍯',
         categoria: 'aderezo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -246,7 +246,7 @@ const ALIMENTOS = {
     ketchup: {
         id: 'ketchup',
         nombre: 'Ketchup',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥫</text></svg>',
+        emoji: '🥫',
         categoria: 'aderezo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -255,7 +255,7 @@ const ALIMENTOS = {
     aceitunas: {
         id: 'aceitunas',
         nombre: 'Aceitunas',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🫒</text></svg>',
+        emoji: '🫒',
         categoria: 'aderezo',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -266,7 +266,7 @@ const ALIMENTOS = {
     hielo: {
         id: 'hielo',
         nombre: 'Hielo',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧊</text></svg>',
+        emoji: '🧊',
         categoria: 'freezer',
         zona_heladera: 'freezer',
         temperatura: -18,
@@ -275,7 +275,7 @@ const ALIMENTOS = {
     helado: {
         id: 'helado',
         nombre: 'Helado',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍦</text></svg>',
+        emoji: '🍦',
         categoria: 'freezer',
         zona_heladera: 'freezer',
         temperatura: -18,
@@ -284,7 +284,7 @@ const ALIMENTOS = {
     vegetales_congelados: {
         id: 'vegetales_congelados',
         nombre: 'Vegetales Congelados',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥦</text></svg>',
+        emoji: '🥦',
         categoria: 'freezer',
         zona_heladera: 'freezer',
         temperatura: -18,
@@ -295,7 +295,7 @@ const ALIMENTOS = {
     jugo: {
         id: 'jugo',
         nombre: 'Jugo',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧃</text></svg>',
+        emoji: '🧃',
         categoria: 'bebida',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -304,7 +304,7 @@ const ALIMENTOS = {
     gaseosa: {
         id: 'gaseosa',
         nombre: 'Gaseosa',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥤</text></svg>',
+        emoji: '🥤',
         categoria: 'bebida',
         zona_heladera: 'fria',
         temperatura: 4,
@@ -315,7 +315,7 @@ const ALIMENTOS = {
     pan: {
         id: 'pan',
         nombre: 'Pan',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍞</text></svg>',
+        emoji: '🍞',
         categoria: 'panificado',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -324,7 +324,7 @@ const ALIMENTOS = {
     pan_rallado: {
         id: 'pan_rallado',
         nombre: 'Pan Rallado',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍞</text></svg>',
+        emoji: '🍞',
         categoria: 'cereal',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -333,7 +333,7 @@ const ALIMENTOS = {
     sal: {
         id: 'sal',
         nombre: 'Sal',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧂</text></svg>',
+        emoji: '🧂',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -342,7 +342,7 @@ const ALIMENTOS = {
     azucar: {
         id: 'azucar',
         nombre: 'Azúcar',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍬</text></svg>',
+        emoji: '🍬',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -351,7 +351,7 @@ const ALIMENTOS = {
     aceite: {
         id: 'aceite',
         nombre: 'Aceite',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🛢️</text></svg>',
+        emoji: '🛢️',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -362,7 +362,7 @@ const ALIMENTOS = {
     arroz: {
         id: 'arroz',
         nombre: 'Arroz',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍚</text></svg>',
+        emoji: '🍚',
         categoria: 'cereal',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -371,7 +371,7 @@ const ALIMENTOS = {
     harina: {
         id: 'harina',
         nombre: 'Harina',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🌾</text></svg>',
+        emoji: '🌾',
         categoria: 'cereal',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -380,7 +380,7 @@ const ALIMENTOS = {
     pasas_uva: {
         id: 'pasas_uva',
         nombre: 'Pasas de Uva',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍇</text></svg>',
+        emoji: '🍇',
         categoria: 'fruto_seco',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -389,7 +389,7 @@ const ALIMENTOS = {
     canela: {
         id: 'canela',
         nombre: 'Canela',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🌰</text></svg>',
+        emoji: '🌰',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -398,7 +398,7 @@ const ALIMENTOS = {
     frutas_secas: {
         id: 'frutas_secas',
         nombre: 'Frutas Secas',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥜</text></svg>',
+        emoji: '🥜',
         categoria: 'fruto_seco',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -407,7 +407,7 @@ const ALIMENTOS = {
     vinagre: {
         id: 'vinagre',
         nombre: 'Vinagre',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🧴</text></svg>',
+        emoji: '🧴',
         categoria: 'aderezo',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -416,7 +416,7 @@ const ALIMENTOS = {
     limon: {
         id: 'limon',
         nombre: 'Limón',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍋</text></svg>',
+        emoji: '🍋',
         categoria: 'fruta',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -425,7 +425,7 @@ const ALIMENTOS = {
     perejil: {
         id: 'perejil',
         nombre: 'Perejil',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🌿</text></svg>',
+        emoji: '🌿',
         categoria: 'verdura',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -434,7 +434,7 @@ const ALIMENTOS = {
     nuez_moscada: {
         id: 'nuez_moscada',
         nombre: 'Nuez Moscada',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🌰</text></svg>',
+        emoji: '🌰',
         categoria: 'condimento',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -443,7 +443,7 @@ const ALIMENTOS = {
     ciruelas_pasas: {
         id: 'ciruelas_pasas',
         nombre: 'Ciruelas Pasas',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🫐</text></svg>',
+        emoji: '🫐',
         categoria: 'fruto_seco',
         zona_heladera: 'afuera',
         temperatura: 20,
@@ -454,7 +454,7 @@ const ALIMENTOS = {
     banana: {
         id: 'banana',
         nombre: 'Banana',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍌</text></svg>',
+        emoji: '🍌',
         categoria: 'fruta',
         zona_heladera: 'afuera',
         temperatura: 18,
@@ -463,7 +463,7 @@ const ALIMENTOS = {
     frutilla: {
         id: 'frutilla',
         nombre: 'Frutilla',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍓</text></svg>',
+        emoji: '🍓',
         categoria: 'fruta',
         zona_heladera: 'verduras',
         temperatura: 4,
@@ -472,7 +472,7 @@ const ALIMENTOS = {
     mango: {
         id: 'mango',
         nombre: 'Mango',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🥭</text></svg>',
+        emoji: '🥭',
         categoria: 'fruta',
         zona_heladera: 'verduras',
         temperatura: 6,
@@ -481,7 +481,7 @@ const ALIMENTOS = {
     jugo_naranja: {
         id: 'jugo_naranja',
         nombre: 'Jugo de Naranja',
-        imagen: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🍊</text></svg>',
+        emoji: '🍊',
         categoria: 'bebida',
         zona_heladera: 'fria',
         temperatura: 4,
