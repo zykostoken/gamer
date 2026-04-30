@@ -2,6 +2,7 @@
 
 # Script para trigger manual del workflow agent-pr-curator
 # Elimina automáticamente las branches huérfanas de Copilot
+# Note: Does not use 'set -e' because we handle conditional gh CLI availability
 
 echo "========================================="
 echo "Agent PR Curator - Manual Trigger"
