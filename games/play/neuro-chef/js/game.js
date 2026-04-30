@@ -312,7 +312,7 @@ function loadLevel1_Supermercado() {
     
     gameArea.innerHTML = `
         <div class="gondola-container" id="gondola">
-            ${shuffled.map(food => `<div class="food-item" draggable="true" data-id="${food.id}"><img src="${food.imagen}" alt="${food.nombre}" loading="lazy" onerror="this.style.display=\x27none\x27;this.nextElementSibling.style.padding=\x2718px 6px\x27;"><div class="label">${food.nombre}</div></div>`).join('')}
+            ${shuffled.map(food => `<div class="food-item" draggable="true" data-id="${food.id}"><span class="food-emoji" role="img" aria-label="${food.nombre}">${food.emoji || '🍴'}</span><div class="label">${food.nombre}</div></div>`).join('')}
         </div>
         <div class="cart-container"><h3>Tu Carrito</h3>
             <div class="cart-grid" id="cart">${Array(10).fill(0).map((_,i)=>`<div class="cart-slot" data-slot="${i}"></div>`).join('')}</div>
@@ -360,7 +360,7 @@ function loadLevel2_Heladera() {
             <div class="bolsa-compras" style="margin-bottom:1.2rem;">
                 <h3>️ Bolsa de Compras — arrastrá cada producto a su lugar</h3>
                 <div class="bolsa-grid" id="bolsa">
-                    ${selected.map(f=>`<div class="food-item" draggable="true" data-id="${f.id}"><img src="${f.imagen}" alt="${f.nombre}" loading="lazy" onerror="this.style.display='none';this.parentElement.querySelector('.label').style.padding='18px 6px';"><div class="label">${f.nombre}</div></div>`).join('')}
+                    ${selected.map(f=>`<div class="food-item" draggable="true" data-id="${f.id}"><span class="food-emoji" role="img" aria-label="${f.nombre}">${f.emoji || '🍴'}</span><div class="label">${f.nombre}</div></div>`).join('')}
                 </div>
             </div>
 
@@ -509,7 +509,7 @@ function loadLevel4_Licuadora() {
     const shuffled=shuffleArray([...lic.secuencia_correcta]);const dist=['sal','aceite','arroz'];const all=shuffleArray([...shuffled,...dist]);
     ga.dataset.correctSeq=JSON.stringify(lic.secuencia_correcta);ga.dataset.explicacion=lic.explicacion;ga.dataset.totalDistractors=dist.length.toString();
     ga.innerHTML=`<div class="licuadora-container"><div class="ingredientes-disponibles"><h3>Ingredientes disponibles</h3><div class="ingredientes-grid" id="lic-source">
-        ${all.map(item=>{const f=ALIMENTOS[item];const n=f?f.nombre:item;return`<div class="lic-item" data-id="${item}" onclick="addToLicuadora(this)">${f?`<img src="${f.imagen}" alt="${n}" style="width:60px;height:60px;object-fit:cover;border-radius:8px">`:`<span style="font-size:2rem">?</span>`}<div class="label">${n}</div></div>`}).join('')}
+        ${all.map(item=>{const f=ALIMENTOS[item];const n=f?f.nombre:item;return`<div class="lic-item" data-id="${item}" onclick="addToLicuadora(this)">${f?`<span class="food-emoji" role="img" aria-label="${n}">${f.emoji || '🍴'}</span>`:`<span style="font-size:2rem">?</span>`}<div class="label">${n}</div></div>`}).join('')}
     </div></div><div class="licuadora-visual"><h3>Orden de carga</h3><div id="lic-target" class="lic-sequence">
         ${lic.secuencia_correcta.map((_,i)=>`<div class="lic-slot" data-order="${i}"><span>${i+1}°</span></div>`).join('')}
     </div></div></div>`;
