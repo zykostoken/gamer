@@ -365,6 +365,85 @@ document.getElementById('game').innerHTML=`<div style="text-align:center;margin-
 
 /* ===== RESULTS (classify) ===== */
 
+/* ===== SERIATION VISUAL RENDERERS =====
+ * Reemplazan emoji+texto por dibujos SVG en los ejes donde la pista
+ * debe ser PERCEPTUAL, no textual. Mismo emoji/texto delataría el orden.
+ *
+ * - medias: tonalidad de gris (1=limpia, 8=sucia) determina el fill
+ * - camisetas: numero dorsal grande sobre fondo de equipo
+ * - botines: tamano fisico del SVG escalado por talle (38..46)
+ */
+function renderSeriationVisual(it,axis){
+  if(axis==='medias'&&it.tonality)return svgMedia(it.tonality);
+  if(axis==='camisetas'&&(it.dorsal||it.numeric))return svgCamiseta(it.dorsal||it.numeric);
+  if(axis==='botines'&&it.size)return svgBotin(it.size);
+  return '';
+}
+function svgMedia(tonality){
+  // 1 (limpia, blanca) -> 8 (sucia, marron oscuro)
+  const t=Math.max(0,Math.min(1,(tonality-1)/7));
+  // Lerp blanco crema -> marron tierra
+  const r=Math.round(245-t*180);
+  const g=Math.round(243-t*195);
+  const b=Math.round(235-t*205);
+  const fill=`rgb(${r},${g},${b})`;
+  const stainOpacity=0.05+t*0.25;
+  return `<svg viewBox="0 0 90 120" width="50" height="68" style="flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))">
+    <defs>
+      <radialGradient id="medStain${tonality}" cx="0.4" cy="0.6" r="0.5">
+        <stop offset="0%" stop-color="rgba(80,55,35,${stainOpacity})"/>
+        <stop offset="100%" stop-color="rgba(80,55,35,0)"/>
+      </radialGradient>
+    </defs>
+    <path d="M24,8 L24,4 Q24,2 26,2 L62,2 Q64,2 64,4 L64,8 L66,12 L66,72 Q66,76 70,80 L84,94 Q86,96 86,99 L86,113 Q86,117 82,117 L18,117 Q14,117 14,113 L14,99 Q14,96 16,94 L22,88 Q24,84 24,80 Z"
+      fill="${fill}" stroke="#0a0a0a" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M24,8 L24,4 Q24,2 26,2 L62,2 Q64,2 64,4 L64,8 L66,12 L66,72 Q66,76 70,80 L84,94 Q86,96 86,99 L86,113 Q86,117 82,117 L18,117 Q14,117 14,113 L14,99 Q14,96 16,94 L22,88 Q24,84 24,80 Z"
+      fill="url(#medStain${tonality})"/>
+    <rect x="24" y="4" width="40" height="7" fill="#16a34a" stroke="#0a0a0a" stroke-width="1"/>
+    <rect x="24" y="11" width="40" height="2" fill="#15803d"/>
+    <ellipse cx="50" cy="113" rx="32" ry="3" fill="rgba(255,255,255,${0.5-t*0.4})"/>
+    <path d="M24,15 L24,72" stroke="rgba(0,0,0,.18)" stroke-width=".7" fill="none"/>
+    <path d="M64,15 L64,72" stroke="rgba(0,0,0,.18)" stroke-width=".7" fill="none"/>
+  </svg>`;
+}
+function svgCamiseta(num){
+  // Numero grande, blanco con borde negro, sobre verde
+  return `<svg viewBox="0 0 110 110" width="64" height="64" style="flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))">
+    <path d="M16,30 L34,12 L42,18 L42,32 Z" fill="#16a34a" stroke="#0a0a0a" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M94,30 L76,12 L68,18 L68,32 Z" fill="#16a34a" stroke="#0a0a0a" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M34,12 Q42,8 55,8 Q68,8 76,12 L78,30 L72,32 L72,98 L38,98 L38,32 L32,30 Z"
+      fill="#22c55e" stroke="#0a0a0a" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M48,9 Q55,16 62,9" stroke="#0a0a0a" stroke-width="1.6" fill="none"/>
+    <path d="M38,40 L72,40" stroke="rgba(255,255,255,.15)" stroke-width="1.2" fill="none"/>
+    <text x="55" y="78" text-anchor="middle" font-family="DM Sans,sans-serif" font-weight="900" font-size="38" fill="#ffffff" stroke="#0a0a0a" stroke-width="2" paint-order="stroke">${num}</text>
+  </svg>`;
+}
+function svgBotin(size){
+  // 38..46 -> escala 0.6..1.05 (rango grande, perceptualmente claro)
+  const t=Math.max(0,Math.min(1,(size-38)/8));
+  const scale=0.6+t*0.45;
+  const w=Math.round(140*scale);
+  const h=Math.round(70*scale);
+  return `<svg viewBox="0 0 200 100" width="${w}" height="${h}" style="flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))">
+    <ellipse cx="100" cy="92" rx="92" ry="3.5" fill="rgba(0,0,0,.4)"/>
+    <path d="M10,72 Q8,86 22,90 L168,90 Q188,90 194,76 L194,70 L10,70 Z" fill="#0a0a0a" stroke="#000" stroke-width="1"/>
+    <circle cx="32" cy="93" r="3.2" fill="#1a1a1a"/>
+    <circle cx="68" cy="94" r="3.2" fill="#1a1a1a"/>
+    <circle cx="105" cy="94" r="3.2" fill="#1a1a1a"/>
+    <circle cx="142" cy="93" r="3.2" fill="#1a1a1a"/>
+    <circle cx="172" cy="92" r="3.2" fill="#1a1a1a"/>
+    <path d="M18,70 Q14,52 38,42 Q70,28 110,30 Q150,32 174,42 Q190,52 194,70 Z"
+      fill="#1a1a1a" stroke="#0a0a0a" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M18,70 Q14,58 30,50 L42,55 L42,70 Z" fill="#0a0a0a"/>
+    <path d="M50,55 Q70,36 110,40 L154,52 L154,70 L50,70 Z" fill="#0d0d0d" stroke="#000" stroke-width="1"/>
+    <line x1="62" y1="52" x2="128" y2="56" stroke="#ffffff" stroke-width="1.1"/>
+    <line x1="58" y1="58" x2="132" y2="61" stroke="#ffffff" stroke-width="1.1"/>
+    <line x1="55" y1="64" x2="135" y2="65" stroke="#ffffff" stroke-width="1.1"/>
+    <path d="M40,52 Q65,38 105,42" stroke="rgba(255,255,255,.2)" stroke-width="1.5" fill="none"/>
+    <text x="180" y="62" font-family="DM Sans,sans-serif" font-size="6" fill="rgba(255,255,255,.05)">·</text>
+  </svg>`;
+}
+
 /* ===== SERIATION — ordenar items en secuencia ===== */
 /* ===== SERIATION — Rutina Diaria, blueprint v1.0 =====
  * Drag-and-drop con pointer events (mousedown/move/up + touch).
@@ -393,15 +472,20 @@ function startSeriation(){
   STATE._serMoves=[]; // path por cada drag para análisis post-hoc
   STATE._serFirstPickupDim=null; // dimensión del primer pickup (proxy de "qué miró primero")
 
-  const itemsHTML=shuffled.map((it,idx)=>
-    `<div class="ser-item" data-id="${it.id}" data-pos="${idx}"
-      style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin:6px 0;cursor:grab;display:flex;align-items:center;gap:10px;font-size:.9rem;user-select:none;touch-action:none;"
+  const axis=mission.axis_slug||PACK.meta?.axis_slug||'';
+  const useVisual=(axis==='medias'||axis==='camisetas'||axis==='botines');
+  const itemsHTML=shuffled.map((it,idx)=>{
+    const visual=useVisual?renderSeriationVisual(it,axis):'';
+    const labelHtml=useVisual
+      ? '' // sin texto delator: la pista esta en el dibujo
+      : `<span style="font-size:1.2rem">${it.emoji}</span><span>${it.name}</span>`;
+    return `<div class="ser-item" data-id="${it.id}" data-pos="${idx}"
+      style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:${useVisual?'10px 14px':'12px 16px'};margin:6px 0;cursor:grab;display:flex;align-items:center;gap:14px;font-size:.9rem;user-select:none;touch-action:none;min-height:${useVisual?'78px':'auto'}"
       data-size="${it.size||''}" data-tonality="${it.tonality||''}" data-color="${it.color||''}" data-numeric="${it.numeric||it.dorsal||''}">
-      <span style="color:var(--dim);font-family:monospace;min-width:20px">${idx+1}</span>
-      <span style="font-size:1.2rem">${it.emoji}</span>
-      <span>${it.name}</span>
-    </div>`
-  ).join('');
+      <span style="color:var(--dim);font-family:monospace;min-width:20px;font-size:.85rem">${idx+1}</span>
+      ${visual}${labelHtml}
+    </div>`;
+  }).join('');
 
   document.getElementById('game').innerHTML=`
     <div style="max-width:600px;margin:0 auto;padding:16px">
