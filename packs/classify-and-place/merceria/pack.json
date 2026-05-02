@@ -80,9 +80,9 @@
     ]
   },
   "difficulty_scaling": {
-    "1": { "items_per_round": 6, "time_limit": 45, "categories_shown": 4, "show_hints": true },
-    "2": { "items_per_round": 10, "time_limit": 35, "categories_shown": 6, "show_hints": true },
-    "3": { "items_per_round": 14, "time_limit": 30, "categories_shown": 8, "show_hints": false },
-    "4": { "items_per_round": 18, "time_limit": 25, "categories_shown": 8, "show_hints": false }
+    "level_1": { "items_per_round": 6,  "time_limit": null, "categories_visible": 4, "hints_available": true,  "distractors": false, "similarity_pairs": false },
+    "level_2": { "items_per_round": 10, "time_limit": null, "categories_visible": 6, "hints_available": true,  "distractors": false, "similarity_pairs": false },
+    "level_3": { "items_per_round": 14, "time_limit": null, "categories_visible": 8, "hints_available": false, "distractors": true,  "similarity_pairs": true  },
+    "level_4": { "items_per_round": 18, "time_limit": null, "categories_visible": 8, "hints_available": false, "distractors": true,  "similarity_pairs": true  }
   }
 }

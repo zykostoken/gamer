@@ -314,11 +314,29 @@ function loadLevel1_Supermercado() {
         <div class="gondola-container" id="gondola">
             ${shuffled.map(food => `<div class="food-item" draggable="true" data-id="${food.id}"><span class="food-emoji" role="img" aria-label="${food.nombre}">${food.emoji || '🍴'}</span><div class="label">${food.nombre}</div></div>`).join('')}
         </div>
-        <div class="cart-container"><h3>Tu Carrito</h3>
+        <div class="cart-container" id="cart-container"><h3 onclick="toggleCart()">Tu Carrito <span class="cart-count" id="cart-count">0/10</span><button class="cart-toggle" onclick="event.stopPropagation();toggleCart()">Ocultar</button></h3>
             <div class="cart-grid" id="cart">${Array(10).fill(0).map((_,i)=>`<div class="cart-slot" data-slot="${i}"></div>`).join('')}</div>
         </div>`;
-    
+
     setupDragAndDrop();
+    if(!window.toggleCart){
+        window.toggleCart=function(){
+            const c=document.getElementById('cart-container');if(!c)return;
+            c.classList.toggle('collapsed');
+            const btn=c.querySelector('.cart-toggle');
+            if(btn)btn.textContent=c.classList.contains('collapsed')?'Mostrar':'Ocultar';
+        };
+        // Auto-update cart count when items change
+        const obs=new MutationObserver(function(){
+            const cart=document.getElementById('cart');
+            if(!cart)return;
+            const filled=cart.querySelectorAll('.cart-slot .food-item').length;
+            const cnt=document.getElementById('cart-count');
+            if(cnt)cnt.textContent=filled+'/10';
+        });
+        const cartEl=document.getElementById('cart');
+        if(cartEl)obs.observe(cartEl,{childList:true,subtree:true});
+    }
     document.getElementById('btn-verify').onclick = () => { Biometrics.logVerify(); verifyLevel1(); };
 }
 

@@ -70,11 +70,15 @@ body {
 .food-item .label { padding: 0.35rem 0.4rem; font-size: 0.7rem; font-weight: 600; color: #fff; text-align: center; line-height: 1.2; background: rgba(0,0,0,0.7); }
 
 /* Nivel 1: Góndola */
-.gondola-container { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; padding: 1.5rem; max-width: 900px; margin: 0 auto; }
-.cart-container { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 50; background: var(--glass); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 1rem 1.5rem; max-width: 700px; width: 90%; }
-.cart-container h3 { font-size: 0.85rem; color: var(--accent); margin-bottom: 0.75rem; font-weight: 600; }
-.cart-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.5rem; }
-.cart-slot { width: 70px; height: 70px; border: 2px dashed rgba(255,255,255,0.2); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; transition: all 0.2s; background: rgba(255,255,255,0.03); overflow: hidden; }
+.gondola-container { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; padding: 1.5rem 1.5rem 200px 1.5rem; max-width: 900px; margin: 0 auto; }
+.cart-container { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 50; background: rgba(20,18,32,0.92); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.18); border-radius: 16px; padding: 0.6rem 1rem; max-width: 700px; width: 92%; box-shadow: 0 8px 32px rgba(0,0,0,0.6); transition: max-height 0.25s ease, padding 0.25s ease; }
+.cart-container.collapsed { padding: 0.4rem 1rem; }
+.cart-container.collapsed .cart-grid { display: none; }
+.cart-container h3 { font-size: 0.78rem; color: var(--accent); margin-bottom: 0.5rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; user-select: none; }
+.cart-container h3 .cart-toggle { margin-left: auto; background: none; border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.6); border-radius: 6px; font-size: 0.7rem; padding: 1px 8px; cursor: pointer; font-family: inherit; }
+.cart-container h3 .cart-count { font-family: monospace; font-size: 0.7rem; color: rgba(255,255,255,0.5); padding: 1px 8px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; }
+.cart-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.4rem; max-height: 90px; }
+.cart-slot { width: 60px; height: 60px; border: 2px dashed rgba(255,255,255,0.2); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; transition: all 0.2s; background: rgba(255,255,255,0.03); overflow: hidden; }
 .cart-slot.drag-over { border-color: var(--accent); background: var(--accent-glow); }
 .cart-slot .food-item { width: 100%; height: 100%; overflow: hidden; border: none; background: rgba(0,0,0,0.4); }
 .cart-slot .food-item img { height: 42px; width: 100%; object-fit: cover; display: block; }
@@ -238,9 +242,14 @@ body {
     .gondola-container { padding: 1rem; gap: 0.5rem; }
     .food-item { width: 85px; }
     .food-item img { height: 60px; }
-    .cart-container { bottom: 70px; }
-    .cart-grid { grid-template-columns: repeat(4, 1fr); }
-    .cart-slot { width: 60px; height: 60px; }
+    .cart-container { bottom: 70px; padding: 0.5rem 0.75rem; }
+    .cart-grid { grid-template-columns: repeat(5, 1fr); gap: 0.35rem; max-height: 75px; }
+    .cart-slot { width: 50px; height: 50px; }
+    .gondola-container { padding-bottom: 180px; }
+    .heladera-container { padding-bottom: 100px; }
+    .cocina-container { padding-bottom: 100px; }
+    .licuadora-container { padding-bottom: 100px; }
+    .mesa-container { padding-bottom: 100px; }
     .heladera-container, .cocina-container, .licuadora-container, .mesa-container, .habitacion-container { grid-template-columns: 1fr; }
 }
 

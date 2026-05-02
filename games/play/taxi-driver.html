@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taxi Driver ZYKOS - ZYKOS GAMER</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/supabase-config.js"></script>
+<script src="/games/shared/require-auth.js"></script>
+<script src="/games/shared/evidence-hash.js"></script>
+<script src="/games/shared/input-calibration.js"></script>
+<script src="/games/shared/auto-save.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800;900&family=IBM+Plex+Mono:wght@400;600;700&display=swap');
+:root {
+  --bg:#070b14; --surface:#0f1623; --card:#182032;
+  --neon:#ffd60a; --neon2:#ff9500; --accent:#06b6d4; --accent2:#a855f7;
+  --good:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+  --dim:rgba(255,255,255,0.45); --text:#e2e8f0;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;overflow:hidden;user-select:none;-webkit-tap-highlight-color:transparent}
+
+.hud{position:fixed;top:0;left:0;right:0;background:linear-gradient(180deg,rgba(7,11,20,.95),rgba(7,11,20,.7));border-bottom:1px solid rgba(255,214,10,.15);padding:10px 18px;z-index:50;display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(8px)}
+.logo{font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:.85rem;color:var(--neon);letter-spacing:2px;text-decoration:none}
+.logo span{color:var(--text);opacity:.5}
+.hud-stats{display:flex;gap:14px;align-items:center;font-size:.78rem;font-family:'IBM Plex Mono',monospace}
+.stat{padding:4px 12px;border-radius:18px;font-weight:700;border:1px solid;display:flex;gap:6px;align-items:center}
+.stat-fare{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3);color:var(--good)}
+.stat-time{background:rgba(0,0,0,.4);border-color:rgba(255,255,255,.1);color:var(--text)}
+.stat-time.low{color:var(--warn);border-color:rgba(245,158,11,.4)}
+.stat-time.crit{color:var(--bad);border-color:rgba(239,68,68,.5);animation:pulse 0.6s infinite}
+.stat-life{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:var(--bad)}
+.stat-day{background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.3);color:var(--accent2)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+#game{position:fixed;inset:0;width:100vw;height:100vh}
+canvas{display:block;width:100%;height:100%;cursor:default}
+
+.minimap{position:fixed;bottom:18px;right:18px;width:140px;height:140px;background:rgba(7,11,20,.85);border:1px solid rgba(255,214,10,.25);border-radius:12px;backdrop-filter:blur(8px);z-index:40;overflow:hidden}
+.minimap canvas{width:100%;height:100%}
+.minimap-label{position:absolute;top:4px;left:8px;font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--neon);letter-spacing:1px;font-weight:700;pointer-events:none}
+
+.controls-hint{position:fixed;bottom:18px;left:18px;background:rgba(7,11,20,.85);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:var(--dim);z-index:40;backdrop-filter:blur(8px)}
+.controls-hint kbd{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:1px 6px;color:var(--text);font-size:.65rem;margin:0 2px}
+
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(34,197,94,.95);color:#000;padding:10px 22px;border-radius:24px;font-weight:800;font-size:.95rem;z-index:60;animation:toastIn .4s ease-out;box-shadow:0 8px 32px rgba(34,197,94,.4)}
+.toast.bad{background:rgba(239,68,68,.95);color:#fff;box-shadow:0 8px 32px rgba(239,68,68,.4)}
+.toast.warn{background:rgba(245,158,11,.95);color:#000}
+.toast.tip{background:linear-gradient(135deg,var(--neon),var(--neon2));color:#000}
+@keyframes toastIn{from{transform:translate(-50%,-30px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+
+.objective{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.92);border:1px solid rgba(255,214,10,.3);border-radius:24px;padding:8px 18px;font-size:.82rem;font-weight:600;z-index:45;backdrop-filter:blur(8px);display:flex;gap:10px;align-items:center}
+.objective .arrow{color:var(--neon);font-size:.95rem}
+.objective .dist{color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:.72rem}
+
+.overlay{position:fixed;inset:0;background:rgba(7,11,20,.95);backdrop-filter:blur(20px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.panel{background:var(--surface);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:36px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;text-align:center}
+.panel h1{font-size:2.2rem;font-weight:900;margin-bottom:6px;background:linear-gradient(135deg,var(--neon),var(--neon2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'IBM Plex Mono',monospace;letter-spacing:1px}
+.panel h2{font-size:1.05rem;font-weight:600;color:var(--dim);margin-bottom:24px}
+.panel p{font-size:.9rem;color:rgba(255,255,255,.65);line-height:1.6;margin-bottom:14px}
+.panel .legend{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0;text-align:left}
+.legend-item{display:flex;gap:10px;align-items:center;font-size:.8rem;background:rgba(255,255,255,.03);padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.05)}
+.legend-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;box-shadow:0 0 8px currentColor}
+.btn{display:inline-block;padding:14px 36px;border-radius:14px;font-weight:800;text-decoration:none;border:none;cursor:pointer;font-size:1rem;font-family:'DM Sans',sans-serif;transition:transform .15s,box-shadow .15s}
+.btn-primary{background:linear-gradient(135deg,var(--neon),var(--neon2));color:#000;box-shadow:0 4px 20px rgba(255,214,10,.3)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(255,214,10,.4)}
+.btn-secondary{background:rgba(255,255,255,.06);color:var(--text);border:1px solid rgba(255,255,255,.1);margin-left:10px}
+.btn-secondary:hover{background:rgba(255,255,255,.1)}
+.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}
+.metric{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 8px;text-align:center}
+.metric .v{font-family:'IBM Plex Mono',monospace;font-size:1.3rem;font-weight:800;color:var(--neon)}
+.metric .l{font-size:.66rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.metric.good .v{color:var(--good)}
+.metric.warn .v{color:var(--warn)}
+.metric.bad .v{color:var(--bad)}
+
+.fare-popup{position:absolute;font-family:'IBM Plex Mono',monospace;font-weight:900;font-size:1.2rem;color:var(--good);text-shadow:0 0 8px rgba(34,197,94,.6);pointer-events:none;z-index:30;animation:floatUp 1.2s ease-out forwards}
+@keyframes floatUp{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-60px);opacity:0}}
+
+.shake{animation:shake .3s}
+@keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(-4px,2px)}50%{transform:translate(4px,-2px)}75%{transform:translate(-2px,3px)}}
+
+@media (max-width:600px){
+  .controls-hint{display:none}
+  .panel{padding:24px}
+  .panel h1{font-size:1.6rem}
+  .metrics-grid{grid-template-columns:repeat(2,1fr)}
+  .legend{grid-template-columns:1fr!important}
+  .minimap{width:100px;height:100px}
+}
+</style>
+</head>
+<body>
+
+<div class="hud">
+  <a href="/games/portal/" class="logo">ZYKOS <span>// TAXI DRIVER</span></a>
+  <div class="hud-stats">
+    <div class="stat stat-day" id="stat-day">DIA 1</div>
+    <div class="stat stat-fare" id="stat-fare">$0</div>
+    <div class="stat stat-time" id="stat-time">--:--</div>
+    <div class="stat stat-life" id="stat-life">III</div>
+  </div>
+</div>
+
+<div id="game">
+  <canvas id="canvas"></canvas>
+</div>
+
+<div class="objective" id="objective" style="display:none">
+  <span class="arrow" id="obj-arrow">→</span>
+  <span id="obj-text">Buscar pasajero</span>
+  <span class="dist" id="obj-dist">--m</span>
+</div>
+
+<div class="minimap">
+  <div class="minimap-label">MAPA</div>
+  <canvas id="minimap"></canvas>
+</div>
+
+<div class="controls-hint">
+  <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> manejar &nbsp;·&nbsp; <kbd>Space</kbd> freno &nbsp;·&nbsp; <kbd>P</kbd> pausa
+</div>
+
+<div class="overlay" id="start-screen">
+  <div class="panel">
+    <h1>TAXI DRIVER</h1>
+    <h2>Manejá. Levantá pasajeros. Dejalos en destino.</h2>
+    <p>Cuanto antes los entregues, mas propina. Esquiva el tránsito y cuidá el taxi — 3 choques fuertes y se acaba el turno.</p>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#ffd60a;color:#ffd60a"></div><span>Vos (taxi)</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#22c55e;color:#22c55e"></div><span>Pasajero esperando</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#06b6d4;color:#06b6d4"></div><span>Destino</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444;color:#ef4444"></div><span>Tránsito</span></div>
+    </div>
+    <p style="font-size:.78rem;color:var(--dim);margin-bottom:24px">Mide planificación de ruta, control motor sostenido, atención dividida y reacción ante obstáculos.</p>
+    <button class="btn btn-primary" id="btn-start">Empezar turno</button>
+  </div>
+</div>
+
+<div class="overlay" id="pause-screen" style="display:none">
+  <div class="panel">
+    <h1>PAUSA</h1>
+    <h2>Tomá aire</h2>
+    <button class="btn btn-primary" onclick="resumeGame()">Continuar</button>
+    <button class="btn btn-secondary" onclick="exitGame()">Salir</button>
+  </div>
+</div>
+
+<div class="overlay" id="results-screen" style="display:none">
+  <div class="panel" id="results-card"></div>
+</div>
+
+<script>
+'use strict';
+
+// ============================================================
+// TAXI DRIVER ZYKOS
+// Top-down 2D taxi simulator. Pick up passengers, deliver them.
+// Tests: planning, motor control, divided attention, reaction.
+// ============================================================
+
+var GAME_SLUG = 'taxi-driver';
+var sb = null;
+try { sb = (typeof getSupabaseClient === 'function') ? getSupabaseClient() : null; } catch(e) {}
+
+// ====== CANVAS ======
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+var miniCanvas = document.getElementById('minimap');
+var miniCtx = miniCanvas.getContext('2d');
+
+function resize() {
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  miniCanvas.width = 140 * dpr;
+  miniCanvas.height = 140 * dpr;
+  miniCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ====== WORLD ======
+var WORLD = {
+  size: 2400,           // cuadrado de mapa
+  blockSize: 240,       // bloque de manzana
+  roadWidth: 60,        // ancho de calle
+  blocks: 10            // 10x10 grid
+};
+
+// Genera el grafo de calles: filas y columnas cada blockSize
+function isOnRoad(x, y) {
+  var bs = WORLD.blockSize, rw = WORLD.roadWidth;
+  var nx = ((x % bs) + bs) % bs;
+  var ny = ((y % bs) + bs) % bs;
+  return nx < rw || ny < rw;
+}
+function isAtIntersection(x, y) {
+  var bs = WORLD.blockSize, rw = WORLD.roadWidth;
+  var nx = ((x % bs) + bs) % bs;
+  var ny = ((y % bs) + bs) % bs;
+  return nx < rw && ny < rw;
+}
+function snapToRoad(x, y) {
+  // Lleva a la calle mas cercana en el eje correspondiente
+  var bs = WORLD.blockSize, rw = WORLD.roadWidth;
+  var nx = ((x % bs) + bs) % bs;
+  var ny = ((y % bs) + bs) % bs;
+  if (nx < rw && ny < rw) return {x:x, y:y};
+  if (nx < rw) return {x:x, y:y};
+  if (ny < rw) return {x:x, y:y};
+  // Fuera de calle — snap al eje mas cercano
+  var dx = nx, dy = ny;
+  if (dx < dy) return {x: x - nx + rw/2, y: y};
+  return {x:x, y: y - ny + rw/2};
+}
+
+// Punto aleatorio sobre calle (no vereda)
+function randomRoadPoint() {
+  var bs = WORLD.blockSize, rw = WORLD.roadWidth;
+  // 50% sobre calle horizontal, 50% vertical
+  var horiz = Math.random() < 0.5;
+  var blockX = Math.floor(Math.random() * WORLD.blocks);
+  var blockY = Math.floor(Math.random() * WORLD.blocks);
+  if (horiz) {
+    return { x: blockX * bs + rw + Math.random() * (bs - rw), y: blockY * bs + rw/2 };
+  } else {
+    return { x: blockX * bs + rw/2, y: blockY * bs + rw + Math.random() * (bs - rw) };
+  }
+}
+
+// ====== STATE ======
+var STATE = {
+  running: false,
+  paused: false,
+  startedAt: 0,
+  day: 1,
+  dayTimeMs: 0,        // tiempo total acumulado del turno
+  dayDurationMs: 90000, // 90s por dia (turno)
+  fare: 0,
+  totalEarned: 0,
+  lives: 3,
+  passenger: null,     // pasajero ACTIVO (en taxi)
+  pendingPassenger: null, // pasajero esperando a ser recogido
+  destination: null,
+  npcs: [],
+  particles: [],
+  popups: [],
+  // metricas
+  passengersDelivered: 0,
+  passengersExpired: 0,
+  crashesMinor: 0,
+  crashesMajor: 0,
+  pickupTimes: [],     // ms desde spawn hasta recoger
+  deliveryTimes: [],   // ms desde recoger hasta dejar
+  tripDistances: [],   // distancia conducida vs ruta optima
+  reactionsToHazard: [], // RT cuando aparece NPC en linea
+  shakeUntil: 0,
+  bestStreak: 0,
+  currentStreak: 0
+};
+
+// ====== TAXI ======
+var taxi = {
+  x: WORLD.size/2, y: WORLD.size/2,
+  vx: 0, vy: 0,
+  angle: -Math.PI/2,
+  speed: 0,
+  maxSpeed: 280,        // px/s
+  accel: 380,
+  brake: 520,
+  friction: 0.92,
+  turnRate: 2.6,
+  width: 18, height: 32,
+  damageMs: 0
+};
+
+// ====== NPC TRAFFIC ======
+function NPC(x, y, dir) {
+  this.x = x; this.y = y;
+  this.dir = dir; // 0=E, 1=S, 2=W, 3=N
+  this.speed = 70 + Math.random() * 60;
+  this.color = ['#ef4444','#3b82f6','#a855f7','#10b981','#f97316','#ec4899'][Math.floor(Math.random()*6)];
+  this.width = 18; this.height = 32;
+  this.cooldownMs = 0;
+}
+NPC.prototype.update = function(dt) {
+  var dx = [1,0,-1,0][this.dir], dy = [0,1,0,-1][this.dir];
+  this.x += dx * this.speed * dt;
+  this.y += dy * this.speed * dt;
+  // En interseccion: 25% de chance de doblar (con cooldown)
+  this.cooldownMs -= dt*1000;
+  if (this.cooldownMs <= 0 && isAtIntersection(this.x, this.y) && Math.random() < 0.04) {
+    var turn = Math.random() < 0.5 ? 1 : -1;
+    this.dir = (this.dir + turn + 4) % 4;
+    this.cooldownMs = 800;
+    // Snap al centro del carril del eje nuevo
+    var bs = WORLD.blockSize, rw = WORLD.roadWidth;
+    if (this.dir === 0 || this.dir === 2) {
+      this.y = Math.floor(this.y / bs) * bs + rw/2;
+    } else {
+      this.x = Math.floor(this.x / bs) * bs + rw/2;
+    }
+  }
+  // wraparound del mundo
+  if (this.x < -50) this.x = WORLD.size + 50;
+  if (this.x > WORLD.size + 50) this.x = -50;
+  if (this.y < -50) this.y = WORLD.size + 50;
+  if (this.y > WORLD.size + 50) this.y = -50;
+};
+NPC.prototype.angle = function() { return [0, Math.PI/2, Math.PI, -Math.PI/2][this.dir]; };
+
+function spawnNPC() {
+  var bs = WORLD.blockSize, rw = WORLD.roadWidth;
+  var dir = Math.floor(Math.random() * 4);
+  var blockX = Math.floor(Math.random() * WORLD.blocks);
+  var blockY = Math.floor(Math.random() * WORLD.blocks);
+  var x, y;
+  if (dir === 0 || dir === 2) {
+    x = blockX * bs + Math.random() * bs;
+    y = blockY * bs + rw/2;
+  } else {
+    x = blockX * bs + rw/2;
+    y = blockY * bs + Math.random() * bs;
+  }
+  // No spawnear muy cerca del taxi
+  if (Math.hypot(x - taxi.x, y - taxi.y) < 200) return null;
+  return new NPC(x, y, dir);
+}
+
+function refillNPCs() {
+  var target = 14 + STATE.day * 4;
+  if (target > 40) target = 40;
+  while (STATE.npcs.length < target) {
+    var n = spawnNPC();
+    if (n) STATE.npcs.push(n);
+    else break;
+  }
+}
+
+// ====== PASSENGERS / FARES ======
+function spawnPassenger() {
+  // pasajero esperando en una vereda (al lado de calle)
+  var p, attempts = 0;
+  do {
+    p = randomRoadPoint();
+    attempts++;
+  } while (attempts < 20 && Math.hypot(p.x - taxi.x, p.y - taxi.y) < 250);
+  var dest, dAttempts = 0;
+  do {
+    dest = randomRoadPoint();
+    dAttempts++;
+  } while (dAttempts < 30 && Math.hypot(dest.x - p.x, dest.y - p.y) < 600);
+  STATE.pendingPassenger = {
+    x: p.x, y: p.y,
+    destX: dest.x, destY: dest.y,
+    spawnedAt: performance.now(),
+    timeoutMs: 25000,  // 25s para llegar a recogerlo
+    baseFare: 100 + Math.floor(Math.hypot(dest.x - p.x, dest.y - p.y) / 8)
+  };
+}
+
+function pickupPassenger() {
+  var pp = STATE.pendingPassenger;
+  if (!pp) return;
+  STATE.pickupTimes.push(performance.now() - pp.spawnedAt);
+  STATE.passenger = {
+    pickedAt: performance.now(),
+    destX: pp.destX, destY: pp.destY,
+    baseFare: pp.baseFare,
+    timeoutMs: 30000
+  };
+  STATE.pendingPassenger = null;
+  STATE.destination = { x: pp.destX, y: pp.destY };
+  toast('Pasajero a bordo', '');
+  beep(660, 0.08, 'square', 0.25);
+  setTimeout(function(){ beep(880, 0.1, 'square', 0.22); }, 90);
+}
+
+function deliverPassenger() {
+  var p = STATE.passenger;
+  if (!p) return;
+  var dt = performance.now() - p.pickedAt;
+  STATE.deliveryTimes.push(dt);
+  // Propina: 100% si <12s, decae linealmente hasta 30% a 30s
+  var tipPct = 1.0;
+  var dtSec = dt / 1000;
+  if (dtSec > 12) tipPct = Math.max(0.3, 1.0 - (dtSec - 12) / 25);
+  var fare = Math.floor(p.baseFare * tipPct);
+  STATE.fare += fare;
+  STATE.totalEarned += fare;
+  STATE.passengersDelivered++;
+  STATE.currentStreak++;
+  if (STATE.currentStreak > STATE.bestStreak) STATE.bestStreak = STATE.currentStreak;
+  STATE.passenger = null;
+  STATE.destination = null;
+  showFarePopup(taxi.x, taxi.y, '+$' + fare);
+  toast('+$' + fare + (tipPct > 0.85 ? ' propina!' : ''), 'tip');
+  beep(523, 0.08, 'sine', 0.3);
+  setTimeout(function(){ beep(659, 0.08, 'sine', 0.3); }, 80);
+  setTimeout(function(){ beep(784, 0.12, 'sine', 0.3); }, 160);
+  // spawn proximo pasajero tras un breve delay
+  setTimeout(function(){ if (STATE.running && !STATE.passenger && !STATE.pendingPassenger) spawnPassenger(); }, 800);
+}
+
+function expirePassenger() {
+  STATE.pendingPassenger = null;
+  STATE.passengersExpired++;
+  STATE.currentStreak = 0;
+  toast('Pasajero perdido', 'bad');
+  beep(180, 0.25, 'sawtooth', 0.18);
+  setTimeout(function(){ if (STATE.running && !STATE.passenger && !STATE.pendingPassenger) spawnPassenger(); }, 1200);
+}
+
+// ====== AUDIO ======
+var audioCtx = null;
+function getAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  return audioCtx;
+}
+function beep(freq, dur, type, vol) {
+  var ac = getAudio(); if (!ac) return;
+  try {
+    var osc = ac.createOscillator(), gain = ac.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol || 0.2, ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.start(); osc.stop(ac.currentTime + dur);
+  } catch(e) {}
+}
+function noiseHit() {
+  var ac = getAudio(); if (!ac) return;
+  try {
+    var bufSize = 4096;
+    var buf = ac.createBuffer(1, bufSize, ac.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i=0;i<bufSize;i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/bufSize, 2);
+    var src = ac.createBufferSource(); src.buffer = buf;
+    var gain = ac.createGain(); gain.gain.value = 0.4;
+    var filter = ac.createBiquadFilter(); filter.type='lowpass'; filter.frequency.value=800;
+    src.connect(filter); filter.connect(gain); gain.connect(ac.destination);
+    src.start();
+  } catch(e) {}
+}
+
+// ====== INPUT ======
+var keys = {};
+window.addEventListener('keydown', function(e) {
+  if (e.key === 'p' || e.key === 'P') { togglePause(); return; }
+  if (e.key === 'Escape' && STATE.running) { togglePause(); return; }
+  keys[e.key.toLowerCase()] = true;
+  if (['arrowup','arrowdown','arrowleft','arrowright',' '].indexOf(e.key.toLowerCase()) >= 0) e.preventDefault();
+});
+window.addEventListener('keyup', function(e) {
+  keys[e.key.toLowerCase()] = false;
+});
+
+// Touch controls (móvil): joystick virtual
+var touchJoy = { active:false, baseX:0, baseY:0, dx:0, dy:0 };
+canvas.addEventListener('touchstart', function(e) {
+  if (!STATE.running) return;
+  var t = e.touches[0];
+  touchJoy.active = true; touchJoy.baseX = t.clientX; touchJoy.baseY = t.clientY;
+  touchJoy.dx = 0; touchJoy.dy = 0;
+});
+canvas.addEventListener('touchmove', function(e) {
+  if (!touchJoy.active) return;
+  e.preventDefault();
+  var t = e.touches[0];
+  touchJoy.dx = t.clientX - touchJoy.baseX;
+  touchJoy.dy = t.clientY - touchJoy.baseY;
+}, {passive:false});
+canvas.addEventListener('touchend', function() { touchJoy.active = false; touchJoy.dx = 0; touchJoy.dy = 0; });
+
+// ====== UPDATE ======
+var lastTs = 0;
+var npcSpawnAccum = 0, passengerCheckAccum = 0;
+function update(dt) {
+  if (!STATE.running || STATE.paused) return;
+
+  STATE.dayTimeMs += dt * 1000;
+
+  // ===== Input → taxi =====
+  var fwd = (keys['w'] || keys['arrowup']) ? 1 : 0;
+  var bwd = (keys['s'] || keys['arrowdown']) ? 1 : 0;
+  var left = (keys['a'] || keys['arrowleft']) ? 1 : 0;
+  var right = (keys['d'] || keys['arrowright']) ? 1 : 0;
+  var brk = keys[' '] ? 1 : 0;
+
+  // Touch joystick
+  if (touchJoy.active) {
+    var jl = Math.hypot(touchJoy.dx, touchJoy.dy);
+    if (jl > 15) {
+      var jang = Math.atan2(touchJoy.dy, touchJoy.dx);
+      var rel = jang - taxi.angle;
+      while (rel > Math.PI) rel -= 2*Math.PI;
+      while (rel < -Math.PI) rel += 2*Math.PI;
+      if (rel > 0.2) right = 1;
+      else if (rel < -0.2) left = 1;
+      fwd = Math.min(1, jl / 60);
+    }
+  }
+
+  // Steering: solo si hay velocidad
+  var steer = (right - left);
+  taxi.angle += steer * taxi.turnRate * dt * Math.min(1, Math.abs(taxi.speed) / 80);
+
+  // Aceleracion
+  if (fwd) taxi.speed += taxi.accel * dt * fwd;
+  if (bwd) taxi.speed -= taxi.accel * dt * 0.7 * bwd;
+  if (brk) taxi.speed *= Math.pow(0.05, dt);
+  if (!fwd && !bwd && !brk) taxi.speed *= Math.pow(taxi.friction, dt * 60);
+  taxi.speed = Math.max(-taxi.maxSpeed*0.5, Math.min(taxi.maxSpeed, taxi.speed));
+
+  // Rugosidad fuera de calle: penaliza
+  var onRoad = isOnRoad(taxi.x, taxi.y);
+  if (!onRoad) {
+    taxi.speed *= Math.pow(0.4, dt);
+  }
+
+  taxi.vx = Math.cos(taxi.angle) * taxi.speed;
+  taxi.vy = Math.sin(taxi.angle) * taxi.speed;
+  taxi.x += taxi.vx * dt;
+  taxi.y += taxi.vy * dt;
+
+  // Limites del mapa
+  if (taxi.x < 20) { taxi.x = 20; taxi.speed *= -0.3; }
+  if (taxi.y < 20) { taxi.y = 20; taxi.speed *= -0.3; }
+  if (taxi.x > WORLD.size - 20) { taxi.x = WORLD.size - 20; taxi.speed *= -0.3; }
+  if (taxi.y > WORLD.size - 20) { taxi.y = WORLD.size - 20; taxi.speed *= -0.3; }
+
+  // ===== NPCs =====
+  npcSpawnAccum += dt;
+  if (npcSpawnAccum > 1.5) { npcSpawnAccum = 0; refillNPCs(); }
+  for (var i=0; i<STATE.npcs.length; i++) {
+    var n = STATE.npcs[i];
+    n.update(dt);
+    // Colision con taxi
+    var dx = n.x - taxi.x, dy = n.y - taxi.y;
+    var dist = Math.hypot(dx, dy);
+    if (dist < 24) {
+      handleCrash(n);
+    }
+  }
+
+  // ===== Pasajero pendiente =====
+  passengerCheckAccum += dt;
+  if (passengerCheckAccum > 0.1) {
+    passengerCheckAccum = 0;
+    if (!STATE.passenger && !STATE.pendingPassenger && STATE.running) {
+      spawnPassenger();
+    }
+    if (STATE.pendingPassenger) {
+      var pp = STATE.pendingPassenger;
+      var pdx = pp.x - taxi.x, pdy = pp.y - taxi.y;
+      // pickup si estamos cerca y casi quietos
+      if (Math.hypot(pdx, pdy) < 30 && Math.abs(taxi.speed) < 60) {
+        pickupPassenger();
+      } else if (performance.now() - pp.spawnedAt > pp.timeoutMs) {
+        expirePassenger();
+      }
+    }
+    if (STATE.passenger) {
+      var p = STATE.passenger;
+      var ddx = p.destX - taxi.x, ddy = p.destY - taxi.y;
+      if (Math.hypot(ddx, ddy) < 30 && Math.abs(taxi.speed) < 80) {
+        deliverPassenger();
+      } else if (performance.now() - p.pickedAt > p.timeoutMs) {
+        // pasajero se baja: 0 propina
+        STATE.passenger = null;
+        STATE.destination = null;
+        STATE.passengersExpired++;
+        STATE.currentStreak = 0;
+        toast('Pasajero abandonó!', 'bad');
+        beep(120, 0.4, 'sawtooth', 0.2);
+      }
+    }
+  }
+
+  // ===== Day cycle =====
+  if (STATE.dayTimeMs >= STATE.dayDurationMs) {
+    STATE.day++;
+    STATE.dayTimeMs = 0;
+    STATE.dayDurationMs = 90000 + STATE.day * 15000;
+    toast('Dia ' + STATE.day + ' — más tránsito!', 'warn');
+    beep(440, 0.15, 'triangle', 0.3);
+    setTimeout(function(){ beep(550, 0.2, 'triangle', 0.3); }, 120);
+  }
+
+  // ===== Particles =====
+  for (var pi=STATE.particles.length-1; pi>=0; pi--) {
+    var pa = STATE.particles[pi];
+    pa.x += pa.vx * dt; pa.y += pa.vy * dt;
+    pa.life -= dt; pa.vx *= 0.95; pa.vy *= 0.95;
+    if (pa.life <= 0) STATE.particles.splice(pi, 1);
+  }
+
+  // Damage cooldown
+  if (taxi.damageMs > 0) taxi.damageMs -= dt * 1000;
+}
+
+function handleCrash(npc) {
+  if (taxi.damageMs > 0) return; // invuln frames
+  var rel = Math.hypot(taxi.vx - (npc.speed * [1,0,-1,0][npc.dir]), taxi.vy - (npc.speed * [0,1,0,-1][npc.dir]));
+  var major = rel > 200;
+  taxi.damageMs = 800;
+  // Knock-back
+  var dx = taxi.x - npc.x, dy = taxi.y - npc.y;
+  var dl = Math.hypot(dx, dy) || 1;
+  taxi.x += dx/dl * 16; taxi.y += dy/dl * 16;
+  taxi.speed *= -0.4;
+  STATE.shakeUntil = performance.now() + (major ? 350 : 180);
+  emitParticles(taxi.x, taxi.y, major ? 22 : 10, '#fbbf24');
+  noiseHit();
+  if (major) {
+    STATE.crashesMajor++;
+    STATE.lives--;
+    STATE.currentStreak = 0;
+    toast('Choque fuerte! -1 vida', 'bad');
+    if (STATE.lives <= 0) {
+      endGame('crash');
+    }
+  } else {
+    STATE.crashesMinor++;
+    toast('Roce!', 'warn');
+  }
+}
+
+function emitParticles(x, y, n, color) {
+  for (var i=0;i<n;i++) {
+    var a = Math.random() * Math.PI * 2;
+    var s = 60 + Math.random() * 220;
+    STATE.particles.push({
+      x:x, y:y, vx:Math.cos(a)*s, vy:Math.sin(a)*s,
+      life: 0.4 + Math.random()*0.5, color:color
+    });
+  }
+}
+
+function showFarePopup(x, y, txt) {
+  // popup en pantalla, no en world coords — convertimos
+  var screen = worldToScreen(x, y);
+  var el = document.createElement('div');
+  el.className = 'fare-popup';
+  el.style.left = screen.x + 'px';
+  el.style.top = screen.y + 'px';
+  el.textContent = txt;
+  document.body.appendChild(el);
+  setTimeout(function(){ if (el.parentNode) el.remove(); }, 1200);
+}
+
+function toast(text, kind) {
+  var el = document.createElement('div');
+  el.className = 'toast' + (kind ? ' ' + kind : '');
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(function(){
+    el.style.transition = 'opacity .3s';
+    el.style.opacity = '0';
+    setTimeout(function(){ if (el.parentNode) el.remove(); }, 300);
+  }, 1500);
+}
+
+// ====== CAMERA ======
+var camera = { x: 0, y: 0 };
+function updateCamera() {
+  var W = window.innerWidth, H = window.innerHeight;
+  var targetX = taxi.x - W/2;
+  var targetY = taxi.y - H/2;
+  camera.x += (targetX - camera.x) * 0.12;
+  camera.y += (targetY - camera.y) * 0.12;
+  // Shake
+  if (performance.now() < STATE.shakeUntil) {
+    var s = (STATE.shakeUntil - performance.now()) / 350 * 10;
+    camera.x += (Math.random() - 0.5) * s;
+    camera.y += (Math.random() - 0.5) * s;
+  }
+}
+function worldToScreen(x, y) { return { x: x - camera.x, y: y - camera.y }; }
+
+// ====== DRAW ======
+function draw() {
+  var W = window.innerWidth, H = window.innerHeight;
+  // background — color de noche/dia segun hora del turno
+  var dayProg = STATE.dayTimeMs / STATE.dayDurationMs;
+  var night = dayProg > 0.6;
+  ctx.fillStyle = night ? '#0a0a18' : '#0f1623';
+  ctx.fillRect(0, 0, W, H);
+
+  // ===== Mapa: bloques (manzanas) =====
+  ctx.save();
+  ctx.translate(-camera.x, -camera.y);
+
+  var bs = WORLD.blockSize, rw = WORLD.roadWidth;
+  // Calcula que bloques son visibles
+  var bx0 = Math.max(0, Math.floor(camera.x / bs) - 1);
+  var by0 = Math.max(0, Math.floor(camera.y / bs) - 1);
+  var bx1 = Math.min(WORLD.blocks, Math.ceil((camera.x + W) / bs) + 1);
+  var by1 = Math.min(WORLD.blocks, Math.ceil((camera.y + H) / bs) + 1);
+
+  // Manzanas (rectangulos)
+  for (var by = by0; by < by1; by++) {
+    for (var bx = bx0; bx < bx1; bx++) {
+      var x0 = bx * bs + rw;
+      var y0 = by * bs + rw;
+      var w = bs - rw;
+      var h = bs - rw;
+      // sombra
+      ctx.fillStyle = night ? '#161e30' : '#1e2840';
+      ctx.fillRect(x0, y0, w, h);
+      // edificio: rectangulo mas chico adentro
+      var bw = w - 14, bh = h - 14;
+      var bx2 = x0 + 7, by2 = y0 + 7;
+      // color basado en posicion (varia)
+      var hue = ((bx*7 + by*13) % 6);
+      var bldgs = ['#2a3650','#243049','#3a2f55','#3a4868','#2d3a55','#384768'];
+      ctx.fillStyle = night ? '#1a2236' : bldgs[hue];
+      ctx.fillRect(bx2, by2, bw, bh);
+      // ventanas (puntos)
+      if (night) {
+        ctx.fillStyle = 'rgba(255,214,10,0.5)';
+        for (var wy=by2+8; wy<by2+bh-5; wy+=12) {
+          for (var wx=bx2+5; wx<bx2+bw-5; wx+=10) {
+            // determinista por celda
+            if (((wx*7 + wy*11 + bx*3 + by*5) % 7) < 3) {
+              ctx.fillRect(wx, wy, 4, 4);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Calles (gris oscuro)
+  ctx.fillStyle = night ? '#0c1018' : '#15192a';
+  for (var bx3 = bx0; bx3 <= bx1; bx3++) {
+    ctx.fillRect(bx3 * bs, by0 * bs, rw, (by1-by0) * bs);
+  }
+  for (var by3 = by0; by3 <= by1; by3++) {
+    ctx.fillRect(bx0 * bs, by3 * bs, (bx1-bx0) * bs, rw);
+  }
+
+  // Lineas de carril (amarillo dashed) — solo en calles
+  ctx.strokeStyle = 'rgba(255,214,10,0.25)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([10, 14]);
+  for (var bx4 = bx0; bx4 <= bx1; bx4++) {
+    ctx.beginPath();
+    ctx.moveTo(bx4 * bs + rw/2, by0 * bs);
+    ctx.lineTo(bx4 * bs + rw/2, by1 * bs);
+    ctx.stroke();
+  }
+  for (var by4 = by0; by4 <= by1; by4++) {
+    ctx.beginPath();
+    ctx.moveTo(bx0 * bs, by4 * bs + rw/2);
+    ctx.lineTo(bx1 * bs, by4 * bs + rw/2);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // ===== Pasajero pendiente =====
+  if (STATE.pendingPassenger) {
+    var pp = STATE.pendingPassenger;
+    var pulse = 0.5 + 0.5 * Math.sin(performance.now() / 200);
+    // halo
+    ctx.fillStyle = 'rgba(34,197,94,' + (0.15 + pulse * 0.25) + ')';
+    ctx.beginPath();
+    ctx.arc(pp.x, pp.y, 22 + pulse * 6, 0, Math.PI*2);
+    ctx.fill();
+    // figura
+    ctx.fillStyle = '#22c55e';
+    ctx.beginPath();
+    ctx.arc(pp.x, pp.y, 10, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px IBM Plex Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('$', pp.x, pp.y + 4);
+    // timeout bar
+    var tt = (pp.timeoutMs - (performance.now() - pp.spawnedAt)) / pp.timeoutMs;
+    if (tt < 0) tt = 0;
+    ctx.strokeStyle = tt > 0.4 ? '#22c55e' : tt > 0.2 ? '#f59e0b' : '#ef4444';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(pp.x, pp.y, 18, -Math.PI/2, -Math.PI/2 + Math.PI*2*tt);
+    ctx.stroke();
+  }
+
+  // ===== Destino (si hay pasajero a bordo) =====
+  if (STATE.destination) {
+    var d = STATE.destination;
+    var pulse2 = 0.5 + 0.5 * Math.sin(performance.now() / 250);
+    ctx.fillStyle = 'rgba(6,182,212,' + (0.15 + pulse2 * 0.3) + ')';
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, 28 + pulse2 * 8, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = '#06b6d4';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, 16, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.fillStyle = '#06b6d4';
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, 5, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // ===== NPCs =====
+  for (var ni=0; ni<STATE.npcs.length; ni++) {
+    var n = STATE.npcs[ni];
+    drawCar(n.x, n.y, n.angle(), n.color, false);
+  }
+
+  // ===== Particulas =====
+  for (var pi2=0; pi2<STATE.particles.length; pi2++) {
+    var pa = STATE.particles[pi2];
+    var alpha = Math.min(1, pa.life * 2);
+    ctx.fillStyle = pa.color;
+    ctx.globalAlpha = alpha;
+    ctx.fillRect(pa.x - 2, pa.y - 2, 4, 4);
+  }
+  ctx.globalAlpha = 1;
+
+  // ===== Taxi =====
+  var flicker = taxi.damageMs > 0 && Math.floor(taxi.damageMs / 80) % 2 === 0;
+  if (!flicker) drawCar(taxi.x, taxi.y, taxi.angle, '#ffd60a', true);
+
+  ctx.restore();
+
+  // ===== Vignette nocturno =====
+  if (night) {
+    var grad = ctx.createRadialGradient(W/2, H/2, 100, W/2, H/2, Math.max(W,H)/1.2);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.65)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // ===== Flecha de objetivo en borde de pantalla =====
+  drawObjectiveArrow();
+}
+
+function drawCar(x, y, angle, color, isTaxi) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle + Math.PI/2);
+  // sombra
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(-9, -15, 18, 32);
+  // cuerpo
+  ctx.fillStyle = color;
+  ctx.fillRect(-9, -16, 18, 32);
+  // capot oscuro
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.fillRect(-9, -16, 18, 6);
+  ctx.fillRect(-9, 10, 18, 6);
+  // ventanas
+  ctx.fillStyle = isTaxi ? 'rgba(20,30,50,0.85)' : 'rgba(40,60,90,0.7)';
+  ctx.fillRect(-7, -10, 14, 9);
+  ctx.fillRect(-7, 1, 14, 8);
+  if (isTaxi) {
+    // techo cartel
+    ctx.fillStyle = '#000';
+    ctx.fillRect(-6, -5, 12, 4);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 4.5px IBM Plex Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText('TAXI', 0, -1.5);
+    // luces
+    ctx.fillStyle = 'rgba(255,255,200,0.9)';
+    ctx.fillRect(-7, -16, 4, 2);
+    ctx.fillRect(3, -16, 4, 2);
+    // luces traseras
+    ctx.fillStyle = '#dc2626';
+    ctx.fillRect(-7, 14, 4, 2);
+    ctx.fillRect(3, 14, 4, 2);
+  } else {
+    ctx.fillStyle = 'rgba(255,255,200,0.7)';
+    ctx.fillRect(-7, -16, 4, 2);
+    ctx.fillRect(3, -16, 4, 2);
+    ctx.fillStyle = '#7f1d1d';
+    ctx.fillRect(-7, 14, 4, 2);
+    ctx.fillRect(3, 14, 4, 2);
+  }
+  ctx.restore();
+}
+
+function drawObjectiveArrow() {
+  var target = null;
+  if (STATE.destination) target = STATE.destination;
+  else if (STATE.pendingPassenger) target = STATE.pendingPassenger;
+  if (!target) return;
+  var W = window.innerWidth, H = window.innerHeight;
+  var sx = target.x - camera.x, sy = target.y - camera.y;
+  // Si esta visible, no dibujar flecha
+  var margin = 60;
+  if (sx > margin && sx < W - margin && sy > margin && sy < H - margin) return;
+  // Posicion de la flecha en borde
+  var cx = W/2, cy = H/2;
+  var dx = sx - cx, dy = sy - cy;
+  var angle = Math.atan2(dy, dx);
+  var rad = Math.min(W, H) * 0.42;
+  var ax = cx + Math.cos(angle) * rad;
+  var ay = cy + Math.sin(angle) * rad;
+  ctx.save();
+  ctx.translate(ax, ay);
+  ctx.rotate(angle);
+  ctx.fillStyle = STATE.destination ? '#06b6d4' : '#22c55e';
+  ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 12;
+  ctx.beginPath();
+  ctx.moveTo(14, 0); ctx.lineTo(-6, -10); ctx.lineTo(-2, 0); ctx.lineTo(-6, 10);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+// ====== MINIMAP ======
+function drawMinimap() {
+  var size = 140;
+  miniCtx.fillStyle = '#0a0d14';
+  miniCtx.fillRect(0, 0, size, size);
+  // Bloques: muy chico, mostramos solo calles
+  var scale = size / WORLD.size;
+  miniCtx.fillStyle = '#1a2238';
+  miniCtx.fillRect(0, 0, size, size);
+  miniCtx.fillStyle = '#2a3450';
+  var bs = WORLD.blockSize, rw = WORLD.roadWidth;
+  for (var i=0; i<=WORLD.blocks; i++) {
+    miniCtx.fillRect(i*bs*scale, 0, rw*scale, size);
+    miniCtx.fillRect(0, i*bs*scale, size, rw*scale);
+  }
+  // NPCs: puntos rojos
+  miniCtx.fillStyle = '#ef4444';
+  for (var ni=0; ni<STATE.npcs.length; ni++) {
+    var n = STATE.npcs[ni];
+    miniCtx.fillRect(n.x*scale - 1.5, n.y*scale - 1.5, 3, 3);
+  }
+  // Pasajero
+  if (STATE.pendingPassenger) {
+    miniCtx.fillStyle = '#22c55e';
+    miniCtx.fillRect(STATE.pendingPassenger.x*scale - 3, STATE.pendingPassenger.y*scale - 3, 6, 6);
+  }
+  // Destino
+  if (STATE.destination) {
+    miniCtx.fillStyle = '#06b6d4';
+    miniCtx.fillRect(STATE.destination.x*scale - 3, STATE.destination.y*scale - 3, 6, 6);
+  }
+  // Taxi
+  miniCtx.fillStyle = '#ffd60a';
+  miniCtx.fillRect(taxi.x*scale - 3, taxi.y*scale - 3, 6, 6);
+}
+
+// ====== HUD UPDATE ======
+function updateHUD() {
+  document.getElementById('stat-day').textContent = 'DIA ' + STATE.day;
+  document.getElementById('stat-fare').textContent = '$' + STATE.totalEarned;
+  var remainMs = STATE.dayDurationMs - STATE.dayTimeMs;
+  var ss = Math.max(0, Math.floor(remainMs / 1000));
+  var mm = Math.floor(ss/60); ss = ss%60;
+  var st = document.getElementById('stat-time');
+  st.textContent = String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
+  st.classList.toggle('low', remainMs < 30000 && remainMs >= 10000);
+  st.classList.toggle('crit', remainMs < 10000);
+  document.getElementById('stat-life').textContent = ['', 'I', 'II', 'III'][STATE.lives] || '';
+
+  var obj = document.getElementById('objective');
+  if (STATE.passenger && STATE.destination) {
+    obj.style.display = 'flex';
+    var ddx = STATE.destination.x - taxi.x, ddy = STATE.destination.y - taxi.y;
+    var dd = Math.hypot(ddx, ddy);
+    document.getElementById('obj-text').textContent = 'Llevar al destino';
+    document.getElementById('obj-dist').textContent = Math.round(dd) + 'm';
+  } else if (STATE.pendingPassenger) {
+    obj.style.display = 'flex';
+    var pdx2 = STATE.pendingPassenger.x - taxi.x, pdy2 = STATE.pendingPassenger.y - taxi.y;
+    var pd2 = Math.hypot(pdx2, pdy2);
+    document.getElementById('obj-text').textContent = 'Buscar pasajero';
+    document.getElementById('obj-dist').textContent = Math.round(pd2) + 'm';
+  } else {
+    obj.style.display = 'none';
+  }
+}
+
+// ====== GAME LOOP ======
+function loop(ts) {
+  if (!lastTs) lastTs = ts;
+  var dt = Math.min(0.05, (ts - lastTs) / 1000);
+  lastTs = ts;
+  updateCamera();
+  update(dt);
+  draw();
+  drawMinimap();
+  updateHUD();
+  requestAnimationFrame(loop);
+}
+
+// ====== START / END ======
+function startGame() {
+  document.getElementById('start-screen').style.display = 'none';
+  STATE.running = true;
+  STATE.startedAt = performance.now();
+  taxi.x = WORLD.size/2; taxi.y = WORLD.size/2; taxi.speed = 0; taxi.angle = -Math.PI/2;
+  STATE.npcs = [];
+  refillNPCs();
+  spawnPassenger();
+  // Beacon entrada
+  beaconEvent('game_started');
+  // Auto-save register
+  if (typeof window.registerAutoSave === 'function') {
+    window.registerAutoSave(function() {
+      return { game_slug: GAME_SLUG, partial_data: snapshotMetrics() };
+    });
+  }
+}
+
+function togglePause() {
+  if (!STATE.running) return;
+  STATE.paused = !STATE.paused;
+  document.getElementById('pause-screen').style.display = STATE.paused ? 'flex' : 'none';
+  if (STATE.paused) beaconEvent('paused');
+}
+function resumeGame() {
+  STATE.paused = false;
+  document.getElementById('pause-screen').style.display = 'none';
+}
+
+function exitGame() {
+  window.location.href = '/games/portal/';
+}
+
+function snapshotMetrics() {
+  var elapsedSec = (performance.now() - STATE.startedAt) / 1000;
+  var avgPickup = STATE.pickupTimes.length ? avg(STATE.pickupTimes) : 0;
+  var avgDeliv = STATE.deliveryTimes.length ? avg(STATE.deliveryTimes) : 0;
+  return {
+    score: STATE.totalEarned,
+    fare_total: STATE.totalEarned,
+    day_reached: STATE.day,
+    passengers_delivered: STATE.passengersDelivered,
+    passengers_expired: STATE.passengersExpired,
+    crashes_minor: STATE.crashesMinor,
+    crashes_major: STATE.crashesMajor,
+    lives_remaining: STATE.lives,
+    pickup_time_avg_ms: Math.round(avgPickup),
+    delivery_time_avg_ms: Math.round(avgDeliv),
+    pickup_time_cv: cv(STATE.pickupTimes),
+    delivery_time_cv: cv(STATE.deliveryTimes),
+    best_streak: STATE.bestStreak,
+    time_played_sec: Math.round(elapsedSec),
+    crashes_per_minute: elapsedSec > 0 ? Math.round((STATE.crashesMajor + STATE.crashesMinor) / (elapsedSec/60) * 100) / 100 : 0,
+    fares_per_minute: elapsedSec > 0 ? Math.round(STATE.passengersDelivered / (elapsedSec/60) * 100) / 100 : 0
+  };
+}
+
+function avg(a) { var s=0; for (var i=0;i<a.length;i++) s+=a[i]; return s/a.length; }
+function cv(a) {
+  if (!a || a.length < 2) return 0;
+  var m = avg(a), v = 0;
+  for (var i=0;i<a.length;i++) v += (a[i]-m)*(a[i]-m);
+  v /= a.length;
+  return Math.round(Math.sqrt(v) / m * 1000) / 1000;
+}
+
+function endGame(reason) {
+  if (!STATE.running) return;
+  STATE.running = false;
+  var metrics = snapshotMetrics();
+  metrics.end_reason = reason;
+  saveMetrics(metrics).then(function() {
+    showResults(metrics, reason);
+    if (typeof window.markAutoSaveComplete === 'function') window.markAutoSaveComplete();
+  });
+}
+
+function showResults(m, reason) {
+  var titleMap = { crash:'Turno terminado', timeup:'Día completado', manual:'Salida' };
+  var title = titleMap[reason] || 'Fin del turno';
+  var html =
+    '<h1>' + title + '</h1>' +
+    '<h2>Total: $' + m.fare_total + ' &middot; ' + m.passengers_delivered + ' viajes</h2>' +
+    '<div class="metrics-grid">' +
+      '<div class="metric good"><div class="v">$' + m.fare_total + '</div><div class="l">Recaudacion</div></div>' +
+      '<div class="metric"><div class="v">' + m.passengers_delivered + '</div><div class="l">Entregas</div></div>' +
+      '<div class="metric ' + (m.passengers_expired > 3 ? 'bad' : 'warn') + '"><div class="v">' + m.passengers_expired + '</div><div class="l">Perdidos</div></div>' +
+      '<div class="metric ' + (m.crashes_major > 0 ? 'bad' : 'good') + '"><div class="v">' + m.crashes_major + '</div><div class="l">Choques</div></div>' +
+      '<div class="metric warn"><div class="v">' + m.crashes_minor + '</div><div class="l">Roces</div></div>' +
+      '<div class="metric"><div class="v">' + m.day_reached + '</div><div class="l">Dia alcanzado</div></div>' +
+      '<div class="metric"><div class="v">' + m.best_streak + '</div><div class="l">Mejor racha</div></div>' +
+      '<div class="metric"><div class="v">' + Math.round(m.delivery_time_avg_ms/1000) + 's</div><div class="l">Tiempo medio</div></div>' +
+      '<div class="metric"><div class="v">' + m.fares_per_minute + '</div><div class="l">Viajes/min</div></div>' +
+    '</div>' +
+    '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px">' +
+      '<button class="btn btn-primary" onclick="window.location.reload()">Otro turno</button>' +
+      '<button class="btn btn-secondary" onclick="exitGame()">Volver al portal</button>' +
+    '</div>';
+  document.getElementById('results-card').innerHTML = html;
+  document.getElementById('results-screen').style.display = 'flex';
+}
+
+// ====== SAVE METRICS ======
+function beaconEvent(name, extra) {
+  try {
+    var dni = window.ZYKOS_DNI || new URLSearchParams(location.search).get('dni');
+    if (sb && dni) {
+      sb.from('zykos_game_metrics').insert({
+        patient_dni: dni,
+        game_slug: GAME_SLUG,
+        metric_type: 'beacon_' + name,
+        metric_value: null,
+        metric_data: Object.assign({ t: new Date().toISOString() }, extra || {})
+      }).then(function(){}, function(){});
+    }
+  } catch(e) {}
+}
+
+async function saveMetrics(metrics) {
+  var dni = window.ZYKOS_DNI || new URLSearchParams(location.search).get('dni');
+  if (!sb || !dni) {
+    console.warn('[taxi] saveMetrics: skipped (sb=' + !!sb + ', dni=' + !!dni + ')');
+    return;
+  }
+  try {
+    var userId = null;
+    try { var u = JSON.parse(localStorage.getItem('zykos_user') || '{}'); userId = u.user_id || null; } catch(e) {}
+    var payload = {
+      user_id: userId,
+      patient_dni: dni,
+      game_slug: GAME_SLUG,
+      metric_type: 'session_summary',
+      metric_data: metrics
+    };
+    if (typeof ZykosEvidence !== 'undefined') {
+      try { payload = await ZykosEvidence.prepare(payload); } catch(e) { console.warn('[taxi] evidence prepare:', e.message); }
+    }
+    var ins = await sb.from('zykos_game_metrics').insert(payload);
+    if (ins && ins.error) console.error('[taxi] insert error:', ins.error);
+  } catch(e) {
+    console.error('[taxi] save exception:', e);
+  }
+}
+
+// ====== BOOT ======
+document.getElementById('btn-start').addEventListener('click', function() {
+  // Poke audio context (gesto de usuario requerido)
+  getAudio();
+  startGame();
+});
+
+// Day timeout
+setInterval(function() {
+  if (STATE.running && STATE.day >= 5 && STATE.dayTimeMs / STATE.dayDurationMs > 0.99) {
+    endGame('timeup');
+  }
+}, 500);
+
+requestAnimationFrame(loop);
+</script>
+
+<!-- ZYKOS ENGINE + AGENTES -->
+<script src="/games/shared/zykos-engine.js"></script>
+<script src="/games/shared/agents/agent-motor.js"></script>
+<script src="/games/shared/agents/agent-rt.js"></script>
+<script src="/games/shared/agents/agent-presence.js"></script>
+<script src="/games/shared/agents/agent-inhibition.js"></script>
+<script src="/games/shared/agents/agent-context.js"></script>
+<script src="/games/shared/agents/agent-focus.js"></script>
+
+</body>
+</html>
